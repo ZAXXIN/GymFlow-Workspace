@@ -1,0 +1,23 @@
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Build
+target/
+build/
+out/
+bin/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sql
+
+# OS
+.DS_Store
+Thumbs.db

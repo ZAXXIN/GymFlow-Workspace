@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gymflow.mapper.OrderMapper">
+
+    <select id="selectOrderStatsByDateRange" resultType="java.util.Map">
+        SELECT
+        COUNT(*) as order_count,
+        COALESCE(SUM(actual_amount), 0) as total_amount,
+        COUNT(DISTINCT member_id) as member_count
+        FROM `order`
+        WHERE payment_status = 'PAID'
+        <if test="startDate != null">
+            AND DATE(payment_time) &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(payment_time) &lt;= #{endDate}
+        </if>
+    </select>
+
+    <select id="selectIncomeStatsByDay" resultType="java.util.Map">
+        SELECT
+            DATE(payment_time) as date,
+            COUNT(*) as order_count,
+            COALESCE(SUM(actual_amount), 0) as amount
+        FROM `order`
+        WHERE payment_status = 'PAID'
+          AND payment_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(payment_time)
+        ORDER BY date
+    </select>
+
+    <select id="selectHotProducts" resultType="java.util.Map">
+        SELECT
+            product_name,
+            order_type,
+            COUNT(*) as order_count,
+            SUM(quantity) as total_quantity,
+            COALESCE(SUM(actual_amount), 0) as total_amount
+        FROM `order`
+        WHERE payment_status = 'PAID'
+          AND create_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY product_name, order_type
+        ORDER BY total_quantity DESC
+            LIMIT #{limit}
+    </select>
+
+    <select id="selectMemberOrders" resultType="com.gymflow.entity.Order">
+        SELECT *
+        FROM `order`
+        WHERE member_id = #{memberId}
+        <if test="orderType != null and orderType != ''">
+            AND order_type = #{orderType}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gymflow.mapper.CheckInMapper">
+
+    <select id="selectMemberCheckIns" resultType="com.gymflow.entity.CheckIn">
+        SELECT
+        ci.*,
+        c.course_name,
+        c.course_date,
+        c.start_time,
+        c.end_time
+        FROM check_in ci
+        LEFT JOIN course c ON ci.course_id = c.id
+        WHERE ci.member_id = #{memberId}
+        AND ci.status = 'SUCCESS'
+        <if test="startDate != null">
+            AND DATE(ci.checkin_time) &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND DATE(ci.checkin_time) &lt;= #{endDate}
+        </if>
+        ORDER BY ci.checkin_time DESC
+    </select>
+
+    <select id="selectCourseCheckIns" resultType="com.gymflow.entity.CheckIn">
+        SELECT
+            ci.*,
+            m.real_name as member_name,
+            m.member_no
+        FROM check_in ci
+                 LEFT JOIN member m ON ci.member_id = m.id
+        WHERE ci.course_id = #{courseId}
+        ORDER BY ci.checkin_time
+    </select>
+
+    <select id="selectCheckInStatsByDay" resultType="java.util.Map">
+        SELECT
+            DATE(checkin_time) as date,
+            COUNT(*) as checkin_count,
+            COUNT(DISTINCT member_id) as member_count
+        FROM check_in
+        WHERE status = 'SUCCESS'
+          AND checkin_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(checkin_time)
+        ORDER BY date
+    </select>
+
+    <select id="selectActiveMembers" resultType="java.util.Map">
+        SELECT
+            m.id as member_id,
+            m.real_name,
+            m.member_no,
+            COUNT(ci.id) as checkin_count
+        FROM member m
+                 LEFT JOIN check_in ci ON m.id = ci.member_id
+            AND ci.checkin_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+            AND ci.status = 'SUCCESS'
+        GROUP BY m.id, m.real_name, m.member_no
+        HAVING checkin_count > 0
+        ORDER BY checkin_count DESC
+    </select>
+
+</mapper>
