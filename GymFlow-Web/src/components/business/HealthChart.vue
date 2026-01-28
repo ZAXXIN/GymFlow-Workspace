@@ -301,9 +301,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import { Camera } from '@element-plus/icons-vue'
 import AppUpload from '../common/AppUpload.vue'
 import type { CheckInFormData } from '@/types'
 

@@ -1,6 +1,6 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const reportRoutes: RouteRecordRaw[] = [
+const reportRoutes: RouteRecordRaw[] = [
   {
     path: '/reports/revenue',
     name: 'RevenueReport',
@@ -35,3 +35,4 @@ export const reportRoutes: RouteRecordRaw[] = [
     }
   }
 ]
+export default reportRoutes

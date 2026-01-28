@@ -246,8 +246,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Download } from '@element-plus/icons-vue'
 import AppTable from '@/components/common/AppTable.vue'
 import type { CourseBooking, BookingStatus, PageParams } from '@/types'
 

@@ -1,68 +1,581 @@
-// 重置样式
+// src/assets/styles/reset.scss
+@use './variables.scss' as *;
+
+/* ==========================================================================
+   CSS Reset - GymFlow健身管理系统专用重置样式
+   ========================================================================== */
+
+/**
+ * 1. 使用更直观的盒模型
+ * 2. 移除默认边距和内边距
+ * 3. 确保一致的字体渲染
+ */
+
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box; /* 1 */
+  margin: 0; /* 2 */
+  padding: 0; /* 2 */
 }
+
+/* ==========================================================================
+   HTML和根元素
+   ========================================================================== */
+
+/**
+ * 1. 防止iOS和IE调整字体大小
+ * 2. 设置基准字体大小为16px（用户首选项）
+ * 3. 优化文本渲染
+ */
 
 html {
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
+  height: 100%;
+  font-size: 16px; /* 2 */
+  -webkit-text-size-adjust: 100%; /* 1 */
+  -moz-text-size-adjust: 100%; /* 1 */
+  text-size-adjust: 100%; /* 1 */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* 移除移动端点击高亮 */
 }
+
+/* ==========================================================================
+   主体和文档结构
+   ========================================================================== */
 
 body {
-  font-family: $font-family;
-  font-size: $font-size;
-  color: $text-primary;
-  background-color: $bg-color;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100%;
+  font-family: $font-family; /* 使用变量中的字体 */
+  font-size: 14px;
+  line-height: 1.5715; /* Element Plus标准行高 */
+  color: var(--el-text-color-primary); /* 使用CSS变量 */
+  background-color: var(--el-bg-color-page); /* 使用CSS变量 */
+  -webkit-font-smoothing: antialiased; /* 3 */
+  -moz-osx-font-smoothing: grayscale; /* 3 */
+  text-rendering: optimizeLegibility; /* 3 */
+  font-feature-settings: 'liga', 'kern'; /* 连字和字距调整 */
 }
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   排版元素
+   ========================================================================== */
+
+/**
+ * 1. 移除默认样式
+ * 2. 设置一致的字体大小和行高
+ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+  color: var(--el-text-color-primary);
+}
+
+h1 { font-size: 2em; }      /* 32px */
+h2 { font-size: 1.75em; }   /* 28px */
+h3 { font-size: 1.5em; }    /* 24px */
+h4 { font-size: 1.25em; }   /* 20px */
+h5 { font-size: 1.125em; }  /* 18px */
+h6 { font-size: 1em; }      /* 16px */
+
+p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+small {
+  font-size: 80%;
+  color: var(--el-text-color-secondary);
+}
+
+/* ==========================================================================
+   链接
+   ========================================================================== */
+
+/**
+ * 1. 移除默认下划线
+ * 2. 设置主题色
+ * 3. 平滑的颜色过渡
+ */
+
+a {
+  color: var(--el-color-primary); /* 2 */
+  text-decoration: none; /* 1 */
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  transition: all var(--el-transition-duration) var(--el-transition-function);
+  
+  &:hover,
+  &:focus {
+    color: var(--el-color-primary-light-3); /* 悬停颜色 */
+    text-decoration: underline; /* 悬停时显示下划线 */
+  }
+  
+  &:active {
+    color: var(--el-color-primary-dark-2); /* 激活状态 */
+  }
+  
+  &:disabled {
+    color: var(--el-text-color-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ==========================================================================
+   媒体元素
+   ========================================================================== */
+
+/**
+ * 1. 移除边框
+ * 2. 响应式图片
+ * 3. 垂直对齐
+ */
 
 img,
-svg,
+picture,
 video,
 canvas,
-audio,
-iframe,
-embed,
-object {
+svg {
   display: block;
-  max-width: 100%;
+  max-width: 100%; /* 2 */
+  height: auto; /* 2 */
+  border-style: none; /* 1 */
+  vertical-align: middle; /* 3 */
 }
 
-button,
+/* 防止拉伸的图片 */
+img[width][height] {
+  height: auto;
+}
+
+/* ==========================================================================
+   表单元素
+   ========================================================================== */
+
+/**
+ * 1. 继承字体
+ * 2. 移除默认样式
+ * 3. 一致的边距
+ */
+
 input,
-optgroup,
-select,
-textarea {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
+button,
+textarea,
+select {
+  font: inherit; /* 1 */
+  font-family: $font-family;
   color: inherit;
+  background-color: transparent;
+  border: 1px solid var(--el-border-color);
+  border-radius: var(--el-border-radius-base);
+  outline: none;
+  transition: border-color var(--el-transition-duration) var(--el-transition-function);
+  
+  &:focus {
+    border-color: var(--el-color-primary);
+    box-shadow: 0 0 0 2px var(--el-color-primary-light-8);
+  }
+  
+  &:disabled {
+    background-color: var(--el-fill-color-light);
+    border-color: var(--el-border-color-light);
+    color: var(--el-text-color-disabled);
+    cursor: not-allowed;
+  }
 }
 
 button {
   cursor: pointer;
-  background: none;
+  padding: var(--el-spacing-xs) var(--el-spacing-md);
+  background-color: var(--el-color-primary);
+  color: white;
   border: none;
+  border-radius: var(--el-border-radius-base);
+  transition: all var(--el-transition-duration) var(--el-transition-function);
+  
+  &:hover {
+    background-color: var(--el-color-primary-light-3);
+  }
+  
+  &:active {
+    background-color: var(--el-color-primary-dark-2);
+  }
+  
+  &:disabled {
+    background-color: var(--el-fill-color-light);
+    color: var(--el-text-color-disabled);
+    cursor: not-allowed;
+  }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+input,
+textarea {
+  width: 100%;
+  padding: var(--el-spacing-sm) var(--el-spacing-md);
+  
+  &::placeholder {
+    color: var(--el-text-color-placeholder);
+    opacity: 1;
+  }
 }
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+select {
+  padding: var(--el-spacing-sm) var(--el-spacing-md);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23606666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--el-spacing-md) center;
+  background-size: 16px;
+  padding-right: calc(var(--el-spacing-md) * 2 + 16px);
+  appearance: none;
+}
+
+/* ==========================================================================
+   列表
+   ========================================================================== */
 
 ul,
 ol {
-  list-style: none;
+  list-style-position: inside;
+  padding-left: var(--el-spacing-md);
+  margin-bottom: 1em;
 }
 
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+li {
+  margin-bottom: var(--el-spacing-xs);
+}
+
+/* ==========================================================================
+   表格
+   ========================================================================== */
+
 table {
+  width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
+  margin-bottom: 1em;
+}
+
+th,
+td {
+  padding: var(--el-spacing-sm) var(--el-spacing-md);
+  border-bottom: 1px solid var(--el-border-color-light);
+  text-align: left;
+}
+
+th {
+  font-weight: 600;
+  background-color: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
+}
+
+/* ==========================================================================
+   代码和预格式化文本
+   ========================================================================== */
+
+pre,
+code,
+kbd,
+samp {
+  font-family: $font-family-mono; /* 使用等宽字体变量 */
+  font-size: 0.875em;
+}
+
+pre {
+  overflow: auto;
+  padding: var(--el-spacing-md);
+  background-color: var(--el-fill-color-light);
+  border-radius: var(--el-border-radius-base);
+  border: 1px solid var(--el-border-color-light);
+  margin-bottom: 1em;
+  
+  code {
+    background-color: transparent;
+    padding: 0;
+  }
+}
+
+code {
+  padding: 0.2em 0.4em;
+  background-color: var(--el-fill-color-light);
+  border-radius: var(--el-border-radius-small);
+  color: var(--el-color-danger);
+}
+
+/* ==========================================================================
+   水平线
+   ========================================================================== */
+
+hr {
+  height: 1px;
+  border: none;
+  background-color: var(--el-border-color);
+  margin: var(--el-spacing-lg) 0;
+}
+
+/* ==========================================================================
+   自定义滚动条
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light);
+  border-radius: var(--el-border-radius-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color);
+  border-radius: var(--el-border-radius-base);
+  
+  &:hover {
+    background: var(--el-border-color-light);
+  }
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--el-fill-color-light);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--el-border-color) var(--el-fill-color-light);
+}
+
+/* ==========================================================================
+   选中文本样式
+   ========================================================================== */
+
+::selection {
+  background-color: rgba(var(--el-color-primary-rgb, 64, 158, 255), 0.2);
+  color: var(--el-text-color-primary);
+}
+
+::-moz-selection {
+  background-color: rgba(var(--el-color-primary-rgb, 64, 158, 255), 0.2);
+  color: var(--el-text-color-primary);
+}
+
+/* ==========================================================================
+   打印样式
+   ========================================================================== */
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+  
+  a[href]::after {
+    content: " (" attr(href) ")";
+  }
+  
+  abbr[title]::after {
+    content: " (" attr(title) ")";
+  }
+  
+  pre,
+  blockquote {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tr,
+  img {
+    page-break-inside: avoid;
+  }
+  
+  img {
+    max-width: 100% !important;
+  }
+  
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+
+/* ==========================================================================
+   辅助功能
+   ========================================================================== */
+
+/* 隐藏但可访问的内容 */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 焦点轮廓（为键盘导航提供视觉反馈） */
+:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 2px;
+}
+
+/* 减少运动 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   高对比度模式
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+  body {
+    color: #000;
+    background-color: #fff;
+  }
+  
+  a {
+    color: #0000ee;
+    text-decoration: underline;
+  }
+  
+  button,
+  input,
+  textarea,
+  select {
+    border: 2px solid currentColor;
+  }
+}
+
+/* ==========================================================================
+   深色主题适配
+   ========================================================================== */
+
+[data-theme="dark"] {
+  /* 在深色主题中，滚动条颜色需要调整 */
+  ::-webkit-scrollbar-track {
+    background: var(--el-fill-color-darker);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--el-border-color-light);
+    
+    &:hover {
+      background: var(--el-border-color);
+    }
+  }
+  
+  /* Firefox 深色主题滚动条 */
+  * {
+    scrollbar-color: var(--el-border-color-light) var(--el-fill-color-darker);
+  }
+}
+
+/* ==========================================================================
+   GymFlow特定重置
+   ========================================================================== */
+
+/* 渐变背景类 */
+.bg-gradient-primary {
+  background: $gradient-primary;
+}
+
+.bg-gradient-success {
+  background: $gradient-success;
+}
+
+.bg-gradient-warning {
+  background: $gradient-warning;
+}
+
+.bg-gradient-danger {
+  background: $gradient-danger;
+}
+
+/* 卡片阴影 */
+.gymflow-card {
+  background: var(--el-bg-color);
+  border-radius: var(--el-border-radius-base);
+  box-shadow: var(--el-box-shadow);
+  padding: var(--el-spacing-lg);
+  transition: box-shadow var(--el-transition-duration) var(--el-transition-function);
+  
+  &:hover {
+    box-shadow: var(--el-box-shadow-light);
+  }
+}
+
+/* 响应式工具类 */
+@media (max-width: 768px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+}
+
+/* 加载状态 */
+@keyframes gymflow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gymflow-loading {
+  animation: gymflow-spin 1s linear infinite;
 }

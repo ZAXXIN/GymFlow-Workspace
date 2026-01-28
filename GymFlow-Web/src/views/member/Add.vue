@@ -290,7 +290,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
 import type { MemberFormData, MemberCard } from '@/types'
 
 const router = useRouter()
@@ -426,7 +425,7 @@ const handleSave = async () => {
 
 // 取消编辑
 const handleCancel = () => {
-  router.push('/member')
+  router.push('/member/list')
 }
 
 // 初始化数据（编辑模式）

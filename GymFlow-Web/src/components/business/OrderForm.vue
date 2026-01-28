@@ -512,9 +512,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import type { OrderFormData, OrderItem } from '@/types'
 
 interface Props {

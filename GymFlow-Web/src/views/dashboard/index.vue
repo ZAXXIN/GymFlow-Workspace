@@ -206,18 +206,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import {
-  Refresh,
-  User,
-  UserFilled,
-  Money,
-  Check,
-  Top,
-  Bottom,
-  Calendar,
-  ShoppingCart
-} from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useCourseStore } from '@/stores/course'

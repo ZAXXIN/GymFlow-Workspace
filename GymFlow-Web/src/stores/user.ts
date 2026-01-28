@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { User, QueryParams, PaginatedResponse } from '@/types'
-import { userApi } from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
   // 状态

@@ -1,7 +1,5 @@
 import { ref, reactive, computed, watch, nextTick } from 'vue'
 import type { Ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
 import { cloneDeep, isEqual } from 'lodash-es'
 
 interface FormOptions<T = any> {

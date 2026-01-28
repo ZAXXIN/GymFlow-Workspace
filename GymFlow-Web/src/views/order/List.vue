@@ -317,24 +317,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Plus,
-  Download,
-  Search,
-  Refresh,
-  View,
-  MoreFilled,
-  Check,
-  Finished,
-  Close,
-  RefreshLeft,
-  Delete,
-  Document,
-  Money,
-  Clock,
-  Calendar
-} from '@element-plus/icons-vue'
 import AppTable from '@/components/common/AppTable.vue'
 import { useOrderStore } from '@/stores/order'
 import {

@@ -1,15 +1,17 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const checkinRoutes: RouteRecordRaw[] = [
+const checkInRoutes: RouteRecordRaw[] = [
   {
-    path: '/checkins',
+    path: '/checkIns',
     name: 'CheckInList',
-    component: () => import('@/views/checkin/List.vue'),
+    component: () => import('@/views/checkIn/List.vue'),
     meta: {
       title: '签到记录',
-      icon: 'i-ep-finished',
+      icon: 'Finished',
       requiresAuth: true,
+      showInMenu:true,
       roles: ['ADMIN']
     }
   }
 ]
+export default checkInRoutes

@@ -448,20 +448,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
-import {
-  Download,
-  Refresh,
-  Search,
-  RefreshRight,
-  Timer,
-  Money,
-  Star,
-  Finished,
-  Top,
-  Bottom
-} from '@element-plus/icons-vue'
 
 const router = useRouter()
 

@@ -353,10 +353,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import * as echarts from 'echarts'
 import { useChart } from '@/composables/useChart'
-import { Document, User, Warning, SuccessFilled } from '@element-plus/icons-vue'
 import type { LogRecord } from '@/types'
 
 // 图表相关

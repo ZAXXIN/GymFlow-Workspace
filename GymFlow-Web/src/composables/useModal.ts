@@ -1,6 +1,5 @@
 import { ref, reactive, computed, watch } from 'vue'
 import type { Ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
 import type { Action } from '@/types'
 
 interface ModalOptions<T = any> {

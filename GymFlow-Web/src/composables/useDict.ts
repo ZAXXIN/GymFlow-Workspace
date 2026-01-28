@@ -1,6 +1,5 @@
 import { ref, reactive, computed, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getDictData, getDictOptions } from '@/api/system'
+// import { getDictData, getDictOptions } from '@/api/system'
 import type { DictItem, DictData, DictOptions } from '@/types'
 
 interface DictCache {
@@ -104,50 +103,50 @@ export function useDict(arg1: string | DictOptions, arg2?: DictOptions) {
   }
   
   // 加载字典数据
-  const loadDictData = async (forceRefresh: boolean = false): Promise<void> => {
-    // 如果强制刷新，清除缓存
-    if (forceRefresh && defaultOptions.cache) {
-      delete dictCache[dictCode]
-    }
+  // const loadDictData = async (forceRefresh: boolean = false): Promise<void> => {
+  //   // 如果强制刷新，清除缓存
+  //   if (forceRefresh && defaultOptions.cache) {
+  //     delete dictCache[dictCode]
+  //   }
     
-    // 检查缓存
-    if (!forceRefresh && defaultOptions.cache) {
-      const cachedData = getFromCache()
-      if (cachedData) {
-        dictData.value = cachedData
-        return
-      }
-    }
+  //   // 检查缓存
+  //   if (!forceRefresh && defaultOptions.cache) {
+  //     const cachedData = getFromCache()
+  //     if (cachedData) {
+  //       dictData.value = cachedData
+  //       return
+  //     }
+  //   }
     
-    try {
-      loading.value = true
-      error.value = null
+  //   try {
+  //     loading.value = true
+  //     error.value = null
       
-      const response = await getDictData(dictCode)
+  //     const response = await getDictData(dictCode)
       
-      if (response.code === 200 && response.data) {
-        dictData.value = response.data
+  //     if (response.code === 200 && response.data) {
+  //       dictData.value = response.data
         
-        // 保存到缓存
-        saveToCache(response.data)
+  //       // 保存到缓存
+  //       saveToCache(response.data)
         
-        // 回调函数
-        defaultOptions.onLoaded?.(response.data)
-      } else {
-        throw new Error(response.message || '获取字典数据失败')
-      }
-    } catch (err: any) {
-      console.error(`加载字典 ${dictCode} 失败:`, err)
-      error.value = err.message || '加载字典数据失败'
+  //       // 回调函数
+  //       defaultOptions.onLoaded?.(response.data)
+  //     } else {
+  //       throw new Error(response.message || '获取字典数据失败')
+  //     }
+  //   } catch (err: any) {
+  //     console.error(`加载字典 ${dictCode} 失败:`, err)
+  //     error.value = err.message || '加载字典数据失败'
       
-      // 回调函数
-      defaultOptions.onError?.(err)
+  //     // 回调函数
+  //     defaultOptions.onError?.(err)
       
-      ElMessage.error(`加载字典数据失败: ${err.message}`)
-    } finally {
-      loading.value = false
-    }
-  }
+  //     ElMessage.error(`加载字典数据失败: ${err.message}`)
+  //   } finally {
+  //     loading.value = false
+  //   }
+  // }
   
   // 刷新字典数据
   const refreshDict = async (): Promise<void> => {
@@ -172,13 +171,13 @@ export function useDict(arg1: string | DictOptions, arg2?: DictOptions) {
   }
   
   // 获取字典选项（用于Element Plus的选择器）
-  const getDictOptions = computed(() => {
-    return dictData.value.map(item => ({
-      label: item.label,
-      value: item.value,
-      ...item
-    }))
-  })
+  // const getDictOptions = computed(() => {
+  //   return dictData.value.map(item => ({
+  //     label: item.label,
+  //     value: item.value,
+  //     ...item
+  //   }))
+  // })
   
   // 检查字典是否包含某个值
   const containsValue = (value: string | number): boolean => {
@@ -226,7 +225,7 @@ export function useDict(arg1: string | DictOptions, arg2?: DictOptions) {
     getItem: getItemByValue,
     
     // 计算属性
-    options: getDictOptions,
+    // options: getDictOptions,
     
     // 工具方法
     containsValue,

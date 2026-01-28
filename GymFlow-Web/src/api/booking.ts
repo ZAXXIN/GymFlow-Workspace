@@ -1,4 +1,4 @@
-import { http } from '@/utils/request'
+import request from '@/utils/request'
 import type { CourseBooking, QueryParams, PaginatedResponse, ApiResponse } from '@/types'
 
 export const bookingApi = {

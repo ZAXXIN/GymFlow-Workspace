@@ -230,18 +230,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Edit,
-  MoreFilled,
-  List,
-  Check,
-  Close,
-  Finished,
-  Delete,
-  Clock,
-  Timer
-} from '@element-plus/icons-vue'
 import { useCourseStore } from '@/stores/course'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate, formatTime } from '@/utils'

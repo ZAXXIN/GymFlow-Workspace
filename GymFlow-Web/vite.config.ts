@@ -8,7 +8,7 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   return {
     base: './',
     plugins: [
@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
         dts: 'src/components.d.ts',
         resolvers: [
           ElementPlusResolver({
-            importStyle: 'sass',
+            importStyle: 'false',
           }),
         ],
       }),
@@ -46,13 +46,15 @@ export default defineConfig(({ mode }) => {
       host: env.VITE_DEV_SERVER_HOST || 'localhost',
       port: parseInt(env.VITE_DEV_SERVER_PORT || '5173'),
       open: true,
-      proxy: env.VITE_PROXY_TARGET ? {
-        [env.VITE_PROXY_CONTEXT || '/api']: {
-          target: env.VITE_PROXY_TARGET,
+      cors: true,
+      proxy: {
+        '/api': {
+          target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
-          rewrite: (path) => path.replace(new RegExp(`^${env.VITE_PROXY_CONTEXT || '/api'}`), ''),
-        },
-      } : undefined,
+          secure: false,
+          ws: true,
+        }
+      }
     },
     build: {
       outDir: env.VITE_BUILD_OUTDIR || 'dist',
@@ -72,9 +74,6 @@ export default defineConfig(({ mode }) => {
           additionalData: `@use "@/assets/styles/variables.scss" as *;`,
         },
       },
-    },
-    define: {
-      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
     },
   }
 })

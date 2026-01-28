@@ -235,21 +235,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Plus,
-  DocumentAdd,
-  Search,
-  Refresh,
-  Download,
-  View,
-  Edit,
-  MoreFilled,
-  List,
-  Check,
-  Close,
-  Delete
-} from '@element-plus/icons-vue'
 import AppTable from '@/components/common/AppTable.vue'
 import { useCourseStore } from '@/stores/course'
 import { useCoachStore } from '@/stores/coach'

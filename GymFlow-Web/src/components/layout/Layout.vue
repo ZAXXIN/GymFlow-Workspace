@@ -1,119 +1,349 @@
 <template>
-  <div class="app-layout">
-    <!-- 头部 -->
-    <app-header v-if="showHeader" />
-    
-    <!-- 侧边栏 -->
-    <app-sidebar v-if="showSidebar" />
-    
-    <!-- 主内容区 -->
-    <main :class="['app-content', { 'with-sidebar': showSidebar, 'with-header': showHeader }]">
-      <!-- 面包屑 -->
-      <app-breadcrumb v-if="showBreadcrumb" />
-      
-      <!-- 页面内容 -->
-      <div class="content-wrapper">
-        <slot />
+  <div class="layout-container">
+    <!-- 顶部导航栏 -->
+    <el-header class="header">
+      <div class="header-left">
+        <img src="@/assets/images/logo.png" alt="Logo" class="logo">
+        <h1 class="title">GymFlow 健身房管理系统</h1>
       </div>
-    </main>
-    
-    <!-- 页脚 -->
-    <app-footer v-if="showFooter" />
+      <div class="header-right">
+        <el-dropdown>
+          <div class="user-info">
+            <el-avatar :size="32" :src="userInfo.avatar" />
+            <span class="username">{{ userInfo.realName || userInfo.username }}</span>
+            <el-icon><ArrowDown /></el-icon>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="goToProfile">
+                <el-icon><User /></el-icon>个人中心
+              </el-dropdown-item>
+              <el-dropdown-item divided @click="handleLogout">
+                <el-icon><SwitchButton /></el-icon>退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
+    </el-header>
+
+    <div class="main-container">
+      <!-- 侧边栏菜单 -->
+      <el-aside width="200px" class="sidebar">
+        <el-menu
+          :default-active="activeMenu"
+          router
+          unique-opened
+          @select="handleMenuSelect"
+        >
+          <!-- 动态生成菜单 -->
+          <template v-for="menu in filteredMenus" :key="menu.path">
+            <!-- 有子菜单的情况 -->
+            <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+              <template #title>
+                <el-icon v-if="menu.icon">
+                  <component :is="menu.icon" />
+                </el-icon>
+                <span>{{ menu.title }}</span>
+              </template>
+              <el-menu-item
+                v-for="child in menu.children"
+                :key="child.path"
+                :index="child.path"
+              >
+                <span>{{ child.title }}</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <!-- 没有子菜单的情况 -->
+            <el-menu-item v-else :index="menu.path">
+              <el-icon v-if="menu.icon">
+                <component :is="menu.icon" />
+              </el-icon>
+              <template #title>
+                <span>{{ menu.title }}</span>
+              </template>
+            </el-menu-item>
+          </template>
+        </el-menu>
+      </el-aside>
+
+      <!-- 主内容区 -->
+      <el-main class="main-content">
+        <router-view />
+      </el-main>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import AppHeader from './Header.vue'
-import AppSidebar from './Sidebar.vue'
-import AppFooter from './Footer.vue'
-import AppBreadcrumb from '../common/AppBreadcrumb.vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import type { UserInfo } from '@/types/auth'
+import { 
+  User, 
+  SwitchButton, 
+  ArrowDown,
+  DataLine,
+  UserFilled,
+  Avatar,
+  Calendar,
+  ShoppingCart,
+  Check,
+  Document,
+  Setting,
+  PieChart
+} from '@element-plus/icons-vue'
 
-interface Props {
-  showHeader?: boolean
-  showSidebar?: boolean
-  showFooter?: boolean
-  showBreadcrumb?: boolean
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+
+// 用户信息
+const userInfo = ref<UserInfo>({
+  userId: 0,
+  username: '',
+  realName: '',
+  phone: '',
+  role: 0,
+  status: 1
+})
+
+// 完整的菜单配置
+const allMenus = [
+  // 仪表盘
+  {
+    path: '/dashboard',
+    title: '仪表盘',
+    icon: DataLine,
+    roles: [0, 1, 2, 3] // 所有角色可见
+  },
+  
+  // 会员管理
+  {
+    path: '/member',
+    title: '会员管理',
+    icon: UserFilled,
+    roles: [0, 1], // 管理员和前台可见
+    children: [
+      { path: '/member/list', title: '会员列表' },
+      { path: '/member/add', title: '添加会员' }
+    ]
+  },
+  
+  // 教练管理
+  {
+    path: '/coach',
+    title: '教练管理',
+    icon: Avatar,
+    roles: [0, 1], // 管理员和前台可见
+    children: [
+      { path: '/coach/list', title: '教练列表' },
+      { path: '/coach/add', title: '添加教练' },
+      { path: '/coach/schedule', title: '排课管理' }
+    ]
+  },
+  
+  // 课程管理
+  {
+    path: '/course',
+    title: '课程管理',
+    icon: Calendar,
+    roles: [0, 1, 2], // 管理员、前台、教练可见
+    children: [
+      { path: '/course/list', title: '课程列表' },
+      { path: '/course/add', title: '添加课程' },
+      { path: '/course/booking', title: '课程预约' }
+    ]
+  },
+  
+  // 订单管理
+  {
+    path: '/order',
+    title: '订单管理',
+    icon: ShoppingCart,
+    roles: [0, 1], // 管理员和前台可见
+    children: [
+      { path: '/order/list', title: '订单列表' },
+      { path: '/order/statistics', title: '销售统计' }
+    ]
+  },
+  
+  // 签到管理
+  {
+    path: '/checkin',
+    title: '签到管理',
+    icon: Check,
+    roles: [0, 1, 2], // 管理员、前台、教练可见
+    children: [
+      { path: '/checkin/records', title: '签到记录' },
+      { path: '/checkin/statistics', title: '签到统计' }
+    ]
+  },
+  // 系统设置
+  {
+    path: '/settings',
+    title: '系统设置',
+    icon: Setting,
+    roles: [0], // 仅管理员可见
+    children: [
+      { path: '/settings/user', title: '用户管理' },
+      { path: '/settings/role', title: '角色权限' },
+      { path: '/settings/system', title: '系统配置' }
+    ]
+  },
+  
+  // 报表统计
+  {
+    path: '/reports',
+    title: '报表统计',
+    icon: PieChart,
+    roles: [0, 1], // 管理员和前台可见
+    children: [
+      { path: '/reports/member', title: '会员统计' },
+      { path: '/reports/finance', title: '财务统计' },
+      { path: '/reports/course', title: '课程统计' }
+    ]
+  }
+]
+
+// 根据用户角色过滤菜单
+const filteredMenus = computed(() => {
+  const role = userInfo.value.role
+  return allMenus.filter(menu => menu.roles.includes(role))
+})
+
+// 当前激活的菜单
+const activeMenu = computed(() => {
+  return route.path
+})
+
+// 处理菜单选择
+const handleMenuSelect = (index: string) => {
+  console.log('选择菜单:', index)
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showHeader: true,
-  showSidebar: true,
-  showFooter: false,
-  showBreadcrumb: true
-})
+// 跳转到个人中心
+const goToProfile = () => {
+  router.push('/member/profile')
+}
 
-const route = useRoute()
+// 处理退出登录
+const handleLogout = async () => {
+  try {
+    await authStore.logout()
+  } catch (error) {
+    console.error('登出失败:', error)
+  } finally {
+    // 清除本地存储
+    localStorage.removeItem('gymflow_token')
+    localStorage.removeItem('gymflow_user_info')
+    
+    // 跳转到登录页
+    window.location.href = '/login'
+  }
+}
 
-// 根据路由元信息动态显示布局元素
-const showHeader = computed(() => {
-  return props.showHeader && route.meta?.showHeader !== false
-})
-
-const showSidebar = computed(() => {
-  return props.showSidebar && route.meta?.showSidebar !== false
-})
-
-const showFooter = computed(() => {
-  return props.showFooter && route.meta?.showFooter !== false
-})
-
-const showBreadcrumb = computed(() => {
-  return props.showBreadcrumb && route.meta?.showBreadcrumb !== false
+// 初始化用户信息
+onMounted(() => {
+  const userStr = localStorage.getItem('gymflow_user_info')
+  if (userStr) {
+    try {
+      userInfo.value = JSON.parse(userStr)
+    } catch (error) {
+      console.error('解析用户信息失败:', error)
+    }
+  }
 })
 </script>
 
-<style scoped lang="scss">
-.app-layout {
+<style scoped>
+.layout-container {
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: #f5f7fa;
-  
-  .app-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    transition: margin-left 0.3s ease;
-    
-    &.with-sidebar {
-      margin-left: 210px;
-    }
-    
-    &.with-header {
-      margin-top: 60px;
-    }
-    
-    .content-wrapper {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      background-color: #ffffff;
-      border-radius: 4px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-      margin: 20px;
-      
-      &:first-child {
-        margin-top: 0;
-      }
-    }
-  }
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .app-layout {
-    .app-content {
-      &.with-sidebar {
-        margin-left: 0;
-      }
-      
-      .content-wrapper {
-        margin: 10px;
-        padding: 15px;
-      }
-    }
-  }
+.header {
+  background-color: #001529;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.user-info:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.username {
+  font-size: 14px;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+}
+
+.sidebar {
+  background-color: #fff;
+  border-right: 1px solid #f0f0f0;
+}
+
+.main-content {
+  padding: 20px;
+  background-color: #f5f7fa;
+  overflow-y: auto;
+}
+
+/* 菜单样式优化 */
+.el-menu {
+  border-right: none;
+}
+
+.el-menu-item {
+  height: 48px;
+  line-height: 48px;
+}
+
+.el-sub-menu .el-menu-item {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 50px !important;
 }
 </style>

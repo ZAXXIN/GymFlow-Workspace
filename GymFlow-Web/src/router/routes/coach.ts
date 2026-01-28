@@ -1,14 +1,15 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const coachRoutes: RouteRecordRaw[] = [
+const coachRoutes: RouteRecordRaw[] = [
   {
     path: '/coaches',
     name: 'CoachList',
     component: () => import('@/views/coach/List.vue'),
     meta: {
       title: '教练管理',
-      icon: 'i-ep-user-filled',
+      icon: 'UserFilled',
       requiresAuth: true,
+      showInMenu:true,
       roles: ['ADMIN']
     }
   },
@@ -49,3 +50,4 @@ export const coachRoutes: RouteRecordRaw[] = [
     }
   }
 ]
+export default coachRoutes

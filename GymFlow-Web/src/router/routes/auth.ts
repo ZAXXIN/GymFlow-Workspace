@@ -1,24 +1,26 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const authRoutes: RouteRecordRaw[] = [
+const authRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/auth/Login.vue'),
     meta: {
       title: '登录',
       requiresAuth: false,
       hideInMenu: true
-    }
+    },
+    component: () => import('@/views/auth/Login.vue')
   },
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/auth/Register.vue'),
-    meta: {
-      title: '注册',
-      requiresAuth: false,
-      hideInMenu: true
-    }
-  }
+  // {
+  //   path: '/register',
+  //   name: 'Register',
+  //   meta: {
+  //     title: '注册',
+  //     requiresAuth: false,
+  //     hideInMenu: true
+  //   },
+  //   component: () => import('@/views/auth/Register.vue')
+  // }
 ]
+
+export default authRoutes

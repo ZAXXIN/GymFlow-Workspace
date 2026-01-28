@@ -124,13 +124,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import {
-  ArrowDown,
-  Refresh,
-  FullScreen,
-  Close
-} from '@element-plus/icons-vue'
 
 interface ActionMenuItem {
   key: string

@@ -7,26 +7,17 @@
           <component :is="isCollapsed ? 'Expand' : 'Fold'" />
         </el-icon>
       </div>
-      
+
       <!-- Logo -->
-      <div class="logo" @click="goHome">
+      <div class="logo">
         <img src="@/assets/images/logo.png" alt="GymFlow" class="logo-image">
         <span class="logo-text" v-show="!isCollapsed">GymFlow 健身工作室</span>
       </div>
     </div>
-    
-    <div class="header-center">
-      <!-- 搜索框 -->
-      <app-search v-if="showSearch" />
-    </div>
-    
+
     <div class="header-right">
       <!-- 消息通知 -->
-      <el-dropdown
-        v-if="showNotifications"
-        trigger="click"
-        class="notification-dropdown"
-      >
+      <el-dropdown v-if="showNotifications" trigger="click" class="notification-dropdown">
         <div class="notification-icon">
           <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0">
             <el-icon :size="20">
@@ -40,12 +31,7 @@
               暂无通知
             </el-dropdown-item>
             <template v-else>
-              <el-dropdown-item
-                v-for="notification in notifications.slice(0, 5)"
-                :key="notification.id"
-                :class="{ 'unread': !notification.read }"
-                @click="handleNotificationClick(notification)"
-              >
+              <el-dropdown-item v-for="notification in notifications.slice(0, 5)" :key="notification.id" :class="{ 'unread': !notification.read }" @click="handleNotificationClick(notification)">
                 <div class="notification-item">
                   <div class="notification-title">
                     {{ notification.title }}
@@ -64,22 +50,22 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      
+
       <!-- 全屏切换 -->
       <div class="fullscreen-toggle" @click="toggleFullscreen">
         <el-icon :size="20">
           <component :is="isFullscreen ? 'FullScreen' : 'CropFree'" />
         </el-icon>
       </div>
-      
+
       <!-- 用户信息 -->
       <el-dropdown trigger="click" class="user-dropdown">
         <div class="user-info">
-          <el-avatar :size="32" :src="userAvatar" class="user-avatar">
-            {{ userInfo?.name?.charAt(0) || 'U' }}
-          </el-avatar>
+          <!-- <el-avatar :size="32" :src="userAvatar" class="user-avatar">
+            {{ authStore.userInfo?.username?.charAt(0) || 'U' }}
+          </el-avatar> -->
           <span class="user-name" v-show="!isCollapsed">
-            {{ userInfo?.name || '用户' }}
+            {{ authStore.userInfo?.username || '用户' }}
           </span>
           <el-icon class="user-arrow">
             <ArrowDown />
@@ -87,16 +73,10 @@
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item @click="goProfile">
-              <el-icon><User /></el-icon>
-              个人中心
-            </el-dropdown-item>
-            <el-dropdown-item @click="goSettings">
-              <el-icon><Setting /></el-icon>
-              系统设置
-            </el-dropdown-item>
-            <el-dropdown-item divided @click="logout">
-              <el-icon><SwitchButton /></el-icon>
+            <el-dropdown-item divided @click="userLogout">
+              <el-icon>
+                <SwitchButton />
+              </el-icon>
               退出登录
             </el-dropdown-item>
           </el-dropdown-menu>
@@ -109,16 +89,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { useSettingsStore } from '@/stores/settings'
 import { formatTime } from '@/utils'
-import { Bell, User, Setting, SwitchButton, ArrowDown } from '@element-plus/icons-vue'
-import AppSearch from '../common/AppSearch.vue'
 import type { Notification } from '@/types'
+import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
+import { useUserStore } from '@/stores/user'
 
-const router = useRouter()
+const authStore = useAuthStore()
 const userStore = useUserStore()
 const settingsStore = useSettingsStore()
+const router = useRouter()
 
 // 响应式数据
 const isFullscreen = ref(false)
@@ -129,7 +109,7 @@ const notifications = ref<Notification[]>([
     content: '张三刚刚注册成为会员',
     time: new Date(Date.now() - 1000 * 60 * 30),
     read: false,
-    type: 'member'
+    type: 'member',
   },
   {
     id: '2',
@@ -137,22 +117,16 @@ const notifications = ref<Notification[]>([
     content: '您的课程将在30分钟后开始',
     time: new Date(Date.now() - 1000 * 60 * 60),
     read: true,
-    type: 'course'
-  }
+    type: 'course',
+  },
 ])
 
 // 计算属性
 const userInfo = computed(() => userStore.currentUser)
 const userAvatar = computed(() => userInfo.value?.avatar || '')
 const isCollapsed = computed(() => settingsStore.sidebarCollapsed)
-const showSearch = computed(() => settingsStore.showSearchBar)
 const showNotifications = computed(() => settingsStore.showNotifications)
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
-
-// 方法
-const toggleSidebar = () => {
-  settingsStore.toggleSidebar()
-}
+const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
 
 const toggleFullscreen = () => {
   if (!document.fullscreenElement) {
@@ -164,28 +138,17 @@ const toggleFullscreen = () => {
       isFullscreen.value = false
     }
   }
+  console.log(userInfo)
 }
 
 const handleFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement
 }
 
-const goHome = () => {
-  router.push('/dashboard')
-}
-
-const goProfile = () => {
-  router.push('/settings/profile')
-}
-
-const goSettings = () => {
-  router.push('/settings/system')
-}
-
-const logout = async () => {
+const userLogout = async () => {
   try {
-    await userStore.logout()
-    router.push('/login')
+    await authStore.logout();
+    router.replace('/login')
   } catch (error) {
     console.error('退出登录失败:', error)
   }
@@ -193,7 +156,7 @@ const logout = async () => {
 
 const handleNotificationClick = (notification: Notification) => {
   notification.read = true
-  
+
   // 根据通知类型跳转到不同页面
   switch (notification.type) {
     case 'member':
@@ -237,12 +200,12 @@ onUnmounted(() => {
   padding: 0 20px;
   z-index: 1000;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  
+
   .header-left {
     display: flex;
     align-items: center;
     flex: 0 0 auto;
-    
+
     .sidebar-toggle {
       display: flex;
       align-items: center;
@@ -254,28 +217,28 @@ onUnmounted(() => {
       color: #ffffff;
       border-radius: 50%;
       transition: background-color 0.3s;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
-      
+
       .el-icon {
         font-size: 20px;
       }
     }
-    
+
     .logo {
       display: flex;
       align-items: center;
       cursor: pointer;
-      
+
       .logo-image {
         width: 36px;
         height: 36px;
         margin-right: 10px;
         border-radius: 6px;
       }
-      
+
       .logo-text {
         color: #ffffff;
         font-size: 18px;
@@ -284,23 +247,23 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .header-center {
     flex: 1;
     max-width: 500px;
     margin: 0 20px;
   }
-  
+
   .header-right {
     display: flex;
     align-items: center;
     gap: 20px;
-    
+
     .notification-dropdown,
     .user-dropdown {
       cursor: pointer;
     }
-    
+
     .notification-icon {
       display: flex;
       align-items: center;
@@ -310,12 +273,12 @@ onUnmounted(() => {
       color: #ffffff;
       border-radius: 50%;
       transition: background-color 0.3s;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
     }
-    
+
     .fullscreen-toggle {
       display: flex;
       align-items: center;
@@ -326,12 +289,12 @@ onUnmounted(() => {
       border-radius: 50%;
       cursor: pointer;
       transition: background-color 0.3s;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
     }
-    
+
     .user-info {
       display: flex;
       align-items: center;
@@ -339,15 +302,15 @@ onUnmounted(() => {
       padding: 4px 8px;
       border-radius: 20px;
       transition: background-color 0.3s;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
-      
+
       .user-avatar {
         background-color: #1890ff;
       }
-      
+
       .user-name {
         color: #ffffff;
         font-size: 14px;
@@ -356,7 +319,7 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      
+
       .user-arrow {
         color: #ffffff;
         font-size: 12px;
@@ -368,18 +331,18 @@ onUnmounted(() => {
 .notification-item {
   min-width: 200px;
   padding: 5px 0;
-  
+
   .notification-title {
     font-size: 14px;
     color: #333;
     margin-bottom: 2px;
   }
-  
+
   .notification-time {
     font-size: 12px;
     color: #999;
   }
-  
+
   &.unread {
     .notification-title {
       font-weight: bold;
@@ -391,7 +354,7 @@ onUnmounted(() => {
   text-align: center;
   color: #1890ff;
   cursor: pointer;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -401,19 +364,19 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .app-header {
     padding: 0 10px;
-    
+
     .logo-text {
       display: none;
     }
-    
+
     .header-center {
       display: none;
     }
-    
+
     .user-name {
       display: none;
     }
-    
+
     .user-arrow {
       display: none;
     }

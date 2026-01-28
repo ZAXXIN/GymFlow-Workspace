@@ -309,20 +309,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import {
-  Plus,
-  Download,
-  Search,
-  Refresh,
-  SwitchButton,
-  User,
-  MoreFilled,
-  Edit,
-  Delete,
-  Calendar,
-  TrendCharts
-} from '@element-plus/icons-vue'
 import AppTable from '@/components/common/AppTable.vue'
 import { useCheckInStore } from '@/stores/checkin'
 import { useMemberStore } from '@/stores/member'

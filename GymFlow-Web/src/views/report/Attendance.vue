@@ -345,19 +345,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import * as echarts from 'echarts'
 import AppTable from '@/components/common/AppTable.vue'
-import {
-  Download,
-  Refresh,
-  Search,
-  RefreshRight,
-  UserChecked,
-  User,
-  TrendCharts,
-  Finished
-} from '@element-plus/icons-vue'
+
 
 // 筛选参数
 const filterParams = reactive({

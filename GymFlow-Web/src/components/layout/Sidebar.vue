@@ -29,14 +29,14 @@
     </div>
     
     <!-- 底部操作 -->
-    <div class="sidebar-footer">
+    <!-- <div class="sidebar-footer">
       <div class="collapse-toggle" @click="toggleCollapse">
         <el-icon>
           <component :is="isCollapsed ? 'Expand' : 'Fold'" />
         </el-icon>
         <span v-show="!isCollapsed">收起菜单</span>
       </div>
-    </div>
+    </div> -->
   </aside>
 </template>
 
@@ -45,8 +45,8 @@ import { computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePermission } from '@/composables/usePermission'
 import { useSettingsStore } from '@/stores/settings'
-import { filterMenuByPermission } from '@/composables/usePermission'
-import SidebarItem from '../common/SidebarItem.vue'
+// import { filterMenuByPermission } from '@/composables/usePermission'
+// import SidebarItem from '../common/SidebarItem.vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 const router = useRouter()
@@ -56,13 +56,37 @@ const settingsStore = useSettingsStore()
 
 // 菜单路由配置
 const menuRoutes = computed(() => {
-  const routes = router.getRoutes().filter(route => {
+  const allRoutes = router.getRoutes()
+  // console.log('所有路由及meta：', allRoutes.map(route => ({
+  //   path: route.path,
+  //   name: route.name,
+  //   showInMenu: route.meta?.showInMenu,
+  //   hidden: route.meta?.hidden,
+  //   isMatch: route.meta?.showInMenu && !route.meta?.hidden
+  // })))
+
+  const routes = allRoutes.filter(route => {
+    // console.log('当前路由：', route.path, '，是否满足条件：', route.meta?.showInMenu && !route.meta?.hidden)
     return route.meta?.showInMenu && !route.meta?.hidden
-  })
-  
+  })  
+
+  // console.log('过滤后路由数量：', routes.length) 
   // 过滤权限
-  return filterMenuByPermission(routes as RouteRecordRaw[])
+  const permissionRoutes = filterMenuByPermission(routes as RouteRecordRaw[])
+  // console.log('权限过滤后路由数量：', permissionRoutes.length) 
+  return permissionRoutes
 })
+// const menuRoutes = computed(() => {
+//   const routes = router.getRoutes().filter(route => {
+//     console.log(route,1)
+//     return route.meta?.showInMenu && !route.meta?.hidden
+//     // return true
+//   })  
+//   // 过滤权限
+//   return filterMenuByPermission(routes as RouteRecordRaw[])
+// })
+// console.log(menuRoutes,2)
+
 
 // 当前激活的菜单
 const activeMenu = computed(() => {

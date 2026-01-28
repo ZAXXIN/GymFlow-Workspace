@@ -305,7 +305,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, type FormInstance } from 'element-plus'
 import type { 
   Course, 
   CourseCategory, 

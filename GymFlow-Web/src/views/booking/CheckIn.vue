@@ -261,21 +261,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  QrCode,
-  Camera,
-  UserFilled,
-  Location,
-  Clock,
-  Check,
-  Refresh,
-  SwitchButton,
-  Close,
-  Calendar,
-  DocumentCopy,
-  Printer
-} from '@element-plus/icons-vue'
 import { useCourseStore } from '@/stores/course'
 import { useMemberStore } from '@/stores/member'
 import { bookingApi } from '@/api/booking'

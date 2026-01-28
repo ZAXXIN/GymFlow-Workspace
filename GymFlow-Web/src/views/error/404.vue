@@ -161,8 +161,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Search, Close, House, Back, Refresh, CopyDocument } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

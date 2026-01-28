@@ -1,4 +1,4 @@
-import { http } from '@/utils/request'
+import request from '@/utils/request'
 import type { CheckIn, QueryParams, PaginatedResponse, ApiResponse } from '@/types'
 import { ApiPaths } from '@/utils/constants'
 

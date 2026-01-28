@@ -1,33 +1,32 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const memberRoutes: RouteRecordRaw[] = [
+const memberRoutes: RouteRecordRaw[] = [
   {
-    path: '/members',
+    path: '/member/list',
     name: 'MemberList',
     component: () => import('@/views/member/List.vue'),
     meta: {
       title: '会员管理',
-      icon: 'i-ep-user',
+      icon: 'User',
       requiresAuth: true,
-      roles: ['ADMIN']
+      showInMenu:true,
     }
   },
   {
-    path: '/members/create',
-    name: 'MemberCreate',
-    component: () => import('@/views/member/Form.vue'),
+    path: '/member/add',
+    name: 'MemberAdd',
+    component: () => import('@/views/member/Add.vue'),
     meta: {
       title: '新增会员',
       requiresAuth: true,
-      roles: ['ADMIN'],
       hideInMenu: true,
       parent: 'MemberList'
     }
   },
   {
-    path: '/members/:id/edit',
+    path: '/member/edit/:id',
     name: 'MemberEdit',
-    component: () => import('@/views/member/Form.vue'),
+    component: () => import('@/views/member/Add.vue'),
     meta: {
       title: '编辑会员',
       requiresAuth: true,
@@ -37,7 +36,7 @@ export const memberRoutes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/members/:id',
+    path: '/member/detail/:id',
     name: 'MemberDetail',
     component: () => import('@/views/member/Detail.vue'),
     meta: {
@@ -47,17 +46,6 @@ export const memberRoutes: RouteRecordRaw[] = [
       hideInMenu: true,
       parent: 'MemberList'
     }
-  },
-  {
-    path: '/members/:id/health',
-    name: 'MemberHealth',
-    component: () => import('@/views/member/HealthRecord.vue'),
-    meta: {
-      title: '健康档案',
-      requiresAuth: true,
-      roles: ['ADMIN'],
-      hideInMenu: true,
-      parent: 'MemberDetail'
-    }
   }
 ]
+export default memberRoutes

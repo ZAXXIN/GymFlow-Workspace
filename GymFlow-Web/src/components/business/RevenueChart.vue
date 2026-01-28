@@ -353,10 +353,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { useChart, getChartColors, getCommonChartOption } from '@/composables/useChart'
-import { Money, CreditCard, Alipay, Wechat } from '@element-plus/icons-vue'
 
 // 图表相关
 const revenueTrendChartRef = ref<HTMLElement>()

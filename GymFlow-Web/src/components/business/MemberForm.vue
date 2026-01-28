@@ -192,8 +192,8 @@
               >
                 <el-option label="正常" value="ACTIVE" />
                 <el-option label="冻结" value="FROZEN" />
-                <el-option label{"value"="EXPIRED"} label="已过期" />
-                <el-option label{"value"="CANCELLED"} label="已注销" />
+                <el-option label="已过期" value="EXPIRED" />
+                <el-option label="已注销" value="CANCELLED" />
               </el-select>
             </el-form-item>
             
@@ -313,8 +313,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
 import { useDict } from '@/composables/useDict'
 import type { MemberFormData } from '@/types'
 

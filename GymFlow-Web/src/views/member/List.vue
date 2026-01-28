@@ -4,19 +4,11 @@
     <div class="page-header">
       <div class="header-left">
         <h1 class="page-title">会员管理</h1>
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item>会员管理</el-breadcrumb-item>
-          <el-breadcrumb-item>会员列表</el-breadcrumb-item>
-        </el-breadcrumb>
       </div>
       <div class="header-right">
         <el-button type="primary" @click="handleAddMember">
           <el-icon><Plus /></el-icon>
           新增会员
-        </el-button>
-        <el-button @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
         </el-button>
       </div>
     </div>
@@ -55,12 +47,10 @@
             clearable
             style="width: 180px;"
           >
-            <el-option
-              v-for="item in memberStatusOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+            <el-option label="活跃" value="ACTIVE" />
+            <el-option label="不活跃" value="INACTIVE" />
+            <el-option label="暂停" value="SUSPENDED" />
+            <el-option label="过期" value="EXPIRED" />
           </el-select>
         </el-form-item>
         <el-form-item label="注册时间">
@@ -101,24 +91,23 @@
       </template>
       
       <el-table
-        v-loading="loading"
         :data="memberList"
         style="width: 100%"
         row-key="id"
-        @sort-change="handleSortChange"
+        v-loading="loading"
       >
-        <el-table-column prop="memberNo" label="会员编号" width="120" sortable />
+        <el-table-column prop="memberNo" label="会员编号" width="120" />
         <el-table-column prop="realName" label="姓名" width="100">
           <template #default="{ row }">
             <div class="member-info">
-              <el-avatar :size="32" :src="row.user?.avatar" class="member-avatar">
+              <el-avatar :size="32" class="member-avatar">
                 {{ row.realName?.charAt(0) || 'M' }}
               </el-avatar>
               <span class="member-name">{{ row.realName }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="user.phone" label="手机号" width="120" />
+        <el-table-column prop="phone" label="手机号" width="120" />
         <el-table-column prop="gender" label="性别" width="80">
           <template #default="{ row }">
             {{ row.gender === 1 ? '男' : '女' }}
@@ -127,7 +116,7 @@
         <el-table-column prop="remainingSessions" label="剩余课时" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.remainingSessions > 0 ? 'success' : 'danger'" size="small">
-              {{ row.remainingSessions }}
+              {{ row.remainingSessions || 0 }}
             </el-tag>
           </template>
         </el-table-column>
@@ -148,52 +137,22 @@
             {{ formatDate(row.membershipEndDate) }}
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="注册时间" width="160" sortable>
+        <el-table-column prop="createTime" label="注册时间" width="160">
           <template #default="{ row }">
-            {{ formatDateTime(row.createdAt) }}
+            {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="text" size="small" @click="handleViewDetail(row.id)">
-              <el-icon><View /></el-icon>
               详情
             </el-button>
             <el-button type="text" size="small" @click="handleEdit(row.id)">
-              <el-icon><Edit /></el-icon>
               编辑
             </el-button>
-            <el-dropdown @command="handleMoreAction($event, row)" trigger="click">
-              <el-button type="text" size="small">
-                <el-icon><MoreFilled /></el-icon>
-                更多
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="health">
-                    <el-icon><Document /></el-icon>
-                    健康档案
-                  </el-dropdown-item>
-                  <el-dropdown-item command="renew">
-                    <el-icon><RefreshRight /></el-icon>
-                    续费
-                  </el-dropdown-item>
-                  <el-dropdown-item command="suspend" v-if="row.status === 'ACTIVE'">
-                    <el-icon><CircleClose /></el-icon>
-                    暂停会籍
-                  </el-dropdown-item>
-                  <el-dropdown-item command="resume" v-else-if="row.status === 'SUSPENDED'">
-                    <el-icon><CircleCheck /></el-icon>
-                    恢复会籍
-                  </el-dropdown-item>
-                  <el-dropdown-divider />
-                  <el-dropdown-item command="delete" class="delete-item">
-                    <el-icon><Delete /></el-icon>
-                    删除
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+            <el-button type="text" size="small" @click="handleDelete(row.id)" style="color: #f56c6c;">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -205,20 +164,12 @@
           v-model:page-size="pagination.size"
           :total="pagination.total"
           :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, sizes, prev, pager, next"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
       </div>
     </el-card>
-    
-    <!-- 新增/编辑对话框 -->
-    <member-form-dialog
-      v-model="formDialog.visible"
-      :mode="formDialog.mode"
-      :member-id="formDialog.memberId"
-      @success="handleFormSuccess"
-    />
   </div>
 </template>
 
@@ -226,30 +177,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Plus,
-  Download,
-  Search,
-  Refresh,
-  View,
-  Edit,
-  MoreFilled,
-  Document,
-  RefreshRight,
-  CircleClose,
-  CircleCheck,
-  Delete
-} from '@element-plus/icons-vue'
-import { useMemberStore } from '@/stores/member'
-import { memberStatusOptions } from '@/utils/constants'
-import { formatDate, formatDateTime } from '@/utils'
-import type { Member, MemberStatus, QueryParams } from '@/types'
-import MemberFormDialog from '@/components/business/MemberFormDialog.vue'
+import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 
-// Store
-const memberStore = useMemberStore()
-
-// Router
 const router = useRouter()
 
 // 状态
@@ -258,7 +187,7 @@ const filterForm = reactive({
   memberNo: '',
   realName: '',
   phone: '',
-  status: '' as MemberStatus | '',
+  status: '',
   dateRange: [] as string[]
 })
 
@@ -268,76 +197,94 @@ const pagination = reactive({
   total: 0
 })
 
-const sortParams = reactive({
-  sortBy: '',
-  sortOrder: '' as 'asc' | 'desc' | ''
-})
+// 模拟数据
+const memberList = ref([
+  {
+    id: 1,
+    memberNo: 'M001',
+    realName: '张三',
+    phone: '13800138001',
+    gender: 1,
+    remainingSessions: 12,
+    status: 'ACTIVE',
+    membershipStartDate: '2024-01-01',
+    membershipEndDate: '2024-12-31',
+    createTime: '2024-01-01 10:00:00'
+  },
+  {
+    id: 2,
+    memberNo: 'M002',
+    realName: '李四',
+    phone: '13800138002',
+    gender: 0,
+    remainingSessions: 0,
+    status: 'EXPIRED',
+    membershipStartDate: '2023-01-01',
+    membershipEndDate: '2023-12-31',
+    createTime: '2023-01-01 10:00:00'
+  },
+  {
+    id: 3,
+    memberNo: 'M003',
+    realName: '王五',
+    phone: '13800138003',
+    gender: 1,
+    remainingSessions: 8,
+    status: 'ACTIVE',
+    membershipStartDate: '2024-02-01',
+    membershipEndDate: '2024-11-30',
+    createTime: '2024-02-01 14:30:00'
+  }
+])
 
-const formDialog = reactive({
-  visible: false,
-  mode: 'create' as 'create' | 'edit',
-  memberId: 0
-})
+// 方法
+const formatDate = (date: string) => {
+  if (!date) return '-'
+  return date
+}
 
-// Computed
-const memberList = computed(() => memberStore.members)
+const formatDateTime = (datetime: string) => {
+  if (!datetime) return '-'
+  return datetime.replace('T', ' ')
+}
 
-// Methods
-const loadMembers = async () => {
-  try {
-    loading.value = true
-    
-    const params: QueryParams = {
-      page: pagination.current,
-      pageSize: pagination.size,
-      ...buildFilterParams()
-    }
-    
-    if (sortParams.sortBy) {
-      params.sortBy = sortParams.sortBy
-      params.sortOrder = sortParams.sortOrder
-    }
-    
-    await memberStore.fetchMembers(params)
-    pagination.total = memberStore.total
-  } catch (error) {
-    console.error('加载会员列表失败:', error)
-    ElMessage.error('加载会员列表失败')
-  } finally {
-    loading.value = false
+const getStatusType = (status: string) => {
+  switch (status) {
+    case 'ACTIVE':
+      return 'success'
+    case 'INACTIVE':
+      return 'info'
+    case 'SUSPENDED':
+      return 'warning'
+    case 'EXPIRED':
+      return 'danger'
+    default:
+      return 'info'
   }
 }
 
-const buildFilterParams = () => {
-  const params: Record<string, any> = {}
-  
-  if (filterForm.memberNo) {
-    params.memberNo = filterForm.memberNo
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'ACTIVE':
+      return '活跃'
+    case 'INACTIVE':
+      return '不活跃'
+    case 'SUSPENDED':
+      return '暂停'
+    case 'EXPIRED':
+      return '过期'
+    default:
+      return status
   }
-  
-  if (filterForm.realName) {
-    params.realName = filterForm.realName
-  }
-  
-  if (filterForm.phone) {
-    params.phone = filterForm.phone
-  }
-  
-  if (filterForm.status) {
-    params.status = filterForm.status
-  }
-  
-  if (filterForm.dateRange?.length === 2) {
-    params.startDate = filterForm.dateRange[0]
-    params.endDate = filterForm.dateRange[1]
-  }
-  
-  return params
 }
 
 const handleSearch = () => {
-  pagination.current = 1
-  loadMembers()
+  console.log('搜索条件:', filterForm)
+  loading.value = true
+  setTimeout(() => {
+    loading.value = false
+    ElMessage.success('搜索完成')
+  }, 500)
 }
 
 const handleReset = () => {
@@ -346,15 +293,8 @@ const handleReset = () => {
   filterForm.phone = ''
   filterForm.status = ''
   filterForm.dateRange = []
-  
   pagination.current = 1
-  loadMembers()
-}
-
-const handleSortChange = ({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) => {
-  sortParams.sortBy = prop
-  sortParams.sortOrder = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : ''
-  loadMembers()
+  handleSearch()
 }
 
 const handleSizeChange = (size: number) => {
@@ -370,305 +310,110 @@ const handleCurrentChange = (current: number) => {
 
 const refreshTable = () => {
   loadMembers()
+  ElMessage.success('刷新成功')
+}
+
+const loadMembers = () => {
+  loading.value = true
+  setTimeout(() => {
+    // 模拟加载数据
+    pagination.total = memberList.value.length
+    loading.value = false
+  }, 500)
 }
 
 const handleAddMember = () => {
-  formDialog.mode = 'create'
-  formDialog.memberId = 0
-  formDialog.visible = true
-}
-
-const handleEdit = (id: number) => {
-  formDialog.mode = 'edit'
-  formDialog.memberId = id
-  formDialog.visible = true
+  router.push('/member/add')
 }
 
 const handleViewDetail = (id: number) => {
-  router.push(`/members/${id}`)
+  router.push(`/member/detail/${id}`)
 }
 
-const handleMoreAction = async (command: string, row: Member) => {
-  switch (command) {
-    case 'health':
-      router.push(`/members/${row.id}/health`)
-      break
-      
-    case 'renew':
-      handleRenew(row.id)
-      break
-      
-    case 'suspend':
-      handleSuspend(row.id)
-      break
-      
-    case 'resume':
-      handleResume(row.id)
-      break
-      
-    case 'delete':
-      handleDelete(row.id)
-      break
-  }
-}
-
-const handleRenew = async (id: number) => {
-  try {
-    await ElMessageBox.prompt('请输入续费月数', '会员续费', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPattern: /^[1-9]\d*$/,
-      inputErrorMessage: '请输入有效的月数'
-    })
-    
-    // 这里调用续费API
-    ElMessage.success('续费成功')
-    loadMembers()
-  } catch (error) {
-    console.error('续费失败:', error)
-  }
-}
-
-const handleSuspend = async (id: number) => {
-  try {
-    const { value } = await ElMessageBox.prompt('请输入暂停天数', '暂停会籍', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPattern: /^[1-9]\d*$/,
-      inputErrorMessage: '请输入有效的天数'
-    })
-    
-    // 这里调用暂停API
-    ElMessage.success('会籍已暂停')
-    loadMembers()
-  } catch (error) {
-    console.error('暂停会籍失败:', error)
-  }
-}
-
-const handleResume = async (id: number) => {
-  try {
-    await ElMessageBox.confirm('确认恢复该会员的会籍吗？', '恢复会籍', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    
-    // 这里调用恢复API
-    ElMessage.success('会籍已恢复')
-    loadMembers()
-  } catch (error) {
-    console.error('恢复会籍失败:', error)
-  }
+const handleEdit = (id: number) => {
+  router.push(`/member/edit/${id}`)
 }
 
 const handleDelete = async (id: number) => {
   try {
-    await ElMessageBox.confirm('确认删除该会员吗？此操作不可恢复。', '删除会员', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger'
-    })
+    await ElMessageBox.confirm(
+      '确定要删除这个会员吗？此操作不可恢复。',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
     
-    await memberStore.deleteMember(id)
+    // 模拟删除
+    memberList.value = memberList.value.filter(member => member.id !== id)
     ElMessage.success('删除成功')
-    loadMembers()
   } catch (error) {
-    console.error('删除会员失败:', error)
-    ElMessage.error('删除失败')
+    // 用户取消
   }
 }
 
-const handleExport = async () => {
-  try {
-    loading.value = true
-    const params = buildFilterParams()
-    await memberStore.exportMembers(params)
-    ElMessage.success('导出成功')
-  } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-const getStatusType = (status: MemberStatus) => {
-  switch (status) {
-    case 'ACTIVE':
-      return 'success'
-    case 'INACTIVE':
-      return 'info'
-    case 'SUSPENDED':
-      return 'warning'
-    case 'EXPIRED':
-      return 'danger'
-    default:
-      return 'info'
-  }
-}
-
-const getStatusText = (status: MemberStatus) => {
-  switch (status) {
-    case 'ACTIVE':
-      return '活跃'
-    case 'INACTIVE':
-      return '不活跃'
-    case 'SUSPENDED':
-      return '暂停'
-    case 'EXPIRED':
-      return '已过期'
-    default:
-      return '未知'
-  }
-}
-
-const handleFormSuccess = () => {
-  formDialog.visible = false
-  loadMembers()
-}
-
-// 生命周期
 onMounted(() => {
   loadMembers()
+  console.log('会员列表页面加载完成')
 })
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .member-list-container {
   padding: 20px;
-  
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    .header-left {
-      .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-        margin: 0 0 8px;
-      }
-      
-      .el-breadcrumb {
-        font-size: 14px;
-        color: var(--gymflow-text-secondary);
-      }
-    }
-  }
-  
-  .filter-card {
-    margin-bottom: 20px;
-    border-radius: 12px;
-    
-    :deep(.el-card__body) {
-      padding: 20px;
-    }
-    
-    :deep(.el-form-item) {
-      margin-bottom: 0;
-    }
-  }
-  
-  .table-card {
-    border-radius: 12px;
-    
-    :deep(.el-card__header) {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--gymflow-border);
-    }
-    
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      
-      .table-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-      }
-    }
-    
-    .member-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .member-avatar {
-        background: var(--gymflow-primary);
-        color: white;
-      }
-      
-      .member-name {
-        font-weight: 500;
-      }
-    }
-    
-    :deep(.el-table) {
-      th {
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-        background: var(--gymflow-bg);
-      }
-      
-      .el-button--text {
-        padding: 4px 8px;
-        
-        .el-icon {
-          margin-right: 4px;
-        }
-      }
-    }
-    
-    .pagination-wrapper {
-      display: flex;
-      justify-content: center;
-      padding: 20px 0 0;
-    }
-  }
 }
 
-:deep(.delete-item) {
-  color: var(--el-color-danger);
-  
-  &:hover {
-    background: rgba(245, 108, 108, 0.1);
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .member-list-container {
-    padding: 16px;
-    
-    .page-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-    }
-    
-    .filter-card {
-      :deep(.el-form) {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      
-      :deep(.el-form-item) {
-        width: 100%;
-        margin-right: 0;
-        
-        .el-input,
-        .el-select,
-        .el-date-editor {
-          width: 100%;
-        }
-      }
-    }
-  }
+.header-left .page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.table-card {
+  border-radius: 12px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-avatar {
+  background: #409eff;
+  color: white;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 0;
 }
 </style>

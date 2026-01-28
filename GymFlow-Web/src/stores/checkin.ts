@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { CheckIn, QueryParams, PaginatedResponse } from '@/types'
-import { checkInApi } from '@/api/checkin'
+import { checkInApi } from '@/api/checkIn'
 
 export const useCheckInStore = defineStore('checkin', () => {
   // 状态

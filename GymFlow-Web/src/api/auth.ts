@@ -1,47 +1,36 @@
-import { http } from '@/utils/request'
-import type { LoginDTO, LoginVO, User, ApiResponse } from '@/types'
+import request from '@/utils/request'
+import type { LoginDTO, LoginResultDTO, ApiResponse } from '@/types/auth'
 import { ApiPaths } from '@/utils/constants'
 
 export const authApi = {
-  /**
+   /**
    * 用户登录
    */
-  login(data: LoginDTO): Promise<LoginVO> {
-    return http.post(ApiPaths.LOGIN, data)
+  login(data: LoginDTO): Promise<ApiResponse<LoginResultDTO>>{
+    return request({
+      url: '/auth/login',
+      method: 'POST',
+      data
+    })
   },
 
   /**
    * 用户登出
    */
-  logout(): Promise<void> {
-    return http.post(ApiPaths.LOGOUT)
+  logout(): Promise<ApiResponse>{
+    return request({
+      url: '/auth/logout',
+      method: 'POST'
+    })
   },
 
   /**
-   * 刷新token
+   * 获取用户信息
    */
-  refreshToken(): Promise<{ token: string }> {
-    return http.post(ApiPaths.REFRESH_TOKEN)
-  },
-
-  /**
-   * 获取当前用户信息
-   */
-  getUserInfo(): Promise<User> {
-    return http.get(ApiPaths.USER_INFO)
-  },
-
-  /**
-   * 修改密码
-   */
-  changePassword(oldPassword: string, newPassword: string): Promise<void> {
-    return http.post('/auth/change-password', { oldPassword, newPassword })
-  },
-
-  /**
-   * 重置密码
-   */
-  resetPassword(username: string, email: string): Promise<void> {
-    return http.post('/auth/reset-password', { username, email })
+  getUserInfo(): Promise<ApiResponse>{
+    return request({
+      url: '/user/info',
+      method: 'GET'
+    })
   }
 }

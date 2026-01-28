@@ -44,8 +44,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SidebarItem from './SidebarItem.vue'
 import { useSidebarStore } from '@/stores/sidebar'
 import { usePermissionStore } from '@/stores/permission'

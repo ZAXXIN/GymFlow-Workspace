@@ -1,6 +1,6 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const bookingRoutes: RouteRecordRaw[] = [
+const bookingRoutes: RouteRecordRaw[] = [
   {
     path: '/bookings',
     name: 'BookingList',
@@ -9,6 +9,7 @@ export const bookingRoutes: RouteRecordRaw[] = [
       title: '课程预约',
       icon: 'i-ep-timer',
       requiresAuth: true,
+      showInMenu:true,
       roles: ['ADMIN', 'COACH']
     }
   },
@@ -20,7 +21,9 @@ export const bookingRoutes: RouteRecordRaw[] = [
       title: '签到管理',
       icon: 'i-ep-check',
       requiresAuth: true,
+      showInMenu:true,
       roles: ['ADMIN', 'COACH']
     }
   }
 ]
+export default bookingRoutes

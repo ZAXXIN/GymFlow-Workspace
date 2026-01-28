@@ -203,21 +203,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { ElUpload, ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Upload,
-  UploadFilled,
-  View,
-  Download,
-  Delete,
-  CopyDocument,
-  Picture,
-  Document,
-  VideoCamera,
-  Music,
-  Files
-} from '@element-plus/icons-vue'
-import type { UploadProps, UploadFile, UploadRawFile } from 'element-plus'
+
 
 interface UploadPropsExtends {
   // 基础配置

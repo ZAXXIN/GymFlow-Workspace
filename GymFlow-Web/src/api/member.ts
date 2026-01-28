@@ -1,4 +1,4 @@
-import { http } from '@/utils/request'
+import request from '@/utils/request'
 import type { Member, QueryParams, PaginatedResponse, HealthRecord, ApiResponse } from '@/types'
 import { ApiPaths } from '@/utils/constants'
 

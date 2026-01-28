@@ -405,18 +405,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  ArrowDown,
-  Calendar,
-  Money,
-  Star,
-  Finished,
-  Search,
-  Clock,
-  Location
-} from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
 import AppTable from '@/components/common/AppTable.vue'
 import type { 
   Coach, 

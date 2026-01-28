@@ -72,6 +72,7 @@ const resolvePath = (routePath: string) => {
 
 // 处理菜单点击
 const handleClick = () => {
+  console.log('导航到:', props.path)
   if (props.item.meta?.fullPath) {
     router.push(props.item.meta.fullPath)
   } else {

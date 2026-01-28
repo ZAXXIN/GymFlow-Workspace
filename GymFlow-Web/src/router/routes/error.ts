@@ -1,6 +1,6 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const errorRoutes: RouteRecordRaw[] = [
+const errorRoutes: RouteRecordRaw[] = [
   {
     path: '/403',
     name: 'Forbidden',
@@ -26,3 +26,4 @@ export const errorRoutes: RouteRecordRaw[] = [
     redirect: '/404'
   }
 ]
+export default errorRoutes

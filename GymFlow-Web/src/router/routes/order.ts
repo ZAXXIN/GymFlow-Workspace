@@ -1,13 +1,14 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const orderRoutes: RouteRecordRaw[] = [
+const orderRoutes: RouteRecordRaw[] = [
   {
     path: '/orders',
     name: 'OrderList',
     component: () => import('@/views/order/List.vue'),
     meta: {
       title: '订单管理',
-      icon: 'i-ep-shopping-cart',
+      icon: 'Ticket',
+      showInMenu:true,
       requiresAuth: true,
       roles: ['ADMIN']
     }
@@ -49,3 +50,4 @@ export const orderRoutes: RouteRecordRaw[] = [
     }
   }
 ]
+export default orderRoutes

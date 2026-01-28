@@ -1,14 +1,15 @@
-import { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 
-export const courseRoutes: RouteRecordRaw[] = [
+const courseRoutes: RouteRecordRaw[] = [
   {
     path: '/courses',
     name: 'CourseList',
     component: () => import('@/views/course/List.vue'),
     meta: {
       title: '课程管理',
-      icon: 'i-ep-calendar',
+      icon: 'Calendar',
       requiresAuth: true,
+      showInMenu:true,
       roles: ['ADMIN', 'COACH']
     }
   },
@@ -60,3 +61,4 @@ export const courseRoutes: RouteRecordRaw[] = [
     }
   }
 ]
+export default courseRoutes

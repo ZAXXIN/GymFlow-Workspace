@@ -449,19 +449,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Printer,
-  MoreFilled,
-  Check,
-  Finished,
-  Close,
-  RefreshLeft,
-  Edit,
-  Delete,
-  Phone,
-  Message
-} from '@element-plus/icons-vue'
 import { useOrderStore } from '@/stores/order'
 import { useAuthStore } from '@/stores/auth'
 import { formatDateTime } from '@/utils'

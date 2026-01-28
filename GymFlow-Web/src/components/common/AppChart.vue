@@ -120,14 +120,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import * as echarts from 'echarts'
 import type { ECharts, EChartsOption, SetOptionOpts } from 'echarts'
-import { ElMessage } from 'element-plus'
-import {
-  Grid,
-  ArrowDown,
-  Refresh,
-  Download,
-  FullScreen
-} from '@element-plus/icons-vue'
+
 
 interface ChartOption extends EChartsOption {
   // 扩展属性

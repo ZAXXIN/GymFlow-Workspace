@@ -282,8 +282,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type UploadProps } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import type { CoachFormData } from '@/types'
 
 const router = useRouter()

@@ -301,9 +301,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
 import AppUpload from '../common/AppUpload.vue'
 import type { CoachFormData } from '@/types'
 

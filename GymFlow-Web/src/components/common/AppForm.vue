@@ -185,8 +185,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, nextTick } from 'vue'
-import { ElForm, ElMessage, type FormRules } from 'element-plus'
-import { QuestionFilled } from '@element-plus/icons-vue'
 
 interface FormItem {
   // 基础属性

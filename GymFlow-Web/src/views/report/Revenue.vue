@@ -345,21 +345,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
-import {
-  Download,
-  Document,
-  Refresh,
-  Search,
-  RefreshRight,
-  Money,
-  ShoppingCart,
-  Histogram,
-  User,
-  Top,
-  Bottom
-} from '@element-plus/icons-vue'
 
 // 筛选参数
 const filterParams = reactive({

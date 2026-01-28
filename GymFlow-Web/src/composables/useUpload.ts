@@ -1,6 +1,4 @@
 import { ref, reactive } from 'vue'
-import { ElMessage, ElNotification } from 'element-plus'
-import type { UploadProps, UploadFile, UploadFiles, UploadRawFile } from 'element-plus'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 
