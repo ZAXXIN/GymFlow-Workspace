@@ -1,18 +1,41 @@
-spring:
-  profiles:
-    active: dev  # 默认使用开发环境
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
-
 server:
   port: 8080
   servlet:
     context-path: /api
 
-# 禁用SpringDoc/Swagger
+spring:
+  application:
+    name: gymflow-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/gymflow?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+
+# SpringDoc配置
 springdoc:
-  api-docs:
-    enabled: false
+#  api-docs:
+#    path: /v3/api-docs
   swagger-ui:
-    enabled: false
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# JWT配置
+jwt:
+  secret-key: gymflow-secret-key-2024
+  expiration: 86400000
+
+# 日志配置
+logging:
+  level:
+    com.gymflow: debug
+    org.springdoc: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"

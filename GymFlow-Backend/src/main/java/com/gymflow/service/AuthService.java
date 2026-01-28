@@ -1,24 +1,23 @@
 package com.gymflow.service;
 
 import com.gymflow.dto.LoginDTO;
-import com.gymflow.dto.RegisterDTO;
-import com.gymflow.utils.Result;
-import org.springframework.stereotype.Service;
+import com.gymflow.dto.LoginResultDTO;
 
-import javax.servlet.http.HttpServletRequest;
-
-@Service
+//登录服务接口
 public interface AuthService {
 
-    Result login(LoginDTO loginDTO);
+    /**
+     * 用户登录
+     */
+    LoginResultDTO login(LoginDTO loginDTO);
 
-    Result register(RegisterDTO registerDTO);
+    /**
+     * 用户登出
+     */
+    void logout(String token);
 
-    Result logout(HttpServletRequest request);
-
-    Result getCurrentUserInfo(HttpServletRequest request);
-
-    Result changePassword(String oldPassword, String newPassword, HttpServletRequest request);
-
-    Result resetPassword(Long userId, String newPassword, HttpServletRequest request);
+    /**
+     * 刷新token
+     */
+    LoginResultDTO refreshToken(String oldToken);
 }

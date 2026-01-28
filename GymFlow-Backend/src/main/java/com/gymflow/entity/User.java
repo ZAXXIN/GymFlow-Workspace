@@ -1,57 +1,56 @@
 package com.gymflow.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.gymflow.enums.UserRole;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @TableName("user")
-public class User implements Serializable {
+@Schema(description = "用户实体")
+public class User {
 
-    private static final long serialVersionUID = 1L;
-
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(type = IdType.AUTO)
+    @Schema(description = "用户ID")
     private Long id;
 
-    @TableField("username")
+    @Schema(description = "用户名")
     private String username;
 
-    @TableField("password")
+    @Schema(description = "密码")
     private String password;
 
-    @TableField("phone")
+    @Schema(description = "手机号")
     private String phone;
 
-    @TableField("email")
-    private String email;
+    @TableField("real_name")
+    @Schema(description = "真实姓名")
+    private String realName;
 
-    @TableField("avatar")
-    private String avatar;
+    @Schema(description = "性别：0-女，1-男")
+    private Integer gender;
 
-    @TableField("role")
-    private UserRole role;
+    @Schema(description = "生日")
+    private LocalDate birthday;
 
-    @TableField("status")
+    @Schema(description = "部门")
+    private String department;
+
+    @Schema(description = "职位")
+    private String position;
+
+    @Schema(description = "角色：0-老板，1-前台，2-教练，3-会员")
+    private Integer role;
+
+    @Schema(description = "状态：0-禁用，1-正常")
     private Integer status;
 
-    @TableField("last_login_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime lastLoginTime;
-
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
-    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")
     private LocalDateTime updateTime;
-
-    @TableLogic
-    @TableField("deleted")
-    private Integer deleted;
 }
