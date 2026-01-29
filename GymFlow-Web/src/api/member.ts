@@ -1,113 +1,186 @@
 import request from '@/utils/request'
-import type { Member, QueryParams, PaginatedResponse, HealthRecord, ApiResponse } from '@/types'
-import { ApiPaths } from '@/utils/constants'
+import type { ApiResponse } from '@/types/common'
+import type { 
+  MemberQueryDTO,
+  MemberListVO,
+  PageResult,
+  MemberFullDTO,
+  MemberBasicDTO,
+  HealthRecordDTO,
+  MemberCardDTO,
+  MemberAddRequest,
+  MemberUpdateRequest
+} from '@/types/member'
 
 export const memberApi = {
   /**
-   * 获取会员列表
+   * 分页查询会员列表
    */
-  getMembers(params?: QueryParams): Promise<PaginatedResponse<Member>> {
-    return http.get(ApiPaths.MEMBERS, { params })
+  getMemberList(data: MemberQueryDTO): Promise<ApiResponse<PageResult<MemberListVO>>> {
+    return request({
+      url: '/member/list',
+      method: 'POST',
+      data
+    })
   },
 
   /**
    * 获取会员详情
    */
-  getMemberById(id: number): Promise<Member> {
-    return http.get(ApiPaths.MEMBER_DETAIL(id))
-  },
-
-  /**
-   * 创建会员
-   */
-  createMember(data: Partial<Member>): Promise<Member> {
-    return http.post(ApiPaths.MEMBERS, data)
-  },
-
-  /**
-   * 更新会员
-   */
-  updateMember(id: number, data: Partial<Member>): Promise<Member> {
-    return http.put(ApiPaths.MEMBER_DETAIL(id), data)
-  },
-
-  /**
-   * 删除会员
-   */
-  deleteMember(id: number): Promise<void> {
-    return http.delete(ApiPaths.MEMBER_DETAIL(id))
-  },
-
-  /**
-   * 获取会员统计
-   */
-  getStatistics(): Promise<any> {
-    return http.get(ApiPaths.MEMBER_STATISTICS)
-  },
-
-  /**
-   * 导出会员数据
-   */
-  exportMembers(params?: QueryParams): Promise<Blob> {
-    return http.get('/members/export', {
-      params,
-      responseType: 'blob'
+  getMemberDetail(memberId: number): Promise<ApiResponse<MemberFullDTO>> {
+    return request({
+      url: `/member/detail/${memberId}`,
+      method: 'GET'
     })
   },
 
   /**
-   * 获取会员健康档案
+   * 添加会员
    */
-  getHealthRecords(memberId: number): Promise<HealthRecord[]> {
-    return http.get(`/members/${memberId}/health-records`)
+  addMember(data: MemberAddRequest): Promise<ApiResponse<number>> {
+    return request({
+      url: '/member/add',
+      method: 'POST',
+      data
+    })
   },
 
   /**
-   * 添加健康记录
+   * 更新会员信息
    */
-  addHealthRecord(memberId: number, data: Partial<HealthRecord>): Promise<HealthRecord> {
-    return http.post(`/members/${memberId}/health-records`, data)
+  updateMember(memberId: number, data: MemberUpdateRequest): Promise<ApiResponse> {
+    return request({
+      url: `/member/update/${memberId}`,
+      method: 'PUT',
+      data
+    })
   },
 
   /**
-   * 更新健康记录
+   * 删除会员（软删除）
    */
-  updateHealthRecord(memberId: number, recordId: number, data: Partial<HealthRecord>): Promise<HealthRecord> {
-    return http.put(`/members/${memberId}/health-records/${recordId}`, data)
+  deleteMember(memberId: number): Promise<ApiResponse> {
+    return request({
+      url: `/member/delete/${memberId}`,
+      method: 'DELETE'
+    })
   },
 
   /**
-   * 删除健康记录
+   * 批量删除会员
    */
-  deleteHealthRecord(memberId: number, recordId: number): Promise<void> {
-    return http.delete(`/members/${memberId}/health-records/${recordId}`)
+  batchDeleteMember(memberIds: number[]): Promise<ApiResponse> {
+    return request({
+      url: '/member/batch-delete',
+      method: 'POST',
+      data: memberIds
+    })
   },
 
   /**
-   * 获取会员训练计划
+   * 启用/禁用会员
    */
-  getTrainingPlans(memberId: number): Promise<any[]> {
-    return http.get(`/members/${memberId}/training-plans`)
+  // changeMemberStatus(memberId: number, status: number): Promise<ApiResponse> {
+  //   return request({
+  //     url: `/member/change-status/${memberId}`,
+  //     method: 'PUT',
+  //     params: { status }
+  //   })
+  // },
+
+  /**
+   * 续费会员卡
+   */
+  renewMemberCard(memberId: number, data: MemberCardDTO): Promise<ApiResponse> {
+    return request({
+      url: `/member/renew-card/${memberId}`,
+      method: 'POST',
+      data
+    })
   },
 
   /**
-   * 续费会籍
+   * 获取健康档案列表
    */
-  renewMembership(memberId: number, months: number): Promise<Member> {
-    return http.post(`/members/${memberId}/renew`, { months })
+  getHealthRecords(memberId: number): Promise<ApiResponse<HealthRecordDTO[]>> {
+    return request({
+      url: `/member/health-records/${memberId}`,
+      method: 'GET'
+    })
   },
 
   /**
-   * 暂停会籍
+   * 添加健康档案
    */
-  suspendMembership(memberId: number, days: number, reason: string): Promise<Member> {
-    return http.post(`/members/${memberId}/suspend`, { days, reason })
+  addHealthRecord(memberId: number, data: HealthRecordDTO): Promise<ApiResponse> {
+    return request({
+      url: `/member/add-health-record/${memberId}`,
+      method: 'POST',
+      data
+    })
   },
 
   /**
-   * 恢复会籍
+   * 检查用户名是否存在
    */
-  resumeMembership(memberId: number): Promise<Member> {
-    return http.post(`/members/${memberId}/resume`)
-  }
+  checkUsernameExists(username: string): Promise<ApiResponse<boolean>> {
+    return request({
+      url: `/member/check-username/${username}`,
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 检查手机号是否存在
+   */
+  // checkPhoneExists(phone: string): Promise<ApiResponse<boolean>> {
+  //   return request({
+  //     url: `/api/member/check-phone/${phone}`,
+  //     method: 'GET'
+  //   })
+  // },
+
+  /**
+   * 导出会员列表
+   */
+  // exportMembers(data: MemberQueryDTO): Promise<Blob> {
+  //   return request({
+  //     url: '/api/member/export',
+  //     method: 'POST',
+  //     data,
+  //     responseType: 'blob'
+  //   })
+  // },
+
+  /**
+   * 导入会员数据
+   */
+  // importMembers(file: File): Promise<ApiResponse> {
+  //   const formData = new FormData()
+  //   formData.append('file', file)
+    
+  //   return request({
+  //     url: '/api/member/import',
+  //     method: 'POST',
+  //     data: formData,
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data'
+  //     }
+  //   })
+  // },
+
+  /**
+   * 获取会员统计数据
+   */
+  // getMemberStats(): Promise<ApiResponse<{
+  //   totalMembers: number
+  //   activeMembers: number
+  //   newMembersToday: number
+  //   expiringMembers: number
+  // }>> {
+  //   return request({
+  //     url: '/api/member/stats',
+  //     method: 'GET'
+  //   })
+  // }
 }

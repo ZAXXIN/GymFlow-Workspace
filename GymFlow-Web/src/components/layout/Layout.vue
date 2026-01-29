@@ -9,7 +9,6 @@
       <div class="header-right">
         <el-dropdown>
           <div class="user-info">
-            <el-avatar :size="32" :src="userInfo.avatar" />
             <span class="username">{{ userInfo.realName || userInfo.username }}</span>
             <el-icon><ArrowDown /></el-icon>
           </div>
@@ -289,6 +288,7 @@ onMounted(() => {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+  color: #fff;
 }
 
 .header-right {

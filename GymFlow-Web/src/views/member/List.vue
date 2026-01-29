@@ -15,7 +15,7 @@
     
     <!-- 筛选条件 -->
     <el-card class="filter-card">
-      <el-form :model="filterForm" inline label-width="80px">
+      <el-form :model="filterForm" inline>
         <el-form-item label="会员编号">
           <el-input
             v-model="filterForm.memberNo"
@@ -40,35 +40,35 @@
             style="width: 180px;"
           />
         </el-form-item>
-        <el-form-item label="会员状态">
+        <el-form-item label="会员卡状态">
           <el-select
-            v-model="filterForm.status"
+            v-model="filterForm.cardStatus"
             placeholder="请选择状态"
             clearable
             style="width: 180px;"
           >
-            <el-option label="活跃" value="ACTIVE" />
-            <el-option label="不活跃" value="INACTIVE" />
-            <el-option label="暂停" value="SUSPENDED" />
+            <el-option label="有效" value="ACTIVE" />
             <el-option label="过期" value="EXPIRED" />
+            <el-option label="用完" value="USED_UP" />
           </el-select>
         </el-form-item>
-        <el-form-item label="注册时间">
+        <!-- <el-form-item label="注册时间">
           <el-date-picker
             v-model="filterForm.dateRange"
             type="daterange"
+            value-format="YYYY-MM-DD"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
             style="width: 240px;"
           />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">
+          <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon><Search /></el-icon>
             查询
           </el-button>
-          <el-button @click="handleReset">
+          <el-button @click="handleReset" :disabled="loading">
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
@@ -82,7 +82,7 @@
         <div class="table-header">
           <span class="table-title">会员列表</span>
           <div class="table-actions">
-            <el-button text @click="refreshTable">
+            <el-button text @click="refreshTable" :loading="loading">
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
@@ -91,16 +91,18 @@
       </template>
       
       <el-table
-        :data="memberList"
+        :data="memberStore.members"
         style="width: 100%"
         row-key="id"
-        v-loading="loading"
+        v-loading="memberStore.loading"
+        stripe
+        border
       >
-        <el-table-column prop="memberNo" label="会员编号" width="120" />
+        <el-table-column prop="memberNo" label="会员编号" width="120" fixed="left" />
         <el-table-column prop="realName" label="姓名" width="100">
           <template #default="{ row }">
             <div class="member-info">
-              <el-avatar :size="32" class="member-avatar">
+              <el-avatar :size="32" class="member-avatar" :style="{ backgroundColor: getRandomColor() }">
                 {{ row.realName?.charAt(0) || 'M' }}
               </el-avatar>
               <span class="member-name">{{ row.realName }}</span>
@@ -110,31 +112,67 @@
         <el-table-column prop="phone" label="手机号" width="120" />
         <el-table-column prop="gender" label="性别" width="80">
           <template #default="{ row }">
-            {{ row.gender === 1 ? '男' : '女' }}
+            {{ row.gender === 1 ? '男' : row.gender === 0 ? '女' : '未知' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="age" label="年龄" width="80" align="center" />
+        <el-table-column prop="cardTypeDesc" label="会员卡类型" width="120">
+          <template #default="{ row }">
+            <el-tag :type="getCardTypeTag(row.cardType)" size="small">
+              {{ row.cardTypeDesc || '无' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="cardStatusDesc" label="会员卡状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="getCardStatusTag(row.cardStatus)" size="small">
+              {{ row.cardStatusDesc || '无' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="remainingSessions" label="剩余课时" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.remainingSessions > 0 ? 'success' : 'danger'" size="small">
-              {{ row.remainingSessions || 0 }}
+            <div v-if="row.remainingSessions > 0">
+              <el-tag type="success" size="small">
+                {{ row.remainingSessions }}
+              </el-tag>
+            </div>
+            <div v-else-if="row.cardType === 0 || row.cardType === 1">
+              <el-tag type="danger" size="small">0</el-tag>
+            </div>
+            <div v-else>
+              <span class="no-sessions">-</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="cardEndDate" label="有效期至" width="120">
+          <template #default="{ row }">
+            <div v-if="row.cardEndDate">
+              {{ formatDate(row.cardEndDate) }}
+            </div>
+            <div v-else>
+              <span class="no-date">-</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="personalCoachName" label="专属教练" width="120" />
+        <el-table-column prop="totalCheckins" label="总签到" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag type="info" size="small">
+              {{ row.totalCheckins || 0 }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" align="center">
+        <el-table-column prop="totalCourseHours" label="总课时" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
-              {{ getStatusText(row.status) }}
+            <el-tag type="warning" size="small">
+              {{ row.totalCourseHours || 0 }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="membershipStartDate" label="会籍开始" width="120">
+        <el-table-column prop="totalSpent" label="累计消费" width="120" align="right">
           <template #default="{ row }">
-            {{ formatDate(row.membershipStartDate) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="membershipEndDate" label="会籍结束" width="120">
-          <template #default="{ row }">
-            {{ formatDate(row.membershipEndDate) }}
+            <span class="amount">¥{{ formatAmount(row.totalSpent) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="注册时间" width="160">
@@ -144,15 +182,27 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="text" size="small" @click="handleViewDetail(row.id)">
+            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+              <el-icon><View /></el-icon>
               详情
             </el-button>
-            <el-button type="text" size="small" @click="handleEdit(row.id)">
+            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
+              <el-icon><Edit /></el-icon>
               编辑
             </el-button>
-            <el-button type="text" size="small" @click="handleDelete(row.id)" style="color: #f56c6c;">
-              删除
-            </el-button>
+            <el-popconfirm
+              title="确定要删除这个会员吗？"
+              @confirm="handleDelete(row.id)"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+            >
+              <template #reference>
+                <el-button type="danger" link size="small">
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-button>
+              </template>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -160,13 +210,14 @@
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
-          v-model:current-page="pagination.current"
-          v-model:page-size="pagination.size"
-          :total="pagination.total"
+          v-model:current-page="memberStore.pageInfo.pageNum"
+          v-model:page-size="memberStore.pageInfo.pageSize"
+          :total="memberStore.total"
           :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next"
+          layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
+          :disabled="loading"
         />
       </div>
     </el-card>
@@ -177,70 +228,31 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search, Refresh } from '@element-plus/icons-vue'
+import { Plus, Search, Refresh, View, Edit, Delete } from '@element-plus/icons-vue'
+import { useMemberStore } from '@/stores/member'
+import type { MemberQueryDTO } from '@/types/member'
 
 const router = useRouter()
+const memberStore = useMemberStore()
 
-// 状态
-const loading = ref(false)
+// 筛选表单
 const filterForm = reactive({
   memberNo: '',
   realName: '',
   phone: '',
-  status: '',
-  dateRange: [] as string[]
+  cardStatus: '',
+  // dateRange: [] as string[]
 })
 
-const pagination = reactive({
-  current: 1,
-  size: 10,
-  total: 0
-})
-
-// 模拟数据
-const memberList = ref([
-  {
-    id: 1,
-    memberNo: 'M001',
-    realName: '张三',
-    phone: '13800138001',
-    gender: 1,
-    remainingSessions: 12,
-    status: 'ACTIVE',
-    membershipStartDate: '2024-01-01',
-    membershipEndDate: '2024-12-31',
-    createTime: '2024-01-01 10:00:00'
-  },
-  {
-    id: 2,
-    memberNo: 'M002',
-    realName: '李四',
-    phone: '13800138002',
-    gender: 0,
-    remainingSessions: 0,
-    status: 'EXPIRED',
-    membershipStartDate: '2023-01-01',
-    membershipEndDate: '2023-12-31',
-    createTime: '2023-01-01 10:00:00'
-  },
-  {
-    id: 3,
-    memberNo: 'M003',
-    realName: '王五',
-    phone: '13800138003',
-    gender: 1,
-    remainingSessions: 8,
-    status: 'ACTIVE',
-    membershipStartDate: '2024-02-01',
-    membershipEndDate: '2024-11-30',
-    createTime: '2024-02-01 14:30:00'
-  }
-])
+const loading = computed(() => memberStore.loading)
 
 // 方法
-const formatDate = (date: string) => {
+const formatDate = (date: string | Date) => {
   if (!date) return '-'
-  return date
+  if (typeof date === 'string') {
+    return date.split('T')[0]
+  }
+  return date.toISOString().split('T')[0]
 }
 
 const formatDateTime = (datetime: string) => {
@@ -248,80 +260,82 @@ const formatDateTime = (datetime: string) => {
   return datetime.replace('T', ' ')
 }
 
-const getStatusType = (status: string) => {
-  switch (status) {
-    case 'ACTIVE':
-      return 'success'
-    case 'INACTIVE':
-      return 'info'
-    case 'SUSPENDED':
-      return 'warning'
-    case 'EXPIRED':
-      return 'danger'
-    default:
-      return 'info'
+const formatAmount = (amount: number) => {
+  if (!amount) return '0.00'
+  return amount.toFixed(2)
+}
+
+const getRandomColor = () => {
+  const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+// 卡片类型标签样式
+const getCardTypeTag = (cardType: number) => {
+  switch (cardType) {
+    case 0: return 'primary'   // 私教课
+    case 1: return 'success'   // 团课
+    case 2: return 'warning'   // 月卡
+    case 3: return 'danger'    // 年卡
+    case 4: return 'info'      // 周卡
+    default: return 'info'
   }
 }
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'ACTIVE':
-      return '活跃'
-    case 'INACTIVE':
-      return '不活跃'
-    case 'SUSPENDED':
-      return '暂停'
-    case 'EXPIRED':
-      return '过期'
-    default:
-      return status
+// 卡片状态标签样式
+const getCardStatusTag = (cardStatus: string) => {
+  switch (cardStatus) {
+    case 'ACTIVE': return 'success'
+    case 'EXPIRED': return 'danger'
+    case 'USED_UP': return 'warning'
+    default: return 'info'
   }
 }
 
-const handleSearch = () => {
-  console.log('搜索条件:', filterForm)
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    ElMessage.success('搜索完成')
-  }, 500)
+// 搜索处理
+const handleSearch = async () => {
+  const queryParams: MemberQueryDTO = {
+    pageNum: memberStore.pageInfo.pageNum,
+    pageSize: memberStore.pageInfo.pageSize,
+    memberNo: filterForm.memberNo,
+    realName: filterForm.realName,
+    phone: filterForm.phone,
+    cardStatus: filterForm.cardStatus,
+    // startDate: filterForm.dateRange?.[0],
+    // endDate: filterForm.dateRange?.[1]
+  }
+  
+  await memberStore.fetchMembers(queryParams)
 }
 
 const handleReset = () => {
   filterForm.memberNo = ''
   filterForm.realName = ''
   filterForm.phone = ''
-  filterForm.status = ''
-  filterForm.dateRange = []
-  pagination.current = 1
+  filterForm.cardStatus = ''
+  // filterForm.dateRange = []
+  memberStore.setPageInfo(1, 10)
   handleSearch()
 }
 
+// 分页处理
 const handleSizeChange = (size: number) => {
-  pagination.size = size
-  pagination.current = 1
-  loadMembers()
+  memberStore.setPageInfo(1, size)
+  handleSearch()
 }
 
 const handleCurrentChange = (current: number) => {
-  pagination.current = current
-  loadMembers()
+  memberStore.setPageInfo(current, memberStore.pageInfo.pageSize)
+  handleSearch()
 }
 
-const refreshTable = () => {
-  loadMembers()
+// 刷新表格
+const refreshTable = async () => {
+  await handleSearch()
   ElMessage.success('刷新成功')
 }
 
-const loadMembers = () => {
-  loading.value = true
-  setTimeout(() => {
-    // 模拟加载数据
-    pagination.total = memberList.value.length
-    loading.value = false
-  }, 500)
-}
-
+// 导航操作
 const handleAddMember = () => {
   router.push('/member/add')
 }
@@ -334,58 +348,50 @@ const handleEdit = (id: number) => {
   router.push(`/member/edit/${id}`)
 }
 
+// 删除会员
 const handleDelete = async (id: number) => {
   try {
-    await ElMessageBox.confirm(
-      '确定要删除这个会员吗？此操作不可恢复。',
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-    
-    // 模拟删除
-    memberList.value = memberList.value.filter(member => member.id !== id)
+    await memberStore.deleteMember(id)
     ElMessage.success('删除成功')
   } catch (error) {
-    // 用户取消
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 
+// 初始化加载
 onMounted(() => {
-  loadMembers()
-  console.log('会员列表页面加载完成')
+  handleSearch()
 })
 </script>
 
 <style scoped>
 .member-list-container {
   padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-.header-left .page-title {
+.page-title {
+  margin: 0;
   font-size: 24px;
   font-weight: 600;
   color: #303133;
-  margin: 0;
 }
 
 .filter-card {
   margin-bottom: 20px;
-  border-radius: 12px;
 }
 
 .table-card {
-  border-radius: 12px;
+  margin-bottom: 20px;
 }
 
 .table-header {
@@ -403,17 +409,41 @@ onMounted(() => {
 .member-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .member-avatar {
-  background: #409eff;
+  background-color: #409EFF;
   color: white;
+  font-weight: 600;
+}
+
+.member-name {
+  font-weight: 500;
+}
+
+.amount {
+  font-weight: 600;
+  color: #67C23A;
+}
+
+.no-sessions,
+.no-date {
+  color: #909399;
+  font-style: italic;
 }
 
 .pagination-wrapper {
+  margin-top: 20px;
   display: flex;
-  justify-content: center;
-  padding: 20px 0 0;
+  justify-content: flex-end;
+}
+
+:deep(.el-card__header) {
+  padding: 16px 20px;
+}
+
+:deep(.el-table__header) {
+  background-color: #f8f9fa;
 }
 </style>
