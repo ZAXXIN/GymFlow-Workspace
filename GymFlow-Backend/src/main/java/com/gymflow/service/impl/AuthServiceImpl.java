@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import com.gymflow.dto.LoginDTO;
-import com.gymflow.dto.LoginResultDTO;
-import com.gymflow.entity.User;
+import com.gymflow.dto.login.LoginDTO;
+import com.gymflow.dto.login.LoginResultDTO;
+import com.gymflow.entity.WebUser;
 import com.gymflow.mapper.UserMapper;
 import com.gymflow.service.AuthService;
 import com.gymflow.utils.JwtTokenUtil;
@@ -42,9 +42,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 2. 查询用户
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getUsername, loginDTO.getUsername());
-        User user = userMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(WebUser::getUsername, loginDTO.getUsername());
+        WebUser user = userMapper.selectOne(queryWrapper);
 
         if (user == null) {
             log.warn("登录失败，用户名不存在: {}", loginDTO.getUsername());
@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         result.setUserId(user.getId());
         result.setUsername(user.getUsername());
         result.setRealName(user.getRealName());
-        result.setPhone(user.getPhone());
+//        result.setPhone(user.getPhone());
         result.setRole(user.getRole());
         result.setToken(token);
         result.setLoginTime(LocalDateTime.now());

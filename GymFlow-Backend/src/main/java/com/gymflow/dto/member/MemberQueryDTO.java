@@ -35,14 +35,9 @@ public class MemberQueryDTO {
     @Schema(description = "手机号（模糊查询）", example = "138")
     private String phone;
 
-    @Min(value = 0, message = "状态值只能是0或1")
-    @Max(value = 1, message = "状态值只能是0或1")
-    @Schema(description = "状态：0-禁用，1-正常", example = "1")
-    private Integer status;
-
-    @Schema(description = "注册开始时间", example = "2026-01-01")
-    private LocalDate startDate;
-
-    @Schema(description = "注册结束时间", example = "2026-01-31")
-    private LocalDate endDate;
+//    @Schema(description = "注册开始时间", example = "2026-01-01")
+//    private LocalDate startDate;
+//
+//    @Schema(description = "注册结束时间", example = "2026-01-31")
+//    private LocalDate endDate;
 }

@@ -12,12 +12,12 @@ public class Coach {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long userId;
-
     @TableField("real_name")
     private String realName;
 
     private String phone;
+
+    private String password;
 
     private String specialty;
 

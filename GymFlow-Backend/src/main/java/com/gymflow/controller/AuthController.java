@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import com.gymflow.dto.LoginDTO;
-import com.gymflow.dto.LoginResultDTO;
+import com.gymflow.dto.login.LoginDTO;
+import com.gymflow.dto.login.LoginResultDTO;
 import com.gymflow.service.AuthService;
 import com.gymflow.common.Result;
 

@@ -13,13 +13,22 @@ public class Member {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private Long userId;
-
     @TableField("member_no")
     private String memberNo;
 
+    private String phone;
+
+    private String password;
+
     @TableField("id_card")
     private String idCard;
+
+    @TableField("real_name")
+    private String realName;
+
+    private Integer gender;
+
+    private LocalDate birthday;
 
     private BigDecimal height;
 

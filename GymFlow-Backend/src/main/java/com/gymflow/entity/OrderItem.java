@@ -37,6 +37,12 @@ public class OrderItem {
     @TableField("validity_end_date")
     private LocalDate validityEndDate;
 
+    @TableField("total_sessions")
+    private Integer totalSessions;
+
+    @TableField("remaining_sessions")
+    private Integer remainingSessions;
+
     private String status;
 
     @TableField(fill = FieldFill.INSERT)

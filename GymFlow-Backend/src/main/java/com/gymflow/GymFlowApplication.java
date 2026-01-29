@@ -10,6 +10,6 @@ public class GymFlowApplication {
     public static void main(String[] args) {
         SpringApplication.run(GymFlowApplication.class, args);
         System.out.println("GymFlow后端服务启动成功！");
-        System.out.println("API文档地址：http://localhost:8080/api/doc.html");
+        System.out.println("API文档地址：http://localhost:8080/api/swagger-ui/index.html");
     }
 }
