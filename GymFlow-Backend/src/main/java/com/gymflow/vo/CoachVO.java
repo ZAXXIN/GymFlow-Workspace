@@ -21,8 +21,6 @@ public class CoachVO {
 
     private String email;
 
-    private String avatar;
-
     private String realName;
 
     private Integer gender;

@@ -74,12 +74,12 @@ public class MemberServiceImpl implements MemberService {
         }
 
         // 注册时间范围查询
-        if (queryDTO.getStartDate() != null) {
-            queryWrapper.ge(Member::getCreateTime, queryDTO.getStartDate().atStartOfDay());
-        }
-        if (queryDTO.getEndDate() != null) {
-            queryWrapper.le(Member::getCreateTime, queryDTO.getEndDate().atTime(23, 59, 59));
-        }
+//        if (queryDTO.getStartDate() != null) {
+//            queryWrapper.ge(Member::getCreateTime, queryDTO.getStartDate().atStartOfDay());
+//        }
+//        if (queryDTO.getEndDate() != null) {
+//            queryWrapper.le(Member::getCreateTime, queryDTO.getEndDate().atTime(23, 59, 59));
+//        }
 
         // 按创建时间倒序排列
         queryWrapper.orderByDesc(Member::getCreateTime);

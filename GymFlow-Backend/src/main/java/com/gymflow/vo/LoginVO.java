@@ -14,8 +14,6 @@ public class LoginVO {
 
     private String email;
 
-    private String avatar;
-
     private UserRole role;
 
     private String token;
