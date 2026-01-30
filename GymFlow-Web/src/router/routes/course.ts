@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 const courseRoutes: RouteRecordRaw[] = [
   {
-    path: '/courses',
+    path: '/course/list',
     name: 'CourseList',
     component: () => import('@/views/course/List.vue'),
     meta: {
@@ -10,35 +10,32 @@ const courseRoutes: RouteRecordRaw[] = [
       icon: 'Calendar',
       requiresAuth: true,
       showInMenu:true,
-      roles: ['ADMIN', 'COACH']
     }
   },
   {
-    path: '/courses/create',
+    path: '/course/add',
     name: 'CourseCreate',
-    component: () => import('@/views/course/Form.vue'),
+    component: () => import('@/views/course/Add.vue'),
     meta: {
       title: '新增课程',
       requiresAuth: true,
-      roles: ['ADMIN'],
       hideInMenu: true,
       parent: 'CourseList'
     }
   },
   {
-    path: '/courses/:id/edit',
+    path: '/course/edit/:id',
     name: 'CourseEdit',
-    component: () => import('@/views/course/Form.vue'),
+    component: () => import('@/views/course/Add.vue'),
     meta: {
       title: '编辑课程',
       requiresAuth: true,
-      roles: ['ADMIN'],
       hideInMenu: true,
       parent: 'CourseList'
     }
   },
   {
-    path: '/courses/:id',
+    path: '/course/detail/:id',
     name: 'CourseDetail',
     component: () => import('@/views/course/Detail.vue'),
     meta: {
@@ -50,7 +47,7 @@ const courseRoutes: RouteRecordRaw[] = [
     }
   },
   {
-    path: '/courses/schedule',
+    path: '/course/schedule',
     name: 'CourseSchedule',
     component: () => import('@/views/course/Schedule.vue'),
     meta: {

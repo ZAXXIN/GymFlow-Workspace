@@ -61,9 +61,6 @@
       <!-- 用户信息 -->
       <el-dropdown trigger="click" class="user-dropdown">
         <div class="user-info">
-          <!-- <el-avatar :size="32" :src="userAvatar" class="user-avatar">
-            {{ authStore.userInfo?.username?.charAt(0) || 'U' }}
-          </el-avatar> -->
           <span class="user-name" v-show="!isCollapsed">
             {{ authStore.userInfo?.username || '用户' }}
           </span>
@@ -123,7 +120,6 @@ const notifications = ref<Notification[]>([
 
 // 计算属性
 const userInfo = computed(() => userStore.currentUser)
-const userAvatar = computed(() => userInfo.value?.avatar || '')
 const isCollapsed = computed(() => settingsStore.sidebarCollapsed)
 const showNotifications = computed(() => settingsStore.showNotifications)
 const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
@@ -306,11 +302,6 @@ onUnmounted(() => {
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
-
-      .user-avatar {
-        background-color: #1890ff;
-      }
-
       .user-name {
         color: #ffffff;
         font-size: 14px;

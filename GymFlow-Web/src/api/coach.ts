@@ -1,14 +1,24 @@
 import request from '@/utils/request'
-import type { Coach, QueryParams, PaginatedResponse, ApiResponse } from '@/types'
-import { ApiPaths } from '@/utils/constants'
+import type {
+  CoachQueryParams,
+  CoachBasicDTO,
+  CoachScheduleDTO,
+  CoachDetail,
+  CoachListVO,
+  PageResultVO,
+  CoachScheduleList,
+  CoachCourseList
+} from '@/types/coach'
+import type { ApiResponse } from '@/types/auth' // 复用通用响应类型
 
+// 教练管理API
 export const coachApi = {
   /**
-   * 获取教练列表
+   * 分页查询教练列表
    */
-  getCoaches(params?: QueryParams): Promise<PaginatedResponse<Coach>> {
+  getCoachList(params: CoachQueryParams): Promise<ApiResponse<PageResultVO<CoachListVO>>> {
     return request({
-      url: ApiPaths.COACHES,
+      url: '/coach/list',
       method: 'GET',
       params
     })
@@ -17,30 +27,30 @@ export const coachApi = {
   /**
    * 获取教练详情
    */
-  getCoachById(id: number): Promise<Coach> {
+  getCoachDetail(coachId: number): Promise<ApiResponse<CoachDetail>> {
     return request({
-      url: ApiPaths.COACH_DETAIL(id),
+      url: `/coach/detail/${coachId}`,
       method: 'GET'
     })
   },
 
   /**
-   * 创建教练
+   * 添加教练
    */
-  createCoach(data: Partial<Coach>): Promise<Coach> {
+  addCoach(data: CoachBasicDTO): Promise<ApiResponse<number>> {
     return request({
-      url: ApiPaths.COACHES,
+      url: '/coach/add',
       method: 'POST',
       data
     })
   },
 
   /**
-   * 更新教练
+   * 更新教练信息
    */
-  updateCoach(id: number, data: Partial<Coach>): Promise<Coach> {
+  updateCoach(coachId: number, data: CoachBasicDTO): Promise<ApiResponse> {
     return request({
-      url: ApiPaths.COACH_DETAIL(id),
+      url: `/coach/update/${coachId}`,
       method: 'PUT',
       data
     })
@@ -49,65 +59,84 @@ export const coachApi = {
   /**
    * 删除教练
    */
-  deleteCoach(id: number): Promise<void> {
+  deleteCoach(coachId: number): Promise<ApiResponse> {
     return request({
-      url: ApiPaths.COACH_DETAIL(id),
+      url: `/coach/delete/${coachId}`,
       method: 'DELETE'
     })
   },
 
   /**
-   * 获取教练统计
+   * 批量删除教练
    */
-  getStatistics(): Promise<any> {
+  // batchDeleteCoach(ids: number[]): Promise<ApiResponse> {
+  //   return request({
+  //     url: '/coach/batchDelete',
+  //     method: 'DELETE',
+  //     data: ids // DELETE请求传递请求体
+  //   })
+  // },
+
+  /**
+   * 更新教练状态
+   */
+  updateCoachStatus(coachId: number, status: number): Promise<ApiResponse> {
     return request({
-      url: ApiPaths.COACH_STATISTICS,
+      url: `/coach/updateStatus/${coachId}`,
+      method: 'PUT',
+      params: { status }
+    })
+  },
+
+  /**
+   * 获取教练排班列表
+   */
+  getCoachSchedules(coachId: number): Promise<ApiResponse<CoachScheduleList[]>> {
+    return request({
+      url: `/coach/schedules/${coachId}`,
       method: 'GET'
     })
   },
 
   /**
-   * 获取教练的课程列表
+   * 添加教练排班
    */
-  getCoachCourses(coachId: number, params?: QueryParams): Promise<PaginatedResponse<any>> {
+  addCoachSchedule(coachId: number, data: CoachScheduleDTO): Promise<ApiResponse> {
     return request({
-      url: `/coaches/${coachId}/courses`,
-      method: 'GET',
-      params
+      url: `/coach/schedule/add/${coachId}`,
+      method: 'POST',
+      data
     })
   },
 
   /**
-   * 获取教练的学员列表
+   * 更新教练排班
    */
-  getCoachMembers(coachId: number, params?: QueryParams): Promise<PaginatedResponse<any>> {
+  updateCoachSchedule(scheduleId: number, data: CoachScheduleDTO): Promise<ApiResponse> {
     return request({
-      url: `/coaches/${coachId}/members`,
-      method: 'GET',
-      params
+      url: `/coach/schedule/update/${scheduleId}`,
+      method: 'PUT',
+      data
     })
   },
 
   /**
-   * 获取教练的业绩统计
+   * 删除教练排班
    */
-  getCoachPerformance(coachId: number, params?: QueryParams): Promise<any> {
+  deleteCoachSchedule(scheduleId: number): Promise<ApiResponse> {
     return request({
-      url: `/coaches/${coachId}/performance`,
-      method: 'GET',
-      params
+      url: `/coach/schedule/delete/${scheduleId}`,
+      method: 'DELETE'
     })
   },
 
   /**
-   * 导出教练数据
+   * 获取教练课程列表
    */
-  exportCoaches(params?: QueryParams): Promise<Blob> {
+  getCoachCourses(coachId: number): Promise<ApiResponse<CoachCourseList[]>> {
     return request({
-      url: '/coaches/export',
-      method: 'GET',
-      params,
-      responseType: 'blob'
+      url: `/coach/courses/${coachId}`,
+      method: 'GET'
     })
   }
 }

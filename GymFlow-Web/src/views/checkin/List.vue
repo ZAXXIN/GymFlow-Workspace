@@ -167,9 +167,6 @@
         <el-table-column prop="memberName" label="会员" width="120">
           <template #default="{ row }">
             <div class="member-cell">
-              <el-avatar :size="32" :src="row.member?.avatar" class="member-avatar">
-                {{ row.memberName?.charAt(0) || 'M' }}
-              </el-avatar>
               <span class="member-name">{{ row.memberName }}</span>
             </div>
           </template>
@@ -816,11 +813,6 @@ onMounted(() => {
       display: flex;
       align-items: center;
       gap: 12px;
-      
-      .member-avatar {
-        background: var(--gymflow-primary);
-        color: white;
-      }
       
       .member-name {
         font-weight: 500;

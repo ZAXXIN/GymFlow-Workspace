@@ -120,52 +120,52 @@ const allMenus = [
   
   // 会员管理
   {
-    path: '/member',
+    path: '/member/list',
     title: '会员管理',
     icon: UserFilled,
     roles: [0, 1], // 管理员和前台可见
-    children: [
-      { path: '/member/list', title: '会员列表' },
-      { path: '/member/add', title: '添加会员' }
-    ]
+    // children: [
+    //   { path: '/member/list', title: '会员列表' },
+    //   { path: '/member/add', title: '添加会员' }
+    // ]
   },
   
   // 教练管理
   {
-    path: '/coach',
+    path: '/coach/list',
     title: '教练管理',
     icon: Avatar,
     roles: [0, 1], // 管理员和前台可见
-    children: [
-      { path: '/coach/list', title: '教练列表' },
-      { path: '/coach/add', title: '添加教练' },
-      { path: '/coach/schedule', title: '排课管理' }
-    ]
+    // children: [
+    //   { path: '/coach/list', title: '教练列表' },
+    //   { path: '/coach/add', title: '添加教练' },
+    //   { path: '/coach/schedule', title: '排课管理' }
+    // ]
   },
   
   // 课程管理
   {
-    path: '/course',
+    path: '/course/list',
     title: '课程管理',
     icon: Calendar,
-    roles: [0, 1, 2], // 管理员、前台、教练可见
-    children: [
-      { path: '/course/list', title: '课程列表' },
-      { path: '/course/add', title: '添加课程' },
-      { path: '/course/booking', title: '课程预约' }
-    ]
+    roles: [0, 1], // 管理员、前台、教练可见
+    // children: [
+    //   { path: '/course/list', title: '课程列表' },
+    //   { path: '/course/add', title: '添加课程' },
+    //   { path: '/course/booking', title: '课程预约' }
+    // ]
   },
   
   // 订单管理
   {
-    path: '/order',
+    path: '/order/list',
     title: '订单管理',
     icon: ShoppingCart,
     roles: [0, 1], // 管理员和前台可见
-    children: [
-      { path: '/order/list', title: '订单列表' },
-      { path: '/order/statistics', title: '销售统计' }
-    ]
+    // children: [
+    //   { path: '/order/list', title: '订单列表' },
+    //   { path: '/order/statistics', title: '销售统计' }
+    // ]
   },
   
   // 签到管理
@@ -173,11 +173,11 @@ const allMenus = [
     path: '/checkin',
     title: '签到管理',
     icon: Check,
-    roles: [0, 1, 2], // 管理员、前台、教练可见
-    children: [
-      { path: '/checkin/records', title: '签到记录' },
-      { path: '/checkin/statistics', title: '签到统计' }
-    ]
+    roles: [0, 1], // 管理员、前台、教练可见
+    // children: [
+    //   { path: '/checkin/records', title: '签到记录' },
+    //   { path: '/checkin/statistics', title: '签到统计' }
+    // ]
   },
   // 系统设置
   {

@@ -13,7 +13,6 @@ export interface LoginResultDTO {
   role: number
   token: string
   loginTime: string
-  avatar?: string
 }
 
 // 用户信息
@@ -28,7 +27,6 @@ export interface UserInfo {
   gender?: number
   birthday?: string
   status: number
-  avatar?: string
 }
 
 // 统一响应格式

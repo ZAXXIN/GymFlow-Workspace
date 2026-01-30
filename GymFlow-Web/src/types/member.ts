@@ -78,7 +78,7 @@ export interface HealthRecordDTO {
 // 会员卡信息
 export interface MemberCardDTO {
   productId?: number
-  cardName: string
+  // cardName: string
   cardType: number // 0-私教课，1-团课，2-月卡，3-年卡
   startDate: string
   endDate: string

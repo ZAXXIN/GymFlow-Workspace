@@ -102,9 +102,6 @@
         <el-table-column prop="realName" label="姓名" width="100">
           <template #default="{ row }">
             <div class="member-info">
-              <el-avatar :size="32" class="member-avatar" :style="{ backgroundColor: getRandomColor() }">
-                {{ row.realName?.charAt(0) || 'M' }}
-              </el-avatar>
               <span class="member-name">{{ row.realName }}</span>
             </div>
           </template>
@@ -183,11 +180,9 @@
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
-              <el-icon><View /></el-icon>
               详情
             </el-button>
             <el-button type="warning" link size="small" @click="handleEdit(row.id)">
-              <el-icon><Edit /></el-icon>
               编辑
             </el-button>
             <el-popconfirm
@@ -198,7 +193,6 @@
             >
               <template #reference>
                 <el-button type="danger" link size="small">
-                  <el-icon><Delete /></el-icon>
                   删除
                 </el-button>
               </template>
@@ -411,13 +405,6 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
 }
-
-.member-avatar {
-  background-color: #409EFF;
-  color: white;
-  font-weight: 600;
-}
-
 .member-name {
   font-weight: 500;
 }
