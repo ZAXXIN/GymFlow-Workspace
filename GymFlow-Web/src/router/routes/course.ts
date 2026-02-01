@@ -41,20 +41,19 @@ const courseRoutes: RouteRecordRaw[] = [
     meta: {
       title: '课程详情',
       requiresAuth: true,
-      roles: ['ADMIN', 'COACH'],
       hideInMenu: true,
       parent: 'CourseList'
     }
   },
   {
-    path: '/course/schedule',
+    path: '/course/schedule/:id',
     name: 'CourseSchedule',
     component: () => import('@/views/course/Schedule.vue'),
     meta: {
       title: '课程安排',
-      icon: 'i-ep-date',
       requiresAuth: true,
-      roles: ['ADMIN', 'COACH']
+      hideInMenu: true,
+      parent: 'CourseList'
     }
   }
 ]

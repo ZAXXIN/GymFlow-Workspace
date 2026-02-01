@@ -1,85 +1,166 @@
 import request from '@/utils/request'
-import type { Course, QueryParams, PaginatedResponse, CourseBooking, ApiResponse } from '@/types'
-import { ApiPaths } from '@/utils/constants'
+import type {
+  CourseQueryParams,
+  CourseBasicDTO,
+  CourseScheduleDTO,
+  CourseDetail,
+  CourseListVO,
+  PageResultVO,
+  CourseScheduleVO,
+  CourseBookingDTO
+} from '@/types/course'
+import type { ApiResponse } from '@/types/auth'
 
+// 课程管理API
 export const courseApi = {
   /**
-   * 获取课程列表
+   * 分页查询课程列表
    */
-  getCourses(params?: QueryParams): Promise<PaginatedResponse<Course>> {
-    return http.get(ApiPaths.COURSES, { params })
+  getCourseList(params: CourseQueryParams): Promise<ApiResponse<PageResultVO<CourseListVO>>> {
+    return request({
+      url: '/course/list',
+      method: 'GET',
+      params
+    })
   },
 
   /**
    * 获取课程详情
    */
-  getCourseById(id: number): Promise<Course> {
-    return http.get(ApiPaths.COURSE_DETAIL(id))
+  getCourseDetail(courseId: number): Promise<ApiResponse<CourseDetail>> {
+    return request({
+      url: `/course/detail/${courseId}`,
+      method: 'GET'
+    })
   },
 
   /**
-   * 创建课程
+   * 添加课程
    */
-  createCourse(data: Partial<Course>): Promise<Course> {
-    return http.post(ApiPaths.COURSES, data)
+  addCourse(data: CourseBasicDTO): Promise<ApiResponse<number>> {
+    return request({
+      url: '/course/add',
+      method: 'POST',
+      data
+    })
   },
 
   /**
    * 更新课程
    */
-  updateCourse(id: number, data: Partial<Course>): Promise<Course> {
-    return http.put(ApiPaths.COURSE_DETAIL(id), data)
+  updateCourse(courseId: number, data: CourseBasicDTO): Promise<ApiResponse> {
+    return request({
+      url: `/course/update/${courseId}`,
+      method: 'PUT',
+      data
+    })
   },
 
   /**
    * 删除课程
    */
-  deleteCourse(id: number): Promise<void> {
-    return http.delete(ApiPaths.COURSE_DETAIL(id))
-  },
-
-  /**
-   * 获取课程安排
-   */
-  getSchedule(params?: QueryParams): Promise<any[]> {
-    return http.get(ApiPaths.COURSE_SCHEDULE, { params })
-  },
-
-  /**
-   * 获取课程预约列表
-   */
-  getCourseBookings(courseId: number): Promise<CourseBooking[]> {
-    return http.get(`/courses/${courseId}/bookings`)
-  },
-
-  /**
-   * 预约课程
-   */
-  bookCourse(courseId: number, memberId: number): Promise<CourseBooking> {
-    return http.post(`/courses/${courseId}/book`, { memberId })
-  },
-
-  /**
-   * 取消预约
-   */
-  cancelBooking(bookingId: number): Promise<void> {
-    return http.delete(`/bookings/${bookingId}`)
-  },
-
-  /**
-   * 导出课程数据
-   */
-  exportCourses(params?: QueryParams): Promise<Blob> {
-    return http.get('/courses/export', {
-      params,
-      responseType: 'blob'
+  deleteCourse(courseId: number): Promise<ApiResponse> {
+    return request({
+      url: `/course/delete/${courseId}`,
+      method: 'DELETE'
     })
   },
 
   /**
-   * 批量创建课程
+   * 更新课程状态
    */
-  batchCreateCourses(data: Partial<Course>[]): Promise<Course[]> {
-    return http.post('/courses/batch', data)
+  updateCourseStatus(courseId: number, status: number): Promise<ApiResponse> {
+    return request({
+      url: `/course/updateStatus/${courseId}`,
+      method: 'PUT',
+      params: { status }
+    })
+  },
+
+  /**
+   * 课程排课（团课）
+   */
+  scheduleCourse(data: CourseScheduleDTO): Promise<ApiResponse> {
+    return request({
+      url: '/course/schedule',
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
+   * 获取课程排课列表
+   */
+  getCourseSchedules(courseId: number): Promise<ApiResponse<CourseScheduleVO[]>> {
+    return request({
+      url: `/course/schedules/${courseId}`,
+      method: 'GET'
+    })
+  },
+
+  /**
+   * 获取课程表
+   */
+  getCourseTimetable(startDate?: string, endDate?: string): Promise<ApiResponse<CourseScheduleVO[]>> {
+    return request({
+      url: '/course/timetable',
+      method: 'GET',
+      params: { startDate, endDate }
+    })
+  },
+
+  /**
+   * 会员预约私教课
+   */
+  bookPrivateCourse(memberId: number, coachId: number, courseDate: string, startTime: string): Promise<ApiResponse> {
+    return request({
+      url: '/course/book/private',
+      method: 'POST',
+      params: { memberId, coachId, courseDate, startTime }
+    })
+  },
+
+  /**
+   * 会员预约团课
+   */
+  bookGroupCourse(memberId: number, scheduleId: number): Promise<ApiResponse> {
+    return request({
+      url: '/course/book/group',
+      method: 'POST',
+      params: { memberId, scheduleId }
+    })
+  },
+
+  /**
+   * 核销课程预约
+   */
+  verifyCourseBooking(bookingId: number, checkinMethod: number): Promise<ApiResponse> {
+    return request({
+      url: `/course/verify/${bookingId}`,
+      method: 'POST',
+      params: { checkinMethod }
+    })
+  },
+
+  /**
+   * 取消课程预约
+   */
+  cancelCourseBooking(bookingId: number, reason: string): Promise<ApiResponse> {
+    return request({
+      url: `/course/cancel/${bookingId}`,
+      method: 'POST',
+      params: { reason }
+    })
+  },
+
+  /**
+   * 批量删除课程
+   */
+  batchDeleteCourse(ids: number[]): Promise<ApiResponse> {
+    return request({
+      url: '/course/batchDelete',
+      method: 'DELETE',
+      data: ids
+    })
   }
 }

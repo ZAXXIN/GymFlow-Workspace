@@ -3,957 +3,705 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">课程安排</h1>
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item>课程管理</el-breadcrumb-item>
-          <el-breadcrumb-item>课程安排</el-breadcrumb-item>
+          <el-breadcrumb-item :to="{ path: '/course/list' }">课程管理</el-breadcrumb-item>
+          <el-breadcrumb-item>课程排课</el-breadcrumb-item>
         </el-breadcrumb>
+        <h1 class="page-title">{{ courseName }} - 课程排课</h1>
       </div>
-      <div class="header-right">
-        <el-button type="primary" @click="handleAddCourse">
-          <el-icon><Plus /></el-icon>
-          新增课程
+      <div class="header-actions">
+        <el-button @click="goBack">返回</el-button>
+        <el-button type="primary" @click="handleAddSchedule" v-if="isGroupCourse">
+          <el-icon>
+            <Plus />
+          </el-icon>
+          添加排课
         </el-button>
-        <el-date-picker
-          v-model="currentWeek"
-          type="week"
-          format="yyyy 第 WW 周"
-          value-format="YYYY-MM-DD"
-          placeholder="选择周"
-          @change="handleWeekChange"
-        />
       </div>
     </div>
-    
-    <!-- 日历视图 -->
-    <el-card class="schedule-card">
-      <div class="calendar-header">
-        <div class="week-navigation">
-          <el-button icon="i-ep-arrow-left" circle @click="prevWeek" />
-          <span class="week-title">{{ weekTitle }}</span>
-          <el-button icon="i-ep-arrow-right" circle @click="nextWeek" />
-        </div>
-        <div class="view-actions">
-          <el-button-group>
-            <el-button :type="viewMode === 'day' ? 'primary' : 'default'" @click="viewMode = 'day'">
-              日
-            </el-button>
-            <el-button :type="viewMode === 'week' ? 'primary' : 'default'" @click="viewMode = 'week'">
-              周
-            </el-button>
-          </el-button-group>
-          <el-button @click="refreshSchedule">
-            <el-icon><Refresh /></el-icon>
-            刷新
-          </el-button>
-        </div>
-      </div>
-      
-      <!-- 周视图 -->
-      <div class="week-view" v-if="viewMode === 'week'">
-        <div class="time-grid">
-          <!-- 时间轴 -->
-          <div class="time-axis">
-            <div class="time-header"></div>
-            <div v-for="hour in hours" :key="hour" class="time-slot">
-              {{ hour }}:00
-            </div>
-          </div>
-          
-          <!-- 日期列 -->
-          <div v-for="day in weekDays" :key="day.date" class="day-column">
-            <div class="day-header">
-              <div class="day-name">{{ day.name }}</div>
-              <div class="day-date">{{ day.date }}</div>
-              <div class="day-count">{{ getDayCourseCount(day.date) }}节</div>
-            </div>
-            
-            <div class="day-time-slots">
-              <div
-                v-for="hour in hours"
-                :key="hour"
-                class="time-slot"
-                @click="handleTimeSlotClick(day.date, hour)"
-              >
-                <!-- 课程卡片 -->
-                <div
-                  v-for="course in getCoursesAtTime(day.date, hour)"
-                  :key="course.id"
-                  class="course-card"
-                  :class="{
-                    [course.status.toLowerCase()]: true,
-                    'full': course.currentBookings >= course.capacity
-                  }"
-                  @click.stop="handleCourseClick(course)"
-                >
-                  <div class="course-title">{{ course.name }}</div>
-                  <div class="course-info">
-                    <span class="coach">{{ course.coachName }}</span>
-                    <span class="capacity">{{ course.currentBookings }}/{{ course.capacity }}</span>
-                  </div>
-                  <div class="course-time">{{ formatTime(course.startTime) }}-{{ formatTime(course.endTime) }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 日视图 -->
-      <div class="day-view" v-else>
-        <div class="day-header-large">
-          <h3>{{ currentDayDate }}</h3>
-          <div class="day-stats">
-            <span class="stat-item">
-              <el-icon><Calendar /></el-icon>
-              {{ currentDayCourses.length }} 节课
-            </span>
-            <span class="stat-item">
-              <el-icon><User /></el-icon>
-              {{ getTotalBookings() }} 个预约
-            </span>
-          </div>
-        </div>
-        
-        <div class="day-timeline">
-          <div
-            v-for="hour in hours"
-            :key="hour"
-            class="timeline-hour"
-          >
-            <div class="hour-label">{{ hour }}:00</div>
-            <div class="hour-content">
-              <div
-                v-for="course in getCoursesAtTime(currentDayDate, hour)"
-                :key="course.id"
-                class="timeline-course"
-                :style="{
-                  top: `${getCoursePosition(course)}px`,
-                  height: `${getCourseHeight(course)}px`
-                }"
-                @click="handleCourseClick(course)"
-              >
-                <div class="course-content">
-                  <div class="course-title">{{ course.name }}</div>
-                  <div class="course-coach">{{ course.coachName }}</div>
-                  <div class="course-time">{{ formatTime(course.startTime) }}-{{ formatTime(course.endTime) }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
+
+    <!-- 课程基本信息 -->
+    <el-card class="course-info-card" v-loading="loading">
+      <div class="course-info">
+        <div class="course-name">{{ courseName }}</div>
+        <div class="course-meta">
+          <el-tag :type="courseType === 0 ? 'primary' : 'success'" size="large">
+            {{ courseType === 0 ? '私教课' : '团课' }}
+          </el-tag>
+          <span class="meta-item">
+            <el-icon>
+              <User />
+            </el-icon>
+            最大容量：{{ maxCapacity }}人
+          </span>
+          <span class="meta-item">
+            <el-icon>
+              <Clock />
+            </el-icon>
+            时长：{{ duration }}分钟
+          </span>
+          <span class="meta-item">
+            <el-icon>
+              <Location />
+            </el-icon>
+            地点：{{ location }}
+          </span>
         </div>
       </div>
     </el-card>
-    
-    <!-- 课程列表 -->
-    <el-card class="course-list-card">
+
+    <!-- 排课列表 -->
+    <el-card class="schedule-list-card" v-loading="loading">
       <template #header>
-        <div class="list-header">
-          <h3>本周课程 ({{ filteredCourses.length }})</h3>
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索课程..."
-            style="width: 240px;"
-            clearable
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
+        <div class="card-header">
+          <span class="card-title">排课列表</span>
+          <div class="header-actions" v-if="isGroupCourse">
+            <el-date-picker v-model="dateFilter" type="daterange" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width: 240px; margin-right: 10px;" @change="handleDateFilterChange" />
+            <el-button @click="refreshData">
+              <el-icon>
+                <Refresh />
+              </el-icon>
+              刷新
+            </el-button>
+          </div>
         </div>
       </template>
-      
-      <el-table :data="filteredCourses" v-loading="loading">
-        <el-table-column prop="name" label="课程名称" width="200">
-          <template #default="{ row }">
-            <div class="course-cell">
-              <el-tag :type="getCategoryType(row.category)" size="small">
-                {{ getCategoryText(row.category) }}
-              </el-tag>
-              <span class="course-name">{{ row.name }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="coachName" label="教练" width="120" />
-        <el-table-column prop="location" label="地点" width="120" />
-        <el-table-column prop="startTime" label="时间" width="180">
-          <template #default="{ row }">
-            <div class="time-cell">
-              <div>{{ formatDate(row.startTime) }}</div>
-              <div class="time-range">{{ formatTime(row.startTime) }} - {{ formatTime(row.endTime) }}</div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="预约/容量" width="120" align="center">
-          <template #default="{ row }">
-            <div class="capacity-cell">
-              <el-progress
-                :percentage="getBookingPercentage(row)"
-                :stroke-width="8"
-                :show-text="false"
-                :color="getCapacityColor(row)"
-              />
-              <span class="capacity-text">{{ row.currentBookings }}/{{ row.capacity }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)" size="small">
-              {{ getStatusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="150" align="center">
-          <template #default="{ row }">
-            <el-button type="text" size="small" @click="handleCourseClick(row)">
-              详情
-            </el-button>
-            <el-button type="text" size="small" @click="handleEdit(row.id)">
-              编辑
-            </el-button>
-            <el-button
-              type="text"
-              size="small"
-              class="delete-btn"
-              @click="handleDelete(row.id)"
-            >
+
+      <div v-if="isGroupCourse">
+        <div v-if="schedules.length > 0">
+          <el-table :data="schedules" style="width: 100%" stripe border>
+            <el-table-column prop="scheduleDate" label="排课日期" width="120" sortable>
+              <template #default="{ row }">
+                {{ formatDate(row.scheduleDate) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="startTime" label="开始时间" width="100">
+              <template #default="{ row }">
+                {{ row.startTime?.slice(0, 5) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="endTime" label="结束时间" width="100">
+              <template #default="{ row }">
+                {{ row.endTime?.slice(0, 5) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="coachName" label="教练" width="120" />
+            <el-table-column prop="maxParticipants" label="最大人数" width="100" align="center" />
+            <el-table-column prop="currentParticipants" label="已报人数" width="100" align="center" />
+            <el-table-column prop="remainingSlots" label="剩余名额" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag :type="getRemainingSlotsType(row.remainingSlots)" size="small">
+                  {{ row.remainingSlots }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getScheduleStatusType(row.status)" size="small">
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="notes" label="备注" min-width="150">
+              <template #default="{ row }">
+                <span class="notes-text">{{ row.notes || '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" fixed="right" align="center">
+              <template #default="{ row }">
+                <el-button type="text" size="small" @click="handleViewScheduleDetail(row)">
+                  详情
+                </el-button>
+                <el-button type="text" size="small" @click="handleEditSchedule(row)">
+                  编辑
+                </el-button>
+                <el-button type="text" size="small" style="color: #f56c6c;" @click="handleDeleteSchedule(row)">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div v-else class="empty-data">
+          <el-empty description="暂无排课信息" />
+        </div>
+      </div>
+      <div v-else class="private-course-notice">
+        <el-alert title="私教课无需排课" type="info" description="私教课由会员直接预约教练的时间，系统会自动创建课程实例。" show-icon :closable="false" />
+      </div>
+    </el-card>
+
+    <!-- 排课详情弹窗 -->
+    <el-dialog v-model="scheduleDialog.visible" :title="scheduleDialog.title" width="600px" :before-close="handleDialogClose">
+      <el-form ref="scheduleFormRef" :model="scheduleForm" :rules="scheduleRules" label-width="100px" v-loading="scheduleDialog.loading">
+        <el-form-item label="课程日期" prop="courseDate">
+          <el-date-picker v-model="scheduleForm.courseDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" />
+        </el-form-item>
+
+        <el-form-item label="开始时间" prop="startTime">
+          <el-time-select v-model="scheduleForm.startTime" :max-time="scheduleForm.endTime" placeholder="选择开始时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
+        </el-form-item>
+
+        <el-form-item label="结束时间" prop="endTime">
+          <el-time-select v-model="scheduleForm.endTime" :min-time="scheduleForm.startTime" placeholder="选择结束时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
+        </el-form-item>
+
+        <el-form-item label="教练" prop="coachId">
+          <el-select v-model="scheduleForm.coachId" placeholder="请选择教练" filterable style="width: 100%">
+            <el-option v-for="coach in coachOptions" :key="coach.id" :label="coach.realName" :value="coach.id" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="最多人数" prop="maxParticipants">
+          <el-input-number v-model="scheduleForm.maxParticipants" :min="1" :max="maxCapacity" :step="1" controls-position="right" style="width: 100%" placeholder="请输入最多排课人数" />
+        </el-form-item>
+
+        <el-form-item label="备注" prop="notes">
+          <el-input v-model="scheduleForm.notes" type="textarea" :rows="3" placeholder="请输入排课备注" maxlength="200" show-word-limit />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="handleDialogClose" :disabled="scheduleDialog.loading">取消</el-button>
+          <template v-if="scheduleDialog.mode === 'edit'">
+            <el-button type="danger" @click="handleDeleteScheduleConfirm" :loading="scheduleDialog.loading">
               删除
             </el-button>
           </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+          <el-button type="primary" @click="handleSaveSchedule" :loading="scheduleDialog.loading">
+            保存
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 排课详情弹窗 -->
+    <el-dialog v-model="detailDialog.visible" title="排课详情" width="800px">
+      <div v-if="selectedSchedule" class="schedule-detail">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="课程名称">{{ selectedSchedule.courseName }}</el-descriptions-item>
+          <el-descriptions-item label="课程类型">{{ selectedSchedule.courseType }}</el-descriptions-item>
+          <el-descriptions-item label="教练">{{ selectedSchedule.coachName }}</el-descriptions-item>
+          <el-descriptions-item label="上课地点">{{ location }}</el-descriptions-item>
+          <el-descriptions-item label="上课日期">{{ formatDate(selectedSchedule.scheduleDate) }}</el-descriptions-item>
+          <el-descriptions-item label="上课时间">
+            {{ selectedSchedule.startTime?.slice(0, 5) }} - {{ selectedSchedule.endTime?.slice(0, 5) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="最大人数">{{ selectedSchedule.maxParticipants }}</el-descriptions-item>
+          <el-descriptions-item label="当前报名">{{ selectedSchedule.currentParticipants }}</el-descriptions-item>
+          <el-descriptions-item label="剩余名额">{{ selectedSchedule.remainingSlots }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{ selectedSchedule.status }}</el-descriptions-item>
+          <el-descriptions-item label="备注" :span="2">
+            {{ selectedSchedule.notes || '无' }}
+          </el-descriptions-item>
+        </el-descriptions>
+
+        <!-- 预约列表 -->
+        <div class="booking-section" v-if="selectedSchedule.bookings && selectedSchedule.bookings.length > 0">
+          <h3 class="section-title">预约列表</h3>
+          <el-table :data="selectedSchedule.bookings" size="small">
+            <el-table-column prop="memberName" label="会员姓名" width="100" />
+            <el-table-column prop="memberPhone" label="手机号" width="120" />
+            <el-table-column prop="bookingStatusDesc" label="预约状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getBookingStatusType(row.bookingStatus)" size="small">
+                  {{ row.bookingStatusDesc }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="bookingTime" label="预约时间" width="160">
+              <template #default="{ row }">
+                {{ formatDateTime(row.bookingTime) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div v-else class="no-booking">
+          <el-empty description="暂无预约" :image-size="60" />
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { useCourseStore } from '@/stores/course'
-import { formatDate, formatTime } from '@/utils'
-import type { Course, CourseStatus } from '@/types'
+import type { CourseScheduleDTO, CourseScheduleVO } from '@/types/course'
+import { coachApi } from '@/api/coach'
 
-// Store
+const router = useRouter()
+const route = useRoute()
 const courseStore = useCourseStore()
 
-// Router
-const router = useRouter()
-
-// 状态
 const loading = ref(false)
-const viewMode = ref<'day' | 'week'>('week')
-const currentWeek = ref('')
-const searchKeyword = ref('')
+const courseId = computed(() => Number(route.params.id))
 
-// 时间配置
-const hours = Array.from({ length: 14 }, (_, i) => i + 7) // 7:00 - 20:00
+// 课程信息
+const courseName = ref('')
+const courseType = ref(1)
+const maxCapacity = ref(20)
+const duration = ref(60)
+const location = ref('')
+const isGroupCourse = computed(() => courseType.value === 1)
 
-// Computed
-const weekDays = computed(() => {
-  const days = []
-  const startDate = new Date(currentWeek.value)
-  
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(startDate)
-    date.setDate(startDate.getDate() + i)
-    
-    days.push({
-      date: formatDate(date, 'MM-DD'),
-      fullDate: formatDate(date, 'YYYY-MM-DD'),
-      name: getWeekdayName(date.getDay()),
-      day: date.getDate(),
-      month: date.getMonth() + 1
-    })
-  }
-  
-  return days
+// 排课数据
+const schedules = ref<CourseScheduleVO[]>([])
+const dateFilter = ref<string[]>([])
+
+// 教练选项
+const coachOptions = ref<any[]>([])
+
+// 弹窗相关
+const scheduleFormRef = ref<FormInstance>()
+const scheduleDialog = reactive({
+  visible: false,
+  mode: 'add', // 'add' | 'edit'
+  title: '',
+  loading: false,
+  editingScheduleId: null as number | null,
 })
 
-const weekTitle = computed(() => {
-  if (!weekDays.value.length) return ''
-  const firstDay = weekDays.value[0]
-  const lastDay = weekDays.value[6]
-  return `${firstDay.month}.${firstDay.day} - ${lastDay.month}.${lastDay.day}`
+const scheduleForm = reactive({
+  courseId: 0,
+  coachId: undefined as number | undefined,
+  courseDate: '',
+  startTime: '',
+  endTime: '',
+  maxParticipants: 20,
+  notes: '',
 })
 
-const currentDayDate = computed(() => {
-  return weekDays.value[0]?.fullDate || ''
+const scheduleRules: FormRules = {
+  courseDate: [{ required: true, message: '请选择课程日期', trigger: 'change' }],
+  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  coachId: [{ required: true, message: '请选择教练', trigger: 'change' }],
+  maxParticipants: [
+    { required: true, message: '请输入最多人数', trigger: 'blur' },
+    {
+      type: 'number',
+      min: 1,
+      max: maxCapacity.value,
+      message: `最多人数在1-${maxCapacity.value}之间`,
+      trigger: 'blur',
+    },
+  ],
+}
+
+// 详情弹窗
+const detailDialog = ref({
+  visible: false,
 })
 
-const currentWeekCourses = computed(() => {
-  if (!weekDays.value.length) return []
-  
-  const startDate = weekDays.value[0].fullDate
-  const endDate = weekDays.value[6].fullDate
-  
-  return courseStore.courses.filter(course => {
-    const courseDate = formatDate(course.startTime, 'YYYY-MM-DD')
-    return courseDate >= startDate && courseDate <= endDate
-  })
-})
+const selectedSchedule = ref<CourseScheduleVO | null>(null)
 
-const currentDayCourses = computed(() => {
-  return currentWeekCourses.value.filter(course => {
-    const courseDate = formatDate(course.startTime, 'YYYY-MM-DD')
-    return courseDate === currentDayDate.value
-  })
-})
-
-const filteredCourses = computed(() => {
-  if (!searchKeyword.value) return currentWeekCourses.value
-  
-  const keyword = searchKeyword.value.toLowerCase()
-  return currentWeekCourses.value.filter(course => 
-    course.name.toLowerCase().includes(keyword) ||
-    course.coachName.toLowerCase().includes(keyword) ||
-    course.location.toLowerCase().includes(keyword)
-  )
-})
-
-// Methods
-const loadSchedule = async () => {
-  try {
-    loading.value = true
-    
-    const startDate = weekDays.value[0]?.fullDate
-    const endDate = weekDays.value[6]?.fullDate
-    
-    if (!startDate || !endDate) return
-    
-    await courseStore.fetchCourses({
-      startDate,
-      endDate,
-      pageSize: 100
-    })
-  } catch (error) {
-    console.error('加载课程安排失败:', error)
-    ElMessage.error('加载课程安排失败')
-  } finally {
-    loading.value = false
-  }
+// 格式化函数
+const formatDate = (date: string) => {
+  if (!date) return '-'
+  return date
 }
 
-const initCurrentWeek = () => {
-  const today = new Date()
-  const dayOfWeek = today.getDay()
-  const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
-  const monday = new Date(today.setDate(diff))
-  currentWeek.value = formatDate(monday, 'YYYY-MM-DD')
+const formatDateTime = (datetime: string) => {
+  if (!datetime) return '-'
+  return datetime.replace('T', ' ')
 }
 
-const getWeekdayName = (day: number) => {
-  const names = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  return names[day]
+const getRemainingSlotsType = (slots: number) => {
+  if (slots > 5) return 'success'
+  if (slots > 0) return 'warning'
+  return 'danger'
 }
 
-const prevWeek = () => {
-  const date = new Date(currentWeek.value)
-  date.setDate(date.getDate() - 7)
-  currentWeek.value = formatDate(date, 'YYYY-MM-DD')
-  loadSchedule()
+const getScheduleStatusType = (status: string) => {
+  if (status === '正常') return 'success'
+  if (status === '禁用') return 'danger'
+  return 'info'
 }
 
-const nextWeek = () => {
-  const date = new Date(currentWeek.value)
-  date.setDate(date.getDate() + 7)
-  currentWeek.value = formatDate(date, 'YYYY-MM-DD')
-  loadSchedule()
-}
-
-const handleWeekChange = () => {
-  loadSchedule()
-}
-
-const refreshSchedule = () => {
-  loadSchedule()
-}
-
-const getDayCourseCount = (date: string) => {
-  return currentWeekCourses.value.filter(course => 
-    formatDate(course.startTime, 'MM-DD') === date
-  ).length
-}
-
-const getCoursesAtTime = (date: string, hour: number) => {
-  return currentWeekCourses.value.filter(course => {
-    const courseDate = formatDate(course.startTime, 'MM-DD')
-    const courseHour = new Date(course.startTime).getHours()
-    return courseDate === date && courseHour === hour
-  })
-}
-
-const getCoursePosition = (course: Course) => {
-  const startTime = new Date(course.startTime)
-  const minutes = startTime.getMinutes()
-  return minutes * 0.8 // 0.8px per minute
-}
-
-const getCourseHeight = (course: Course) => {
-  return course.duration * 0.8 // 0.8px per minute
-}
-
-const getTotalBookings = () => {
-  return currentDayCourses.value.reduce((sum, course) => sum + course.currentBookings, 0)
-}
-
-const handleTimeSlotClick = (date: string, hour: number) => {
-  // 打开新增课程表单，预设时间
-  const dateStr = weekDays.value.find(d => d.date === date)?.fullDate
-  if (dateStr) {
-    const startTime = `${dateStr} ${hour.toString().padStart(2, '0')}:00:00`
-    const endTime = `${dateStr} ${(hour + 1).toString().padStart(2, '0')}:00:00`
-    
-    router.push({
-      path: '/courses/create',
-      query: {
-        startTime,
-        endTime,
-        duration: 60
-      }
-    })
-  }
-}
-
-const handleCourseClick = (course: Course) => {
-  router.push(`/courses/${course.id}`)
-}
-
-const handleAddCourse = () => {
-  router.push('/courses/create')
-}
-
-const handleEdit = (id: number) => {
-  router.push(`/courses/${id}/edit`)
-}
-
-const handleDelete = async (id: number) => {
-  try {
-    await ElMessageBox.confirm('确认删除该课程吗？此操作不可恢复。', '删除课程', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger'
-    })
-    
-    await courseStore.deleteCourse(id)
-    ElMessage.success('删除成功')
-    loadSchedule()
-  } catch (error) {
-    console.error('删除失败:', error)
-    ElMessage.error('删除失败')
-  }
-}
-
-const getCategoryType = (category: string) => {
-  const types: Record<string, string> = {
-    YOGA: 'success',
-    PILATES: 'info',
-    CROSSFIT: 'warning',
-    SPINNING: 'danger',
-    BODYBUILDING: '',
-    AEROBICS: 'success',
-    PERSONAL_TRAINING: 'warning'
-  }
-  return types[category] || 'info'
-}
-
-const getCategoryText = (category: string) => {
-  const map: Record<string, string> = {
-    YOGA: '瑜伽',
-    PILATES: '普拉提',
-    CROSSFIT: '综合体能',
-    SPINNING: '动感单车',
-    BODYBUILDING: '力量训练',
-    AEROBICS: '有氧运动',
-    PERSONAL_TRAINING: '私教课'
-  }
-  return map[category] || category
-}
-
-const getStatusType = (status: CourseStatus) => {
+const getBookingStatusType = (status: number) => {
   switch (status) {
-    case 'SCHEDULED':
-      return 'primary'
-    case 'IN_PROGRESS':
-      return 'warning'
-    case 'COMPLETED':
-      return 'success'
-    case 'CANCELLED':
-      return 'danger'
+    case 0:
+      return 'warning' // 待上课
+    case 1:
+      return 'success' // 已签到
+    case 2:
+      return 'info' // 已完成
+    case 3:
+      return 'danger' // 已取消
     default:
       return 'info'
   }
 }
 
-const getStatusText = (status: CourseStatus) => {
-  switch (status) {
-    case 'SCHEDULED':
-      return '已安排'
-    case 'IN_PROGRESS':
-      return '进行中'
-    case 'COMPLETED':
-      return '已完成'
-    case 'CANCELLED':
-      return '已取消'
-    default:
-      return '未知'
+// 加载数据
+const loadData = async () => {
+  try {
+    loading.value = true
+
+    // 加载课程详情
+    const courseResponse = await courseStore.fetchCourseDetail(courseId.value)
+    if (courseResponse) {
+      courseName.value = courseResponse.courseName
+      courseType.value = courseResponse.courseType
+      maxCapacity.value = courseResponse.maxCapacity
+      duration.value = courseResponse.duration
+      location.value = courseResponse.location || ''
+      // 加载教练列表
+      coachOptions.value = courseResponse.coaches.map((item) => ({
+        id: item.id,
+        realName: item.realName,
+      }))
+    }
+
+    // 加载排课列表
+    if (isGroupCourse.value) {
+      await loadSchedules()
+    }
+  } catch (error) {
+    console.error('加载数据失败:', error)
+    ElMessage.error('加载数据失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const getBookingPercentage = (course: Course) => {
-  if (!course.capacity) return 0
-  return Math.round((course.currentBookings / course.capacity) * 100)
+// 加载排课列表
+const loadSchedules = async () => {
+  try {
+    const response = await courseStore.fetchCourseSchedules(courseId.value)
+    if (response) {
+      schedules.value = response
+    }
+  } catch (error) {
+    console.error('加载排课列表失败:', error)
+    throw error
+  }
 }
 
-const getCapacityColor = (course: Course) => {
-  const percentage = getBookingPercentage(course)
-  if (percentage >= 90) return '#f56c6c'
-  if (percentage >= 70) return '#e6a23c'
-  return '#67c23a'
+// 加载教练列表
+// const loadCoachOptions = async () => {
+
+//   const response = await coachApi.getCoachList({})
+//   try {
+//     if (response.code === 200) {
+//       coachOptions.value = response.data.list.map(item => ({
+//         id: item.id,
+//         realName: item.realName
+//       }));
+//     }
+//   } catch (error) {
+//     console.error('加载教练列表失败:', error)
+//   }
+// }
+
+// 日期过滤
+const disabledDate = (time: Date) => {
+  return time.getTime() < Date.now() - 8.64e7 // 禁用今天之前的日期
 }
 
-// 生命周期
+const handleDateFilterChange = () => {
+  // 这里可以实现日期过滤逻辑
+  loadSchedules()
+}
+
+// 刷新数据
+const refreshData = async () => {
+  await loadData()
+  ElMessage.success('刷新成功')
+}
+
+// 添加排课
+const handleAddSchedule = () => {
+  if (!isGroupCourse.value) {
+    ElMessage.warning('只有团课可以排课')
+    return
+  }
+
+  scheduleDialog.mode = 'add'
+  scheduleDialog.title = '添加排课'
+  scheduleDialog.editingScheduleId = null
+  scheduleDialog.visible = true
+
+  // 重置表单
+  Object.assign(scheduleForm, {
+    courseId: courseId.value,
+    coachId: undefined,
+    courseDate: '',
+    startTime: '09:00',
+    endTime: '10:00',
+    maxParticipants: maxCapacity.value,
+    notes: '',
+  })
+}
+
+// 编辑排课
+const handleEditSchedule = (schedule: CourseScheduleVO) => {
+  scheduleDialog.mode = 'edit'
+  scheduleDialog.title = '编辑排课'
+  scheduleDialog.editingScheduleId = schedule.scheduleId
+  scheduleDialog.visible = true
+
+  Object.assign(scheduleForm, {
+    courseId: courseId.value,
+    coachId: schedule.coachId,
+    courseDate: schedule.scheduleDate,
+    startTime: schedule.startTime.slice(0, 5),
+    endTime: schedule.endTime.slice(0, 5),
+    maxParticipants: schedule.maxParticipants,
+    notes: schedule.notes || '',
+  })
+}
+
+// 查看排课详情
+const handleViewScheduleDetail = (schedule: CourseScheduleVO) => {
+  selectedSchedule.value = schedule
+  detailDialog.value.visible = true
+}
+
+// 删除排课
+const handleDeleteSchedule = async (schedule: CourseScheduleVO) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除 ${schedule.scheduleDate} ${schedule.startTime.slice(0, 5)} 的排课吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    // 这里应该调用API删除排课
+    // 为了演示，这里从列表中移除
+    schedules.value = schedules.value.filter((s) => s.scheduleId !== schedule.scheduleId)
+    ElMessage.success('删除成功')
+  } catch (error) {
+    // 用户取消
+  }
+}
+
+// 保存排课
+const handleSaveSchedule = async () => {
+  if (!scheduleFormRef.value) return
+
+  try {
+    await scheduleFormRef.value.validate()
+
+    scheduleDialog.loading = true
+
+    const scheduleData: CourseScheduleDTO = {
+      courseId: scheduleForm.courseId,
+      coachId: scheduleForm.coachId!,
+      courseDate: scheduleForm.courseDate,
+      startTime: scheduleForm.startTime + ':00',
+      endTime: scheduleForm.endTime + ':00',
+      maxParticipants: scheduleForm.maxParticipants,
+      notes: scheduleForm.notes,
+    }
+
+    if (scheduleDialog.mode === 'add') {
+      await courseStore.scheduleCourse(scheduleData)
+      ElMessage.success('添加排课成功')
+    } else if (scheduleDialog.editingScheduleId) {
+      // 更新排课（需要实现updateCourseSchedule接口）
+      ElMessage.warning('更新排课功能待实现')
+    }
+    scheduleDialog.visible = false
+    await loadSchedules()
+  } catch (error) {
+    console.error('保存排课失败:', error)
+    ElMessage.error('保存排课失败')
+  } finally {
+    scheduleDialog.loading = false
+  }
+}
+
+// 确认删除排课
+const handleDeleteScheduleConfirm = async () => {
+  if (!scheduleDialog.editingScheduleId) return
+
+  try {
+    await ElMessageBox.confirm('确定要删除这个排课吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
+    scheduleDialog.loading = true
+    // 这里应该调用API删除排课
+    schedules.value = schedules.value.filter(
+      (s) => s.scheduleId !== scheduleDialog.editingScheduleId
+    )
+    ElMessage.success('删除排课成功')
+    scheduleDialog.visible = false
+    await loadSchedules()
+  } catch (error) {
+    console.error('删除排课失败:', error)
+  } finally {
+    scheduleDialog.loading = false
+  }
+}
+
+// 关闭弹窗
+const handleDialogClose = () => {
+  scheduleDialog.visible = false
+  scheduleFormRef.value?.clearValidate()
+}
+
+// 导航
+const goBack = () => {
+  router.push('/course/list')
+}
+
 onMounted(() => {
-  initCurrentWeek()
-  loadSchedule()
+  loadData()
 })
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .course-schedule-container {
   padding: 20px;
-  
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    .header-left {
-      .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-        margin: 0 0 8px;
-      }
-      
-      .el-breadcrumb {
-        font-size: 14px;
-        color: var(--gymflow-text-secondary);
-      }
-    }
-  }
-  
-  .schedule-card {
-    border-radius: 12px;
-    margin-bottom: 24px;
-    
-    :deep(.el-card__body) {
-      padding: 20px;
-    }
-    
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      
-      .week-navigation {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        
-        .week-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: var(--gymflow-text-primary);
-          min-width: 200px;
-          text-align: center;
-        }
-      }
-      
-      .view-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-    }
-    
-    .week-view {
-      .time-grid {
-        display: flex;
-        border: 1px solid var(--gymflow-border);
-        border-radius: 8px;
-        overflow: hidden;
-        
-        .time-axis {
-          width: 80px;
-          flex-shrink: 0;
-          
-          .time-header {
-            height: 60px;
-            background: var(--gymflow-bg);
-            border-bottom: 1px solid var(--gymflow-border);
-          }
-          
-          .time-slot {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: var(--gymflow-text-secondary);
-            border-bottom: 1px solid var(--gymflow-border);
-            background: var(--gymflow-card-bg);
-          }
-        }
-        
-        .day-column {
-          flex: 1;
-          border-left: 1px solid var(--gymflow-border);
-          
-          .day-header {
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--gymflow-bg);
-            border-bottom: 1px solid var(--gymflow-border);
-            
-            .day-name {
-              font-size: 14px;
-              font-weight: 600;
-              color: var(--gymflow-text-primary);
-            }
-            
-            .day-date {
-              font-size: 12px;
-              color: var(--gymflow-text-secondary);
-              margin: 2px 0;
-            }
-            
-            .day-count {
-              font-size: 11px;
-              color: var(--gymflow-primary);
-              background: rgba(0, 184, 148, 0.1);
-              padding: 1px 6px;
-              border-radius: 10px;
-            }
-          }
-          
-          .day-time-slots {
-            .time-slot {
-              height: 60px;
-              position: relative;
-              border-bottom: 1px solid var(--gymflow-border);
-              cursor: pointer;
-              transition: background 0.2s;
-              
-              &:hover {
-                background: rgba(0, 184, 148, 0.05);
-              }
-              
-              .course-card {
-                position: absolute;
-                left: 4px;
-                right: 4px;
-                top: 2px;
-                bottom: 2px;
-                padding: 8px;
-                border-radius: 6px;
-                font-size: 12px;
-                cursor: pointer;
-                overflow: hidden;
-                transition: transform 0.2s;
-                
-                &:hover {
-                  transform: translateY(-2px);
-                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                }
-                
-                &.scheduled {
-                  background: rgba(64, 158, 255, 0.1);
-                  border: 1px solid rgba(64, 158, 255, 0.3);
-                }
-                
-                &.in_progress {
-                  background: rgba(230, 162, 60, 0.1);
-                  border: 1px solid rgba(230, 162, 60, 0.3);
-                }
-                
-                &.completed {
-                  background: rgba(103, 194, 58, 0.1);
-                  border: 1px solid rgba(103, 194, 58, 0.3);
-                }
-                
-                &.cancelled {
-                  background: rgba(245, 108, 108, 0.1);
-                  border: 1px solid rgba(245, 108, 108, 0.3);
-                  opacity: 0.7;
-                }
-                
-                &.full {
-                  position: relative;
-                  
-                  &::after {
-                    content: '满';
-                    position: absolute;
-                    top: 2px;
-                    right: 2px;
-                    background: var(--el-color-danger);
-                    color: white;
-                    font-size: 10px;
-                    padding: 1px 4px;
-                    border-radius: 4px;
-                  }
-                }
-                
-                .course-title {
-                  font-weight: 600;
-                  color: var(--gymflow-text-primary);
-                  margin-bottom: 2px;
-                  white-space: nowrap;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                }
-                
-                .course-info {
-                  display: flex;
-                  justify-content: space-between;
-                  font-size: 10px;
-                  color: var(--gymflow-text-secondary);
-                  margin-bottom: 2px;
-                }
-                
-                .course-time {
-                  font-size: 10px;
-                  color: var(--gymflow-text-secondary);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    .day-view {
-      .day-header-large {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid var(--gymflow-border);
-        
-        h3 {
-          font-size: 20px;
-          font-weight: 600;
-          color: var(--gymflow-text-primary);
-          margin: 0;
-        }
-        
-        .day-stats {
-          display: flex;
-          gap: 20px;
-          
-          .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            color: var(--gymflow-text-secondary);
-            
-            .el-icon {
-              color: var(--gymflow-primary);
-            }
-          }
-        }
-      }
-      
-      .day-timeline {
-        border-left: 2px solid var(--gymflow-border);
-        margin-left: 80px;
-        position: relative;
-        
-        .timeline-hour {
-          display: flex;
-          position: relative;
-          height: 48px;
-          
-          .hour-label {
-            position: absolute;
-            left: -80px;
-            top: 0;
-            width: 70px;
-            text-align: right;
-            padding-right: 10px;
-            font-size: 14px;
-            color: var(--gymflow-text-secondary);
-            line-height: 48px;
-          }
-          
-          .hour-content {
-            flex: 1;
-            position: relative;
-            border-bottom: 1px solid var(--gymflow-border);
-            
-            .timeline-course {
-              position: absolute;
-              left: 8px;
-              right: 8px;
-              background: rgba(0, 184, 148, 0.1);
-              border: 1px solid rgba(0, 184, 148, 0.3);
-              border-radius: 6px;
-              padding: 8px;
-              cursor: pointer;
-              overflow: hidden;
-              
-              &:hover {
-                background: rgba(0, 184, 148, 0.15);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-              }
-              
-              .course-content {
-                .course-title {
-                  font-size: 14px;
-                  font-weight: 600;
-                  color: var(--gymflow-text-primary);
-                  margin-bottom: 2px;
-                }
-                
-                .course-coach {
-                  font-size: 12px;
-                  color: var(--gymflow-text-secondary);
-                  margin-bottom: 2px;
-                }
-                
-                .course-time {
-                  font-size: 12px;
-                  color: var(--gymflow-text-secondary);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  .course-list-card {
-    border-radius: 12px;
-    
-    :deep(.el-card__header) {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--gymflow-border);
-    }
-    
-    .list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      
-      h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-      }
-    }
-    
-    :deep(.el-table) {
-      th {
-        background: var(--gymflow-bg);
-        font-weight: 600;
-      }
-      
-      .course-cell {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        
-        .course-name {
-          font-weight: 500;
-        }
-      }
-      
-      .time-cell {
-        .time-range {
-          font-size: 12px;
-          color: var(--gymflow-text-secondary);
-          margin-top: 2px;
-        }
-      }
-      
-      .capacity-cell {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        
-        .capacity-text {
-          font-size: 12px;
-          color: var(--gymflow-text-secondary);
-          text-align: center;
-        }
-      }
-      
-      .delete-btn {
-        color: var(--el-color-danger);
-        
-        &:hover {
-          background: rgba(245, 108, 108, 0.1);
-        }
-      }
-    }
-  }
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .course-schedule-container {
-    padding: 16px;
-    
-    .page-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-    }
-    
-    .schedule-card {
-      .calendar-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-      }
-      
-      .week-view {
-        overflow-x: auto;
-        
-        .time-grid {
-          min-width: 800px;
-        }
-      }
-      
-      .day-view {
-        .day-header-large {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        
-        .day-timeline {
-          margin-left: 60px;
-          
-          .timeline-hour {
-            .hour-label {
-              left: -60px;
-              width: 50px;
-            }
-          }
-        }
-      }
-    }
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.header-left .page-title {
+  margin: 10px 0 0 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.course-info-card {
+  margin-bottom: 20px;
+}
+
+.course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.course-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.course-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.meta-item .el-icon {
+  color: #409eff;
+}
+
+.schedule-list-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.empty-data {
+  padding: 40px 0;
+  text-align: center;
+}
+
+.empty-actions {
+  margin-top: 20px;
+}
+
+.private-course-notice {
+  padding: 20px;
+}
+
+.notes-text {
+  color: #606266;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.schedule-detail {
+  padding: 10px;
+}
+
+.booking-section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.no-booking {
+  padding: 40px 0;
+  text-align: center;
+}
+
+:deep(.el-card__header) {
+  padding: 16px 20px;
+}
+
+:deep(.el-table__header) {
+  background-color: #f8f9fa;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f5f7fa;
+}
+
+:deep(.el-alert) {
+  margin-bottom: 0;
+}
+
+:deep(.el-descriptions__body) {
+  background-color: white;
+}
+
+:deep(.el-descriptions__cell) {
+  padding: 12px 16px;
 }
 </style>

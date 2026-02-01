@@ -1,124 +1,424 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Course, QueryParams, PaginatedResponse } from '@/types'
 import { courseApi } from '@/api/course'
+import type {
+  CourseQueryParams,
+  CourseBasicDTO,
+  CourseScheduleDTO,
+  CourseListVO,
+  CourseDetail,
+  CourseScheduleVO,
+  CourseBookingDTO,
+  PageResultVO
+} from '@/types/course'
 
 export const useCourseStore = defineStore('course', () => {
-  // 状态
-  const courses = ref<Course[]>([])
-  const currentCourse = ref<Course | null>(null)
+  const courseList = ref<CourseListVO[]>([])
+  const currentCourse = ref<CourseDetail | null>(null)
+  const courseSchedules = ref<CourseScheduleVO[]>([])
+  const courseTimetable = ref<CourseScheduleVO[]>([])
   const total = ref(0)
   const loading = ref(false)
-
-  // Actions
-  const fetchCourses = async (params: QueryParams = {}) => {
+  const pageInfo = ref({
+    pageNum: 1,
+    pageSize: 10,
+    totalPages: 0
+  })
+  
+  /**
+   * 分页查询课程列表
+   */
+  const fetchCourseList = async (params: CourseQueryParams = {}) => {
     try {
       loading.value = true
-      const response: PaginatedResponse<Course> = await courseApi.getCourses(params)
-      courses.value = response.items
-      total.value = response.total
-      return response
+      const queryParams = {
+        pageNum: params.pageNum || pageInfo.value.pageNum,
+        pageSize: params.pageSize || pageInfo.value.pageSize,
+        ...params
+      }
+      
+      const response = await courseApi.getCourseList(queryParams)
+      if (response.code === 200) {
+        courseList.value = response.data.list
+        total.value = response.data.total
+        pageInfo.value = {
+          pageNum: response.data.pageNum,
+          pageSize: response.data.pageSize,
+          totalPages: response.data.pages || Math.ceil(response.data.total / response.data.pageSize)
+        }
+      }
+      return response.data
     } catch (error) {
-      console.error('Fetch courses failed:', error)
+      console.error('获取课程列表失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
 
-  const fetchCourseById = async (id: number) => {
+  /**
+   * 添加课程
+   */
+  const addCourse = async (data: CourseBasicDTO) => {
     try {
       loading.value = true
-      const response = await courseApi.getCourseById(id)
-      currentCourse.value = response
-      return response
-    } catch (error) {
-      console.error('Fetch course by id failed:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const createCourse = async (courseData: Partial<Course>) => {
-    try {
-      loading.value = true
-      const response = await courseApi.createCourse(courseData)
-      return response
-    } catch (error) {
-      console.error('Create course failed:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const updateCourse = async (id: number, courseData: Partial<Course>) => {
-    try {
-      loading.value = true
-      const response = await courseApi.updateCourse(id, courseData)
-      // 更新本地数据
-      const index = courses.value.findIndex(course => course.id === id)
-      if (index !== -1) {
-        courses.value[index] = { ...courses.value[index], ...response }
+      const response = await courseApi.addCourse(data)
+      if (response.code === 200) {
+        // 添加成功后重新加载列表
+        await fetchCourseList({
+          pageNum: pageInfo.value.pageNum,
+          pageSize: pageInfo.value.pageSize
+        })
       }
       return response
     } catch (error) {
-      console.error('Update course failed:', error)
+      console.error('添加课程失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
 
-  const deleteCourse = async (id: number) => {
+  /**
+   * 更新课程信息
+   */
+  const updateCourse = async (courseId: number, data: CourseBasicDTO) => {
     try {
       loading.value = true
-      await courseApi.deleteCourse(id)
-      // 从本地删除
-      courses.value = courses.value.filter(course => course.id !== id)
-      total.value -= 1
-    } catch (error) {
-      console.error('Delete course failed:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const getCourseSchedule = async (params: QueryParams = {}) => {
-    try {
-      loading.value = true
-      const response = await courseApi.getSchedule(params)
+      const response = await courseApi.updateCourse(courseId, data)
+      if (response.code === 200) {
+        // 更新成功后刷新当前课程详情
+        if (currentCourse.value?.id === courseId) {
+          await fetchCourseDetail(courseId)
+        }
+        // 刷新列表
+        await fetchCourseList({
+          pageNum: pageInfo.value.pageNum,
+          pageSize: pageInfo.value.pageSize
+        })
+      }
       return response
     } catch (error) {
-      console.error('Get course schedule failed:', error)
+      console.error('更新课程失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
 
-  const resetCourseState = () => {
-    courses.value = []
+  /**
+   * 删除课程
+   */
+  const deleteCourse = async (courseId: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.deleteCourse(courseId)
+      if (response.code === 200) {
+        // 从本地列表中移除
+        courseList.value = courseList.value.filter(item => item.id !== courseId)
+        total.value -= 1
+        
+        // 如果删除的是当前查看的课程，清空当前课程数据
+        if (currentCourse.value?.id === courseId) {
+          currentCourse.value = null
+          courseSchedules.value = []
+        }
+      }
+      return response
+    } catch (error) {
+      console.error('删除课程失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 批量删除课程
+   */
+  const batchDeleteCourse = async (ids: number[]) => {
+    try {
+      loading.value = true
+      const response = await courseApi.batchDeleteCourse(ids)
+      if (response.code === 200) {
+        // 从本地列表中移除
+        courseList.value = courseList.value.filter(item => !ids.includes(item.id))
+        total.value -= ids.length
+        
+        // 如果删除的包含当前查看的课程，清空当前课程数据
+        if (currentCourse.value && ids.includes(currentCourse.value.id)) {
+          currentCourse.value = null
+          courseSchedules.value = []
+        }
+      }
+      return response
+    } catch (error) {
+      console.error('批量删除课程失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 更新课程状态
+   */
+  const updateCourseStatus = async (courseId: number, status: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.updateCourseStatus(courseId, status)
+      if (response.code === 200) {
+        // 更新列表中的状态
+        const index = courseList.value.findIndex(item => item.id === courseId)
+        if (index !== -1) {
+          courseList.value[index].status = status
+          courseList.value[index].statusDesc = status === 1 ? '正常' : '禁用'
+        }
+        // 更新当前课程的状态
+        if (currentCourse.value?.id === courseId) {
+          currentCourse.value.status = status
+          currentCourse.value.statusDesc = status === 1 ? '正常' : '禁用'
+        }
+      }
+      return response
+    } catch (error) {
+      console.error('更新课程状态失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 获取课程详情
+   */
+  const fetchCourseDetail = async (courseId: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.getCourseDetail(courseId)
+      if (response.code === 200) {
+        currentCourse.value = response.data
+        // 同时加载该课程的排课
+        await fetchCourseSchedules(courseId)
+      }
+      return response.data
+    } catch (error) {
+      console.error('获取课程详情失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 获取课程排课列表
+   */
+  const fetchCourseSchedules = async (courseId: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.getCourseSchedules(courseId)
+      if (response.code === 200) {
+        courseSchedules.value = response.data
+      }
+      return response.data
+    } catch (error) {
+      console.error('获取课程排课失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 获取课程表
+   */
+  const fetchCourseTimetable = async (startDate?: string, endDate?: string) => {
+    try {
+      loading.value = true
+      const response = await courseApi.getCourseTimetable(startDate, endDate)
+      if (response.code === 200) {
+        courseTimetable.value = response.data
+      }
+      return response.data
+    } catch (error) {
+      console.error('获取课程表失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 课程排课（团课）
+   */
+  const scheduleCourse = async (data: CourseScheduleDTO) => {
+    try {
+      loading.value = true
+      const response = await courseApi.scheduleCourse(data)
+      if (response.code === 200 && currentCourse.value) {
+        // 排课成功后刷新排课列表
+        await fetchCourseSchedules(currentCourse.value.id)
+      }
+      return response
+    } catch (error) {
+      console.error('课程排课失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 会员预约私教课
+   */
+  const bookPrivateCourse = async (memberId: number, coachId: number, courseDate: string, startTime: string) => {
+    try {
+      loading.value = true
+      const response = await courseApi.bookPrivateCourse(memberId, coachId, courseDate, startTime)
+      return response
+    } catch (error) {
+      console.error('预约私教课失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 会员预约团课
+   */
+  const bookGroupCourse = async (memberId: number, scheduleId: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.bookGroupCourse(memberId, scheduleId)
+      return response
+    } catch (error) {
+      console.error('预约团课失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 核销课程预约
+   */
+  const verifyCourseBooking = async (bookingId: number, checkinMethod: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.verifyCourseBooking(bookingId, checkinMethod)
+      return response
+    } catch (error) {
+      console.error('核销课程预约失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 取消课程预约
+   */
+  const cancelCourseBooking = async (bookingId: number, reason: string) => {
+    try {
+      loading.value = true
+      const response = await courseApi.cancelCourseBooking(bookingId, reason)
+      return response
+    } catch (error) {
+      console.error('取消课程预约失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * 设置分页信息
+   */
+  const setPageInfo = (pageNum: number, pageSize: number) => {
+    pageInfo.value.pageNum = pageNum
+    pageInfo.value.pageSize = pageSize
+  }
+
+  /**
+   * 清空当前课程数据
+   */
+  const clearCurrentCourse = () => {
     currentCourse.value = null
+    courseSchedules.value = []
+  }
+
+  /**
+   * 重置状态
+   */
+  const resetState = () => {
+    courseList.value = []
+    currentCourse.value = null
+    courseSchedules.value = []
+    courseTimetable.value = []
     total.value = 0
+    loading.value = false
+    pageInfo.value = {
+      pageNum: 1,
+      pageSize: 10,
+      totalPages: 0
+    }
+  }
+
+  // Getters
+  const hasNextPage = () => {
+    return pageInfo.value.pageNum < pageInfo.value.totalPages
+  }
+
+  const hasPrevPage = () => {
+    return pageInfo.value.pageNum > 1
+  }
+
+  // 格式化课程列表
+  const formattedCourseList = () => {
+    return courseList.value.map(course => ({
+      ...course,
+      priceFormatted: course.price ? `¥${course.price.toFixed(2)}` : '-',
+      enrollmentRateFormatted: course.enrollmentRate ? `${course.enrollmentRate}%` : '0%',
+      durationFormatted: course.duration ? `${course.duration}分钟` : '-',
+      statusDesc: course.status === 1 ? '正常' : '禁用',
+      createTimeFormatted: course.createTime ? new Date(course.createTime).toLocaleString() : '-',
+      courseDateFormatted: course.courseDate ? new Date(course.courseDate).toLocaleDateString() : '-'
+    }))
   }
 
   return {
     // 状态
-    courses,
+    courseList,
     currentCourse,
+    courseSchedules,
+    courseTimetable,
     total,
     loading,
+    pageInfo,
     
     // Actions
-    fetchCourses,
-    fetchCourseById,
-    createCourse,
+    fetchCourseList,
+    addCourse,
     updateCourse,
     deleteCourse,
-    getCourseSchedule,
-    resetCourseState
+    batchDeleteCourse,
+    updateCourseStatus,
+    fetchCourseDetail,
+    fetchCourseSchedules,
+    fetchCourseTimetable,
+    scheduleCourse,
+    bookPrivateCourse,
+    bookGroupCourse,
+    verifyCourseBooking,
+    cancelCourseBooking,
+    setPageInfo,
+    clearCurrentCourse,
+    resetState,
+    
+    // Getters
+    hasNextPage,
+    hasPrevPage,
+    formattedCourseList
   }
 })

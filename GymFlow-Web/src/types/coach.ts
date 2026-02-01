@@ -11,15 +11,17 @@ export interface CoachQueryParams {
 }
 
 export interface CoachBasicDTO {
+  id: number
   realName: string
-  phone: string
-  password?: string
+  phone?: string
   specialty?: string
   certificationList?: string[]
-  yearsOfExperience: number
-  hourlyRate: number
-  commissionRate: number
+  yearsOfExperience?: number
+  hourlyRate?: number
+  commissionRate?: number
   introduction?: string
+  status?: number
+  statusDesc?: string
 }
 
 export interface CoachScheduleDTO {
