@@ -1,92 +1,142 @@
 import request from '@/utils/request'
-import type { Order, QueryParams, PaginatedResponse, ApiResponse } from '@/types'
-import { ApiPaths } from '@/utils/constants'
+import type {
+  OrderQueryParams,
+  OrderBasicDTO,
+  OrderStatusDTO,
+  OrderListVO,
+  OrderDetailVO,
+  PageResultVO,
+  ApiResponse
+} from '@/types/order'
 
+// 订单管理API
 export const orderApi = {
   /**
-   * 获取订单列表
+   * 分页查询订单列表
    */
-  getOrders(params?: QueryParams): Promise<PaginatedResponse<Order>> {
-    return http.get(ApiPaths.ORDERS, { params })
+  getOrderList(params: OrderQueryParams): Promise<ApiResponse<PageResultVO<OrderListVO>>> {
+    return request({
+      url: '/order/list',
+      method: 'POST',
+      data: params
+    })
   },
 
   /**
    * 获取订单详情
    */
-  getOrderById(id: number): Promise<Order> {
-    return http.get(ApiPaths.ORDER_DETAIL(id))
+  getOrderDetail(orderId: number): Promise<ApiResponse<OrderDetailVO>> {
+    return request({
+      url: `/order/detail/${orderId}`,
+      method: 'GET'
+    })
   },
 
   /**
    * 创建订单
    */
-  createOrder(data: Partial<Order>): Promise<Order> {
-    return http.post(ApiPaths.ORDERS, data)
+  createOrder(data: OrderBasicDTO): Promise<ApiResponse<number>> {
+    return request({
+      url: '/order/create',
+      method: 'POST',
+      data
+    })
   },
 
   /**
-   * 更新订单
+   * 更新订单信息
    */
-  updateOrder(id: number, data: Partial<Order>): Promise<Order> {
-    return http.put(ApiPaths.ORDER_DETAIL(id), data)
+  updateOrder(orderId: number, data: OrderBasicDTO): Promise<ApiResponse> {
+    return request({
+      url: `/order/update/${orderId}`,
+      method: 'PUT',
+      data
+    })
   },
 
   /**
-   * 删除订单
+   * 更新订单状态
    */
-  deleteOrder(id: number): Promise<void> {
-    return http.delete(ApiPaths.ORDER_DETAIL(id))
-  },
-
-  /**
-   * 获取订单统计
-   */
-  getStatistics(params?: QueryParams): Promise<any> {
-    return http.get(ApiPaths.ORDER_STATISTICS, { params })
-  },
-
-  /**
-   * 确认订单
-   */
-  confirmOrder(id: number): Promise<Order> {
-    return http.post(`/orders/${id}/confirm`)
+  updateOrderStatus(orderId: number, data: OrderStatusDTO): Promise<ApiResponse> {
+    return request({
+      url: `/order/updateStatus/${orderId}`,
+      method: 'PUT',
+      data
+    })
   },
 
   /**
    * 取消订单
    */
-  cancelOrder(id: number, reason?: string): Promise<Order> {
-    return http.post(`/orders/${id}/cancel`, { reason })
-  },
-
-  /**
-   * 退款
-   */
-  refundOrder(id: number, reason?: string): Promise<Order> {
-    return http.post(`/orders/${id}/refund`, { reason })
+  cancelOrder(orderId: number, reason?: string): Promise<ApiResponse> {
+    return request({
+      url: `/order/cancel/${orderId}`,
+      method: 'POST',
+      params: { reason }
+    })
   },
 
   /**
    * 完成订单
    */
-  completeOrder(id: number): Promise<Order> {
-    return http.post(`/orders/${id}/complete`)
-  },
-
-  /**
-   * 导出订单数据
-   */
-  exportOrders(params?: QueryParams): Promise<Blob> {
-    return http.get('/orders/export', {
-      params,
-      responseType: 'blob'
+  completeOrder(orderId: number): Promise<ApiResponse> {
+    return request({
+      url: `/order/complete/${orderId}`,
+      method: 'POST'
     })
   },
 
   /**
-   * 获取订单商品项
+   * 删除订单
    */
-  getOrderItems(orderId: number): Promise<any[]> {
-    return http.get(`/orders/${orderId}/items`)
+  deleteOrder(orderId: number): Promise<ApiResponse> {
+    return request({
+      url: `/order/delete/${orderId}`,
+      method: 'DELETE'
+    })
+  },
+
+  /**
+   * 批量删除订单
+   */
+  batchDeleteOrder(ids: number[]): Promise<ApiResponse> {
+    return request({
+      url: '/order/batch-delete',
+      method: 'POST',
+      data: ids
+    })
+  },
+
+  /**
+   * 订单支付
+   */
+  payOrder(orderId: number, paymentMethod?: string): Promise<ApiResponse> {
+    return request({
+      url: `/order/pay/${orderId}`,
+      method: 'POST',
+      params: { paymentMethod }
+    })
+  },
+
+  /**
+   * 订单退款
+   */
+  refundOrder(orderId: number, refundAmount: number, reason?: string): Promise<ApiResponse> {
+    return request({
+      url: `/order/refund/${orderId}`,
+      method: 'POST',
+      params: { refundAmount, reason }
+    })
+  },
+
+  /**
+   * 获取会员订单列表
+   */
+  getMemberOrders(memberId: number, params: OrderQueryParams): Promise<ApiResponse<PageResultVO<OrderListVO>>> {
+    return request({
+      url: `/order/member/${memberId}`,
+      method: 'POST',
+      data: params
+    })
   }
 }
