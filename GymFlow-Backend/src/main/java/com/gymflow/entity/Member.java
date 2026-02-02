@@ -11,13 +11,15 @@ import java.time.LocalDateTime;
 public class Member {
 
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Long id;  // 主键，作为唯一标识
 
     @TableField("member_no")
     private String memberNo;
 
+    @TableField("phone")
     private String phone;
 
+    @TableField("password")
     private String password;
 
     @TableField("id_card")
@@ -26,12 +28,16 @@ public class Member {
     @TableField("real_name")
     private String realName;
 
+    @TableField("gender")
     private Integer gender;
 
+    @TableField("birthday")
     private LocalDate birthday;
 
+    @TableField("height")
     private BigDecimal height;
 
+    @TableField("weight")
     private BigDecimal weight;
 
     @TableField("membership_start_date")
@@ -52,11 +58,12 @@ public class Member {
     @TableField("total_spent")
     private BigDecimal totalSpent;
 
+    @TableField("address")
     private String address;
 
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 }

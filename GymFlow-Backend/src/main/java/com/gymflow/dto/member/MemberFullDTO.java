@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Schema(description = "会员完整信息DTO（包含基础信息+健康档案+会员卡+课程/签到记录）")
+@Schema(description = "会员完整信息DTO")
 public class MemberFullDTO {
 
     // 会员基本信息
@@ -19,20 +19,19 @@ public class MemberFullDTO {
     @Schema(description = "会员主键ID", example = "10001", required = true)
     private Long id;
 
-    @NotNull(message = "用户ID不能为空")
-    @Positive(message = "用户ID必须为正数")
-    @Schema(description = "关联用户表ID", example = "20001", required = true)
-    private Long userId;
+    // 移除了userId字段
+    // @NotNull(message = "用户ID不能为空")
+    // @Positive(message = "用户ID必须为正数")
+    // @Schema(description = "关联用户表ID", example = "20001", required = true)
+    // private Long userId;
 
     @NotBlank(message = "会员编号不能为空")
     @Size(max = 20, message = "会员编号长度不能超过20")
     @Schema(description = "会员编号", example = "GYM20260128001", required = true)
     private String memberNo;
 
-    @NotBlank(message = "用户名不能为空")
-    @Size(max = 50, message = "用户名长度不能超过50")
-    @Schema(description = "登录用户名", example = "zhangsan", required = true)
-    private String username;
+    @Schema(description = "登录用户名（手机号）", example = "13800138000")
+    private String username;  // 这里直接使用手机号作为用户名
 
     @NotBlank(message = "手机号不能为空")
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
@@ -110,4 +109,9 @@ public class MemberFullDTO {
     // 签到记录列表
     @Schema(description = "会员签到记录列表")
     private List<CheckInRecordDTO> checkinRecords;
+
+    // 在getUsername方法中设置用户名
+    public String getUsername() {
+        return this.phone; // 手机号作为用户名
+    }
 }

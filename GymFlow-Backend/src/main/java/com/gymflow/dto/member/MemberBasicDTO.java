@@ -11,12 +11,9 @@ import java.time.LocalDate;
 @Schema(description = "会员基础信息DTO")
 public class MemberBasicDTO {
 
-    // 用户信息
-//    @NotBlank(message = "用户名不能为空")
-//    @Size(max = 50, message = "用户名长度不能超过50")
-//    @Schema(description = "用户名", example = "zhangsan", required = true)
-//    private String username;
-//
+    @Schema(description = "会员ID", example = "1001")
+    private Long id;
+
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, max = 20, message = "密码长度需在6-20之间")
     @Schema(description = "密码", example = "123456", required = true)
