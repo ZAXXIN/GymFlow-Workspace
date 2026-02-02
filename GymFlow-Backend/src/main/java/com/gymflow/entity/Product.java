@@ -23,7 +23,7 @@ public class Product {
 
     private String description;
 
-    private String images;
+    private String images; // JSON格式存储
 
     @TableField("original_price")
     private BigDecimal originalPrice;
@@ -45,7 +45,7 @@ public class Product {
     @TableField("validity_days")
     private Integer validityDays;
 
-    private String specifications;
+    private String specifications; // JSON格式存储
 
     private Integer status;
 
