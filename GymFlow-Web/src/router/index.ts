@@ -7,6 +7,7 @@ import dashboardRoutes from './routes/dashboard'
 import memberRoutes from './routes/member'
 import coachRoutes from './routes/coach'
 import courseRoutes from './routes/course'
+import productRoutes from './routes/product'
 import orderRoutes from './routes/order'
 import checkinRoutes from './routes/checkIn'
 import settingsRoutes from './routes/settings'
@@ -25,6 +26,7 @@ const routes: RouteRecordRaw[] = [
       ...memberRoutes,
       ...coachRoutes,
       ...courseRoutes,
+      ...productRoutes,
       ...orderRoutes,
       ...checkinRoutes,
       ...settingsRoutes,

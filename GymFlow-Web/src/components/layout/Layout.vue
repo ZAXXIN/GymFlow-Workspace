@@ -89,9 +89,10 @@ import {
   Calendar,
   ShoppingCart,
   Check,
-  Document,
   Setting,
-  PieChart
+  PieChart,
+  Goods,
+  Document
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -122,7 +123,7 @@ const allMenus = [
   {
     path: '/member/list',
     title: '会员管理',
-    icon: UserFilled,
+    icon: User,
     roles: [0, 1], // 管理员和前台可见
     // children: [
     //   { path: '/member/list', title: '会员列表' },
@@ -155,12 +156,18 @@ const allMenus = [
     //   { path: '/course/booking', title: '课程预约' }
     // ]
   },
+  {
+    path: '/product/list',
+    title: '商品管理',
+    icon: Goods,
+    roles: [0, 1], // 管理员、前台、教练可见
+  },
   
   // 订单管理
   {
     path: '/order/list',
     title: '订单管理',
-    icon: ShoppingCart,
+    icon: Document,
     roles: [0, 1], // 管理员和前台可见
     // children: [
     //   { path: '/order/list', title: '订单列表' },
