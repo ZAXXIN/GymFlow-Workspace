@@ -13,17 +13,5 @@ const bookingRoutes: RouteRecordRaw[] = [
       roles: ['ADMIN', 'COACH']
     }
   },
-  {
-    path: '/checkin',
-    name: 'CheckIn',
-    component: () => import('@/views/booking/CheckIn.vue'),
-    meta: {
-      title: '签到管理',
-      icon: 'i-ep-check',
-      requiresAuth: true,
-      showInMenu:true,
-      roles: ['ADMIN', 'COACH']
-    }
-  }
 ]
 export default bookingRoutes

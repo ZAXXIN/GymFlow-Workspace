@@ -3,69 +3,68 @@
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-left">
-        <h1 class="page-title">签到记录</h1>
-        <el-breadcrumb separator="/">
-          <el-breadcrumb-item>签到管理</el-breadcrumb-item>
-          <el-breadcrumb-item>签到记录</el-breadcrumb-item>
-        </el-breadcrumb>
+        <h1 class="page-title">签到管理</h1>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleBatchCheckin">
+        <el-button type="primary" @click="handleQuickCheckIn">
           <el-icon><Plus /></el-icon>
-          批量签到
+          快速签到
         </el-button>
-        <el-button @click="handleExport">
+        <el-button type="success" @click="handleExport" :disabled="loading">
           <el-icon><Download /></el-icon>
-          导出
+          导出数据
         </el-button>
       </div>
     </div>
     
     <!-- 筛选条件 -->
     <el-card class="filter-card">
-      <el-form :model="filterForm" inline label-width="80px">
+      <el-form :model="filterForm" inline>
         <el-form-item label="会员姓名">
           <el-input
             v-model="filterForm.memberName"
             placeholder="请输入会员姓名"
             clearable
             style="width: 180px;"
+            @keyup.enter="handleSearch"
           />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input
+            v-model="filterForm.memberPhone"
+            placeholder="请输入手机号"
+            clearable
+            style="width: 180px;"
+            @keyup.enter="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item label="签到方式">
+          <el-select
+            v-model="filterForm.checkinMethod"
+            placeholder="请选择签到方式"
+            clearable
+            style="width: 180px;"
+          >
+            <el-option label="教练签到" :value="0" />
+            <el-option label="前台签到" :value="1" />
+          </el-select>
         </el-form-item>
         <el-form-item label="签到类型">
           <el-select
-            v-model="filterForm.type"
-            placeholder="请选择类型"
+            v-model="filterForm.hasCourseBooking"
+            placeholder="请选择签到类型"
             clearable
             style="width: 180px;"
           >
-            <el-option
-              v-for="item in checkinTypeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="签到状态">
-          <el-select
-            v-model="filterForm.status"
-            placeholder="请选择状态"
-            clearable
-            style="width: 180px;"
-          >
-            <el-option
-              v-for="item in checkinStatusOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+            <el-option label="课程签到" :value="true" />
+            <el-option label="自由训练" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item label="签到时间">
           <el-date-picker
             v-model="filterForm.dateRange"
             type="daterange"
+            value-format="YYYY-MM-DD"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
@@ -73,11 +72,11 @@
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">
+          <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon><Search /></el-icon>
             查询
           </el-button>
-          <el-button @click="handleReset">
+          <el-button @click="handleReset" :disabled="loading">
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
@@ -85,64 +84,68 @@
       </el-form>
     </el-card>
     
-    <!-- 今日签到统计 -->
-    <div class="today-stats">
-      <el-card class="stats-card">
-        <div class="stats-content">
-          <div class="stats-icon today">
-            <el-icon><Calendar /></el-icon>
-          </div>
-          <div class="stats-info">
-            <div class="stats-number">{{ todayStats.todayCheckins || 0 }}</div>
-            <div class="stats-label">今日签到</div>
-          </div>
+    <!-- 今日统计 -->
+    <el-card class="stats-card">
+      <template #header>
+        <div class="stats-header">
+          <span class="stats-title">今日签到统计</span>
+          <span class="stats-time">更新时间：{{ formatDateTime(statsUpdateTime) }}</span>
         </div>
-      </el-card>
+      </template>
       
-      <el-card class="stats-card">
-        <div class="stats-content">
-          <div class="stats-icon course">
-            <el-icon><Calendar /></el-icon>
+      <el-row :gutter="20" v-if="todayStats">
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">总签到数</div>
+            <div class="stat-value">{{ todayStats.totalCheckIns }}</div>
+            <div class="stat-trend">较昨日 {{ getTrendPercentage(todayStats.totalCheckIns, yesterdayTotalCheckIns) }}</div>
           </div>
-          <div class="stats-info">
-            <div class="stats-number">{{ todayStats.todayCourses || 0 }}</div>
-            <div class="stats-label">今日课程</div>
+        </el-col>
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">课程签到</div>
+            <div class="stat-value text-primary">{{ todayStats.courseCheckIns }}</div>
+            <div class="stat-trend">占总签到 {{ getPercentage(todayStats.courseCheckIns, todayStats.totalCheckIns) }}</div>
           </div>
-        </div>
-      </el-card>
-      
-      <el-card class="stats-card">
-        <div class="stats-content">
-          <div class="stats-icon attendance">
-            <el-icon><TrendCharts /></el-icon>
+        </el-col>
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">自由训练</div>
+            <div class="stat-value text-warning">{{ todayStats.freeCheckIns }}</div>
+            <div class="stat-trend">占总签到 {{ getPercentage(todayStats.freeCheckIns, todayStats.totalCheckIns) }}</div>
           </div>
-          <div class="stats-info">
-            <div class="stats-number">{{ todayStats.attendanceRate || 0 }}%</div>
-            <div class="stats-label">出勤率</div>
+        </el-col>
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">教练签到</div>
+            <div class="stat-value text-success">{{ todayStats.coachCheckIns }}</div>
+            <div class="stat-trend">占签到方式 {{ getPercentage(todayStats.coachCheckIns, todayStats.totalCheckIns) }}</div>
           </div>
-        </div>
-      </el-card>
-      
-      <el-card class="stats-card">
-        <div class="stats-content">
-          <div class="stats-icon member">
-            <el-icon><User /></el-icon>
+        </el-col>
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">前台签到</div>
+            <div class="stat-value text-info">{{ todayStats.frontDeskCheckIns }}</div>
+            <div class="stat-trend">占签到方式 {{ getPercentage(todayStats.frontDeskCheckIns, todayStats.totalCheckIns) }}</div>
           </div>
-          <div class="stats-info">
-            <div class="stats-number">{{ todayStats.activeMembers || 0 }}</div>
-            <div class="stats-label">活跃会员</div>
+        </el-col>
+        <el-col :span="4">
+          <div class="stat-item">
+            <div class="stat-label">签到率</div>
+            <div class="stat-value text-danger">{{ todayStats.checkInRate.toFixed(1) }}%</div>
+            <div class="stat-trend">今日活跃会员：{{ todayStats.uniqueMembers }}人</div>
           </div>
-        </div>
-      </el-card>
-    </div>
+        </el-col>
+      </el-row>
+    </el-card>
     
-    <!-- 签到记录表格 -->
+    <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
         <div class="table-header">
           <span class="table-title">签到记录</span>
           <div class="table-actions">
-            <el-button text @click="refreshTable">
+            <el-button text @click="refreshTable" :loading="loading">
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
@@ -150,773 +153,684 @@
         </div>
       </template>
       
-      <app-table
-        :data="checkinList"
-        :total="pagination.total"
-        :show-add="false"
-        :show-export="false"
-        :page="pagination.current"
-        :page-size="pagination.size"
-        :show-selection="false"
-        @refresh="refreshTable"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        @sort-change="handleSortChange"
+      <el-table
+        :data="formattedCheckIns"
+        style="width: 100%"
+        row-key="id"
+        v-loading="loading"
+        stripe
+        border
+        @selection-change="handleSelectionChange"
       >
-        <el-table-column prop="checkInNo" label="签到编号" width="140" sortable />
-        <el-table-column prop="memberName" label="会员" width="120">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column prop="checkinTimeFormatted" label="签到时间" width="180" fixed="left" />
+        <el-table-column label="会员信息" width="200">
           <template #default="{ row }">
-            <div class="member-cell">
-              <span class="member-name">{{ row.memberName }}</span>
+            <div class="member-info">
+              <div class="member-name">{{ row.memberName || '-' }}</div>
+              <div class="member-phone">{{ row.memberPhone || '-' }}</div>
+              <div class="member-no" v-if="row.memberNo">{{ row.memberNo }}</div>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="签到类型" width="100">
+        <el-table-column label="签到类型" width="120">
           <template #default="{ row }">
-            <el-tag :type="getCheckinTypeType(row.type)" size="small">
-              {{ getCheckinTypeText(row.type) }}
+            <el-tag
+              :type="row.courseCheckIn ? 'success' : 'primary'"
+              size="small"
+            >
+              {{ row.courseCheckIn ? '课程签到' : '自由训练' }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="location" label="签到地点" width="120" />
-        <el-table-column prop="checkInTime" label="签到时间" width="160">
-          <template #default="{ row }">
-            <div class="time-cell">
-              <div class="checkin-time">{{ formatDateTime(row.checkInTime) }}</div>
-              <div v-if="row.checkOutTime" class="checkout-time">
-                签退: {{ formatTime(row.checkOutTime) }}
-              </div>
+            <div class="course-info" v-if="row.courseCheckIn && row.courseName">
+              <span class="course-name">{{ row.courseName }}</span>
+              <span class="coach-name" v-if="row.coachName">({{ row.coachName }})</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="duration" label="停留时长" width="100">
+        <el-table-column prop="checkinMethodDesc" label="签到方式" width="100">
           <template #default="{ row }">
-            <span v-if="row.checkOutTime" class="duration">
-              {{ calculateDuration(row.checkInTime, row.checkOutTime) }}
-            </span>
-            <span v-else class="in-progress">进行中</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="签到状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="getCheckinStatusType(row.status)" size="small">
-              {{ getCheckinStatusText(row.status) }}
+            <el-tag
+              :type="row.checkinMethod === 0 ? 'warning' : 'info'"
+              size="small"
+            >
+              {{ row.checkinMethodDesc }}
             </el-tag>
           </template>
         </el-table-column>
-        <template #actions="{ row }">
-          <el-button
-            type="text"
-            size="small"
-            @click="handleCheckOut(row)"
-            v-if="row.status === 'CHECKED_IN'"
-          >
-            <el-icon><SwitchButton /></el-icon>
-            签退
-          </el-button>
-          <el-button type="text" size="small" @click="handleViewMember(row.memberId)">
-            <el-icon><User /></el-icon>
-            会员详情
-          </el-button>
-          <el-dropdown @command="handleMoreAction($event, row)" trigger="click">
-            <el-button type="text" size="small">
-              <el-icon><MoreFilled /></el-icon>
-              更多
+        <el-table-column prop="notes" label="备注" width="200">
+          <template #default="{ row }">
+            <div class="notes-content" :title="row.notes">
+              {{ row.notes || '无' }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTimeFormatted" label="创建时间" width="180" />
+        <el-table-column label="操作" width="80" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+              详情
             </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="edit">
-                  <el-icon><Edit /></el-icon>
-                  编辑
-                </el-dropdown-item>
-                <el-dropdown-divider />
-                <el-dropdown-item command="delete" class="delete-item">
-                  <el-icon><Delete /></el-icon>
+            <el-button 
+              type="warning" 
+              link 
+              size="small" 
+              v-if="canEdit(row)"
+              @click="handleEdit(row.id)"
+            >
+              编辑
+            </el-button>
+            <el-popconfirm
+              title="确定要删除这条记录吗？"
+              @confirm="handleDelete(row.id)"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+              v-if="!row.courseCheckIn"
+            >
+              <template #reference>
+                <el-button type="danger" link size="small">
                   删除
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </template>
-      </app-table>
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 批量操作 -->
+      <div class="batch-actions" v-if="selectedRows.length > 0">
+        <el-button type="danger" size="small" @click="handleBatchDelete">
+          <el-icon><Delete /></el-icon>
+          批量删除
+        </el-button>
+        <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
+      </div>
+      
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pageInfo.pageNum"
+          v-model:page-size="pageInfo.pageSize"
+          :total="total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :disabled="loading"
+        />
+      </div>
     </el-card>
     
-    <!-- 批量签到对话框 -->
+    <!-- 快速签到对话框 -->
     <el-dialog
-      v-model="batchDialog.visible"
-      title="批量签到"
+      v-model="quickCheckInDialogVisible"
+      title="快速签到"
       width="500px"
+      :close-on-click-modal="false"
     >
-      <el-form
-        ref="batchFormRef"
-        :model="batchForm"
-        :rules="batchRules"
-        label-width="100px"
-      >
-        <el-form-item label="签到类型" prop="type">
+      <el-form :model="quickCheckInForm" :rules="quickCheckInRules" ref="quickCheckInFormRef">
+        <el-form-item label="会员信息" prop="memberId">
           <el-select
-            v-model="batchForm.type"
-            placeholder="请选择签到类型"
-            style="width: 100%;"
+            v-model="quickCheckInForm.memberId"
+            placeholder="请选择会员"
+            filterable
+            remote
+            :remote-method="searchMembers"
+            :loading="searchLoading"
+            style="width: 100%"
           >
             <el-option
-              v-for="item in checkinTypeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+              v-for="member in memberOptions"
+              :key="member.id"
+              :label="`${member.realName} (${member.phone})`"
+              :value="member.id"
+            >
+              <div class="member-option">
+                <span class="member-name">{{ member.realName }}</span>
+                <span class="member-phone">{{ member.phone }}</span>
+                <span class="member-no">{{ member.memberNo }}</span>
+              </div>
+            </el-option>
           </el-select>
         </el-form-item>
         
-        <el-form-item label="签到地点" prop="location">
-          <el-input
-            v-model="batchForm.location"
-            placeholder="请输入签到地点"
-          />
-        </el-form-item>
+        <!-- <el-form-item label="签到方式" prop="checkinMethod">
+          <el-radio-group v-model="quickCheckInForm.checkinMethod">
+            <el-radio :label="0">教练签到</el-radio>
+            <el-radio :label="1">前台签到</el-radio>
+          </el-radio-group>
+        </el-form-item> -->
         
-        <el-form-item label="选择会员" prop="memberIds">
-          <el-transfer
-            v-model="batchForm.memberIds"
-            :data="memberOptions"
-            :titles="['所有会员', '已选择']"
-            :props="{
-              key: 'id',
-              label: 'name'
-            }"
-            filterable
-            :filter-method="filterMember"
-            filter-placeholder="搜索会员"
+        <el-form-item label="备注" prop="notes">
+          <el-input
+            v-model="quickCheckInForm.notes"
+            type="textarea"
+            placeholder="请输入备注信息（选填）"
+            :rows="3"
           />
         </el-form-item>
       </el-form>
       
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="batchDialog.visible = false">取消</el-button>
-          <el-button type="primary" @click="handleBatchSubmit">
-            确定 ({{ batchForm.memberIds.length }}人)
-          </el-button>
-        </span>
+        <el-button @click="quickCheckInDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitQuickCheckIn" :loading="loading">
+          确认签到
+        </el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import AppTable from '@/components/common/AppTable.vue'
-import { useCheckInStore } from '@/stores/checkin'
+import { ElMessage, ElMessageBox, type FormInstance } from 'element-plus'
+import { useCheckInStore } from '@/stores/checkIn'
 import { useMemberStore } from '@/stores/member'
-import { formatDateTime, formatTime } from '@/utils'
-import type { CheckIn, QueryParams, CheckInType, CheckInStatus } from '@/types'
+import type { CheckInQueryParams } from '@/types/checkIn'
+import type { MemberListVO } from '@/types/member'
 
-// Store
+const router = useRouter()
 const checkInStore = useCheckInStore()
 const memberStore = useMemberStore()
 
-// Router
-const router = useRouter()
-
-// Refs
-const batchFormRef = ref<FormInstance>()
-
-// 状态
-const loading = ref(false)
-
+// 筛选表单
 const filterForm = reactive({
   memberName: '',
-  type: '' as CheckInType | '',
-  status: '' as CheckInStatus | '',
+  memberPhone: '',
+  checkinMethod: undefined as number | undefined,
+  hasCourseBooking: undefined as boolean | undefined,
   dateRange: [] as string[]
 })
 
-const pagination = reactive({
-  current: 1,
-  size: 10,
-  total: 0
+// 选择的行
+const selectedRows = ref<any[]>([])
+
+// 今日统计相关
+const todayStats = ref<any>(null)
+const yesterdayTotalCheckIns = ref(0)
+const statsUpdateTime = ref(new Date())
+
+// 快速签到相关
+const quickCheckInDialogVisible = ref(false)
+const quickCheckInFormRef = ref<FormInstance>()
+const searchLoading = ref(false)
+const memberOptions = ref<MemberListVO[]>([])
+
+const quickCheckInForm = reactive({
+  memberId: undefined as number | undefined,
+  checkinMethod: 1,
+  notes: ''
 })
 
-const sortParams = reactive({
-  sortBy: '',
-  sortOrder: '' as 'asc' | 'desc' | ''
-})
-
-const todayStats = reactive({
-  todayCheckins: 0,
-  todayCourses: 0,
-  attendanceRate: 0,
-  activeMembers: 0
-})
-
-const batchDialog = reactive({
-  visible: false
-})
-
-const batchForm = reactive({
-  type: 'GYM_ACCESS' as CheckInType,
-  location: '',
-  memberIds: [] as number[]
-})
-
-const batchRules: FormRules = {
-  type: [
-    { required: true, message: '请选择签到类型', trigger: 'change' }
-  ],
-  location: [
-    { required: true, message: '请输入签到地点', trigger: 'blur' }
-  ],
-  memberIds: [
+const quickCheckInRules = {
+  memberId: [
     { required: true, message: '请选择会员', trigger: 'change' }
+  ],
+  checkinMethod: [
+    { required: true, message: '请选择签到方式', trigger: 'change' }
   ]
 }
 
-// 选项配置
-const checkinTypeOptions = [
-  { label: '课程签到', value: 'COURSE' },
-  { label: '场馆进入', value: 'GYM_ACCESS' },
-  { label: '私教课', value: 'PERSONAL_TRAINING' }
-]
+// 获取store状态
+const { checkInList, total, loading, pageInfo, formattedCheckInList, formatDateTime } = checkInStore
 
-const checkinStatusOptions = [
-  { label: '已签到', value: 'CHECKED_IN' },
-  { label: '已签退', value: 'CHECKED_OUT' }
-]
+// 格式化后的签到列表
+const formattedCheckIns = computed(() => formattedCheckInList())
 
-// Computed
-const checkinList = computed(() => checkInStore.checkIns)
+// 是否可以编辑（只能编辑一周内的自由训练签到）
+const canEdit = (row: any) => {
+  if (row.courseCheckIn) return false
+  const checkinTime = new Date(row.checkinTime)
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  return checkinTime > oneWeekAgo
+}
 
-const memberOptions = computed(() => {
-  return memberStore.members.map(member => ({
-    id: member.id,
-    name: `${member.realName} (${member.memberNo})`
-  }))
-})
+// 计算百分比
+const getPercentage = (part: number, total: number) => {
+  if (total === 0) return '0%'
+  return `${((part / total) * 100).toFixed(1)}%`
+}
 
-// Methods
-const loadCheckins = async () => {
+// 计算趋势百分比
+const getTrendPercentage = (today: number, yesterday: number) => {
+  if (yesterday === 0) return '+100%'
+  const diff = today - yesterday
+  const percentage = (diff / yesterday) * 100
+  return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(1)}%`
+}
+
+// 搜索会员
+const searchMembers = async (query: string) => {
+  if (!query.trim()) {
+    memberOptions.value = []
+    return
+  }
+  
+  searchLoading.value = true
   try {
-    loading.value = true
-    
-    const params: QueryParams = {
-      page: pagination.current,
-      pageSize: pagination.size,
-      ...buildFilterParams()
+    const params = {
+      realName: query,
+      phone: query,
+      pageNum: 1,
+      pageSize: 20
     }
-    
-    if (sortParams.sortBy) {
-      params.sortBy = sortParams.sortBy
-      params.sortOrder = sortParams.sortOrder
-    }
-    
-    await checkInStore.fetchCheckIns(params)
-    pagination.total = checkInStore.total
+    const response = await memberStore.fetchMembers(params)
+    memberOptions.value = response.list || []
   } catch (error) {
-    console.error('加载签到记录失败:', error)
-    ElMessage.error('加载签到记录失败')
+    console.error('搜索会员失败:', error)
+    memberOptions.value = []
   } finally {
-    loading.value = false
+    searchLoading.value = false
   }
 }
 
+// 加载数据
+const loadData = async () => {
+  const params: CheckInQueryParams = {
+    pageNum: pageInfo.pageNum,
+    pageSize: pageInfo.pageSize,
+    memberName: filterForm.memberName,
+    checkinMethod: filterForm.checkinMethod,
+    hasCourseBooking: filterForm.hasCourseBooking
+  }
+
+  // 处理日期范围
+  if (filterForm.dateRange?.length === 2) {
+    params.startDate = filterForm.dateRange[0]
+    params.endDate = filterForm.dateRange[1]
+  }
+
+  await checkInStore.fetchCheckInList(params)
+}
+
+// 加载今日统计
 const loadTodayStats = async () => {
   try {
-    const data = await checkInStore.getCheckInStatistics()
-    todayStats.todayCheckins = data.todayCheckins || 0
-    todayStats.todayCourses = data.todayCourses || 0
-    todayStats.attendanceRate = data.attendanceRate || 0
-    todayStats.activeMembers = data.activeMembers || 0
+    const stats = await checkInStore.fetchTodayCheckInStats()
+    todayStats.value = stats
+    statsUpdateTime.value = new Date()
   } catch (error) {
     console.error('加载今日统计失败:', error)
   }
 }
 
-const loadMembers = async () => {
-  try {
-    await memberStore.fetchMembers({ pageSize: 100 })
-  } catch (error) {
-    console.error('加载会员列表失败:', error)
-  }
-}
-
-const buildFilterParams = () => {
-  const params: Record<string, any> = {}
-  
-  if (filterForm.memberName) {
-    params.memberName = filterForm.memberName
-  }
-  
-  if (filterForm.type) {
-    params.type = filterForm.type
-  }
-  
-  if (filterForm.status) {
-    params.status = filterForm.status
-  }
-  
-  if (filterForm.dateRange?.length === 2) {
-    params.startDate = filterForm.dateRange[0]
-    params.endDate = filterForm.dateRange[1]
-  }
-  
-  return params
-}
-
+// 搜索
 const handleSearch = () => {
-  pagination.current = 1
-  loadCheckins()
+  pageInfo.pageNum = 1
+  loadData()
 }
 
+// 重置
 const handleReset = () => {
   filterForm.memberName = ''
-  filterForm.type = ''
-  filterForm.status = ''
+  filterForm.memberPhone = ''
+  filterForm.checkinMethod = undefined
+  filterForm.hasCourseBooking = undefined
   filterForm.dateRange = []
+  pageInfo.pageNum = 1
+  loadData()
+}
+
+// 快速签到
+const handleQuickCheckIn = () => {
+  quickCheckInDialogVisible.value = true
+  memberOptions.value = []
+}
+
+// 提交快速签到
+const submitQuickCheckIn = async () => {
+  if (!quickCheckInFormRef.value) return
   
-  pagination.current = 1
-  loadCheckins()
-}
-
-const handleSortChange = ({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) => {
-  sortParams.sortBy = prop
-  sortParams.sortOrder = order === 'ascending' ? 'asc' : order === 'descending' ? 'desc' : ''
-  loadCheckins()
-}
-
-const handleSizeChange = (size: number) => {
-  pagination.size = size
-  pagination.current = 1
-  loadCheckins()
-}
-
-const handleCurrentChange = (current: number) => {
-  pagination.current = current
-  loadCheckins()
-}
-
-const refreshTable = () => {
-  loadCheckins()
-  loadTodayStats()
-}
-
-const handleBatchCheckin = () => {
-  batchForm.memberIds = []
-  batchForm.location = '健身房前台'
-  batchDialog.visible = true
-}
-
-const handleExport = async () => {
   try {
-    loading.value = true
-    const params = buildFilterParams()
-    await checkInStore.exportCheckIns(params)
-    ElMessage.success('导出成功')
+    await quickCheckInFormRef.value.validate()
+    
+    if (!quickCheckInForm.memberId) {
+      ElMessage.error('请选择会员')
+      return
+    }
+    
+    await checkInStore.memberCheckIn(
+      quickCheckInForm.memberId,
+      quickCheckInForm.checkinMethod,
+      quickCheckInForm.notes
+    )
+    
+    ElMessage.success('签到成功')
+    quickCheckInDialogVisible.value = false
+    loadData()
+    loadTodayStats()
+    
+    // 重置表单
+    quickCheckInForm.memberId = undefined
+    quickCheckInForm.notes = ''
+    quickCheckInForm.checkinMethod = 1
   } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败')
-  } finally {
-    loading.value = false
+    console.error('签到失败:', error)
   }
 }
 
-const handleCheckOut = async (row: CheckIn) => {
+// 查看详情
+const handleViewDetail = (id: number) => {
+  router.push(`/checkIn/detail/${id}`)
+}
+
+// 编辑签到
+const handleEdit = async (id: number) => {
   try {
-    await ElMessageBox.confirm('确认为该会员进行签退吗？', '签退', {
+    const { value: notes } = await ElMessageBox.prompt('请输入新的备注信息', '编辑签到', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'info'
+      inputType: 'textarea',
+      inputValue: selectedRows.value.find(row => row.id === id)?.notes || ''
     })
     
-    // 调用签退API
-    await checkInStore.updateCheckIn(row.id, {
-      checkOutTime: new Date().toISOString(),
-      status: 'CHECKED_OUT'
-    })
-    
-    ElMessage.success('签退成功')
-    loadCheckins()
+    await checkInStore.updateCheckIn(id, notes)
+    ElMessage.success('更新成功')
+    loadData()
   } catch (error) {
-    console.error('签退失败:', error)
-    ElMessage.error('签退失败')
+    // 用户取消
   }
 }
 
-const handleViewMember = (memberId: number) => {
-  router.push(`/members/${memberId}`)
-}
-
-const handleMoreAction = async (command: string, row: CheckIn) => {
-  switch (command) {
-    case 'edit':
-      handleEditCheckin(row)
-      break
-    case 'delete':
-      handleDeleteCheckin(row.id)
-      break
-  }
-}
-
-const handleEditCheckin = (checkin: CheckIn) => {
-  // 实现编辑签到记录功能
-  ElMessage.info('编辑功能开发中')
-}
-
-const handleDeleteCheckin = async (id: number) => {
+// 删除签到
+const handleDelete = async (id: number) => {
   try {
-    await ElMessageBox.confirm('确认删除该签到记录吗？此操作不可恢复。', '删除签到记录', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-      confirmButtonClass: 'el-button--danger'
-    })
-    
     await checkInStore.deleteCheckIn(id)
     ElMessage.success('删除成功')
-    loadCheckins()
+    loadData()
+    loadTodayStats()
   } catch (error) {
     console.error('删除失败:', error)
     ElMessage.error('删除失败')
   }
 }
 
-const filterMember = (query: string, item: any) => {
-  return item.name.toLowerCase().includes(query.toLowerCase())
-}
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请选择要删除的签到记录')
+    return
+  }
 
-const handleBatchSubmit = async () => {
-  if (!batchFormRef.value) return
-  
+  // 检查是否有课程签到记录
+  const courseCheckIns = selectedRows.value.filter(row => row.courseCheckIn)
+  if (courseCheckIns.length > 0) {
+    ElMessage.warning(`包含 ${courseCheckIns.length} 条课程签到记录，不能删除`)
+    return
+  }
+
   try {
-    await batchFormRef.value.validate()
-    
-    if (batchForm.memberIds.length === 0) {
-      ElMessage.warning('请至少选择一名会员')
-      return
-    }
-    
-    loading.value = true
-    
-    await checkInStore.batchCheckIn({
-      memberIds: batchForm.memberIds,
-      type: batchForm.type
-    })
-    
-    ElMessage.success(`成功为 ${batchForm.memberIds.length} 名会员签到`)
-    batchDialog.visible = false
-    loadCheckins()
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 条签到记录吗？`,
+      '警告',
+      {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消'
+      }
+    )
+
+    const ids = selectedRows.value.map(row => row.id)
+    await checkInStore.batchDeleteCheckIns(ids)
+    ElMessage.success('批量删除成功')
+    selectedRows.value = []
+    loadData()
     loadTodayStats()
   } catch (error) {
-    console.error('批量签到失败:', error)
-    ElMessage.error('批量签到失败')
-  } finally {
-    loading.value = false
+    // 用户取消
   }
 }
 
-const getCheckinTypeType = (type: CheckInType) => {
-  switch (type) {
-    case 'COURSE':
-      return 'primary'
-    case 'GYM_ACCESS':
-      return 'success'
-    case 'PERSONAL_TRAINING':
-      return 'warning'
-    default:
-      return 'info'
+// 选择变化
+const handleSelectionChange = (rows: any[]) => {
+  selectedRows.value = rows
+}
+
+// 分页大小变化
+const handleSizeChange = (size: number) => {
+  pageInfo.pageSize = size
+  pageInfo.pageNum = 1
+  loadData()
+}
+
+// 页码变化
+const handleCurrentChange = (current: number) => {
+  pageInfo.pageNum = current
+  loadData()
+}
+
+// 刷新表格
+const refreshTable = async () => {
+  await loadData()
+  await loadTodayStats()
+  ElMessage.success('刷新成功')
+}
+
+// 导出数据
+const handleExport = async () => {
+  try {
+    ElMessage.info('导出功能开发中...')
+    // 这里应该调用导出API
+    // await checkInStore.exportCheckIns(filterForm)
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
   }
 }
 
-const getCheckinTypeText = (type: CheckInType) => {
-  switch (type) {
-    case 'COURSE':
-      return '课程签到'
-    case 'GYM_ACCESS':
-      return '场馆进入'
-    case 'PERSONAL_TRAINING':
-      return '私教课'
-    default:
-      return type
-  }
-}
-
-const getCheckinStatusType = (status: CheckInStatus) => {
-  switch (status) {
-    case 'CHECKED_IN':
-      return 'primary'
-    case 'CHECKED_OUT':
-      return 'success'
-    default:
-      return 'info'
-  }
-}
-
-const getCheckinStatusText = (status: CheckInStatus) => {
-  switch (status) {
-    case 'CHECKED_IN':
-      return '已签到'
-    case 'CHECKED_OUT':
-      return '已签退'
-    default:
-      return '未知'
-  }
-}
-
-const calculateDuration = (checkInTime: string, checkOutTime: string) => {
-  const checkIn = new Date(checkInTime)
-  const checkOut = new Date(checkOutTime)
-  const diffMs = checkOut.getTime() - checkIn.getTime()
-  
-  const hours = Math.floor(diffMs / (1000 * 60 * 60))
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-  
-  if (hours > 0) {
-    return `${hours}小时${minutes}分钟`
-  }
-  return `${minutes}分钟`
-}
-
-// 生命周期
+// 初始化加载
 onMounted(() => {
-  loadCheckins()
+  loadData()
   loadTodayStats()
-  loadMembers()
 })
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .checkin-list-container {
   padding: 20px;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.stats-card {
+  margin-bottom: 20px;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.stats-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
   
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+  .stat-label {
+    font-size: 14px;
+    color: #606266;
+    margin-bottom: 8px;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
     
-    .header-left {
-      .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-        margin: 0 0 8px;
-      }
-      
-      .el-breadcrumb {
-        font-size: 14px;
-        color: var(--gymflow-text-secondary);
-      }
+    &.text-primary {
+      color: #409EFF;
+    }
+    
+    &.text-warning {
+      color: #E6A23C;
+    }
+    
+    &.text-success {
+      color: #67C23A;
+    }
+    
+    &.text-info {
+      color: #909399;
+    }
+    
+    &.text-danger {
+      color: #F56C6C;
     }
   }
   
-  .filter-card {
-    margin-bottom: 20px;
-    border-radius: 12px;
-    
-    :deep(.el-card__body) {
-      padding: 20px;
-    }
-    
-    :deep(.el-form-item) {
-      margin-bottom: 0;
-    }
-  }
-  
-  .today-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-    
-    .stats-card {
-      border-radius: 12px;
-      border: 1px solid var(--gymflow-border);
-      
-      :deep(.el-card__body) {
-        padding: 20px;
-      }
-      
-      .stats-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        
-        .stats-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
-          font-size: 24px;
-          
-          &.today {
-            background: rgba(64, 158, 255, 0.1);
-            color: #409eff;
-          }
-          
-          &.course {
-            background: rgba(103, 194, 58, 0.1);
-            color: #67c23a;
-          }
-          
-          &.attendance {
-            background: rgba(230, 162, 60, 0.1);
-            color: #e6a23c;
-          }
-          
-          &.member {
-            background: rgba(155, 89, 182, 0.1);
-            color: #9b59b6;
-          }
-        }
-        
-        .stats-info {
-          .stats-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--gymflow-text-primary);
-            margin-bottom: 4px;
-            line-height: 1;
-          }
-          
-          .stats-label {
-            font-size: 12px;
-            color: var(--gymflow-text-secondary);
-          }
-        }
-      }
-    }
-  }
-  
-  .table-card {
-    border-radius: 12px;
-    
-    :deep(.el-card__header) {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--gymflow-border);
-    }
-    
-    .table-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      
-      .table-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--gymflow-text-primary);
-      }
-    }
-    
-    .member-cell {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .member-name {
-        font-weight: 500;
-      }
-    }
-    
-    .time-cell {
-      .checkin-time {
-        font-size: 14px;
-        color: var(--gymflow-text-primary);
-      }
-      
-      .checkout-time {
-        font-size: 12px;
-        color: var(--gymflow-text-secondary);
-        margin-top: 2px;
-      }
-    }
-    
-    .duration {
-      font-weight: 500;
-      color: var(--gymflow-primary);
-    }
-    
-    .in-progress {
-      color: var(--el-color-warning);
-      font-weight: 500;
-    }
+  .stat-trend {
+    font-size: 12px;
+    color: #909399;
   }
 }
 
-:deep(.delete-item) {
-  color: var(--el-color-danger);
+.table-card {
+  margin-bottom: 20px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.member-info {
+  .member-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
   
-  &:hover {
-    background: rgba(245, 108, 108, 0.1);
+  .member-phone {
+    font-size: 12px;
+    color: #909399;
+    margin-bottom: 2px;
+  }
+  
+  .member-no {
+    font-size: 11px;
+    color: #C0C4CC;
+    background-color: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 2px;
+    display: inline-block;
   }
 }
 
-// 批量签到对话框
-:deep(.el-dialog) {
-  border-radius: 12px;
+.course-info {
+  margin-top: 4px;
+  font-size: 12px;
   
-  .el-dialog__header {
-    padding: 20px;
-    border-bottom: 1px solid var(--gymflow-border);
+  .course-name {
+    color: #67C23A;
   }
   
-  .el-dialog__body {
-    padding: 20px;
-    
-    .el-transfer {
-      display: flex;
-      justify-content: center;
-      
-      :deep(.el-transfer-panel) {
-        width: 200px;
-        
-        .el-transfer-panel__body {
-          height: 300px;
-        }
-      }
-    }
-  }
-  
-  .el-dialog__footer {
-    padding: 20px;
-    border-top: 1px solid var(--gymflow-border);
+  .coach-name {
+    color: #909399;
+    margin-left: 4px;
   }
 }
 
-// 响应式设计
-@media (max-width: 768px) {
-  .checkin-list-container {
-    padding: 16px;
-    
-    .page-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 16px;
-    }
-    
-    .filter-card {
-      :deep(.el-form) {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-      
-      :deep(.el-form-item) {
-        width: 100%;
-        margin-right: 0;
-        
-        .el-input,
-        .el-select,
-        .el-date-editor {
-          width: 100%;
-        }
-      }
-    }
-    
-    .today-stats {
-      grid-template-columns: repeat(2, 1fr);
-    }
+.notes-content {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch-actions {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .selected-count {
+    color: #606266;
+    font-size: 14px;
   }
+}
+
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.member-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  
+  .member-name {
+    font-weight: 500;
+  }
+  
+  .member-phone {
+    color: #909399;
+    font-size: 12px;
+    margin: 0 8px;
+  }
+  
+  .member-no {
+    color: #C0C4CC;
+    font-size: 11px;
+  }
+}
+
+:deep(.el-card__header) {
+  padding: 16px 20px;
+}
+
+:deep(.el-table__header) {
+  background-color: #f8f9fa;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: #f5f7fa;
+}
+
+:deep(.el-col) {
+  margin-bottom: 20px;
 }
 </style>

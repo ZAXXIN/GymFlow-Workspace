@@ -177,7 +177,7 @@ const allMenus = [
   
   // 签到管理
   {
-    path: '/checkin',
+    path: '/checkIn/list',
     title: '签到管理',
     icon: Check,
     roles: [0, 1], // 管理员、前台、教练可见
