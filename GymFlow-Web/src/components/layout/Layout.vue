@@ -193,9 +193,9 @@ const allMenus = [
     icon: Setting,
     roles: [0], // 仅管理员可见
     children: [
-      { path: '/settings/user', title: '用户管理' },
-      { path: '/settings/role', title: '角色权限' },
-      { path: '/settings/system', title: '系统配置' }
+      { path: '/settings/webUser', title: '用户管理' },
+      // { path: '/settings/role', title: '角色权限' },
+      { path: '/settings/systemConfig', title: '系统配置' }
     ]
   },
   

@@ -9,8 +9,8 @@ import coachRoutes from './routes/coach'
 import courseRoutes from './routes/course'
 import productRoutes from './routes/product'
 import orderRoutes from './routes/order'
-import checkinRoutes from './routes/checkIn'
-import settingsRoutes from './routes/settings'
+import checkInRoutes from './routes/checkIn'
+import settingRoutes from './routes/settings'
 import reportRoutes from './routes/report'
 
 // 合并所有路由
@@ -28,8 +28,8 @@ const routes: RouteRecordRaw[] = [
       ...courseRoutes,
       ...productRoutes,
       ...orderRoutes,
-      ...checkinRoutes,
-      ...settingsRoutes,
+      ...checkInRoutes,
+      ...settingRoutes,
       ...reportRoutes
     ]
   },
