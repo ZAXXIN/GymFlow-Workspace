@@ -10,12 +10,16 @@
         <el-dropdown>
           <div class="user-info">
             <span class="username">{{ userInfo.realName || userInfo.username }}</span>
-            <el-icon><ArrowDown /></el-icon>
+            <el-icon>
+              <ArrowDown />
+            </el-icon>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click="handleLogout">
-                <el-icon><SwitchButton /></el-icon>退出登录
+                <el-icon>
+                  <SwitchButton />
+                </el-icon>退出登录
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -26,12 +30,7 @@
     <div class="main-container">
       <!-- 侧边栏菜单 -->
       <el-aside width="200px" class="sidebar">
-        <el-menu
-          :default-active="activeMenu"
-          router
-          unique-opened
-          @select="handleMenuSelect"
-        >
+        <el-menu :default-active="activeMenu" router unique-opened @select="handleMenuSelect">
           <!-- 动态生成菜单 -->
           <template v-for="menu in filteredMenus" :key="menu.path">
             <!-- 有子菜单的情况 -->
@@ -42,11 +41,7 @@
                 </el-icon>
                 <span>{{ menu.title }}</span>
               </template>
-              <el-menu-item
-                v-for="child in menu.children"
-                :key="child.path"
-                :index="child.path"
-              >
+              <el-menu-item v-for="child in menu.children" :key="child.path" :index="child.path">
                 <span>{{ child.title }}</span>
               </el-menu-item>
             </el-sub-menu>
@@ -76,9 +71,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { UserInfo } from '@/types/auth'
-import { 
-  User, 
-  SwitchButton, 
+import {
+  User,
+  SwitchButton,
   ArrowDown,
   DataLine,
   UserFilled,
@@ -89,7 +84,7 @@ import {
   Setting,
   PieChart,
   Goods,
-  Document
+  Document,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -103,7 +98,7 @@ const userInfo = ref<UserInfo>({
   realName: '',
   phone: '',
   role: 0,
-  status: 1
+  status: 1,
 })
 
 // 完整的菜单配置（与路由的 meta 保持一致）
@@ -113,9 +108,9 @@ const allMenus = [
     path: '/dashboard',
     title: '仪表盘',
     icon: DataLine,
-    permissions: [] // 所有角色可见
+    permissions: [], // 所有角色可见
   },
-  
+
   // 会员管理
   {
     path: '/member/list',
@@ -123,7 +118,7 @@ const allMenus = [
     icon: User,
     permissions: ['member:view'], // 需要会员查看权限
   },
-  
+
   // 教练管理
   {
     path: '/coach/list',
@@ -131,7 +126,7 @@ const allMenus = [
     icon: Avatar,
     permissions: ['coach:view'], // 需要教练查看权限
   },
-  
+
   // 课程管理
   {
     path: '/course/list',
@@ -139,7 +134,7 @@ const allMenus = [
     icon: Calendar,
     permissions: ['course:view'], // 需要课程查看权限
   },
-  
+
   // 商品管理
   {
     path: '/product/list',
@@ -147,7 +142,7 @@ const allMenus = [
     icon: Goods,
     permissions: ['product:view'], // 需要商品查看权限
   },
-  
+
   // 订单管理
   {
     path: '/order/list',
@@ -155,7 +150,7 @@ const allMenus = [
     icon: Document,
     permissions: ['order:view'], // 需要订单查看权限
   },
-  
+
   // 签到管理
   {
     path: '/checkIn/list',
@@ -163,7 +158,7 @@ const allMenus = [
     icon: Check,
     permissions: ['checkIn:view'], // 需要签到查看权限
   },
-  
+
   // 系统设置（只有老板有权限）
   {
     path: '/settings',
@@ -171,19 +166,25 @@ const allMenus = [
     icon: Setting,
     permissions: ['settings:user:view', 'settings:config:view'], // 需要任一系统设置权限
     children: [
-      { 
-        path: '/settings/webUser', 
+      {
+        path: '/settings/webUser',
         title: '用户管理',
-        permissions: ['settings:user:view'] // 需要用户管理权限
+        permissions: ['settings:user:view'], // 需要用户管理权限
       },
-      { 
-        path: '/settings/systemConfig', 
+      {
+        path: '/settings/systemConfig',
         title: '系统配置',
-        permissions: ['settings:config:view'] // 需要系统配置权限
-      }
-    ]
+        permissions: ['settings:config:view'], // 需要系统配置权限
+      },
+      {
+        path: '/settings/role',
+
+        title: '角色权限',
+        permissions: ['settings:role:view'],
+      },
+    ],
   },
-  
+
   // 报表统计
   {
     path: '/reports',
@@ -191,45 +192,47 @@ const allMenus = [
     icon: PieChart,
     permissions: ['member:view', 'order:view', 'checkIn:view'], // 需要任一报表相关权限
     children: [
-      { 
-        path: '/reports/member', 
+      {
+        path: '/reports/member',
         title: '会员统计',
-        permissions: ['member:view'] 
+        permissions: ['member:view'],
       },
-      { 
-        path: '/reports/finance', 
+      {
+        path: '/reports/finance',
         title: '财务统计',
-        permissions: ['order:view'] 
+        permissions: ['order:view'],
       },
-      { 
-        path: '/reports/course', 
+      {
+        path: '/reports/course',
         title: '课程统计',
-        permissions: ['course:view'] 
-      }
-    ]
-  }
+        permissions: ['course:view'],
+      },
+    ],
+  },
 ]
 
 // 根据用户权限过滤菜单
 const filteredMenus = computed(() => {
   // 递归过滤菜单
   const filterMenu = (menus: any[]) => {
-    return menus.filter(menu => {
+    return menus.filter((menu) => {
       // 检查当前菜单是否有权限
-      const hasMenuPermission = !menu.permissions || menu.permissions.length === 0 || 
+      const hasMenuPermission =
+        !menu.permissions ||
+        menu.permissions.length === 0 ||
         menu.permissions.some((p: string) => authStore.hasPermission(p))
-      
+
       // 如果有子菜单，递归过滤子菜单
       if (menu.children && menu.children.length > 0) {
         menu.children = filterMenu(menu.children)
         // 如果子菜单过滤后还有内容，或者当前菜单本身就有权限，则保留
         return menu.children.length > 0 || hasMenuPermission
       }
-      
+
       return hasMenuPermission
     })
   }
-  
+
   return filterMenu(allMenus)
 })
 
@@ -253,7 +256,7 @@ const handleLogout = async () => {
     // 清除本地存储
     localStorage.removeItem('gymflow_token')
     localStorage.removeItem('gymflow_user_info')
-    
+
     // 跳转到登录页
     window.location.href = '/login'
   }

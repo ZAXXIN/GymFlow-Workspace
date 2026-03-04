@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { webUserApi } from '@/api/settings'
+import { webUserApi } from '@/api/settings/webUser'
 import type { 
   WebUserQueryParams, 
   WebUserBasicDTO, 
   WebUserListVO, 
   WebUserDetailDTO,
   PageResultVO
-} from '@/api/settings'
+} from '@/api/settings/webUser'
 
 export const useWebUserStore = defineStore('webUser', () => {
   const userList = ref<WebUserListVO[]>([])

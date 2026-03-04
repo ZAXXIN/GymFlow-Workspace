@@ -1,7 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 import type { PermissionCode } from '@/types/permission'
 
-const settingRoutes: RouteRecordRaw[] = [
+const settingsRoutes: RouteRecordRaw[] = [
   {
     path: '/settings/webUser',
     name: 'webUserList',
@@ -59,7 +59,18 @@ const settingRoutes: RouteRecordRaw[] = [
       showInMenu: true,
       permissions: ['settings:config:view'] as PermissionCode[]  // 查看系统配置需要的权限
     }
+  },
+  {
+    path: '/settings/role',
+    name: 'rolePermission',
+    component: () => import('@/views/settings/RolePermission.vue'),
+    meta: {
+      title: '角色权限',
+      requiresAuth: true,
+      showInMenu: true,
+      permissions: ['settings:role:view']
+    }
   }
 ]
 
-export default settingRoutes
+export default settingsRoutes
