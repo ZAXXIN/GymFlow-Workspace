@@ -1,6 +1,7 @@
 package com.gymflow.controller;
 
 import com.gymflow.common.Result;
+import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.dto.order.*;
 import com.gymflow.service.OrderService;
 import com.gymflow.vo.OrderListVO;
@@ -30,173 +31,125 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping("/list")
-    @Operation(summary = "分页查询订单列表", description = "根据条件分页查询订单列表")
+    @Operation(summary = "分页查询订单列表")
+    @PreAuthorize("order:view")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<OrderListVO>> getOrderList(@Valid @RequestBody OrderQueryDTO queryDTO) {
-        try {
-            PageResultVO<OrderListVO> result = orderService.getOrderList(queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("查询订单列表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<OrderListVO> result = orderService.getOrderList(queryDTO);
+        return Result.success("查询成功", result);
     }
 
     @GetMapping("/detail/{orderId}")
-    @Operation(summary = "获取订单详情", description = "根据订单ID获取订单详细信息")
+    @Operation(summary = "获取订单详情")
+    @PreAuthorize("order:detail")  // 查看详情权限（老板和前台都有）
     public Result<OrderDetailVO> getOrderDetail(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId) {
-        try {
-            OrderFullDTO fullDTO = orderService.getOrderDetail(orderId);
-            OrderDetailVO detailVO = convertToOrderDetailVO(fullDTO);
-            return Result.success("查询成功", detailVO);
-        } catch (Exception e) {
-            log.error("获取订单详情失败：{}", e.getMessage(), e);
-            return Result.error("获取失败：" + e.getMessage());
-        }
+        OrderFullDTO fullDTO = orderService.getOrderDetail(orderId);
+        OrderDetailVO detailVO = convertToOrderDetailVO(fullDTO);
+        return Result.success("查询成功", detailVO);
     }
 
     @PostMapping("/create")
-    @Operation(summary = "创建订单", description = "创建新订单")
+    @Operation(summary = "创建订单")
+    @PreAuthorize("order:add")  // 创建订单权限（老板和前台都有）
     public Result<Long> createOrder(@Valid @RequestBody OrderBasicDTO orderDTO) {
-        try {
-            Long orderId = orderService.createOrder(orderDTO);
-            return Result.success("创建订单成功", orderId);
-        } catch (Exception e) {
-            log.error("创建订单失败：{}", e.getMessage(), e);
-            return Result.error("创建失败：" + e.getMessage());
-        }
+        Long orderId = orderService.createOrder(orderDTO);
+        return Result.success("创建订单成功", orderId);
     }
 
     @PutMapping("/update/{orderId}")
-    @Operation(summary = "更新订单信息", description = "更新订单信息（仅限待处理订单）")
+    @Operation(summary = "更新订单信息")
+    @PreAuthorize("order:edit")  // 编辑权限（只有老板有）
     public Result<Void> updateOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId,
             @Valid @RequestBody OrderBasicDTO orderDTO) {
-        try {
-            orderService.updateOrder(orderId, orderDTO);
-            return Result.success("更新订单成功");
-        } catch (Exception e) {
-            log.error("更新订单失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        orderService.updateOrder(orderId, orderDTO);
+        return Result.success("更新订单成功");
     }
 
     @PutMapping("/updateStatus/{orderId}")
-    @Operation(summary = "更新订单状态", description = "更新订单状态")
+    @Operation(summary = "更新订单状态")
+    @PreAuthorize("order:edit")  // 编辑权限（只有老板有）
     public Result<Void> updateOrderStatus(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId,
             @Valid @RequestBody OrderStatusDTO statusDTO) {
-        try {
-            orderService.updateOrderStatus(orderId, statusDTO);
-            return Result.success("更新订单状态成功");
-        } catch (Exception e) {
-            log.error("更新订单状态失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        orderService.updateOrderStatus(orderId, statusDTO);
+        return Result.success("更新订单状态成功");
     }
 
     @PostMapping("/cancel/{orderId}")
-    @Operation(summary = "取消订单", description = "取消订单")
+    @Operation(summary = "取消订单")
+    @PreAuthorize("order:cancel")  // 取消权限（老板和前台都有）
     public Result<Void> cancelOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId,
             @RequestParam(required = false) String reason) {
-        try {
-            orderService.cancelOrder(orderId, reason);
-            return Result.success("取消订单成功");
-        } catch (Exception e) {
-            log.error("取消订单失败：{}", e.getMessage(), e);
-            return Result.error("取消失败：" + e.getMessage());
-        }
+        orderService.cancelOrder(orderId, reason);
+        return Result.success("取消订单成功");
     }
 
     @PostMapping("/complete/{orderId}")
-    @Operation(summary = "完成订单", description = "完成订单（确认收货/完成服务）")
+    @Operation(summary = "完成订单")
+    @PreAuthorize("order:edit")  // 完成权限（老板和前台都有）
     public Result<Void> completeOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId) {
-        try {
-            orderService.completeOrder(orderId);
-            return Result.success("完成订单成功");
-        } catch (Exception e) {
-            log.error("完成订单失败：{}", e.getMessage(), e);
-            return Result.error("完成失败：" + e.getMessage());
-        }
+        orderService.completeOrder(orderId);
+        return Result.success("完成订单成功");
     }
 
     @DeleteMapping("/delete/{orderId}")
-    @Operation(summary = "删除订单", description = "删除订单（软删除）")
+    @Operation(summary = "删除订单")
+    @PreAuthorize("order:delete")  // 删除权限（只有老板有）
     public Result<Void> deleteOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId) {
-        try {
-            orderService.deleteOrder(orderId);
-            return Result.success("删除订单成功");
-        } catch (Exception e) {
-            log.error("删除订单失败：{}", e.getMessage(), e);
-            return Result.error("删除失败：" + e.getMessage());
-        }
+        orderService.deleteOrder(orderId);
+        return Result.success("删除订单成功");
     }
 
     @PostMapping("/batch-delete")
-    @Operation(summary = "批量删除订单", description = "批量删除多个订单")
+    @Operation(summary = "批量删除订单")
+    @PreAuthorize("order:delete")  // 批量删除权限（只有老板有）
     public Result<Void> batchDeleteOrders(@RequestBody List<Long> orderIds) {
-        try {
-            orderService.batchDeleteOrders(orderIds);
-            return Result.success("批量删除成功");
-        } catch (Exception e) {
-            log.error("批量删除订单失败：{}", e.getMessage(), e);
-            return Result.error("批量删除失败：" + e.getMessage());
-        }
+        orderService.batchDeleteOrders(orderIds);
+        return Result.success("批量删除成功");
     }
 
     @PostMapping("/pay/{orderId}")
-    @Operation(summary = "订单支付", description = "订单支付")
+    @Operation(summary = "订单支付")
+    @PreAuthorize("order:pay")  // 支付权限（老板和前台都有）
     public Result<Void> payOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId,
             @RequestParam(required = false) String paymentMethod) {
-        try {
-            orderService.payOrder(orderId, paymentMethod != null ? paymentMethod : "现金");
-            return Result.success("订单支付成功");
-        } catch (Exception e) {
-            log.error("订单支付失败：{}", e.getMessage(), e);
-            return Result.error("支付失败：" + e.getMessage());
-        }
+        orderService.payOrder(orderId, paymentMethod != null ? paymentMethod : "现金");
+        return Result.success("订单支付成功");
     }
 
     @PostMapping("/refund/{orderId}")
-    @Operation(summary = "订单退款", description = "订单退款")
+    @Operation(summary = "订单退款")
+    @PreAuthorize("order:refund")  // 退款权限（只有老板有）
     public Result<Void> refundOrder(
             @Parameter(description = "订单ID", required = true)
             @PathVariable @NotNull Long orderId,
             @RequestParam BigDecimal refundAmount,
             @RequestParam(required = false) String reason) {
-        try {
-            orderService.refundOrder(orderId, refundAmount, reason);
-            return Result.success("订单退款成功");
-        } catch (Exception e) {
-            log.error("订单退款失败：{}", e.getMessage(), e);
-            return Result.error("退款失败：" + e.getMessage());
-        }
+        orderService.refundOrder(orderId, refundAmount, reason);
+        return Result.success("订单退款成功");
     }
 
     @PostMapping("/member/{memberId}")
-    @Operation(summary = "获取会员订单列表", description = "获取指定会员的订单列表")
+    @Operation(summary = "获取会员订单列表")
+    @PreAuthorize("order:view")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<OrderListVO>> getMemberOrders(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody OrderQueryDTO queryDTO) {
-        try {
-            PageResultVO<OrderListVO> result = orderService.getMemberOrders(memberId, queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("获取会员订单列表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<OrderListVO> result = orderService.getMemberOrders(memberId, queryDTO);
+        return Result.success("查询成功", result);
     }
 
     /**
@@ -204,8 +157,6 @@ public class OrderController {
      */
     private OrderDetailVO convertToOrderDetailVO(OrderFullDTO fullDTO) {
         OrderDetailVO vo = new OrderDetailVO();
-
-        // 设置基本信息
         vo.setId(fullDTO.getId());
         vo.setOrderNo(fullDTO.getOrderNo());
         vo.setMemberId(fullDTO.getMemberInfo() != null ? fullDTO.getMemberInfo().getId() : null);

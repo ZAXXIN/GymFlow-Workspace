@@ -1,4 +1,4 @@
-package com.gymflow.dto.login;
+package com.gymflow.dto.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

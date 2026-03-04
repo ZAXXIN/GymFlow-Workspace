@@ -1,6 +1,7 @@
 package com.gymflow.controller.settings;
 
 import com.gymflow.common.Result;
+import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.dto.setting.webUser.WebUserQueryDTO;
 import com.gymflow.dto.setting.webUser.WebUserBasicDTO;
 import com.gymflow.dto.setting.webUser.WebUserDetailDTO;
@@ -29,127 +30,91 @@ public class WebUserController {
     private final WebUserService webUserService;
 
     @PostMapping("/list")
-    @Operation(summary = "分页查询用户列表", description = "根据条件分页查询后台用户列表")
+    @Operation(summary = "分页查询用户列表")
+    @PreAuthorize("settings:user:view")  // 查看用户列表权限（只有老板有）
     public Result<PageResultVO<WebUserListVO>> getUserList(@Valid @RequestBody WebUserQueryDTO queryDTO) {
-        try {
-            PageResultVO<WebUserListVO> result = webUserService.getUserList(queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("查询用户列表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<WebUserListVO> result = webUserService.getUserList(queryDTO);
+        return Result.success("查询成功", result);
     }
 
     @GetMapping("/detail/{userId}")
-    @Operation(summary = "获取用户详情", description = "根据用户ID获取用户详细信息")
+    @Operation(summary = "获取用户详情")
+    @PreAuthorize("settings:user:view")  // 查看用户详情权限（只有老板有）
     public Result<WebUserDetailDTO> getUserDetail(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
-        try {
-            WebUserDetailDTO detail = webUserService.getUserDetail(userId);
-            return Result.success("查询成功", detail);
-        } catch (Exception e) {
-            log.error("获取用户详情失败：{}", e.getMessage(), e);
-            return Result.error("获取失败：" + e.getMessage());
-        }
+        WebUserDetailDTO detail = webUserService.getUserDetail(userId);
+        return Result.success("查询成功", detail);
     }
 
     @PostMapping("/add")
-    @Operation(summary = "新增用户", description = "添加新后台用户")
+    @Operation(summary = "新增用户")
+    @PreAuthorize("settings:user:add")  // 新增用户权限（只有老板有）
     public Result<Long> addUser(@Valid @RequestBody WebUserBasicDTO userDTO) {
-        try {
-            Long userId = webUserService.addUser(userDTO);
-            return Result.success("添加成功", userId);
-        } catch (Exception e) {
-            log.error("添加用户失败：{}", e.getMessage(), e);
-            return Result.error("添加失败：" + e.getMessage());
-        }
+        Long userId = webUserService.addUser(userDTO);
+        return Result.success("添加成功", userId);
     }
 
     @PutMapping("/update/{userId}")
-    @Operation(summary = "编辑用户", description = "更新用户信息")
+    @Operation(summary = "编辑用户")
+    @PreAuthorize("settings:user:edit")  // 编辑用户权限（只有老板有）
     public Result<Void> updateUser(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
             @Valid @RequestBody WebUserBasicDTO userDTO) {
-        try {
-            webUserService.updateUser(userId, userDTO);
-            return Result.success("更新成功");
-        } catch (Exception e) {
-            log.error("更新用户失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        webUserService.updateUser(userId, userDTO);
+        return Result.success("更新成功");
     }
 
     @DeleteMapping("/delete/{userId}")
-    @Operation(summary = "删除用户", description = "根据用户ID删除用户")
+    @Operation(summary = "删除用户")
+    @PreAuthorize("settings:user:delete")  // 删除用户权限（只有老板有）
     public Result<Void> deleteUser(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
-        try {
-            webUserService.deleteUser(userId);
-            return Result.success("删除成功");
-        } catch (Exception e) {
-            log.error("删除用户失败：{}", e.getMessage(), e);
-            return Result.error("删除失败：" + e.getMessage());
-        }
+        webUserService.deleteUser(userId);
+        return Result.success("删除成功");
     }
 
     @PutMapping("/updateStatus/{userId}")
-    @Operation(summary = "更新用户状态", description = "更新用户状态：0-禁用，1-正常")
+    @Operation(summary = "更新用户状态")
+    @PreAuthorize("settings:user:status")  // 修改用户状态权限（只有老板有）
     public Result<Void> updateUserStatus(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
             @RequestParam @NotNull Integer status) {
-        try {
-            webUserService.updateUserStatus(userId, status);
-            return Result.success("更新状态成功");
-        } catch (Exception e) {
-            log.error("更新用户状态失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        webUserService.updateUserStatus(userId, status);
+        return Result.success("更新状态成功");
     }
 
     @PutMapping("/resetPassword/{userId}")
-    @Operation(summary = "重置密码", description = "重置用户密码为默认密码")
+    @Operation(summary = "重置密码")
+    @PreAuthorize("settings:user:resetpwd")  // 重置密码权限（只有老板有）
     public Result<Void> resetPassword(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
-        try {
-            webUserService.resetPassword(userId, null);
-            return Result.success("重置密码成功");
-        } catch (Exception e) {
-            log.error("重置密码失败：{}", e.getMessage(), e);
-            return Result.error("重置失败：" + e.getMessage());
-        }
+        webUserService.resetPassword(userId, null);
+        return Result.success("重置密码成功");
     }
 
     @PutMapping("/customResetPassword/{userId}")
-    @Operation(summary = "自定义重置密码", description = "将用户密码重置为指定密码")
+    @Operation(summary = "自定义重置密码")
+    @PreAuthorize("settings:user:resetpwd")  // 重置密码权限（只有老板有）
     public Result<Void> customResetPassword(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
             @RequestParam @NotNull String newPassword) {
-        try {
-            webUserService.resetPassword(userId, newPassword);
-            return Result.success("密码重置成功");
-        } catch (Exception e) {
-            log.error("自定义重置密码失败：{}", e.getMessage(), e);
-            return Result.error("重置失败：" + e.getMessage());
-        }
+        webUserService.resetPassword(userId, newPassword);
+        return Result.success("密码重置成功");
     }
 
     @GetMapping("/check-username")
-    @Operation(summary = "检查用户名是否存在", description = "检查用户名是否已被使用")
+    @Operation(summary = "检查用户名是否存在")
+    @PreAuthorize("settings:user:add,settings:user:edit,logical=OR")  // 新增或编辑时检查
     public Result<Boolean> checkUsernameExists(
             @RequestParam String username,
             @RequestParam(required = false) Long excludeUserId) {
-        try {
-            boolean exists = webUserService.checkUsernameExists(username, excludeUserId);
-            return Result.success("查询成功", exists);
-        } catch (Exception e) {
-            log.error("检查用户名失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        boolean exists = webUserService.checkUsernameExists(username, excludeUserId);
+        return Result.success("查询成功", exists);
     }
 }

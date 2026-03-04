@@ -17,7 +17,8 @@ public class WebUser {
 
     private String realName;
 
-    private Integer role; // 0-老板，1-前台
+    @TableField("role_id")
+    private Long roleId; // 角色ID，关联role表 0：老板 1：前台
 
     private Integer status; // 0-禁用，1-正常
 

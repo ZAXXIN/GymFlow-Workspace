@@ -1,6 +1,7 @@
 package com.gymflow.controller.common;
 
 import com.gymflow.common.Result;
+import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.utils.FileUploadUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +23,8 @@ public class UploadController {
     private final FileUploadUtil fileUploadUtil;
 
     @PostMapping("/image")
-    @Operation(summary = "上传图片", description = "上传图片文件，返回图片URL")
+    @Operation(summary = "上传图片")
+    @PreAuthorize("common:upload")  // 上传权限（所有登录用户都有）
     public Result<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             // 验证文件类型
@@ -68,7 +70,8 @@ public class UploadController {
     }
 
     @PostMapping("/file")
-    @Operation(summary = "上传文件", description = "上传通用文件，返回文件URL")
+    @Operation(summary = "上传文件")
+    @PreAuthorize("common:upload")  // 上传权限（所有登录用户都有）
     public Result<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             // 验证文件大小（限制20MB）
@@ -92,7 +95,8 @@ public class UploadController {
     }
 
     @DeleteMapping
-    @Operation(summary = "删除文件", description = "根据URL删除已上传的文件")
+    @Operation(summary = "删除文件")
+    @PreAuthorize("common:upload")  // 删除权限（所有登录用户都有）
     public Result<Void> deleteFile(@RequestParam String url) {
         try {
             fileUploadUtil.delete(url);

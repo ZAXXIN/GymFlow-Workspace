@@ -1,4 +1,4 @@
-package com.gymflow.entity.settings;
+package com.gymflow.entity.auth;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -14,10 +14,12 @@ public class Role {
     @TableField("role_name")
     private String roleName;
 
-    private String permissions;
+    @TableField("role_code")
+    private String roleCode;  // 角色编码：BOSS, RECEPTIONIST
 
-    @TableField("data_scope")
-    private String dataScope;
+    private String description;
+
+    private Integer status;  // 状态：0-禁用，1-启用
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

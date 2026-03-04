@@ -1,4 +1,4 @@
-package com.gymflow.controller;
+package com.gymflow.controller.auth;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -7,10 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import com.gymflow.dto.login.LoginDTO;
-import com.gymflow.dto.login.LoginResultDTO;
-import com.gymflow.service.AuthService;
+import com.gymflow.dto.auth.LoginDTO;
+import com.gymflow.dto.auth.LoginResultDTO;
+import com.gymflow.service.auth.AuthService;
 import com.gymflow.common.Result;
+import com.gymflow.entity.settings.WebUser;
+import com.gymflow.mapper.settings.WebUserMapper;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -25,6 +27,9 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private WebUserMapper webUserMapper;
+
     @Operation(summary = "用户登录", description = "使用用户名和密码登录系统")
     @PostMapping("/login")
     public Result<LoginResultDTO> login(
@@ -32,6 +37,15 @@ public class AuthController {
             @Valid @RequestBody LoginDTO loginDTO) {
         try {
             LoginResultDTO result = authService.login(loginDTO);
+
+            // 获取用户角色信息（如果需要额外的角色信息）
+            if (result.getUserId() != null) {
+                WebUser user = webUserMapper.selectById(result.getUserId());
+                if (user != null) {
+                    result.setRole(user.getRoleId() != null ? user.getRoleId().intValue() : null);
+                }
+            }
+
             return Result.success("登录成功", result);
         } catch (Exception e) {
             log.error("登录失败: {}", e.getMessage());

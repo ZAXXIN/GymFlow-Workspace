@@ -1,7 +1,7 @@
-package com.gymflow.service;
+package com.gymflow.service.auth;
 
-import com.gymflow.dto.login.LoginDTO;
-import com.gymflow.dto.login.LoginResultDTO;
+import com.gymflow.dto.auth.LoginDTO;
+import com.gymflow.dto.auth.LoginResultDTO;
 
 //登录服务接口
 public interface AuthService {

@@ -1,5 +1,7 @@
 package com.gymflow.controller;
 
+import com.gymflow.common.Result;
+import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.dto.member.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import com.gymflow.service.MemberService;
 import com.gymflow.vo.MemberListVO;
 import com.gymflow.vo.PageResultVO;
-import com.gymflow.common.Result;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -29,139 +30,102 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/list")
-    @Operation(summary = "分页查询会员列表", description = "根据条件分页查询会员列表")
+    @Operation(summary = "分页查询会员列表")
+    @PreAuthorize("member:view")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<MemberListVO>> getMemberList(@Valid @RequestBody MemberQueryDTO queryDTO) {
-        try {
-            PageResultVO<MemberListVO> result = memberService.getMemberList(queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("查询会员列表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<MemberListVO> result = memberService.getMemberList(queryDTO);
+        return Result.success("查询成功", result);
     }
 
     @GetMapping("/detail/{memberId}")
-    @Operation(summary = "获取会员详情", description = "根据会员ID获取会员详细信息")
+    @Operation(summary = "获取会员详情")
+    @PreAuthorize("member:detail")  // 查看详情权限（老板和前台都有）
     public Result<MemberFullDTO> getMemberDetail(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId) {
-        try {
-            MemberFullDTO detail = memberService.getMemberDetail(memberId);
-            return Result.success("查询成功", detail);
-        } catch (Exception e) {
-            log.error("获取会员详情失败：{}", e.getMessage(), e);
-            return Result.error("获取失败：" + e.getMessage());
-        }
+        MemberFullDTO detail = memberService.getMemberDetail(memberId);
+        return Result.success("查询成功", detail);
     }
 
     @PostMapping("/add")
-    @Operation(summary = "添加会员", description = "添加新会员，包含基本信息、健康档案和会员卡信息")
+    @Operation(summary = "添加会员")
+    @PreAuthorize("member:add")  // 新增权限（老板和前台都有）
     public Result<Long> addMember(@Valid @RequestBody MemberAddRequest request) {
-        try {
-            Long memberId = memberService.addMember(
-                    request.getBasicDTO(),
-                    request.getHealthRecordDTO(),
-                    request.getCardDTO()
-            );
-            return Result.success("添加成功", memberId);
-        } catch (Exception e) {
-            log.error("添加会员失败：{}", e.getMessage(), e);
-            return Result.error("添加失败：" + e.getMessage());
-        }
+        Long memberId = memberService.addMember(
+                request.getBasicDTO(),
+                request.getHealthRecordDTO(),
+                request.getCardDTO()
+        );
+        return Result.success("添加成功", memberId);
     }
 
     @PutMapping("/update/{memberId}")
-    @Operation(summary = "更新会员信息", description = "更新会员的基本信息、健康档案和会员卡信息")
+    @Operation(summary = "更新会员信息")
+    @PreAuthorize("member:edit")  // 编辑权限（老板和前台都有）
     public Result<Void> updateMember(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody MemberUpdateRequest request) {
-        try {
-            memberService.updateMember(
-                    memberId,
-                    request.getBasicDTO(),
-//                    request.getHealthRecordDTO(),
-                    request.getCardDTO()
-            );
-            return Result.success("更新成功");
-        } catch (Exception e) {
-            log.error("更新会员失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        memberService.updateMember(
+                memberId,
+                request.getBasicDTO(),
+                request.getCardDTO()
+        );
+        return Result.success("更新成功");
     }
 
     @DeleteMapping("/delete/{memberId}")
-    @Operation(summary = "删除会员", description = "根据会员ID删除会员（软删除）")
+    @Operation(summary = "删除会员")
+    @PreAuthorize("member:delete")  // 删除权限（只有老板有）
     public Result<Void> deleteMember(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId) {
-        try {
-            memberService.deleteMember(memberId);
-            return Result.success("删除成功");
-        } catch (Exception e) {
-            log.error("删除会员失败：{}", e.getMessage(), e);
-            return Result.error("删除失败：" + e.getMessage());
-        }
+        memberService.deleteMember(memberId);
+        return Result.success("删除成功");
     }
 
     @PostMapping("/batch-delete")
-    @Operation(summary = "批量删除会员", description = "批量删除多个会员")
+    @Operation(summary = "批量删除会员")
+    @PreAuthorize("member:batch:delete")  // 批量删除权限（只有老板有）
     public Result<Void> batchDeleteMember(@RequestBody List<Long> memberIds) {
-        try {
-            memberService.batchDeleteMember(memberIds);
-            return Result.success("批量删除成功");
-        } catch (Exception e) {
-            log.error("批量删除会员失败：{}", e.getMessage(), e);
-            return Result.error("批量删除失败：" + e.getMessage());
-        }
+        memberService.batchDeleteMember(memberIds);
+        return Result.success("批量删除成功");
     }
 
     @PostMapping("/renew-card/{memberId}")
-    @Operation(summary = "续费会员卡", description = "为会员续费会员卡")
+    @Operation(summary = "续费会员卡")
+    @PreAuthorize("member:card:renew")  // 续费权限（老板和前台都有）
     public Result<Void> renewMemberCard(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody MemberCardDTO cardDTO) {
-        try {
-            memberService.renewMemberCard(memberId, cardDTO);
-            return Result.success("续费成功");
-        } catch (Exception e) {
-            log.error("续费会员卡失败：{}", e.getMessage(), e);
-            return Result.error("续费失败：" + e.getMessage());
-        }
+        memberService.renewMemberCard(memberId, cardDTO);
+        return Result.success("续费成功");
     }
 
     @GetMapping("/health-records/{memberId}")
-    @Operation(summary = "获取健康档案列表", description = "获取会员的健康档案记录列表")
+    @Operation(summary = "获取健康档案列表")
+    @PreAuthorize("member:health:view")  // 查看健康档案权限（老板和前台都有）
     public Result<List<HealthRecordDTO>> getHealthRecords(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId) {
-        try {
-            List<HealthRecordDTO> records = memberService.getHealthRecords(memberId);
-            return Result.success("查询成功", records);
-        } catch (Exception e) {
-            log.error("获取健康档案失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        List<HealthRecordDTO> records = memberService.getHealthRecords(memberId);
+        return Result.success("查询成功", records);
     }
 
     @PostMapping("/add-health-record/{memberId}")
-    @Operation(summary = "添加健康档案", description = "为会员添加新的健康档案记录")
+    @Operation(summary = "添加健康档案")
+    @PreAuthorize("member:health:add")  // 添加健康档案权限（老板和前台都有）
     public Result<Void> addHealthRecord(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody HealthRecordDTO healthRecordDTO) {
-        try {
-            memberService.addHealthRecord(memberId, healthRecordDTO);
-            return Result.success("添加成功");
-        } catch (Exception e) {
-            log.error("添加健康档案失败：{}", e.getMessage(), e);
-            return Result.error("添加失败：" + e.getMessage());
-        }
+        memberService.addHealthRecord(memberId, healthRecordDTO);
+        return Result.success("添加成功");
     }
 }
 
-// 请求包装类
+// 请求包装类（保持不变）
 @Data
 class MemberAddRequest {
     @Valid

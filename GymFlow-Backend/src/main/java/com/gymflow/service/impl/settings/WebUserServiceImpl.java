@@ -52,8 +52,9 @@ public class WebUserServiceImpl implements WebUserService {
             queryWrapper.like(WebUser::getRealName, queryDTO.getRealName());
         }
 
+        // 修改：使用 roleId 查询，需要将 Integer 的 role 转换为 Long
         if (queryDTO.getRole() != null) {
-            queryWrapper.eq(WebUser::getRole, queryDTO.getRole());
+            queryWrapper.eq(WebUser::getRoleId, queryDTO.getRole().longValue());
         }
 
         if (queryDTO.getStatus() != null) {
@@ -106,6 +107,11 @@ public class WebUserServiceImpl implements WebUserService {
         WebUser user = new WebUser();
         BeanUtils.copyProperties(userDTO, user);
 
+        // 设置 roleId（将 Integer 的 role 转换为 Long）
+        if (userDTO.getRole() != null) {
+            user.setRoleId(userDTO.getRole().longValue());
+        }
+
         // 使用BCrypt加密密码
         String password = StringUtils.hasText(userDTO.getPassword()) ?
                 userDTO.getPassword() : DEFAULT_PASSWORD;
@@ -141,6 +147,11 @@ public class WebUserServiceImpl implements WebUserService {
         // 更新用户信息
         BeanUtils.copyProperties(userDTO, user, "id", "password", "createTime");
 
+        // 更新 roleId
+        if (userDTO.getRole() != null) {
+            user.setRoleId(userDTO.getRole().longValue());
+        }
+
         // 如果勾选了修改密码，则更新密码
         if (userDTO.getChangePassword() != null && userDTO.getChangePassword()) {
             if (!StringUtils.hasText(userDTO.getNewPassword())) {
@@ -171,10 +182,10 @@ public class WebUserServiceImpl implements WebUserService {
             throw new BusinessException("用户不存在");
         }
 
-        // 检查是否是最后一个老板
-        if (user.getRole() == 0) {
+        // 检查是否是最后一个老板（roleId = 0 表示老板）
+        if (user.getRoleId() != null && user.getRoleId() == 0L) {
             LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(WebUser::getRole, 0);
+            queryWrapper.eq(WebUser::getRoleId, 0L);
             Long adminCount = webUserMapper.selectCount(queryWrapper);
 
             if (adminCount <= 1) {
@@ -207,9 +218,9 @@ public class WebUserServiceImpl implements WebUserService {
         }
 
         // 如果禁用老板账号，检查是否是最后一个
-        if (status == 0 && user.getRole() == 0) {
+        if (status == 0 && user.getRoleId() != null && user.getRoleId() == 0L) {
             LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(WebUser::getRole, 0);
+            queryWrapper.eq(WebUser::getRoleId, 0L);
             queryWrapper.eq(WebUser::getStatus, 1);
             Long activeAdminCount = webUserMapper.selectCount(queryWrapper);
 
@@ -272,8 +283,13 @@ public class WebUserServiceImpl implements WebUserService {
         WebUserListVO vo = new WebUserListVO();
         BeanUtils.copyProperties(user, vo);
 
+        // 设置角色ID（用于前端显示）
+        if (user.getRoleId() != null) {
+            vo.setRole(user.getRoleId().intValue());
+        }
+
         // 设置角色描述
-        vo.setRoleDesc(getRoleDesc(user.getRole()));
+        vo.setRoleDesc(getRoleDesc(user.getRoleId()));
 
         // 设置状态描述
         vo.setStatusDesc(user.getStatus() == 1 ? "正常" : "禁用");
@@ -285,8 +301,13 @@ public class WebUserServiceImpl implements WebUserService {
         WebUserDetailDTO dto = new WebUserDetailDTO();
         BeanUtils.copyProperties(user, dto);
 
+        // 设置角色ID（用于前端显示）
+        if (user.getRoleId() != null) {
+            dto.setRole(user.getRoleId().intValue());
+        }
+
         // 设置角色描述
-        dto.setRoleDesc(getRoleDesc(user.getRole()));
+        dto.setRoleDesc(getRoleDesc(user.getRoleId()));
 
         // 设置状态描述
         dto.setStatusDesc(user.getStatus() == 1 ? "正常" : "禁用");
@@ -294,12 +315,15 @@ public class WebUserServiceImpl implements WebUserService {
         return dto;
     }
 
-    private String getRoleDesc(Integer role) {
-        if (role == null) return "未知";
-        switch (role) {
-            case 0: return "老板";
-            case 1: return "前台";
-            default: return "未知";
+    private String getRoleDesc(Long roleId) {
+        if (roleId == null) return "未知";
+        // 根据roleId获取角色描述，0-老板，1-前台
+        if (roleId == 0L) {
+            return "老板";
+        } else if (roleId == 1L) {
+            return "前台";
+        } else {
+            return "未知";
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.gymflow.entity;
+package com.gymflow.entity.auth;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

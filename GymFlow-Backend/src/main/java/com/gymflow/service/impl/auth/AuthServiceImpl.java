@@ -1,4 +1,4 @@
-package com.gymflow.service.impl;
+package com.gymflow.service.impl.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -6,13 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import com.gymflow.dto.login.LoginDTO;
-import com.gymflow.dto.login.LoginResultDTO;
+import com.gymflow.dto.auth.LoginDTO;
+import com.gymflow.dto.auth.LoginResultDTO;
 import com.gymflow.entity.settings.WebUser;
 import com.gymflow.mapper.UserMapper;
-import com.gymflow.service.AuthService;
+import com.gymflow.service.auth.AuthService;
 import com.gymflow.utils.JwtTokenUtil;
-import com.gymflow.utils.PasswordUtil;
 import com.gymflow.exception.BusinessException;
 import java.time.LocalDateTime;
 
@@ -26,11 +25,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
-    @Autowired
-    private PasswordUtil passwordUtil;
-
     // BCrypt密码编码器
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     @Override
     public LoginResultDTO login(LoginDTO loginDTO) {
         // 1. 参数校验
@@ -62,16 +59,18 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名或密码错误");
         }
 
-        // 5. 生成token
-        String token = jwtTokenUtil.generateToken(user.getId(), user.getUsername(), user.getRole());
+        // 5. 获取角色值（用于token生成）
+        Integer roleValue = user.getRoleId() != null ? user.getRoleId().intValue() : null;
 
-        // 6. 构造返回结果
+        // 6. 生成token
+        String token = jwtTokenUtil.generateToken(user.getId(), user.getUsername(), roleValue);
+
+        // 7. 构造返回结果
         LoginResultDTO result = new LoginResultDTO();
         result.setUserId(user.getId());
         result.setUsername(user.getUsername());
         result.setRealName(user.getRealName());
-//        result.setPhone(user.getPhone());
-        result.setRole(user.getRole());
+        result.setRole(roleValue);
         result.setToken(token);
         result.setLoginTime(LocalDateTime.now());
 
@@ -84,8 +83,10 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String token) {
         // 实际项目中，这里可以将token加入黑名单或从Redis中删除
         // 暂时只做日志记录
-        String username = jwtTokenUtil.getUsernameFromToken(token);
-        log.info("用户登出: {}", username);
+        if (token != null && jwtTokenUtil.validateToken(token)) {
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            log.info("用户登出: {}", username);
+        }
     }
 
     @Override

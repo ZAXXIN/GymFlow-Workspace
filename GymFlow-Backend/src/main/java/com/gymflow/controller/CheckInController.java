@@ -1,6 +1,7 @@
 package com.gymflow.controller;
 
 import com.gymflow.common.Result;
+import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.dto.checkin.CheckInQueryDTO;
 import com.gymflow.dto.checkin.CheckInStatsDTO;
 import com.gymflow.dto.checkin.CheckInReportDTO;
@@ -31,140 +32,100 @@ public class CheckInController {
     private final CheckInService checkInService;
 
     @PostMapping("/list")
-    @Operation(summary = "分页查询签到列表", description = "根据条件分页查询签到列表")
+    @Operation(summary = "分页查询签到列表")
+    @PreAuthorize("checkIn:view")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<CheckInListVO>> getCheckInList(@Valid @RequestBody CheckInQueryDTO queryDTO) {
-        try {
-            PageResultVO<CheckInListVO> result = checkInService.getCheckInList(queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("查询签到列表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<CheckInListVO> result = checkInService.getCheckInList(queryDTO);
+        return Result.success("查询成功", result);
     }
 
     @GetMapping("/detail/{checkInId}")
-    @Operation(summary = "获取签到详情", description = "根据签到ID获取签到详细信息")
+    @Operation(summary = "获取签到详情")
+    @PreAuthorize("checkIn:detail")  // 查看详情权限（老板和前台都有）
     public Result<CheckInDetailVO> getCheckInDetail(
             @Parameter(description = "签到ID", required = true)
             @PathVariable @NotNull Long checkInId) {
-        try {
-            CheckInDetailVO detail = checkInService.getCheckInDetail(checkInId);
-            return Result.success("查询成功", detail);
-        } catch (Exception e) {
-            log.error("获取签到详情失败：{}", e.getMessage(), e);
-            return Result.error("获取失败：" + e.getMessage());
-        }
+        CheckInDetailVO detail = checkInService.getCheckInDetail(checkInId);
+        return Result.success("查询成功", detail);
     }
 
     @PostMapping("/member/{memberId}")
-    @Operation(summary = "会员签到", description = "会员进行自由训练签到")
+    @Operation(summary = "会员签到")
+    @PreAuthorize("checkIn:member:add")  // 会员签到权限（老板和前台都有）
     public Result<Void> memberCheckIn(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @RequestParam @NotNull Integer checkinMethod,
             @RequestParam(required = false) String notes) {
-        try {
-            checkInService.memberCheckIn(memberId, checkinMethod, notes);
-            return Result.success("签到成功");
-        } catch (Exception e) {
-            log.error("会员签到失败：{}", e.getMessage(), e);
-            return Result.error("签到失败：" + e.getMessage());
-        }
+        checkInService.memberCheckIn(memberId, checkinMethod, notes);
+        return Result.success("签到成功");
     }
 
     @PostMapping("/course/{bookingId}")
-    @Operation(summary = "课程签到", description = "会员进行课程签到")
+    @Operation(summary = "课程签到")
+    @PreAuthorize("checkIn:course:add")  // 课程签到权限（老板和前台都有）
     public Result<Void> courseCheckIn(
             @Parameter(description = "预约ID", required = true)
             @PathVariable @NotNull Long bookingId,
             @RequestParam @NotNull Integer checkinMethod,
             @RequestParam(required = false) String notes) {
-        try {
-            checkInService.courseCheckIn(bookingId, checkinMethod, notes);
-            return Result.success("课程签到成功");
-        } catch (Exception e) {
-            log.error("课程签到失败：{}", e.getMessage(), e);
-            return Result.error("签到失败：" + e.getMessage());
-        }
+        checkInService.courseCheckIn(bookingId, checkinMethod, notes);
+        return Result.success("课程签到成功");
     }
 
     @PutMapping("/update/{checkInId}")
-    @Operation(summary = "更新签到信息", description = "更新签到备注信息")
+    @Operation(summary = "更新签到信息")
+    @PreAuthorize("checkIn:edit")  // 编辑权限（老板和前台都有）
     public Result<Void> updateCheckIn(
             @Parameter(description = "签到ID", required = true)
             @PathVariable @NotNull Long checkInId,
             @RequestParam String notes) {
-        try {
-            checkInService.updateCheckIn(checkInId, notes);
-            return Result.success("更新签到信息成功");
-        } catch (Exception e) {
-            log.error("更新签到信息失败：{}", e.getMessage(), e);
-            return Result.error("更新失败：" + e.getMessage());
-        }
+        checkInService.updateCheckIn(checkInId, notes);
+        return Result.success("更新签到信息成功");
     }
 
     @DeleteMapping("/delete/{checkInId}")
-    @Operation(summary = "删除签到记录", description = "删除签到记录（仅限自由训练签到）")
+    @Operation(summary = "删除签到记录")
+    @PreAuthorize("checkIn:delete")  // 删除权限（只有老板有）
     public Result<Void> deleteCheckIn(
             @Parameter(description = "签到ID", required = true)
             @PathVariable @NotNull Long checkInId) {
-        try {
-            checkInService.deleteCheckIn(checkInId);
-            return Result.success("删除签到记录成功");
-        } catch (Exception e) {
-            log.error("删除签到记录失败：{}", e.getMessage(), e);
-            return Result.error("删除失败：" + e.getMessage());
-        }
+        checkInService.deleteCheckIn(checkInId);
+        return Result.success("删除签到记录成功");
     }
 
     @PostMapping("/batch-delete")
-    @Operation(summary = "批量删除签到记录", description = "批量删除多个签到记录")
+    @Operation(summary = "批量删除签到记录")
+    @PreAuthorize("checkIn:delete")  // 删除权限（只有老板有）
     public Result<Void> batchDeleteCheckIns(@RequestBody List<Long> checkInIds) {
-        try {
-            checkInService.batchDeleteCheckIns(checkInIds);
-            return Result.success("批量删除成功");
-        } catch (Exception e) {
-            log.error("批量删除签到记录失败：{}", e.getMessage(), e);
-            return Result.error("批量删除失败：" + e.getMessage());
-        }
+        checkInService.batchDeleteCheckIns(checkInIds);
+        return Result.success("批量删除成功");
     }
 
     @PostMapping("/member-list/{memberId}")
-    @Operation(summary = "获取会员签到记录", description = "获取指定会员的签到记录列表")
+    @Operation(summary = "获取会员签到记录")
+    @PreAuthorize("checkIn:view")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<CheckInListVO>> getMemberCheckIns(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody CheckInQueryDTO queryDTO) {
-        try {
-            PageResultVO<CheckInListVO> result = checkInService.getMemberCheckIns(memberId, queryDTO);
-            return Result.success("查询成功", result);
-        } catch (Exception e) {
-            log.error("获取会员签到记录失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        PageResultVO<CheckInListVO> result = checkInService.getMemberCheckIns(memberId, queryDTO);
+        return Result.success("查询成功", result);
     }
 
     @GetMapping("/stats/today")
-    @Operation(summary = "获取今日签到统计", description = "获取今日签到统计数据")
+    @Operation(summary = "获取今日签到统计")
+    @PreAuthorize("checkIn:view")  // 查看权限（老板和前台都有）
     public Result<CheckInStatsDTO> getTodayCheckInStats() {
-        try {
-            CheckInStatsDTO stats = checkInService.getTodayCheckInStats();
-            return Result.success("查询成功", stats);
-        } catch (Exception e) {
-            log.error("获取今日签到统计失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        CheckInStatsDTO stats = checkInService.getTodayCheckInStats();
+        return Result.success("查询成功", stats);
     }
 
     @PostMapping("/report")
-    @Operation(summary = "获取签到统计报表", description = "获取签到统计报表数据")
+    @Operation(summary = "获取签到统计报表")
+    @PreAuthorize("checkIn:view")  // 查看权限（老板和前台都有）
     public Result<CheckInReportDTO> getCheckInReport(@Valid @RequestBody CheckInQueryDTO queryDTO) {
-        try {
-            CheckInReportDTO report = checkInService.getCheckInReport(queryDTO);
-            return Result.success("查询成功", report);
-        } catch (Exception e) {
-            log.error("获取签到统计报表失败：{}", e.getMessage(), e);
-            return Result.error("查询失败：" + e.getMessage());
-        }
+        CheckInReportDTO report = checkInService.getCheckInReport(queryDTO);
+        return Result.success("查询成功", report);
     }
 }
