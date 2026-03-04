@@ -2,30 +2,44 @@ package com.gymflow.entity;
 
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 public class DashboardStats {
 
-    // 今日数据
-    private BigDecimal todayIncome;
-    private Integer todayNewMembers;
-    private Integer todayCheckins;
-    private Integer todayBookings;
+    // 总会员数
+    private Integer totalMembers;
 
-    // 本周数据
-    private BigDecimal weekIncome;
-    private Integer weekNewMembers;
+    // 总教练数
+    private Integer totalCoaches;
 
-    // 本月数据
-    private BigDecimal monthIncome;
+    // 总课程数
+    private Integer totalCourses;
+
+    // 今日营收
+    private BigDecimal todayRevenue;
+
+    // 今日签到数
+    private Integer todayCheckIns;
+
+    // 本月营收
+    private BigDecimal monthRevenue;
+
+    // 本月新增会员
     private Integer monthNewMembers;
 
-    // 总览数据
-    private Integer totalMembers;
-    private Integer totalCoaches;
-    private Integer totalCourses;
-    private Integer activeCourses;
+    // 本月签到数
+    private Integer monthCheckIns;
 
-    // 教练排名数据（需要单独查询）
-    // 会员活跃度数据（需要单独查询）
+    // 上月营收
+    private BigDecimal lastMonthRevenue;
+
+    // 上月新增会员
+    private Integer lastMonthNewMembers;
+
+    // 昨日营收
+    private BigDecimal yesterdayRevenue;
+
+    // 昨日签到数
+    private Integer yesterdayCheckIns;
 }
