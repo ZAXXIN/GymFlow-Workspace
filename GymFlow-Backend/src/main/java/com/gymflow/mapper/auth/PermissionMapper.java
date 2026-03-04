@@ -1,6 +1,7 @@
 package com.gymflow.mapper.auth;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gymflow.dto.settings.rolePermission.RolePermissionDetailDTO;
 import com.gymflow.entity.auth.Permission;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -49,4 +50,33 @@ public interface PermissionMapper extends BaseMapper<Permission> {
      */
     @Delete("DELETE FROM role_permission WHERE role_id = #{roleId}")
     int deleteRolePermissions(@Param("roleId") Long roleId);
+
+    /**
+     * 根据角色ID查询权限ID列表
+     */
+    @Select("SELECT permission_id FROM role_permission WHERE role_id = #{roleId}")
+    List<Long> selectPermissionIdsByRoleId(@Param("roleId") Long roleId);
+
+    /**
+     * 根据角色ID查询权限详情列表
+     */
+    @Select("SELECT p.id as permission_id, p.permission_name, p.permission_code, p.type, p.module " +
+            "FROM permission p " +
+            "LEFT JOIN role_permission rp ON rp.permission_id = p.id " +
+            "WHERE rp.role_id = #{roleId} AND p.status = 1 " +
+            "ORDER BY p.sort_order")
+    List<RolePermissionDetailDTO> selectPermissionDetailsByRoleId(@Param("roleId") Long roleId);
+
+    /**
+     * 批量插入角色权限关联
+     */
+    @Insert({
+            "<script>",
+            "INSERT INTO role_permission(role_id, permission_id) VALUES ",
+            "<foreach collection='permissionIds' item='permissionId' separator=','>",
+            "(#{roleId}, #{permissionId})",
+            "</foreach>",
+            "</script>"
+    })
+    int insertRolePermissions(@Param("roleId") Long roleId, @Param("permissionIds") List<Long> permissionIds);
 }

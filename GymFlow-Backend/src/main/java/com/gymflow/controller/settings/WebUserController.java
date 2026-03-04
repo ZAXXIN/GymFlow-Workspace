@@ -2,9 +2,9 @@ package com.gymflow.controller.settings;
 
 import com.gymflow.common.Result;
 import com.gymflow.common.annotation.PreAuthorize;
-import com.gymflow.dto.setting.webUser.WebUserQueryDTO;
-import com.gymflow.dto.setting.webUser.WebUserBasicDTO;
-import com.gymflow.dto.setting.webUser.WebUserDetailDTO;
+import com.gymflow.dto.settings.webUser.WebUserQueryDTO;
+import com.gymflow.dto.settings.webUser.WebUserBasicDTO;
+import com.gymflow.dto.settings.webUser.WebUserDetailDTO;
 import com.gymflow.service.settings.WebUserService;
 import com.gymflow.vo.PageResultVO;
 import com.gymflow.vo.settings.WebUserListVO;

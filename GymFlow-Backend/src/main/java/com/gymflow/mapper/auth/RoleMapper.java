@@ -27,4 +27,10 @@ public interface RoleMapper extends BaseMapper<Role> {
             "LEFT JOIN web_user w ON w.role_id = rp.role_id " +
             "WHERE w.id = #{userId} AND p.status = 1")
     List<String> selectPermissionsByUserId(@Param("userId") Long userId);
+
+    /**
+     * 统计使用该角色的用户数量
+     */
+    @Select("SELECT COUNT(*) FROM web_user WHERE role_id = #{roleId}")
+    Integer countUsersByRoleId(@Param("roleId") Long roleId);
 }

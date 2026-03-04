@@ -2,9 +2,9 @@ package com.gymflow.controller.settings;
 
 import com.gymflow.common.Result;
 import com.gymflow.common.annotation.PreAuthorize;
-import com.gymflow.dto.setting.System.BasicConfigDTO;
-import com.gymflow.dto.setting.System.BusinessConfigDTO;
-import com.gymflow.dto.setting.System.SystemConfigResponseDTO;
+import com.gymflow.dto.settings.System.BasicConfigDTO;
+import com.gymflow.dto.settings.System.BusinessConfigDTO;
+import com.gymflow.dto.settings.System.SystemConfigResponseDTO;
 import com.gymflow.service.settings.SystemConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

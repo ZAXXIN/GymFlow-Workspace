@@ -1,6 +1,6 @@
 package com.gymflow.utils;
 
-import com.gymflow.dto.setting.System.BusinessConfigDTO;
+import com.gymflow.dto.settings.System.BusinessConfigDTO;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.service.settings.SystemConfigService;
 import lombok.RequiredArgsConstructor;

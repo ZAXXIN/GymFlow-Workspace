@@ -1,8 +1,8 @@
 package com.gymflow.service.settings;
 
-import com.gymflow.dto.setting.System.BasicConfigDTO;
-import com.gymflow.dto.setting.System.BusinessConfigDTO;
-import com.gymflow.dto.setting.System.SystemConfigResponseDTO;
+import com.gymflow.dto.settings.System.BasicConfigDTO;
+import com.gymflow.dto.settings.System.BusinessConfigDTO;
+import com.gymflow.dto.settings.System.SystemConfigResponseDTO;
 import com.gymflow.vo.settings.SystemConfigVO;
 
 public interface SystemConfigService {

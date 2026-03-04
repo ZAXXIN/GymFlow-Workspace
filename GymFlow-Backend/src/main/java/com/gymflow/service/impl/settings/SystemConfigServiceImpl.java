@@ -1,10 +1,9 @@
 // service/impl/settings/SystemConfigServiceImpl.java
 package com.gymflow.service.impl.settings;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.gymflow.dto.setting.System.BasicConfigDTO;
-import com.gymflow.dto.setting.System.BusinessConfigDTO;
-import com.gymflow.dto.setting.System.SystemConfigResponseDTO;
+import com.gymflow.dto.settings.System.BasicConfigDTO;
+import com.gymflow.dto.settings.System.BusinessConfigDTO;
+import com.gymflow.dto.settings.System.SystemConfigResponseDTO;
 import com.gymflow.entity.settings.SystemConfig;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.settings.SystemConfigMapper;

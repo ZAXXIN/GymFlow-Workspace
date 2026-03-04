@@ -1,8 +1,8 @@
 package com.gymflow.service.settings;
 
-import com.gymflow.dto.setting.webUser.WebUserQueryDTO;
-import com.gymflow.dto.setting.webUser.WebUserBasicDTO;
-import com.gymflow.dto.setting.webUser.WebUserDetailDTO;
+import com.gymflow.dto.settings.webUser.WebUserQueryDTO;
+import com.gymflow.dto.settings.webUser.WebUserBasicDTO;
+import com.gymflow.dto.settings.webUser.WebUserDetailDTO;
 import com.gymflow.vo.PageResultVO;
 import com.gymflow.vo.settings.WebUserListVO;
 
