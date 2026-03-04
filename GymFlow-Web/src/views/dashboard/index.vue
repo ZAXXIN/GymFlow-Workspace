@@ -132,7 +132,7 @@
     </div>
     
     <!-- 快速操作 -->
-    <div class="quick-actions">
+    <!-- <div class="quick-actions">
       <el-card>
         <template #header>
           <h3>快速操作</h3>
@@ -156,7 +156,7 @@
           </el-button>
         </div>
       </el-card>
-    </div>
+    </div> -->
     
     <!-- 今日课程 -->
     <div class="today-courses">
@@ -204,132 +204,107 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
+import { Refresh, Top, Bottom, User, UserFilled, Money, Check, Calendar, ShoppingCart } from '@element-plus/icons-vue'
 import { useDashboardStore } from '@/stores/dashboard'
-import { useCourseStore } from '@/stores/course'
-import { formatTime } from '@/utils'
-import type { Course, CourseStatus } from '@/types'
 
-// Store
-const dashboardStore = useDashboardStore()
-const courseStore = useCourseStore()
-
-// Router
 const router = useRouter()
-
-// 状态
-const loading = ref(false)
-const coursesLoading = ref(false)
-const dateRange = ref<[Date, Date]>([
-  new Date(new Date().setDate(new Date().getDate() - 7)),
-  new Date()
-])
-const revenuePeriod = ref('week')
+const dashboardStore = useDashboardStore()
 
 // 图表引用
 const revenueChartRef = ref<HTMLElement>()
 const courseChartRef = ref<HTMLElement>()
-
-// 图表实例
 let revenueChart: echarts.ECharts | null = null
 let courseChart: echarts.ECharts | null = null
 
-// Computed
-const stats = ref(dashboardStore.stats)
-const todayCourses = ref<Course[]>([])
-const memberTrend = ref(12.5)
-const coachTrend = ref(5.2)
-const revenueTrend = ref(18.3)
-const attendanceTrend = ref(8.7)
+// 日期范围
+const dateRange = ref<[Date, Date]>([
+  new Date(new Date().setDate(new Date().getDate() - 6)),
+  new Date()
+])
 
-// Methods
+// 状态
+const loading = computed(() => dashboardStore.loading)
+const coursesLoading = computed(() => dashboardStore.coursesLoading)
+const stats = computed(() => dashboardStore.stats)
+const revenueTrend = computed(() => dashboardStore.revenueTrend)
+const courseCategories = computed(() => dashboardStore.courseCategories)
+const todayCourses = computed(() => dashboardStore.todayCourses)
+const quickStats = computed(() => dashboardStore.quickStats)
+
+// 趋势数据
+const memberTrend = computed(() => dashboardStore.memberTrend)
+const coachTrend = computed(() => dashboardStore.coachTrend)
+const revenueTrendValue = computed(() => dashboardStore.revenueTrend)
+const attendanceTrend = computed(() => dashboardStore.attendanceTrend)
+
+// 营收周期
+const revenuePeriod = ref('week')
+
+// 初始化数据
+const initData = async () => {
+  try {
+    await Promise.all([
+      dashboardStore.fetchDashboardStats(),
+      dashboardStore.fetchRevenueTrend(revenuePeriod.value),
+      dashboardStore.fetchCourseCategoryStats(),
+      dashboardStore.fetchTodayCourses(),
+      dashboardStore.fetchQuickStats()
+    ])
+    
+    // 初始化图表
+    initRevenueChart()
+    initCourseChart()
+  } catch (error) {
+    console.error('初始化仪表盘数据失败:', error)
+  }
+}
+
+// 刷新数据
 const refreshData = async () => {
-  try {
-    loading.value = true
-    await dashboardStore.refreshData()
-    stats.value = dashboardStore.stats
-    await loadTodayCourses()
-    ElMessage.success('数据刷新成功')
-  } catch (error) {
-    ElMessage.error('数据刷新失败')
-    console.error('刷新数据失败:', error)
-  } finally {
-    loading.value = false
+  await dashboardStore.refreshAllData()
+  // 刷新图表
+  updateRevenueChart()
+  updateCourseChart()
+}
+
+// 日期变化
+const handleDateChange = (dates: [Date, Date]) => {
+  if (dates && dates.length === 2) {
+    const startDate = dates[0].toISOString().split('T')[0]
+    const endDate = dates[1].toISOString().split('T')[0]
+    dashboardStore.fetchRevenueTrend(revenuePeriod.value, startDate, endDate)
   }
 }
 
-const loadTodayCourses = async () => {
-  try {
-    coursesLoading.value = true
-    const today = new Date().toISOString().split('T')[0]
-    const response = await courseStore.fetchCourses({
-      startDate: today,
-      endDate: today,
-      pageSize: 5
-    })
-    todayCourses.value = response.items
-  } catch (error) {
-    console.error('加载今日课程失败:', error)
-  } finally {
-    coursesLoading.value = false
-  }
-}
-
-const handleDateChange = () => {
-  refreshData()
-}
-
+// 周期变化
 const handlePeriodChange = (period: string) => {
   revenuePeriod.value = period
-  initRevenueChart()
+  dashboardStore.fetchRevenueTrend(period)
+    .then(() => {
+      updateRevenueChart()
+    })
 }
 
-const getStatusType = (status: CourseStatus) => {
-  switch (status) {
-    case 'SCHEDULED':
-      return 'primary'
-    case 'IN_PROGRESS':
-      return 'warning'
-    case 'COMPLETED':
-      return 'success'
-    case 'CANCELLED':
-      return 'danger'
-    default:
-      return 'info'
-  }
-}
-
-const getStatusText = (status: CourseStatus) => {
-  switch (status) {
-    case 'SCHEDULED':
-      return '已安排'
-    case 'IN_PROGRESS':
-      return '进行中'
-    case 'COMPLETED':
-      return '已完成'
-    case 'CANCELLED':
-      return '已取消'
-    default:
-      return '未知'
-  }
-}
-
-// 初始化营收趋势图表
+// 初始化营收图表
 const initRevenueChart = () => {
   if (!revenueChartRef.value) return
-  
-  if (revenueChart) {
-    revenueChart.dispose()
-  }
   
   revenueChart = echarts.init(revenueChartRef.value)
   
   const option = {
     tooltip: {
       trigger: 'axis',
-      formatter: '{b}<br/>¥{c}'
+      axisPointer: {
+        type: 'shadow'
+      },
+      formatter: (params: any) => {
+        const data = params[0]
+        return `${data.name}<br/>营收：¥${data.value.toFixed(2)}`
+      }
     },
     grid: {
       left: '3%',
@@ -339,71 +314,88 @@ const initRevenueChart = () => {
     },
     xAxis: {
       type: 'category',
-      data: revenuePeriod.value === 'week' 
-        ? ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-        : revenuePeriod.value === 'month'
-        ? Array.from({ length: 30 }, (_, i) => `${i + 1}日`)
-        : ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+      data: revenueTrend.value?.categories || [],
+      axisLabel: {
+        rotate: revenuePeriod.value === 'year' ? 0 : 30
+      }
     },
     yAxis: {
       type: 'value',
+      name: '金额 (¥)',
       axisLabel: {
-        formatter: '¥{value}'
+        formatter: (value: number) => {
+          if (value >= 10000) {
+            return (value / 10000).toFixed(1) + '万'
+          }
+          return value
+        }
       }
     },
     series: [
       {
         name: '营收',
-        type: 'line',
-        smooth: true,
-        data: revenuePeriod.value === 'week'
-          ? [3200, 2800, 3500, 4200, 3800, 4500, 5200]
-          : revenuePeriod.value === 'month'
-          ? Array.from({ length: 30 }, () => Math.floor(Math.random() * 5000) + 2000)
-          : [45000, 52000, 48000, 55000, 62000, 58000, 65000, 70000, 68000, 75000, 80000, 85000],
+        type: 'bar',
+        data: revenueTrend.value?.values || [],
         itemStyle: {
-          color: '#00b894'
+          color: '#409EFF',
+          borderRadius: [4, 4, 0, 0]
         },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(0, 184, 148, 0.3)' },
-            { offset: 1, color: 'rgba(0, 184, 148, 0.1)' }
-          ])
-        }
+        barWidth: 30
       }
     ]
   }
   
   revenueChart.setOption(option)
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', () => {
+    revenueChart?.resize()
+  })
+}
+
+// 更新营收图表
+const updateRevenueChart = () => {
+  if (!revenueChart) return
+  
+  revenueChart.setOption({
+    xAxis: {
+      data: revenueTrend.value?.categories || []
+    },
+    series: [
+      {
+        data: revenueTrend.value?.values || []
+      }
+    ]
+  })
 }
 
 // 初始化课程分类图表
 const initCourseChart = () => {
   if (!courseChartRef.value) return
   
-  if (courseChart) {
-    courseChart.dispose()
-  }
-  
   courseChart = echarts.init(courseChartRef.value)
   
   const option = {
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: '{b}: {c} ({d}%)'
     },
     legend: {
       orient: 'vertical',
-      right: 10,
+      left: 'left',
       top: 'center',
-      data: ['瑜伽', '普拉提', '综合体能', '动感单车', '力量训练', '有氧运动', '私教课']
+      itemWidth: 10,
+      itemHeight: 10,
+      formatter: (name: string) => {
+        const item = courseCategories.value?.find(c => c.category === name)
+        return `${name} ${item?.value || 0} (${item?.percentage || 0}%)`
+      }
     },
     series: [
       {
         name: '课程分类',
         type: 'pie',
         radius: ['40%', '70%'],
-        center: ['40%', '50%'],
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 10,
@@ -411,89 +403,122 @@ const initCourseChart = () => {
           borderWidth: 2
         },
         label: {
-          show: false,
-          position: 'center'
+          show: false
         },
         emphasis: {
           label: {
             show: true,
-            fontSize: '18',
+            fontSize: 14,
             fontWeight: 'bold'
           }
         },
-        labelLine: {
-          show: false
-        },
-        data: [
-          { value: 335, name: '瑜伽', itemStyle: { color: '#5470c6' } },
-          { value: 310, name: '普拉提', itemStyle: { color: '#91cc75' } },
-          { value: 234, name: '综合体能', itemStyle: { color: '#fac858' } },
-          { value: 135, name: '动感单车', itemStyle: { color: '#ee6666' } },
-          { value: 154, name: '力量训练', itemStyle: { color: '#73c0de' } },
-          { value: 98, name: '有氧运动', itemStyle: { color: '#3ba272' } },
-          { value: 67, name: '私教课', itemStyle: { color: '#fc8452' } }
-        ]
+        data: courseCategories.value?.map(item => ({
+          name: item.category,
+          value: item.value,
+          itemStyle: {
+            color: item.color
+          }
+        })) || []
       }
     ]
   }
   
   courseChart.setOption(option)
+  
+  window.addEventListener('resize', () => {
+    courseChart?.resize()
+  })
+}
+
+// 更新课程分类图表
+const updateCourseChart = () => {
+  if (!courseChart) return
+  
+  courseChart.setOption({
+    series: [
+      {
+        data: courseCategories.value?.map(item => ({
+          name: item.category,
+          value: item.value,
+          itemStyle: {
+            color: item.color
+          }
+        })) || []
+      }
+    ],
+    legend: {
+      formatter: (name: string) => {
+        const item = courseCategories.value?.find(c => c.category === name)
+        return `${name} ${item?.value || 0} (${item?.percentage || 0}%)`
+      }
+    }
+  })
+}
+
+// 获取状态类型
+const getStatusType = (status: string) => {
+  switch (status) {
+    case 'scheduled': return 'primary'
+    case 'in-progress': return 'warning'
+    case 'completed': return 'success'
+    case 'cancelled': return 'danger'
+    default: return 'info'
+  }
+}
+
+// 获取状态文本
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'scheduled': return '待开始'
+    case 'in-progress': return '进行中'
+    case 'completed': return '已完成'
+    case 'cancelled': return '已取消'
+    default: return '未知'
+  }
+}
+
+// 格式化时间
+const formatTime = (time: string) => {
+  return dashboardStore.formatTime(time)
 }
 
 // 快速操作
 const handleAddMember = () => {
-  router.push('/members/create')
+  router.push('/member/add')
 }
 
 const handleAddCourse = () => {
-  router.push('/courses/create')
+  router.push('/course/schedule')
 }
 
 const handleCheckIn = () => {
-  router.push('/checkin')
+  router.push('/checkIn/list')
 }
 
 const handleViewOrders = () => {
-  router.push('/orders')
+  router.push('/order/list')
 }
 
 const viewAllCourses = () => {
-  router.push('/courses')
+  router.push('/course/list')
 }
 
 const viewCourseDetail = (id: number) => {
-  router.push(`/courses/${id}`)
+  router.push(`/course/detail/${id}`)
 }
 
-// 图表自适应
-const handleResize = () => {
-  if (revenueChart) {
-    revenueChart.resize()
-  }
-  if (courseChart) {
-    courseChart.resize()
-  }
-}
+// 监听数据变化
+watch(courseCategories, () => {
+  updateCourseChart()
+}, { deep: true })
+
+watch(revenueTrend, () => {
+  updateRevenueChart()
+}, { deep: true })
 
 // 生命周期
-onMounted(async () => {
-  await refreshData()
-  
-  await nextTick()
-  initRevenueChart()
-  initCourseChart()
-  
-  window.addEventListener('resize', handleResize)
-})
-
-onBeforeUnmount(() => {
-  if (revenueChart) {
-    revenueChart.dispose()
-  }
-  if (courseChart) {
-    courseChart.dispose()
-  }
-  window.removeEventListener('resize', handleResize)
+onMounted(() => {
+  initData()
 })
 </script>
 
