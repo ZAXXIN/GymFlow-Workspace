@@ -7,36 +7,28 @@
           <span class="page-title">订单详情</span>
           <div class="header-actions">
             <el-button-group>
-              <el-button
-                type="primary"
-                v-if="currentOrder?.orderStatus === 'PENDING'"
-                @click="goEdit"
-              >
-                <el-icon><Edit /></el-icon>
+              <el-button type="primary" v-if="currentOrder?.orderStatus === 'PENDING'" @click="goEdit">
+                <el-icon>
+                  <Edit />
+                </el-icon>
                 编辑
               </el-button>
-              <el-button
-                type="success"
-                v-if="currentOrder?.paymentStatus === 0 && currentOrder?.orderStatus === 'PENDING'"
-                @click="handlePay"
-              >
-                <el-icon><Money /></el-icon>
+              <el-button type="success" v-if="currentOrder?.paymentStatus === 0 && currentOrder?.orderStatus === 'PENDING'" @click="handlePay">
+                <el-icon>
+                  <Money />
+                </el-icon>
                 支付
               </el-button>
-              <el-button
-                type="warning"
-                v-if="currentOrder?.orderStatus === 'PROCESSING'"
-                @click="handleComplete"
-              >
-                <el-icon><Check /></el-icon>
+              <el-button type="warning" v-if="currentOrder?.orderStatus === 'PROCESSING'" @click="handleComplete">
+                <el-icon>
+                  <Check />
+                </el-icon>
                 完成
               </el-button>
-              <el-button
-                type="danger"
-                v-if="currentOrder?.orderStatus === 'PENDING' || currentOrder?.orderStatus === 'PROCESSING'"
-                @click="handleCancel"
-              >
-                <el-icon><Close /></el-icon>
+              <el-button type="danger" v-if="currentOrder?.orderStatus === 'PENDING' || currentOrder?.orderStatus === 'PROCESSING'" @click="handleCancel">
+                <el-icon>
+                  <Close />
+                </el-icon>
                 取消
               </el-button>
               <el-dropdown @command="handleMoreAction">
@@ -46,15 +38,21 @@
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item command="refund" v-if="currentOrder?.paymentStatus === 1 && (currentOrder?.orderStatus === 'COMPLETED' || currentOrder?.orderStatus === 'PROCESSING')">
-                      <el-icon><RefreshLeft /></el-icon>
+                      <el-icon>
+                        <RefreshLeft />
+                      </el-icon>
                       退款
                     </el-dropdown-item>
                     <el-dropdown-item command="print" divided>
-                      <el-icon><Printer /></el-icon>
+                      <el-icon>
+                        <Printer />
+                      </el-icon>
                       打印订单
                     </el-dropdown-item>
                     <el-dropdown-item command="delete" v-if="currentOrder?.orderStatus === 'CANCELLED' || currentOrder?.orderStatus === 'COMPLETED'">
-                      <el-icon><Delete /></el-icon>
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
                       删除订单
                     </el-dropdown-item>
                   </el-dropdown-menu>
@@ -65,7 +63,7 @@
         </div>
       </template>
     </el-page-header>
-    
+
     <!-- 基本信息卡片 -->
     <el-card class="info-card" v-loading="loading">
       <template #header>
@@ -79,11 +77,11 @@
           </div>
         </div>
       </template>
-      
+
       <el-descriptions :column="3" border>
         <el-descriptions-item label="订单编号">{{ currentOrder?.orderNo || '-' }}</el-descriptions-item>
         <el-descriptions-item label="订单类型">{{ currentOrder?.orderTypeDesc || '-' }}</el-descriptions-item>
-        
+
         <el-descriptions-item label="会员姓名">
           <div class="member-info">
             <div class="member-name">{{ currentOrder?.memberName || '-' }}</div>
@@ -92,7 +90,7 @@
         </el-descriptions-item>
         <!-- <el-descriptions-item label="会员ID">{{ currentOrder?.memberId || '-' }}</el-descriptions-item> -->
         <el-descriptions-item label="支付方式">{{ currentOrder?.paymentMethod || '现金' }}</el-descriptions-item>
-        
+
         <el-descriptions-item label="支付状态">
           <el-tag :type="currentOrder?.paymentStatus === 1 ? 'success' : 'warning'" size="small">
             {{ currentOrder?.paymentStatusDesc || '-' }}
@@ -108,7 +106,7 @@
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDateTime(currentOrder?.createTime) }}</el-descriptions-item>
         <!-- <el-descriptions-item label="最后更新">{{ formatDateTime(currentOrder?.updateTime) }}</el-descriptions-item> -->
-        
+
         <el-descriptions-item label="订单金额">
           <div class="amount-info">
             <div class="amount-item">
@@ -125,13 +123,13 @@
             </div>
           </div>
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="备注">
           {{ currentOrder?.remark || '无' }}
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
-    
+
     <!-- 商品信息 -->
     <el-card class="products-card">
       <template #header>
@@ -140,20 +138,14 @@
           <span class="card-subtitle">共 {{ currentOrder?.orderItems?.length || 0 }} 件商品</span>
         </div>
       </template>
-      
+
       <div v-if="currentOrder?.orderItems && currentOrder.orderItems.length > 0">
         <el-table :data="currentOrder.orderItems" style="width: 100%" border stripe>
           <el-table-column type="index" label="序号" width="60" align="center" />
           <el-table-column label="商品信息" min-width="250">
             <template #default="{ row }">
               <div class="product-info">
-                <el-image
-                  v-if="row.productImage"
-                  :src="row.productImage"
-                  :preview-src-list="[row.productImage]"
-                  fit="cover"
-                  style="width: 50px; height: 50px; margin-right: 10px;"
-                />
+                <el-image v-if="row.productImage" :src="row.productImage" :preview-src-list="[row.productImage]" fit="cover" style="width: 50px; height: 50px; margin-right: 10px;" />
                 <div class="product-text">
                   <div class="product-name">{{ row.productName }}</div>
                   <div class="product-type text-gray">{{ getProductTypeDesc(row.productType) }}</div>
@@ -196,7 +188,7 @@
             </template>
           </el-table-column>
         </el-table>
-        
+
         <!-- 金额汇总 -->
         <div class="amount-summary">
           <div class="summary-row">
@@ -213,12 +205,12 @@
           </div>
         </div>
       </div>
-      
+
       <div v-else class="empty-data">
         <el-empty description="暂无商品信息" />
       </div>
     </el-card>
-    
+
     <!-- 支付记录 -->
     <el-card class="payment-card" v-if="paymentRecords && paymentRecords.length > 0">
       <template #header>
@@ -226,7 +218,7 @@
           <span class="card-title">支付记录</span>
         </div>
       </template>
-      
+
       <el-table :data="paymentRecords" style="width: 100%">
         <el-table-column prop="paymentNo" label="支付流水号" width="180" />
         <el-table-column prop="paymentMethod" label="支付方式" width="100" />
@@ -253,14 +245,14 @@
         <el-table-column prop="remark" label="备注" min-width="150" />
       </el-table>
     </el-card>
-    
+
     <!-- 支付对话框 -->
     <!-- <PaymentDialog
       v-model="paymentDialogVisible"
       :order-id="orderId"
       @success="handlePaymentSuccess"
     /> -->
-    
+
     <!-- 退款对话框 -->
     <!-- <RefundDialog
       v-model="refundDialogVisible"
@@ -293,7 +285,7 @@ const currentOrder = computed(() => orderStore.currentOrder)
 // 支付记录（模拟数据，实际应该从API获取）
 const paymentRecords = computed(() => {
   if (!currentOrder.value) return []
-  
+
   // 这里应该从API获取支付记录
   // 暂时模拟数据
   return []
@@ -329,11 +321,16 @@ const formatAmount = (amount: number | null | undefined) => {
 const getProductTypeDesc = (productType: number | undefined) => {
   if (productType === undefined) return '未知'
   switch (productType) {
-    case 0: return '会籍卡'
-    case 1: return '私教课'
-    case 2: return '团课'
-    case 3: return '相关产品'
-    default: return '未知'
+    case 0:
+      return '会籍卡'
+    case 1:
+      return '私教课'
+    case 2:
+      return '团课'
+    case 3:
+      return '相关产品'
+    default:
+      return '未知'
   }
 }
 
@@ -341,37 +338,56 @@ const getProductTypeDesc = (productType: number | undefined) => {
 const getItemStatusType = (status: string | undefined) => {
   if (!status) return 'info'
   switch (status) {
-    case 'UNPAID': return 'warning'
-    case 'PAID': return 'primary'
-    case 'ACTIVE': return 'success'
-    case 'EXPIRED': return 'danger'
-    case 'USED_UP': return 'info'
-    default: return 'info'
+    case 'UNPAID':
+      return 'warning'
+    case 'PAID':
+      return 'primary'
+    case 'ACTIVE':
+      return 'success'
+    case 'EXPIRED':
+      return 'danger'
+    case 'USED_UP':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
 const getItemStatusDesc = (status: string | undefined) => {
   if (!status) return '未知'
   switch (status) {
-    case 'UNPAID': return '未支付'
-    case 'PAID': return '已支付'
-    case 'ACTIVE': return '生效中'
-    case 'EXPIRED': return '已过期'
-    case 'USED_UP': return '已用完'
-    default: return '未知'
+    case 'UNPAID':
+      return '未支付'
+    case 'PAID':
+      return '已支付'
+    case 'ACTIVE':
+      return '生效中'
+    case 'EXPIRED':
+      return '已过期'
+    case 'USED_UP':
+      return '已用完'
+    default:
+      return '未知'
   }
 }
 
 // 状态标签类型
 const getStatusTagType = (status: string) => {
   switch (status) {
-    case 'PENDING': return 'warning'
-    case 'PROCESSING': return 'primary'
-    case 'COMPLETED': return 'success'
-    case 'CANCELLED': return 'info'
-    case 'REFUNDED': return 'danger'
-    case 'DELETED': return 'info'
-    default: return 'info'
+    case 'PENDING':
+      return 'warning'
+    case 'PROCESSING':
+      return 'primary'
+    case 'COMPLETED':
+      return 'success'
+    case 'CANCELLED':
+      return 'info'
+    case 'REFUNDED':
+      return 'danger'
+    case 'DELETED':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
@@ -402,9 +418,9 @@ const handlePay = () => {
 const handleComplete = async () => {
   try {
     await ElMessageBox.confirm('确定要完成此订单吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await orderStore.completeOrder(orderId.value)
     ElMessage.success('订单已完成')
     await loadOrderDetail()
@@ -419,9 +435,9 @@ const handleCancel = async () => {
     const { value: reason } = await ElMessageBox.prompt('请输入取消原因', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      inputType: 'textarea'
+      inputType: 'textarea',
     })
-    
+
     await orderStore.cancelOrder(orderId.value, reason)
     ElMessage.success('订单已取消')
     await loadOrderDetail()
@@ -456,9 +472,9 @@ const handleDelete = async () => {
     await ElMessageBox.confirm('确定要删除此订单吗？', '警告', {
       type: 'warning',
       confirmButtonText: '删除',
-      cancelButtonText: '取消'
+      cancelButtonText: '取消',
     })
-    
+
     await orderStore.deleteOrder(orderId.value)
     ElMessage.success('订单已删除')
     goBack()
@@ -520,7 +536,9 @@ onMounted(() => {
   gap: 8px;
 }
 
-.info-card, .products-card, .payment-card {
+.info-card,
+.products-card,
+.payment-card {
   margin-bottom: 20px;
 }
 
@@ -544,7 +562,7 @@ onMounted(() => {
 .order-no {
   font-size: 16px;
   font-weight: 600;
-  color: #409EFF;
+  color: #409eff;
   padding: 4px 12px;
   background-color: #ecf5ff;
   border-radius: 4px;
@@ -556,7 +574,7 @@ onMounted(() => {
     font-weight: 500;
     margin-bottom: 4px;
   }
-  
+
   .member-phone {
     font-size: 12px;
     color: #909399;
@@ -572,26 +590,26 @@ onMounted(() => {
 .amount-info {
   .amount-item {
     margin-bottom: 8px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
   }
-  
+
   .amount-label {
     color: #606266;
     margin-right: 8px;
   }
-  
+
   .amount-value {
     font-weight: 600;
-    
+
     &.actual {
-      color: #67C23A;
+      color: #67c23a;
     }
-    
+
     &.discount {
-      color: #E6A23C;
+      color: #e6a23c;
     }
   }
 }
@@ -599,15 +617,15 @@ onMounted(() => {
 .product-info {
   display: flex;
   align-items: center;
-  
+
   .product-text {
     flex: 1;
-    
+
     .product-name {
       font-weight: 500;
       margin-bottom: 4px;
     }
-    
+
     .product-type {
       font-size: 12px;
       color: #909399;
@@ -620,16 +638,16 @@ onMounted(() => {
 }
 
 .text-primary {
-  color: #409EFF;
+  color: #409eff;
   font-weight: 600;
 }
 
 .text-success {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .text-danger {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .amount-summary {
@@ -639,27 +657,27 @@ onMounted(() => {
   border-radius: 4px;
   max-width: 400px;
   margin-left: auto;
-  
+
   .summary-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 12px;
     font-size: 14px;
     color: #606266;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     &.total {
       padding-top: 12px;
       border-top: 1px solid #e0e0e0;
       font-size: 16px;
       font-weight: 600;
       color: #303133;
-      
+
       .total-amount {
-        color: #67C23A;
+        color: #67c23a;
         font-size: 18px;
       }
     }

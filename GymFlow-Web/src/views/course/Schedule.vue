@@ -11,7 +11,7 @@
       </div>
       <div class="header-actions">
         <el-button @click="goBack">返回</el-button>
-        <el-button type="primary" @click="handleAddSchedule" v-if="isGroupCourse">
+        <el-button v-permission="'course:schedule:set'" type="primary" @click="handleAddSchedule" v-if="isGroupCourse">
           <el-icon>
             <Plus />
           </el-icon>
@@ -233,6 +233,9 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { useCourseStore } from '@/stores/course'
 import type { CourseScheduleDTO, CourseScheduleVO } from '@/types/course'
 import { coachApi } from '@/api/coach'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const route = useRoute()

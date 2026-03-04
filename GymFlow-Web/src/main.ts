@@ -7,6 +7,9 @@ import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
 
+// 导入权限指令
+import { setupPermissionDirective } from '@/directives/permission'
+
 // 导入全局样式
 import '@/assets/styles/index.scss'
 
@@ -20,6 +23,14 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(createPinia())
+// 创建 Pinia 实例
+const pinia = createPinia()
+app.use(pinia)
+
+// 注册路由
 app.use(router)
+
+// 注册权限指令
+setupPermissionDirective(app)
+
 app.mount('#app')

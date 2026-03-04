@@ -53,17 +53,12 @@
         <h3 class="section-title">商品图片</h3>
         <div class="image-list">
           <div v-for="(image, index) in productDetail.images" :key="index" class="image-item">
-            <el-image
-              :src="image"
-              fit="cover"
-              class="image-content"
-              :preview-src-list="productDetail.images"
-              :initial-index="index"
-              hide-on-click-modal
-            >
+            <el-image :src="image" fit="cover" class="image-content" :preview-src-list="productDetail.images" :initial-index="index" hide-on-click-modal>
               <template #error>
                 <div class="image-error">
-                  <el-icon><Picture /></el-icon>
+                  <el-icon>
+                    <Picture />
+                  </el-icon>
                   <span>加载失败</span>
                 </div>
               </template>
@@ -123,7 +118,9 @@
                 <div class="info-title">会籍权益</div>
                 <div class="benefits-list">
                   <div v-for="(benefit, index) in productDetail.detailDTO.membershipBenefits" :key="index" class="benefit-item">
-                    <el-icon><Check /></el-icon>
+                    <el-icon>
+                      <Check />
+                    </el-icon>
                     <span>{{ benefit }}</span>
                   </div>
                 </div>
@@ -161,12 +158,7 @@
               <div v-if="productDetail.detailDTO.coachIds && productDetail.detailDTO.coachIds.length > 0" class="info-section full-width">
                 <div class="info-title">适用教练</div>
                 <div class="coach-tags">
-                  <el-tag
-                    v-for="coachId in productDetail.detailDTO.coachIds"
-                    :key="coachId"
-                    type="info"
-                    size="small"
-                  >
+                  <el-tag v-for="coachId in productDetail.detailDTO.coachIds" :key="coachId" type="info" size="small">
                     教练 {{ coachId }}
                   </el-tag>
                 </div>
@@ -228,16 +220,7 @@
             <div class="tab-header">
               <span class="tab-title">销售记录</span>
               <div class="tab-actions">
-                <el-date-picker
-                  v-model="salesFilter.dateRange"
-                  type="daterange"
-                  range-separator="至"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                  size="small"
-                  style="width: 240px;"
-                  @change="handleDateRangeChange"
-                />
+                <el-date-picker v-model="salesFilter.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" style="width: 240px;" @change="handleDateRangeChange" />
               </div>
             </div>
           </template>
@@ -285,15 +268,7 @@
 
             <!-- 分页 -->
             <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="salesPagination.pageNum"
-                v-model:page-size="salesPagination.pageSize"
-                :total="salesPagination.total"
-                :page-sizes="[10, 20, 50, 100]"
-                layout="total, sizes, prev, pager, next, jumper"
-                @size-change="handleSalesSizeChange"
-                @current-change="handleSalesPageChange"
-              />
+              <el-pagination v-model:current-page="salesPagination.pageNum" v-model:page-size="salesPagination.pageSize" :total="salesPagination.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSalesSizeChange" @current-change="handleSalesPageChange" />
             </div>
           </div>
 
@@ -325,13 +300,13 @@ const salesRecords = ref<any[]>([])
 const salesFilter = ref({
   dateRange: [] as string[],
   startDate: '',
-  endDate: ''
+  endDate: '',
 })
 
 const salesPagination = ref({
   pageNum: 1,
   pageSize: 10,
-  total: 0
+  total: 0,
 })
 
 const productId = computed(() => Number(route.params.id))
@@ -375,10 +350,10 @@ const getPaymentStatusDesc = (status?: number) => {
 }
 
 const getPaymentStatusType = (status?: number) => {
-  if (status === 0) return 'warning'  // 待支付
-  if (status === 1) return 'success'  // 支付成功
-  if (status === 2) return 'danger'   // 支付失败
-  if (status === 3) return 'info'     // 已退款
+  if (status === 0) return 'warning' // 待支付
+  if (status === 1) return 'success' // 支付成功
+  if (status === 2) return 'danger' // 支付失败
+  if (status === 3) return 'info' // 已退款
   return 'info'
 }
 
@@ -387,7 +362,7 @@ const loadProductDetail = async () => {
   try {
     loading.value = true
     await productStore.fetchProductDetail(productId.value)
-    
+
     // 加载销售记录
     await loadSalesRecords()
   } catch (error) {
@@ -409,23 +384,23 @@ const loadSalesRecords = async () => {
         orderNo: 'DD202312150001',
         memberName: '张三',
         quantity: 1,
-        unitPrice: 299.00,
-        totalAmount: 299.00,
+        unitPrice: 299.0,
+        totalAmount: 299.0,
         paymentMethod: 0,
         paymentStatus: 1,
-        createTime: '2023-12-15 14:30:00'
+        createTime: '2023-12-15 14:30:00',
       },
       {
         orderId: 10002,
         orderNo: 'DD202312150002',
         memberName: '李四',
         quantity: 2,
-        unitPrice: 299.00,
-        totalAmount: 598.00,
+        unitPrice: 299.0,
+        totalAmount: 598.0,
         paymentMethod: 1,
         paymentStatus: 1,
-        createTime: '2023-12-15 16:45:00'
-      }
+        createTime: '2023-12-15 16:45:00',
+      },
     ]
     salesPagination.value.total = 2
   } catch (error) {

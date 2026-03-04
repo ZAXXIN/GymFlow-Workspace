@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { PermissionCode } from '@/types/permission'
 
 const settingRoutes: RouteRecordRaw[] = [
   {
@@ -7,9 +8,9 @@ const settingRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/settings/webUser/List.vue'),
     meta: {
       title: '用户管理',
-      // icon: 'UserFilled',
       requiresAuth: true,
-      showInMenu:true,
+      showInMenu: true,
+      permissions: ['settings:user:view'] as PermissionCode[]  // 查看用户列表需要的权限
     }
   },
   {
@@ -19,19 +20,21 @@ const settingRoutes: RouteRecordRaw[] = [
     meta: {
       title: '用户详情',
       requiresAuth: true,
-      hideInMenu: true,
-      parent: 'webUserList'
+      showInMenu: false,
+      parent: 'webUserList',
+      permissions: ['settings:user:view'] as PermissionCode[]  // 查看详情需要的权限
     }
   },
   {
     path: '/settings/webUser/add',
-    name: 'editWebUser',
+    name: 'addWebUser',
     component: () => import('@/views/settings/webUser/Add.vue'),
     meta: {
       title: '新增用户',
       requiresAuth: true,
-      hideInMenu: true,
-      parent: 'webUserList'
+      showInMenu: false,
+      parent: 'webUserList',
+      permissions: ['settings:user:add'] as PermissionCode[]  // 新增用户需要的权限
     }
   },
   {
@@ -41,8 +44,9 @@ const settingRoutes: RouteRecordRaw[] = [
     meta: {
       title: '编辑用户',
       requiresAuth: true,
-      hideInMenu: true,
-      parent: 'webUserList'
+      showInMenu: false,
+      parent: 'webUserList',
+      permissions: ['settings:user:edit'] as PermissionCode[]  // 编辑用户需要的权限
     }
   },
   {
@@ -52,41 +56,10 @@ const settingRoutes: RouteRecordRaw[] = [
     meta: {
       title: '系统配置',
       requiresAuth: true,
-      hideInMenu: true,
+      showInMenu: true,
+      permissions: ['settings:config:view'] as PermissionCode[]  // 查看系统配置需要的权限
     }
-  },
-  // {
-  //   path: '/settings/role',
-  //   name: 'roleAuth',
-  //   component: () => import('@/views/settings/role.vue'),
-  //   meta: {
-  //     title: '角色权限',
-  //     requiresAuth: true,
-  //     hideInMenu: true,
-  //     // parent: 'CoachList'
-  //   }
-  // },
-  // {
-  //   path: '/coach/detail/:id',
-  //   name: 'CoachDetail',
-  //   component: () => import('@/views/coach/Detail.vue'),
-  //   meta: {
-  //     title: '教练详情',
-  //     requiresAuth: true,
-  //     hideInMenu: true,
-  //     parent: 'CoachList'
-  //   }
-  // },
-  // {
-  //   path: '/coach/schedule/:id',
-  //   name: 'CoachDetail',
-  //   component: () => import('@/views/coach/Schedule.vue'),
-  //   meta: {
-  //     title: '教练排课',
-  //     requiresAuth: true,
-  //     hideInMenu: true,
-  //     parent: 'CoachList'
-  //   }
-  // }
+  }
 ]
+
 export default settingRoutes

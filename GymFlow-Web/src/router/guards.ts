@@ -1,18 +1,16 @@
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useSettingsStore } from '@/stores/settings'
-import { PageTitles } from '@/utils/constants'
-import { checkRoutePermission } from '@/utils'
+import { usePermission } from '@/composables/usePermission'
+import { ElMessage } from 'element-plus'
 
 export const setupRouterGuards = (router: any) => {
   // 全局前置守卫
   router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
     const authStore = useAuthStore()
-    const settingsStore = useSettingsStore()
+    const { hasPermission } = usePermission()
     
     // 设置页面标题
-    const title = PageTitles[to.name as keyof typeof PageTitles] || 'GymFlow'
-    document.title = title
+    document.title = (to.meta?.title as string) || 'GymFlow'
     
     // 检查是否需要登录
     if (to.meta.requiresAuth && !authStore.isLoggedIn) {
@@ -20,10 +18,13 @@ export const setupRouterGuards = (router: any) => {
       return
     }
     
-    // 检查角色权限
-    if (to.meta.roles && authStore.userRole) {
-      const hasPermission = checkRoutePermission(to, authStore.userRole)
-      if (!hasPermission) {
+    // 检查页面权限
+    if (to.meta.permissions) {
+      const requiredPermissions = to.meta.permissions as string[]
+      const hasRequiredPermission = requiredPermissions.some(p => hasPermission(p))
+      
+      if (!hasRequiredPermission) {
+        ElMessage.error('没有权限访问该页面')
         next('/403')
         return
       }
@@ -36,10 +37,5 @@ export const setupRouterGuards = (router: any) => {
     }
     
     next()
-  })
-  
-  // 全局后置守卫
-  router.afterEach((to: RouteLocationNormalized) => {
-    // 可以在这里添加页面访问统计等
   })
 }

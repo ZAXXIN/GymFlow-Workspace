@@ -6,23 +6,20 @@
         <h1 class="page-title">用户管理</h1>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleCreateUser">
-          <el-icon><Plus /></el-icon>
+        <el-button v-permission="'settings:user:add'" type="primary" @click="handleCreateUser">
+          <el-icon>
+            <Plus />
+          </el-icon>
           新增用户
         </el-button>
       </div>
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
         <el-form-item label="用户名">
-          <el-input
-            v-model="filterForm.username"
-            placeholder="请输入用户名"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.username" placeholder="请输入用户名" clearable style="width: 180px;" />
         </el-form-item>
         <!-- <el-form-item label="真实姓名">
           <el-input
@@ -33,23 +30,13 @@
           />
         </el-form-item> -->
         <el-form-item label="角色">
-          <el-select
-            v-model="filterForm.role"
-            placeholder="请选择角色"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.role" placeholder="请选择角色" clearable style="width: 180px;">
             <el-option label="老板" :value="0" />
             <el-option label="前台" :value="1" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select
-            v-model="filterForm.status"
-            placeholder="请选择状态"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 180px;">
             <el-option label="正常" :value="1" />
             <el-option label="禁用" :value="0" />
           </el-select>
@@ -67,17 +54,21 @@
         </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -85,21 +76,16 @@
           <span class="table-title">用户列表</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="formattedUsers"
-        style="width: 100%"
-        row-key="id"
-        v-loading="loading"
-        stripe
-        border
-      >
+
+      <el-table :data="formattedUsers" style="width: 100%" row-key="id" v-loading="loading" stripe border>
         <el-table-column prop="username" label="用户名" width="150" />
         <el-table-column prop="realName" label="真实姓名" width="150" />
         <el-table-column prop="roleDesc" label="角色" width="100">
@@ -111,10 +97,7 @@
         </el-table-column>
         <el-table-column prop="statusDesc" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag
-              :type="row.status === 1 ? 'success' : 'info'"
-              size="small"
-            >
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
               {{ row.statusDesc }}
             </el-tag>
           </template>
@@ -126,52 +109,31 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
+            <el-button v-permission="'settings:user:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button
-              type="success"
-              link
-              size="small"
-              v-if="row.status === 0"
-              @click="handleEnable(row.id)"
-            >
+            <el-button type="success" link size="small" v-if="row.status === 0" v-permission="'settings:user:status'" @click="handleEnable(row.id)">
               启用
             </el-button>
-            <el-button
-              type="danger"
-              link
-              size="small"
-              v-if="row.status === 1"
-              @click="handleDisable(row.id)"
-            >
+            <el-button type="danger" link size="small" v-if="row.status === 1" v-permission="'settings:user:status'" @click="handleDisable(row.id)">
               禁用
             </el-button>
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 批量操作 -->
-      <div class="batch-actions" v-if="selectedRows.length > 0">
+      <!-- <div class="batch-actions" v-if="selectedRows.length > 0">
         <el-button type="danger" size="small" @click="handleBatchDelete">
           <el-icon><Delete /></el-icon>
           批量删除
         </el-button>
         <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
-      </div>
-      
+      </div> -->
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pageInfo.pageNum"
-          v-model:page-size="pageInfo.pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
   </div>
@@ -181,9 +143,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useWebUserStore } from '@/stores/settings'
-import type { WebUserQueryParams } from '@/api/settings'
+import { useWebUserStore } from '@/stores/settings/webUser'
+import type { WebUserQueryParams } from '@/api/settings/webUser'
+import { usePermission } from '@/composables/usePermission'
 
+const { hasPermission } = usePermission()
 const router = useRouter()
 const userStore = useWebUserStore()
 
@@ -193,7 +157,7 @@ const filterForm = reactive({
   realName: '',
   role: undefined as number | undefined,
   status: undefined as number | undefined,
-  dateRange: [] as string[]
+  dateRange: [] as string[],
 })
 
 // 选择的行
@@ -218,7 +182,7 @@ const loadData = async () => {
     username: filterForm.username || undefined,
     realName: filterForm.realName || undefined,
     role: filterForm.role,
-    status: filterForm.status
+    status: filterForm.status,
   }
 
   // 处理日期范围（如果需要）
@@ -266,9 +230,9 @@ const handleEdit = (id: number) => {
 const handleEnable = async (id: number) => {
   try {
     await ElMessageBox.confirm('确定要启用该用户吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.updateUserStatus(id, 1)
     ElMessage.success('启用成功')
     loadData()
@@ -281,9 +245,9 @@ const handleEnable = async (id: number) => {
 const handleDisable = async (id: number) => {
   try {
     await ElMessageBox.confirm('确定要禁用该用户吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.updateUserStatus(id, 0)
     ElMessage.success('禁用成功')
     loadData()
@@ -323,15 +287,11 @@ const handleBatchDelete = async () => {
   }
 
   try {
-    await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedRows.value.length} 个用户吗？`,
-      '警告',
-      {
-        type: 'warning',
-        confirmButtonText: '删除',
-        cancelButtonText: '取消'
-      }
-    )
+    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个用户吗？`, '警告', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    })
 
     // 批量删除接口暂未实现，这里逐个删除
     for (const row of selectedRows.value) {
@@ -419,7 +379,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .selected-count {
     color: #606266;
     font-size: 14px;

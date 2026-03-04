@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { type User, type UserRole } from '@/types'
 import { StorageKeys } from '@/utils/constants'
 import { authApi } from '@/api/auth'
+import type { PermissionCode } from '@/types/permission'
 // 导入Element Plus的提示组件（可选，用于统一提示）
 import { ElMessage } from 'element-plus'
 
@@ -19,24 +20,57 @@ type ApiResponse<T = any> = {
   data: T
 }
 
-// 定义登录响应数据类型
+// 定义登录响应数据类型（根据实际返回数据调整）
 type LoginResponseData = {
+  userId: number
+  username: string
+  realName: string
+  phone: string | null
+  role: number
   token: string
-  user: User
+  loginTime: string
+}
+
+// 定义权限响应数据类型
+type PermissionResponseData = {
+  permissions: PermissionCode[]
+  menus: any[]
 }
 
 export const useAuthStore = defineStore('auth', () => {
   // 状态
   const token = ref<string | null>(localStorage.getItem(StorageKeys.TOKEN))
   const userInfo = ref<User | null>(JSON.parse(localStorage.getItem(StorageKeys.USER_INFO) || 'null'))
+  const permissions = ref<PermissionCode[]>(JSON.parse(localStorage.getItem('gymflow_permissions') || '[]'))
+  const menus = ref<any[]>(JSON.parse(localStorage.getItem('gymflow_menus') || '[]'))
   const loading = ref(false)
 
   // Getter
   const isLoggedIn = computed(() => !!token.value)
   const userRole = computed(() => userInfo.value?.role || null)
-  const isAdmin = computed(() => userRole.value === UserRole.ADMIN)
-  const isCoach = computed(() => userRole.value === UserRole.COACH)
-  const isMember = computed(() => userRole.value === UserRole.MEMBER)
+  const isAdmin = computed(() => userRole.value === 0) // 0-老板
+  const isReceptionist = computed(() => userRole.value === 1) // 1-前台
+  const isCoach = computed(() => userRole.value === 2) // 2-教练
+  const isMember = computed(() => userRole.value === 3) // 3-会员
+
+  // 权限相关 Getters
+  const hasPermission = (permission: PermissionCode | PermissionCode[]): boolean => {
+    if (!permission) return true
+    
+    // 如果是数组，检查是否包含任一权限（OR关系）
+    if (Array.isArray(permission)) {
+      return permission.some(p => permissions.value.includes(p))
+    }
+    
+    return permissions.value.includes(permission)
+  }
+
+  const hasAllPermissions = (requiredPermissions: PermissionCode[]): boolean => {
+    return requiredPermissions.every(p => permissions.value.includes(p))
+  }
+
+  const getPermissions = computed(() => permissions.value)
+  const getMenus = computed(() => menus.value)
 
   // Actions
   const setToken = (newToken: string) => {
@@ -49,25 +83,146 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem(StorageKeys.USER_INFO, JSON.stringify(info))
   }
 
+  const setPermissions = (perms: PermissionCode[]) => {
+    permissions.value = perms
+    localStorage.setItem('gymflow_permissions', JSON.stringify(perms))
+
+    // 🔥 在这里打印用户权限
+    console.log('========== 用户权限列表 ==========')
+    console.log('用户名:', userInfo.value?.username)
+    console.log('角色:', userInfo.value?.role === 0 ? '老板' : 
+                      userInfo.value?.role === 1 ? '前台' : 
+                      userInfo.value?.role === 2 ? '教练' : '会员')
+    console.log('权限数量:', perms.length)
+    console.log('权限列表:', perms)
+    console.log('================================')
+  }
+
+  const setMenus = (menuList: any[]) => {
+    menus.value = menuList
+    localStorage.setItem('gymflow_menus', JSON.stringify(menuList))
+  }
+
   const clearAuth = () => {
     token.value = null
     userInfo.value = null
+    permissions.value = []
+    menus.value = []
     localStorage.removeItem(StorageKeys.TOKEN)
     localStorage.removeItem(StorageKeys.USER_INFO)
+    localStorage.removeItem('gymflow_permissions')
+    localStorage.removeItem('gymflow_menus')
   }
 
-  // 登录（核心修正：接收对象参数，适配后端响应格式）
+  /**
+   * 根据角色设置默认权限
+   */
+  const setDefaultPermissionsByRole = (role?: number) => {
+    if (role === undefined) return
+    
+    let defaultPerms: PermissionCode[] = []
+    
+    if (role === 0) { // 老板
+      defaultPerms = [
+        'member:view', 'member:detail', 'member:add', 'member:edit', 'member:delete', 'member:batch:delete',
+        'member:card:renew', 'member:health:view', 'member:health:add',
+        'coach:view', 'coach:detail', 'coach:add', 'coach:edit', 'coach:delete', 'coach:batch:delete',
+        'coach:schedule:view', 'coach:schedule:set',
+        'course:view', 'course:detail', 'course:add', 'course:edit', 'course:delete',
+        'course:schedule:view', 'course:schedule:set', 'course:booking:add', 'course:booking:cancel',
+        'checkIn:view', 'checkIn:detail', 'checkIn:member:add', 'checkIn:course:add',
+        'checkIn:edit', 'checkIn:delete', 'checkIn:verify',
+        'order:view', 'order:detail', 'order:add', 'order:edit', 'order:cancel', 'order:delete',
+        'order:pay', 'order:refund',
+        'product:view', 'product:detail', 'product:add', 'product:edit', 'product:delete',
+        'product:status', 'product:stock', 'product:category:view', 'product:category:manage',
+        'settings:user:view', 'settings:user:add', 'settings:user:edit', 'settings:user:delete',
+        'settings:user:status', 'settings:user:resetpwd',
+        'settings:config:view', 'settings:config:edit',
+        'common:upload'
+      ]
+    } else if (role === 1) { // 前台
+      defaultPerms = [
+        'member:view', 'member:detail', 'member:add', 'member:edit',
+        'member:card:renew', 'member:health:view', 'member:health:add',
+        'coach:view', 'coach:detail', 'coach:schedule:view',
+        'course:view', 'course:detail', 'course:schedule:view', 'course:booking:add', 'course:booking:cancel',
+        'checkIn:view', 'checkIn:detail', 'checkIn:member:add', 'checkIn:course:add',
+        'checkIn:edit', 'checkIn:verify',
+        'order:view', 'order:detail', 'order:add', 'order:cancel', 'order:pay',
+        'product:view', 'product:detail', 'product:category:view',
+        'settings:config:view',
+        'common:upload'
+      ]
+    } else if (role === 2) { // 教练
+      defaultPerms = [
+        'coach:view', 'coach:detail', 'coach:schedule:view',
+        'course:view', 'course:detail', 'course:schedule:view',
+        'checkIn:view', 'checkIn:detail', 'checkIn:member:add', 'checkIn:course:add',
+        'common:upload'
+      ]
+    } else { // 会员
+      defaultPerms = []
+    }
+    
+    if (defaultPerms.length > 0) {
+      console.log('使用基于角色的默认权限:', role === 0 ? '老板' : role === 1 ? '前台' : role === 2 ? '教练' : '会员')
+      setPermissions(defaultPerms)
+    }
+  }
+
+  /**
+   * 获取用户权限
+   */
+  const fetchUserPermissions = async () => {
+    try {
+      // 调用获取权限的接口
+      const response: ApiResponse<PermissionResponseData> = await authApi.getUserPermissions()
+      
+      if (response.code === 200 && response.data) {
+        setPermissions(response.data.permissions)
+        setMenus(response.data.menus)
+      } else {
+        // 如果接口返回失败，使用默认权限
+        console.warn('获取权限接口返回失败，使用默认权限')
+        setDefaultPermissionsByRole(userInfo.value?.role)
+      }
+    } catch (error) {
+      console.error('获取权限失败:', error)
+      // 如果获取失败，使用基于角色的默认权限
+      console.warn('获取权限接口异常，使用默认权限')
+      // setDefaultPermissionsByRole(userInfo.value?.role)
+    }
+  }
+
+  /**
+   * 登录
+   */
   const login = async (params: LoginParams) => {
     try {
       loading.value = true
-      // 调用接口，传递{ username, password }对象（确保是字符串类型）
       const response: ApiResponse<LoginResponseData> = await authApi.login(params)
       
-      // 处理后端响应（适配标准的code/data/message格式）
+      console.log('登录返回数据:', response.data)
+      
       if (response.code === 200 && response.data) {
-        // 存储token和用户信息
+        // 存储token
         setToken(response.data.token)
-        setUserInfo(response.data.user)
+        
+        // 存储用户信息
+        const user: User = {
+          id: response.data.userId,
+          username: response.data.username,
+          realName: response.data.realName,
+          phone: response.data.phone || '',
+          role: response.data.role,
+          status: 1
+        }
+        setUserInfo(user)
+        
+        // 🔥 登录成功后，主动获取权限
+        await fetchUserPermissions()
+        
         ElMessage.success('登录成功')
         return { success: true, ...response }
       } else {
@@ -76,7 +231,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error: any) {
       console.error('Login failed:', error)
-      // 统一错误返回格式，避免前端报错
       const errMsg = error.message || '网络异常，登录失败'
       ElMessage.error(errMsg)
       return { success: false, code: 500, message: errMsg, data: null }
@@ -85,7 +239,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // 登出（优化：添加提示）
+  /**
+   * 登出
+   */
   const logout = async () => {
     try {
       await authApi.logout()
@@ -98,7 +254,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // 刷新用户信息（适配后端响应格式）
+  /**
+   * 刷新用户信息
+   */
   const refreshUserInfo = async () => {
     try {
       const response: ApiResponse<User> = await authApi.getUserInfo()
@@ -109,18 +267,24 @@ export const useAuthStore = defineStore('auth', () => {
       throw new Error(response.message || '刷新用户信息失败')
     } catch (error) {
       console.error('Refresh user info failed:', error)
-      throw error // 抛出错误，让调用方处理
+      throw error
     }
   }
 
-  // 检查登录状态
+  /**
+   * 刷新用户权限
+   */
+  const refreshPermissions = async () => {
+    return await fetchUserPermissions()
+  }
+
+  /**
+   * 检查登录状态
+   */
   const checkAuth = () => {
     if (!token.value) {
       return false
     }
-    // 可选：添加token过期检查（比如解析token的过期时间）
-    // const tokenExp = getTokenExpiration(token.value)
-    // return tokenExp > Date.now()
     return true
   }
 
@@ -128,14 +292,23 @@ export const useAuthStore = defineStore('auth', () => {
     // 状态
     token,
     userInfo,
+    permissions,
+    menus,
     loading,
     
     // Getter
     isLoggedIn,
     userRole,
     isAdmin,
+    isReceptionist,
     isCoach,
     isMember,
+    
+    // 权限相关
+    hasPermission,
+    hasAllPermissions,
+    getPermissions,
+    getMenus,
     
     // Actions
     setToken,
@@ -144,6 +317,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     refreshUserInfo,
+    refreshPermissions,
     checkAuth
   }
 })

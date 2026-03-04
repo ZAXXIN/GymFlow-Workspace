@@ -6,47 +6,29 @@
         <h1 class="page-title">会员管理</h1>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleAddMember">
-          <el-icon><Plus /></el-icon>
+        <el-button v-permission="'member:add'" type="primary" @click="handleAddMember">
+          <el-icon>
+            <Plus />
+          </el-icon>
           新增会员
         </el-button>
       </div>
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
         <el-form-item label="会员编号">
-          <el-input
-            v-model="filterForm.memberNo"
-            placeholder="请输入会员编号"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.memberNo" placeholder="请输入会员编号" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="姓名">
-          <el-input
-            v-model="filterForm.realName"
-            placeholder="请输入姓名"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.realName" placeholder="请输入姓名" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input
-            v-model="filterForm.phone"
-            placeholder="请输入手机号"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.phone" placeholder="请输入手机号" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="会员卡状态">
-          <el-select
-            v-model="filterForm.cardStatus"
-            placeholder="请选择状态"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.cardStatus" placeholder="请选择状态" clearable style="width: 180px;">
             <el-option label="有效" value="ACTIVE" />
             <el-option label="过期" value="EXPIRED" />
             <el-option label="用完" value="USED_UP" />
@@ -65,17 +47,21 @@
         </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -83,21 +69,16 @@
           <span class="table-title">会员列表</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="memberStore.members"
-        style="width: 100%"
-        row-key="id"
-        v-loading="memberStore.loading"
-        stripe
-        border
-      >
+
+      <el-table :data="memberStore.members" style="width: 100%" row-key="id" v-loading="memberStore.loading" stripe border>
         <el-table-column prop="memberNo" label="会员编号" width="120" fixed="left" />
         <el-table-column prop="realName" label="姓名" width="100">
           <template #default="{ row }">
@@ -182,17 +163,12 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
+            <el-button v-permission="'member:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-popconfirm
-              title="确定要删除这个会员吗？"
-              @confirm="handleDelete(row.id)"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-            >
+            <el-popconfirm  title="确定要删除这个会员吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
-                <el-button type="danger" link size="small">
+                <el-button v-permission="'member:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
@@ -200,19 +176,10 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="memberStore.pageInfo.pageNum"
-          v-model:page-size="memberStore.pageInfo.pageSize"
-          :total="memberStore.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="memberStore.pageInfo.pageNum" v-model:page-size="memberStore.pageInfo.pageSize" :total="memberStore.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
   </div>
@@ -224,6 +191,9 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useMemberStore } from '@/stores/member'
 import type { MemberQueryDTO } from '@/types/member'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const memberStore = useMemberStore()
@@ -266,22 +236,32 @@ const getRandomColor = () => {
 // 卡片类型标签样式
 const getCardTypeTag = (cardType: number) => {
   switch (cardType) {
-    case 0: return 'primary'   // 私教课
-    case 1: return 'success'   // 团课
-    case 2: return 'warning'   // 月卡
-    case 3: return 'danger'    // 年卡
-    case 4: return 'info'      // 周卡
-    default: return 'info'
+    case 0:
+      return 'primary' // 私教课
+    case 1:
+      return 'success' // 团课
+    case 2:
+      return 'warning' // 月卡
+    case 3:
+      return 'danger' // 年卡
+    case 4:
+      return 'info' // 周卡
+    default:
+      return 'info'
   }
 }
 
 // 卡片状态标签样式
 const getCardStatusTag = (cardStatus: string) => {
   switch (cardStatus) {
-    case 'ACTIVE': return 'success'
-    case 'EXPIRED': return 'danger'
-    case 'USED_UP': return 'warning'
-    default: return 'info'
+    case 'ACTIVE':
+      return 'success'
+    case 'EXPIRED':
+      return 'danger'
+    case 'USED_UP':
+      return 'warning'
+    default:
+      return 'info'
   }
 }
 
@@ -297,7 +277,7 @@ const handleSearch = async () => {
     // startDate: filterForm.dateRange?.[0],
     // endDate: filterForm.dateRange?.[1]
   }
-  
+
   await memberStore.fetchMembers(queryParams)
 }
 
@@ -410,7 +390,7 @@ onMounted(() => {
 
 .amount {
   font-weight: 600;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .no-sessions,

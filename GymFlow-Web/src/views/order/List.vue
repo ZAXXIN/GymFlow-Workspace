@@ -5,14 +5,14 @@
       <div class="header-left">
         <h1 class="page-title">订单管理</h1>
       </div>
-      <div class="header-right">
+      <!-- <div class="header-right">
         <el-button type="primary" @click="handleCreateOrder">
           <el-icon><Plus /></el-icon>
           新建订单
         </el-button>
-      </div>
+      </div> -->
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
@@ -25,28 +25,13 @@
           />
         </el-form-item> -->
         <el-form-item label="会员姓名">
-          <el-input
-            v-model="filterForm.memberName"
-            placeholder="请输入会员姓名"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.memberName" placeholder="请输入会员姓名" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input
-            v-model="filterForm.memberPhone"
-            placeholder="请输入手机号"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.memberPhone" placeholder="请输入手机号" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="订单类型">
-          <el-select
-            v-model="filterForm.orderType"
-            placeholder="请选择订单类型"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.orderType" placeholder="请选择订单类型" clearable style="width: 180px;">
             <el-option label="会籍卡" :value="0" />
             <el-option label="私教课" :value="1" />
             <el-option label="团课" :value="2" />
@@ -54,23 +39,13 @@
           </el-select>
         </el-form-item>
         <el-form-item label="支付状态">
-          <el-select
-            v-model="filterForm.paymentStatus"
-            placeholder="请选择支付状态"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.paymentStatus" placeholder="请选择支付状态" clearable style="width: 180px;">
             <el-option label="待支付" :value="0" />
             <el-option label="已支付" :value="1" />
           </el-select>
         </el-form-item>
         <el-form-item label="订单状态">
-          <el-select
-            v-model="filterForm.orderStatus"
-            placeholder="请选择订单状态"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.orderStatus" placeholder="请选择订单状态" clearable style="width: 180px;">
             <el-option label="待处理" value="PENDING" />
             <el-option label="处理中" value="PROCESSING" />
             <el-option label="已完成" value="COMPLETED" />
@@ -79,29 +54,25 @@
           </el-select>
         </el-form-item>
         <el-form-item label="创建时间">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            style="width: 240px;"
-          />
+          <el-date-picker v-model="filterForm.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px;" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -109,21 +80,16 @@
           <span class="table-title">订单列表</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="formattedOrders"
-        style="width: 100%"
-        row-key="id"
-        v-loading="loading"
-        stripe
-        border
-      >
+
+      <el-table :data="formattedOrders" style="width: 100%" row-key="id" v-loading="loading" stripe border>
         <el-table-column prop="orderNo" label="订单编号" width="180" fixed="left" />
         <el-table-column label="会员信息" width="200">
           <template #default="{ row }">
@@ -159,10 +125,7 @@
         </el-table-column>
         <el-table-column prop="orderStatusDesc" label="订单状态" width="100">
           <template #default="{ row }">
-            <el-tag
-              :type="getStatusTagType(row.orderStatus)"
-              size="small"
-            >
+            <el-tag :type="getStatusTagType(row.orderStatus)" size="small">
               {{ row.orderStatusDesc }}
             </el-tag>
           </template>
@@ -174,33 +137,21 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button 
-              type="warning" 
-              link 
-              size="small" 
-              v-if="row.orderStatus === 'PENDING'"
-              @click="handleEdit(row.id)"
-            >
+            <el-button v-permission="'order:edit'" type="warning" link size="small" v-if="row.orderStatus === 'PENDING'" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button 
+            <!-- <el-button 
               type="success" 
               link 
               size="small" 
-              v-if="row.paymentStatus === 0 && row.orderStatus === 'PENDING'"
+              v-if="row.paymentStatus === 0 && row.orderStatus === 'PENDING'" v-permission="'order:pay'"
               @click="handlePay(row.id)"
             >
               支付
-            </el-button>
-            <el-popconfirm
-              title="确定要删除这个订单吗？"
-              @confirm="handleDelete(row.id)"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-              v-if="row.orderStatus === 'CANCELLED' || row.orderStatus === 'COMPLETED'"
-            >
+            </el-button> -->
+            <el-popconfirm title="确定要删除这个订单吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="row.orderStatus === 'CANCELLED' || row.orderStatus === 'COMPLETED'">
               <template #reference>
-                <el-button type="danger" link size="small">
+                <el-button v-permission="'order:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
@@ -208,31 +159,24 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 批量操作 -->
       <div class="batch-actions" v-if="selectedRows.length > 0">
         <el-button type="danger" size="small" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
+          <el-icon>
+            <Delete />
+          </el-icon>
           批量删除
         </el-button>
         <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
       </div>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pageInfo.pageNum"
-          v-model:page-size="pageInfo.pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
-    
+
     <!-- 支付对话框 -->
     <!-- <PaymentDialog
       v-model="paymentDialogVisible"
@@ -249,6 +193,9 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useOrderStore } from '@/stores/order'
 // import PaymentDialog from './components/PaymentDialog.vue'
 import type { OrderQueryParams } from '@/types/order'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const orderStore = useOrderStore()
@@ -261,7 +208,7 @@ const filterForm = reactive({
   orderType: undefined as number | undefined,
   paymentStatus: undefined as number | undefined,
   orderStatus: '' as string,
-  dateRange: [] as string[]
+  dateRange: [] as string[],
 })
 
 // 选择的行
@@ -280,13 +227,20 @@ const formattedOrders = computed(() => formattedOrderList())
 // 获取状态标签类型
 const getStatusTagType = (status: string) => {
   switch (status) {
-    case 'PENDING': return 'warning'
-    case 'PROCESSING': return 'primary'
-    case 'COMPLETED': return 'success'
-    case 'CANCELLED': return 'info'
-    case 'REFUNDED': return 'danger'
-    case 'DELETED': return 'info'
-    default: return 'info'
+    case 'PENDING':
+      return 'warning'
+    case 'PROCESSING':
+      return 'primary'
+    case 'COMPLETED':
+      return 'success'
+    case 'CANCELLED':
+      return 'info'
+    case 'REFUNDED':
+      return 'danger'
+    case 'DELETED':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
@@ -298,7 +252,7 @@ const loadData = async () => {
     orderNo: filterForm.orderNo,
     orderType: filterForm.orderType,
     paymentStatus: filterForm.paymentStatus,
-    orderStatus: filterForm.orderStatus
+    orderStatus: filterForm.orderStatus,
   }
 
   // 处理日期范围
@@ -377,17 +331,13 @@ const handleBatchDelete = async () => {
   }
 
   try {
-    await ElMessageBox.confirm(
-      `确定要删除选中的 ${selectedRows.value.length} 个订单吗？`,
-      '警告',
-      {
-        type: 'warning',
-        confirmButtonText: '删除',
-        cancelButtonText: '取消'
-      }
-    )
+    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个订单吗？`, '警告', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    })
 
-    const ids = selectedRows.value.map(row => row.id)
+    const ids = selectedRows.value.map((row) => row.id)
     await orderStore.batchDeleteOrder(ids)
     ElMessage.success('批量删除成功')
     selectedRows.value = []
@@ -474,7 +424,7 @@ onMounted(() => {
     font-weight: 500;
     margin-bottom: 4px;
   }
-  
+
   .member-phone {
     font-size: 12px;
     color: #909399;
@@ -483,7 +433,7 @@ onMounted(() => {
 
 .actual-amount {
   font-weight: 600;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .batch-actions {
@@ -494,7 +444,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .selected-count {
     color: #606266;
     font-size: 14px;

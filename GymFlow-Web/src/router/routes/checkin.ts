@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { PermissionCode } from '@/types/permission'
 
 const checkInRoutes: RouteRecordRaw[] = [
   {
@@ -9,7 +10,8 @@ const checkInRoutes: RouteRecordRaw[] = [
       title: '签到记录',
       icon: 'Finished',
       requiresAuth: true,
-      showInMenu:true,
+      showInMenu: true,
+      permissions: ['checkIn:view'] as PermissionCode[]  // 查看签到列表需要的权限
     }
   },
   {
@@ -19,9 +21,11 @@ const checkInRoutes: RouteRecordRaw[] = [
     meta: {
       title: '签到详情',
       requiresAuth: true,
-      hideInMenu: true,
-      parent: 'CheckInList'
+      showInMenu: false, 
+      parent: 'CheckInList',
+      permissions: ['checkIn:detail'] as PermissionCode[]  // 查看详情需要的权限
     }
-  },
+  }
 ]
+
 export default checkInRoutes

@@ -166,7 +166,7 @@
           <template #header>
             <div class="tab-header">
               <span class="tab-title">排课列表</span>
-              <el-button type="primary" size="small" @click="handleAddSchedule" v-if="courseDetail?.courseType === 1">
+              <el-button v-permission="'course:schedule:set'" type="primary" size="small" @click="handleAddSchedule" v-if="courseDetail?.courseType === 1">
                 <el-icon>
                   <Plus />
                 </el-icon>

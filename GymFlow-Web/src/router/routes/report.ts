@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { PermissionCode } from '@/types/permission'
 
 const reportRoutes: RouteRecordRaw[] = [
   {
@@ -7,9 +8,10 @@ const reportRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/report/Revenue.vue'),
     meta: {
       title: '营收报表',
-      icon: 'i-ep-pie-chart',
+      icon: 'PieChart',
       requiresAuth: true,
-      roles: ['ADMIN']
+      showInMenu: true,
+      permissions: ['order:view'] as PermissionCode[]  // 营收报表需要的权限
     }
   },
   {
@@ -18,9 +20,10 @@ const reportRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/report/Attendance.vue'),
     meta: {
       title: '出勤报表',
-      icon: 'i-ep-trend-charts',
+      icon: 'TrendCharts',
       requiresAuth: true,
-      roles: ['ADMIN']
+      showInMenu: true,
+      permissions: ['checkIn:view'] as PermissionCode[]  // 出勤报表需要的权限
     }
   },
   {
@@ -29,10 +32,12 @@ const reportRoutes: RouteRecordRaw[] = [
     component: () => import('@/views/report/Performance.vue'),
     meta: {
       title: '业绩报表',
-      icon: 'i-ep-data-analysis',
+      icon: 'DataAnalysis',
       requiresAuth: true,
-      roles: ['ADMIN']
+      showInMenu: true,
+      permissions: ['order:view', 'member:view'] as PermissionCode[]  // 业绩报表需要的权限
     }
   }
 ]
+
 export default reportRoutes

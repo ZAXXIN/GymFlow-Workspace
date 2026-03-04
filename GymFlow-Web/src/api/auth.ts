@@ -32,5 +32,15 @@ export const authApi = {
       url: '/user/info',
       method: 'GET'
     })
+  },
+  
+  /**
+   * 获取用户权限
+   */
+  getUserPermissions() {
+    return request({
+      url: '/auth/permissions',
+      method: 'get'
+    })
   }
 }

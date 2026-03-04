@@ -8,7 +8,7 @@ const errorRoutes: RouteRecordRaw[] = [
     meta: {
       title: '403 Forbidden',
       requiresAuth: false,
-      hideInMenu: true
+      showInMenu: false
     }
   },
   {
@@ -18,7 +18,7 @@ const errorRoutes: RouteRecordRaw[] = [
     meta: {
       title: '404 Not Found',
       requiresAuth: false,
-      hideInMenu: true
+      showInMenu: false
     }
   },
   {
@@ -26,4 +26,5 @@ const errorRoutes: RouteRecordRaw[] = [
     redirect: '/404'
   }
 ]
+
 export default errorRoutes

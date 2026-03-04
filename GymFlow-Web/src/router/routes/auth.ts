@@ -7,20 +7,10 @@ const authRoutes: RouteRecordRaw[] = [
     meta: {
       title: '登录',
       requiresAuth: false,
-      hideInMenu: true
+      showInMenu: false
     },
     component: () => import('@/views/auth/Login.vue')
-  },
-  // {
-  //   path: '/register',
-  //   name: 'Register',
-  //   meta: {
-  //     title: '注册',
-  //     requiresAuth: false,
-  //     hideInMenu: true
-  //   },
-  //   component: () => import('@/views/auth/Register.vue')
-  // }
+  }
 ]
 
 export default authRoutes

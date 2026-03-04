@@ -14,10 +14,7 @@
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="goToProfile">
-                <el-icon><User /></el-icon>个人中心
-              </el-dropdown-item>
-              <el-dropdown-item divided @click="handleLogout">
+              <el-dropdown-item @click="handleLogout">
                 <el-icon><SwitchButton /></el-icon>退出登录
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -109,14 +106,14 @@ const userInfo = ref<UserInfo>({
   status: 1
 })
 
-// 完整的菜单配置
+// 完整的菜单配置（与路由的 meta 保持一致）
 const allMenus = [
   // 仪表盘
   {
     path: '/dashboard',
     title: '仪表盘',
     icon: DataLine,
-    roles: [0, 1, 2, 3] // 所有角色可见
+    permissions: [] // 所有角色可见
   },
   
   // 会员管理
@@ -124,11 +121,7 @@ const allMenus = [
     path: '/member/list',
     title: '会员管理',
     icon: User,
-    roles: [0, 1], // 管理员和前台可见
-    // children: [
-    //   { path: '/member/list', title: '会员列表' },
-    //   { path: '/member/add', title: '添加会员' }
-    // ]
+    permissions: ['member:view'], // 需要会员查看权限
   },
   
   // 教练管理
@@ -136,12 +129,7 @@ const allMenus = [
     path: '/coach/list',
     title: '教练管理',
     icon: Avatar,
-    roles: [0, 1], // 管理员和前台可见
-    // children: [
-    //   { path: '/coach/list', title: '教练列表' },
-    //   { path: '/coach/add', title: '添加教练' },
-    //   { path: '/coach/schedule', title: '排课管理' }
-    // ]
+    permissions: ['coach:view'], // 需要教练查看权限
   },
   
   // 课程管理
@@ -149,18 +137,15 @@ const allMenus = [
     path: '/course/list',
     title: '课程管理',
     icon: Calendar,
-    roles: [0, 1], // 管理员、前台、教练可见
-    // children: [
-    //   { path: '/course/list', title: '课程列表' },
-    //   { path: '/course/add', title: '添加课程' },
-    //   { path: '/course/booking', title: '课程预约' }
-    // ]
+    permissions: ['course:view'], // 需要课程查看权限
   },
+  
+  // 商品管理
   {
     path: '/product/list',
     title: '商品管理',
     icon: Goods,
-    roles: [0, 1], // 管理员、前台、教练可见
+    permissions: ['product:view'], // 需要商品查看权限
   },
   
   // 订单管理
@@ -168,11 +153,7 @@ const allMenus = [
     path: '/order/list',
     title: '订单管理',
     icon: Document,
-    roles: [0, 1], // 管理员和前台可见
-    // children: [
-    //   { path: '/order/list', title: '订单列表' },
-    //   { path: '/order/statistics', title: '销售统计' }
-    // ]
+    permissions: ['order:view'], // 需要订单查看权限
   },
   
   // 签到管理
@@ -180,22 +161,26 @@ const allMenus = [
     path: '/checkIn/list',
     title: '签到管理',
     icon: Check,
-    roles: [0, 1], // 管理员、前台、教练可见
-    // children: [
-    //   { path: '/checkin/records', title: '签到记录' },
-    //   { path: '/checkin/statistics', title: '签到统计' }
-    // ]
+    permissions: ['checkIn:view'], // 需要签到查看权限
   },
-  // 系统设置
+  
+  // 系统设置（只有老板有权限）
   {
     path: '/settings',
     title: '系统设置',
     icon: Setting,
-    roles: [0], // 仅管理员可见
+    permissions: ['settings:user:view', 'settings:config:view'], // 需要任一系统设置权限
     children: [
-      { path: '/settings/webUser', title: '用户管理' },
-      // { path: '/settings/role', title: '角色权限' },
-      { path: '/settings/systemConfig', title: '系统配置' }
+      { 
+        path: '/settings/webUser', 
+        title: '用户管理',
+        permissions: ['settings:user:view'] // 需要用户管理权限
+      },
+      { 
+        path: '/settings/systemConfig', 
+        title: '系统配置',
+        permissions: ['settings:config:view'] // 需要系统配置权限
+      }
     ]
   },
   
@@ -204,19 +189,48 @@ const allMenus = [
     path: '/reports',
     title: '报表统计',
     icon: PieChart,
-    roles: [0, 1], // 管理员和前台可见
+    permissions: ['member:view', 'order:view', 'checkIn:view'], // 需要任一报表相关权限
     children: [
-      { path: '/reports/member', title: '会员统计' },
-      { path: '/reports/finance', title: '财务统计' },
-      { path: '/reports/course', title: '课程统计' }
+      { 
+        path: '/reports/member', 
+        title: '会员统计',
+        permissions: ['member:view'] 
+      },
+      { 
+        path: '/reports/finance', 
+        title: '财务统计',
+        permissions: ['order:view'] 
+      },
+      { 
+        path: '/reports/course', 
+        title: '课程统计',
+        permissions: ['course:view'] 
+      }
     ]
   }
 ]
 
-// 根据用户角色过滤菜单
+// 根据用户权限过滤菜单
 const filteredMenus = computed(() => {
-  const role = userInfo.value.role
-  return allMenus.filter(menu => menu.roles.includes(role))
+  // 递归过滤菜单
+  const filterMenu = (menus: any[]) => {
+    return menus.filter(menu => {
+      // 检查当前菜单是否有权限
+      const hasMenuPermission = !menu.permissions || menu.permissions.length === 0 || 
+        menu.permissions.some((p: string) => authStore.hasPermission(p))
+      
+      // 如果有子菜单，递归过滤子菜单
+      if (menu.children && menu.children.length > 0) {
+        menu.children = filterMenu(menu.children)
+        // 如果子菜单过滤后还有内容，或者当前菜单本身就有权限，则保留
+        return menu.children.length > 0 || hasMenuPermission
+      }
+      
+      return hasMenuPermission
+    })
+  }
+  
+  return filterMenu(allMenus)
 })
 
 // 当前激活的菜单
@@ -227,11 +241,6 @@ const activeMenu = computed(() => {
 // 处理菜单选择
 const handleMenuSelect = (index: string) => {
   console.log('选择菜单:', index)
-}
-
-// 跳转到个人中心
-const goToProfile = () => {
-  router.push('/member/profile')
 }
 
 // 处理退出登录

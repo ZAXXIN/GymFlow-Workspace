@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { PermissionCode } from '@/types/permission'
 
 const dashboardRoutes: RouteRecordRaw[] = [
   {
@@ -8,10 +9,11 @@ const dashboardRoutes: RouteRecordRaw[] = [
     meta: {
       title: '仪表盘',
       icon: 'DataBoard',
-      showInMenu:true,
+      showInMenu: true,
       requiresAuth: true,
-      roles: ['ADMIN', 'COACH']
+      permissions: [] as PermissionCode[]  // 仪表盘所有人都可见
     }
   }
 ]
+
 export default dashboardRoutes

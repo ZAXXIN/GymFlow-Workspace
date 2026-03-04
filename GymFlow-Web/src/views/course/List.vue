@@ -6,49 +6,30 @@
         <h1 class="page-title">课程管理</h1>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleAddCourse">
-          <el-icon><Plus /></el-icon>
+        <el-button v-permission="'course:add'" type="primary" @click="handleAddCourse">
+          <el-icon>
+            <Plus />
+          </el-icon>
           新增课程
         </el-button>
       </div>
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
         <el-form-item label="课程名称">
-          <el-input
-            v-model="filterForm.courseName"
-            placeholder="请输入课程名称"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.courseName" placeholder="请输入课程名称" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="课程类型">
-          <el-select
-            v-model="filterForm.courseType"
-            placeholder="请选择课程类型"
-            clearable
-            style="width: 120px;"
-          >
+          <el-select v-model="filterForm.courseType" placeholder="请选择课程类型" clearable style="width: 120px;">
             <el-option label="私教课" :value="0" />
             <el-option label="团课" :value="1" />
           </el-select>
         </el-form-item>
         <el-form-item label="教练">
-          <el-select
-            v-model="filterForm.coachId"
-            placeholder="请选择教练"
-            clearable
-            filterable
-            style="width: 180px;"
-          >
-            <el-option
-              v-for="coach in coachOptions"
-              :key="coach.id"
-              :label="coach.realName"
-              :value="coach.id"
-            />
+          <el-select v-model="filterForm.coachId" placeholder="请选择教练" clearable filterable style="width: 180px;">
+            <el-option v-for="coach in coachOptions" :key="coach.id" :label="coach.realName" :value="coach.id" />
           </el-select>
         </el-form-item>
         <!-- <el-form-item label="日期范围">
@@ -62,29 +43,28 @@
           />
         </el-form-item> -->
         <el-form-item label="状态">
-          <el-select
-            v-model="filterForm.status"
-            placeholder="请选择状态"
-            clearable
-            style="width: 100px;"
-          >
+          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 100px;">
             <el-option label="正常" :value="1" />
             <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -92,30 +72,21 @@
           <span class="table-title">课程列表</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="courseStore.formattedCourseList()"
-        style="width: 100%"
-        row-key="id"
-        v-loading="courseStore.loading"
-        stripe
-        border
-      >
+
+      <el-table :data="courseStore.formattedCourseList()" style="width: 100%" row-key="id" v-loading="courseStore.loading" stripe border>
         <el-table-column prop="courseName" label="课程名称" min-width="150">
           <template #default="{ row }">
             <div class="course-info">
               <span class="course-name">{{ row.courseName }}</span>
-              <el-tag 
-                :type="row.courseType === 0 ? 'primary' : 'success'" 
-                size="small"
-                effect="plain"
-              >
+              <el-tag :type="row.courseType === 0 ? 'primary' : 'success'" size="small" effect="plain">
                 {{ row.courseTypeDesc }}
               </el-tag>
             </div>
@@ -136,12 +107,7 @@
         </el-table-column>
         <el-table-column prop="enrollmentRateFormatted" label="满员率" width="120" align="center">
           <template #default="{ row }">
-            <el-progress 
-              :percentage="parseFloat(row.enrollmentRate) || 0" 
-              :stroke-width="16" 
-              :status="getEnrollmentStatus(row.enrollmentRate)"
-              :show-text="false"
-            />
+            <el-progress :percentage="parseFloat(row.enrollmentRate) || 0" :stroke-width="16" :status="getEnrollmentStatus(row.enrollmentRate)" :show-text="false" />
             <span style="font-size: 12px; margin-left: 5px;">{{ row.enrollmentRateFormatted }}</span>
           </template>
         </el-table-column>
@@ -167,23 +133,18 @@
         <!-- <el-table-column prop="createTimeFormatted" label="创建时间" width="160" /> -->
         <el-table-column label="操作" width="220" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+            <el-button v-permission="'course:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
+            <el-button v-permission="'course:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button type="info" link size="small" @click="handleViewSchedule(row.id)">
+            <el-button v-permission="'course:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
               排课
             </el-button>
-            <el-popconfirm
-              title="确定要删除这个课程吗？"
-              @confirm="handleDelete(row.id)"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-            >
+            <el-popconfirm title="确定要删除这个课程吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
-                <el-button type="danger" link size="small">
+                <el-button v-permission="'course:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
@@ -191,19 +152,10 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="courseStore.pageInfo.pageNum"
-          v-model:page-size="courseStore.pageInfo.pageSize"
-          :total="courseStore.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="courseStore.pageInfo.pageNum" v-model:page-size="courseStore.pageInfo.pageSize" :total="courseStore.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
   </div>
@@ -216,6 +168,9 @@ import { ElMessage } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { useCourseStore } from '@/stores/course'
 import type { CourseQueryParams } from '@/types/course'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -225,7 +180,7 @@ const filterForm = reactive({
   courseName: '',
   courseType: undefined as number | undefined,
   coachId: undefined as number | undefined,
-  status: undefined as number | undefined
+  status: undefined as number | undefined,
 })
 
 // const dateRange = ref<string[]>([])
@@ -247,14 +202,14 @@ const handleSearch = async () => {
     courseName: filterForm.courseName,
     courseType: filterForm.courseType,
     coachId: filterForm.coachId,
-    status: filterForm.status
+    status: filterForm.status,
   }
-  
+
   // if (dateRange.value && dateRange.value.length === 2) {
   //   queryParams.startDate = dateRange.value[0]
   //   queryParams.endDate = dateRange.value[1]
   // }
-  
+
   await courseStore.fetchCourseList(queryParams)
 }
 
@@ -323,7 +278,7 @@ const loadCoachOptions = async () => {
     coachOptions.value = [
       { id: 1, realName: '张三' },
       { id: 2, realName: '李四' },
-      { id: 3, realName: '王五' }
+      { id: 3, realName: '王五' },
     ]
   } catch (error) {
     console.error('加载教练列表失败:', error)
@@ -390,7 +345,7 @@ onMounted(() => {
 
 .amount {
   font-weight: 600;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .no-data {

@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import type { PermissionCode } from '@/types/permission'
 
 const orderRoutes: RouteRecordRaw[] = [
   {
@@ -8,8 +9,9 @@ const orderRoutes: RouteRecordRaw[] = [
     meta: {
       title: '订单管理',
       icon: 'Ticket',
-      showInMenu:true,
+      showInMenu: true,
       requiresAuth: true,
+      permissions: ['order:view'] as PermissionCode[]  // 查看订单列表需要的权限
     }
   },
   {
@@ -19,9 +21,11 @@ const orderRoutes: RouteRecordRaw[] = [
     meta: {
       title: '订单详情',
       requiresAuth: true,
-      hideInMenu: true,
-      parent: 'OrderList'
+      showInMenu: false,
+      parent: 'OrderList',
+      permissions: ['order:detail'] as PermissionCode[]  // 查看订单详情需要的权限
     }
-  },
+  }
 ]
+
 export default orderRoutes

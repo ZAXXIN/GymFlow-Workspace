@@ -7,12 +7,10 @@
           <span class="page-title">签到详情</span>
           <div class="header-actions">
             <el-button-group>
-              <el-button
-                type="warning"
-                v-if="canEdit"
-                @click="handleEdit"
-              >
-                <el-icon><Edit /></el-icon>
+              <el-button type="warning" v-if="canEdit" @click="handleEdit">
+                <el-icon>
+                  <Edit />
+                </el-icon>
                 编辑
               </el-button>
               <!-- <el-button
@@ -49,7 +47,7 @@
         </div>
       </template>
     </el-page-header>
-    
+
     <!-- 基本信息卡片 -->
     <el-card class="info-card" v-loading="loading">
       <template #header>
@@ -63,7 +61,7 @@
           </div>
         </div>
       </template>
-      
+
       <el-descriptions :column="2" border>
         <el-descriptions-item label="会员信息">
           <div class="member-info">
@@ -78,7 +76,7 @@
             </div>
           </div>
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="签到信息">
           <div class="checkin-info">
             <div class="checkin-method">
@@ -94,7 +92,7 @@
             </div>
           </div>
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="备注" :span="2">
           <div class="notes-content">
             {{ currentCheckIn?.notes || '无' }}
@@ -102,7 +100,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
-    
+
     <!-- 课程信息卡片（如果是课程签到） -->
     <el-card class="course-card" v-if="isCourseCheckIn">
       <template #header>
@@ -110,7 +108,7 @@
           <span class="card-title">课程信息</span>
         </div>
       </template>
-      
+
       <el-descriptions :column="2" border>
         <el-descriptions-item label="预约编号">
           <span class="info-value">{{ currentCheckIn?.courseBookingId || '-' }}</span>
@@ -118,7 +116,7 @@
         <el-descriptions-item label="预约时间">
           {{ formatDateTime(currentCheckIn?.bookingTime) }}
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="课程名称">
           <div class="course-name">{{ currentCheckIn?.courseName || '-' }}</div>
           <div class="course-type">{{ currentCheckIn?.courseTypeDesc || '-' }}</div>
@@ -129,7 +127,7 @@
             <div>{{ currentCheckIn.startTime.slice(0, 5) }} - {{ currentCheckIn.endTime.slice(0, 5) }}</div>
           </div>
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="上课地点">
           {{ currentCheckIn?.location || '-' }}
         </el-descriptions-item>
@@ -139,7 +137,7 @@
             <div class="coach-phone">{{ currentCheckIn.coachPhone }}</div>
           </div>
         </el-descriptions-item>
-        
+
         <el-descriptions-item label="预约状态" :span="2">
           <el-tag :type="getBookingStatusTagType(currentCheckIn?.bookingStatus)" size="small">
             {{ currentCheckIn?.bookingStatusDesc || '-' }}
@@ -147,7 +145,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
-    
+
     <!-- 会员近期签到记录 -->
     <el-card class="recent-checkins-card" v-if="currentCheckIn">
       <template #header>
@@ -160,17 +158,10 @@
           </router-link>
         </div>
       </template>
-      
+
       <div v-if="recentCheckIns && recentCheckIns.length > 0">
         <el-timeline>
-          <el-timeline-item
-            v-for="(item, index) in recentCheckIns"
-            :key="index"
-            :timestamp="formatDateTime(item.checkinTime)"
-            placement="top"
-            :type="item.id === currentCheckIn.id ? 'primary' : 'info'"
-            :hollow="item.id !== currentCheckIn.id"
-          >
+          <el-timeline-item v-for="(item, index) in recentCheckIns" :key="index" :timestamp="formatDateTime(item.checkinTime)" placement="top" :type="item.id === currentCheckIn.id ? 'primary' : 'info'" :hollow="item.id !== currentCheckIn.id">
             <el-card shadow="hover">
               <div class="timeline-content">
                 <div class="checkin-item">
@@ -197,7 +188,7 @@
           </el-timeline-item>
         </el-timeline>
       </div>
-      
+
       <div v-else class="empty-data">
         <el-empty description="暂无近期签到记录" />
       </div>
@@ -262,11 +253,16 @@ const getCheckInTypeTagType = (checkIn: CheckInDetailVO | null) => {
 const getBookingStatusTagType = (status: number | undefined) => {
   if (status === undefined) return 'info'
   switch (status) {
-    case 0: return 'warning'
-    case 1: return 'success'
-    case 2: return 'info'
-    case 3: return 'danger'
-    default: return 'info'
+    case 0:
+      return 'warning'
+    case 1:
+      return 'success'
+    case 2:
+      return 'info'
+    case 3:
+      return 'danger'
+    default:
+      return 'info'
   }
 }
 
@@ -275,7 +271,7 @@ const getTimeDiff = (time1: string, time2: string) => {
   const diff = Math.abs(new Date(time1).getTime() - new Date(time2).getTime())
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  
+
   if (hours > 0) {
     return `${hours}小时${minutes}分钟`
   } else {
@@ -288,7 +284,7 @@ const loadCheckInDetail = async () => {
   try {
     loading.value = true
     await checkInStore.fetchCheckInDetail(checkInId.value)
-    
+
     // 加载会员近期签到记录
     if (currentCheckIn.value?.memberId) {
       await loadRecentCheckIns(currentCheckIn.value.memberId)
@@ -307,7 +303,7 @@ const loadRecentCheckIns = async (memberId: number) => {
     const params = {
       memberId,
       pageNum: 1,
-      pageSize: 10
+      pageSize: 10,
     }
     const response = await checkInStore.fetchMemberCheckIns(memberId, params)
     recentCheckIns.value = response.list || []
@@ -323,9 +319,9 @@ const handleEdit = async () => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputType: 'textarea',
-      inputValue: currentCheckIn.value?.notes || ''
+      inputValue: currentCheckIn.value?.notes || '',
     })
-    
+
     await checkInStore.updateCheckIn(checkInId.value, notes)
     ElMessage.success('更新成功')
     await loadCheckInDetail()
@@ -340,9 +336,9 @@ const handleDelete = async () => {
     await ElMessageBox.confirm('确定要删除这条签到记录吗？', '警告', {
       type: 'warning',
       confirmButtonText: '删除',
-      cancelButtonText: '取消'
+      cancelButtonText: '取消',
     })
-    
+
     await checkInStore.deleteCheckIn(checkInId.value)
     ElMessage.success('删除成功')
     goBack()
@@ -424,7 +420,9 @@ onMounted(() => {
   gap: 8px;
 }
 
-.info-card, .course-card, .recent-checkins-card {
+.info-card,
+.course-card,
+.recent-checkins-card {
   margin-bottom: 20px;
 }
 
@@ -444,7 +442,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .checkin-time {
     font-size: 14px;
     color: #909399;
@@ -458,12 +456,12 @@ onMounted(() => {
     color: #303133;
     margin-bottom: 8px;
   }
-  
+
   .member-detail {
     font-size: 14px;
     color: #606266;
     margin-bottom: 4px;
-    
+
     span {
       margin-right: 20px;
     }
@@ -474,8 +472,9 @@ onMounted(() => {
   .checkin-method {
     margin-bottom: 8px;
   }
-  
-  .checkin-time-detail, .create-time {
+
+  .checkin-time-detail,
+  .create-time {
     font-size: 14px;
     color: #606266;
     margin-bottom: 4px;
@@ -515,7 +514,7 @@ onMounted(() => {
 
 .info-value {
   font-weight: 500;
-  color: #409EFF;
+  color: #409eff;
 }
 
 .member-link {
@@ -528,24 +527,24 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-    
+
     .notes {
       color: #909399;
       font-size: 13px;
       flex: 1;
     }
   }
-  
+
   .checkin-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 13px;
-    
+
     .course-name {
-      color: #67C23A;
+      color: #67c23a;
     }
-    
+
     .time-diff {
       color: #909399;
     }

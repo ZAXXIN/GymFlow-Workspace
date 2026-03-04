@@ -7,83 +7,61 @@
       </div>
       <div class="header-right">
         <el-button type="primary" @click="handleQuickCheckIn">
-          <el-icon><Plus /></el-icon>
+          <el-icon>
+            <Plus />
+          </el-icon>
           快速签到
         </el-button>
         <el-button type="success" @click="handleExport" :disabled="loading">
-          <el-icon><Download /></el-icon>
+          <el-icon>
+            <Download />
+          </el-icon>
           导出数据
         </el-button>
       </div>
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
         <el-form-item label="会员姓名">
-          <el-input
-            v-model="filterForm.memberName"
-            placeholder="请输入会员姓名"
-            clearable
-            style="width: 180px;"
-            @keyup.enter="handleSearch"
-          />
+          <el-input v-model="filterForm.memberName" placeholder="请输入会员姓名" clearable style="width: 180px;" @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input
-            v-model="filterForm.memberPhone"
-            placeholder="请输入手机号"
-            clearable
-            style="width: 180px;"
-            @keyup.enter="handleSearch"
-          />
+          <el-input v-model="filterForm.memberPhone" placeholder="请输入手机号" clearable style="width: 180px;" @keyup.enter="handleSearch" />
         </el-form-item>
         <el-form-item label="签到方式">
-          <el-select
-            v-model="filterForm.checkinMethod"
-            placeholder="请选择签到方式"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.checkinMethod" placeholder="请选择签到方式" clearable style="width: 180px;">
             <el-option label="教练签到" :value="0" />
             <el-option label="前台签到" :value="1" />
           </el-select>
         </el-form-item>
         <el-form-item label="签到类型">
-          <el-select
-            v-model="filterForm.hasCourseBooking"
-            placeholder="请选择签到类型"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.hasCourseBooking" placeholder="请选择签到类型" clearable style="width: 180px;">
             <el-option label="课程签到" :value="true" />
             <el-option label="自由训练" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item label="签到时间">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            style="width: 240px;"
-          />
+          <el-date-picker v-model="filterForm.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px;" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 今日统计 -->
     <el-card class="stats-card">
       <template #header>
@@ -92,7 +70,7 @@
           <span class="stats-time">更新时间：{{ formatDateTime(statsUpdateTime) }}</span>
         </div>
       </template>
-      
+
       <el-row :gutter="20" v-if="todayStats">
         <el-col :span="4">
           <div class="stat-item">
@@ -138,7 +116,7 @@
         </el-col>
       </el-row>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -146,22 +124,16 @@
           <span class="table-title">签到记录</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="formattedCheckIns"
-        style="width: 100%"
-        row-key="id"
-        v-loading="loading"
-        stripe
-        border
-        @selection-change="handleSelectionChange"
-      >
+
+      <el-table :data="formattedCheckIns" style="width: 100%" row-key="id" v-loading="loading" stripe border @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column prop="checkinTimeFormatted" label="签到时间" width="180" fixed="left" />
         <el-table-column label="会员信息" width="200">
@@ -175,10 +147,7 @@
         </el-table-column>
         <el-table-column label="签到类型" width="120">
           <template #default="{ row }">
-            <el-tag
-              :type="row.courseCheckIn ? 'success' : 'primary'"
-              size="small"
-            >
+            <el-tag :type="row.courseCheckIn ? 'success' : 'primary'" size="small">
               {{ row.courseCheckIn ? '课程签到' : '自由训练' }}
             </el-tag>
             <div class="course-info" v-if="row.courseCheckIn && row.courseName">
@@ -189,10 +158,7 @@
         </el-table-column>
         <el-table-column prop="checkinMethodDesc" label="签到方式" width="100">
           <template #default="{ row }">
-            <el-tag
-              :type="row.checkinMethod === 0 ? 'warning' : 'info'"
-              size="small"
-            >
+            <el-tag :type="row.checkinMethod === 0 ? 'warning' : 'info'" size="small">
               {{ row.checkinMethodDesc }}
             </el-tag>
           </template>
@@ -210,22 +176,10 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button 
-              type="warning" 
-              link 
-              size="small" 
-              v-if="canEdit(row)"
-              @click="handleEdit(row.id)"
-            >
+            <el-button v-if="hasPermission('checkIn:edit')&&canEdit(row)" type="warning" link size="small"  @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-popconfirm
-              title="确定要删除这条记录吗？"
-              @confirm="handleDelete(row.id)"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-              v-if="!row.courseCheckIn"
-            >
+            <el-popconfirm title="确定要删除这条记录吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="!row.courseCheckIn && hasPermission('checkIn:delete')">
               <template #reference>
                 <el-button type="danger" link size="small">
                   删除
@@ -235,55 +189,30 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 批量操作 -->
       <div class="batch-actions" v-if="selectedRows.length > 0">
         <el-button type="danger" size="small" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
+          <el-icon>
+            <Delete />
+          </el-icon>
           批量删除
         </el-button>
         <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
       </div>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pageInfo.pageNum"
-          v-model:page-size="pageInfo.pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
-    
+
     <!-- 快速签到对话框 -->
-    <el-dialog
-      v-model="quickCheckInDialogVisible"
-      title="快速签到"
-      width="500px"
-      :close-on-click-modal="false"
-    >
+    <el-dialog v-model="quickCheckInDialogVisible" title="快速签到" width="500px" :close-on-click-modal="false">
       <el-form :model="quickCheckInForm" :rules="quickCheckInRules" ref="quickCheckInFormRef">
         <el-form-item label="会员信息" prop="memberId">
-          <el-select
-            v-model="quickCheckInForm.memberId"
-            placeholder="请选择会员"
-            filterable
-            remote
-            :remote-method="searchMembers"
-            :loading="searchLoading"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="member in memberOptions"
-              :key="member.id"
-              :label="`${member.realName} (${member.phone})`"
-              :value="member.id"
-            >
+          <el-select v-model="quickCheckInForm.memberId" placeholder="请选择会员" filterable remote :remote-method="searchMembers" :loading="searchLoading" style="width: 100%">
+            <el-option v-for="member in memberOptions" :key="member.id" :label="`${member.realName} (${member.phone})`" :value="member.id">
               <div class="member-option">
                 <span class="member-name">{{ member.realName }}</span>
                 <span class="member-phone">{{ member.phone }}</span>
@@ -292,24 +221,19 @@
             </el-option>
           </el-select>
         </el-form-item>
-        
+
         <!-- <el-form-item label="签到方式" prop="checkinMethod">
           <el-radio-group v-model="quickCheckInForm.checkinMethod">
             <el-radio :label="0">教练签到</el-radio>
             <el-radio :label="1">前台签到</el-radio>
           </el-radio-group>
         </el-form-item> -->
-        
+
         <el-form-item label="备注" prop="notes">
-          <el-input
-            v-model="quickCheckInForm.notes"
-            type="textarea"
-            placeholder="请输入备注信息（选填）"
-            :rows="3"
-          />
+          <el-input v-model="quickCheckInForm.notes" type="textarea" placeholder="请输入备注信息（选填）" :rows="3" />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="quickCheckInDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitQuickCheckIn" :loading="loading">
@@ -328,6 +252,9 @@ import { useCheckInStore } from '@/stores/checkIn'
 import { useMemberStore } from '@/stores/member'
 import type { CheckInQueryParams } from '@/types/checkIn'
 import type { MemberListVO } from '@/types/member'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const checkInStore = useCheckInStore()
@@ -339,7 +266,7 @@ const filterForm = reactive({
   memberPhone: '',
   checkinMethod: undefined as number | undefined,
   hasCourseBooking: undefined as boolean | undefined,
-  dateRange: [] as string[]
+  dateRange: [] as string[],
 })
 
 // 选择的行
@@ -359,16 +286,12 @@ const memberOptions = ref<MemberListVO[]>([])
 const quickCheckInForm = reactive({
   memberId: undefined as number | undefined,
   checkinMethod: 1,
-  notes: ''
+  notes: '',
 })
 
 const quickCheckInRules = {
-  memberId: [
-    { required: true, message: '请选择会员', trigger: 'change' }
-  ],
-  checkinMethod: [
-    { required: true, message: '请选择签到方式', trigger: 'change' }
-  ]
+  memberId: [{ required: true, message: '请选择会员', trigger: 'change' }],
+  checkinMethod: [{ required: true, message: '请选择签到方式', trigger: 'change' }],
 }
 
 // 获取store状态
@@ -406,14 +329,14 @@ const searchMembers = async (query: string) => {
     memberOptions.value = []
     return
   }
-  
+
   searchLoading.value = true
   try {
     const params = {
       realName: query,
       phone: query,
       pageNum: 1,
-      pageSize: 20
+      pageSize: 20,
     }
     const response = await memberStore.fetchMembers(params)
     memberOptions.value = response.list || []
@@ -432,7 +355,7 @@ const loadData = async () => {
     pageSize: pageInfo.pageSize,
     memberName: filterForm.memberName,
     checkinMethod: filterForm.checkinMethod,
-    hasCourseBooking: filterForm.hasCourseBooking
+    hasCourseBooking: filterForm.hasCourseBooking,
   }
 
   // 处理日期范围
@@ -481,26 +404,26 @@ const handleQuickCheckIn = () => {
 // 提交快速签到
 const submitQuickCheckIn = async () => {
   if (!quickCheckInFormRef.value) return
-  
+
   try {
     await quickCheckInFormRef.value.validate()
-    
+
     if (!quickCheckInForm.memberId) {
       ElMessage.error('请选择会员')
       return
     }
-    
+
     await checkInStore.memberCheckIn(
       quickCheckInForm.memberId,
       quickCheckInForm.checkinMethod,
       quickCheckInForm.notes
     )
-    
+
     ElMessage.success('签到成功')
     quickCheckInDialogVisible.value = false
     loadData()
     loadTodayStats()
-    
+
     // 重置表单
     quickCheckInForm.memberId = undefined
     quickCheckInForm.notes = ''
@@ -522,9 +445,9 @@ const handleEdit = async (id: number) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputType: 'textarea',
-      inputValue: selectedRows.value.find(row => row.id === id)?.notes || ''
+      inputValue: selectedRows.value.find((row) => row.id === id)?.notes || '',
     })
-    
+
     await checkInStore.updateCheckIn(id, notes)
     ElMessage.success('更新成功')
     loadData()
@@ -554,7 +477,7 @@ const handleBatchDelete = async () => {
   }
 
   // 检查是否有课程签到记录
-  const courseCheckIns = selectedRows.value.filter(row => row.courseCheckIn)
+  const courseCheckIns = selectedRows.value.filter((row) => row.courseCheckIn)
   if (courseCheckIns.length > 0) {
     ElMessage.warning(`包含 ${courseCheckIns.length} 条课程签到记录，不能删除`)
     return
@@ -567,11 +490,11 @@ const handleBatchDelete = async () => {
       {
         type: 'warning',
         confirmButtonText: '删除',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
 
-    const ids = selectedRows.value.map(row => row.id)
+    const ids = selectedRows.value.map((row) => row.id)
     await checkInStore.batchDeleteCheckIns(ids)
     ElMessage.success('批量删除成功')
     selectedRows.value = []
@@ -677,39 +600,39 @@ onMounted(() => {
   padding: 16px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  
+
   .stat-label {
     font-size: 14px;
     color: #606266;
     margin-bottom: 8px;
   }
-  
+
   .stat-value {
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 4px;
-    
+
     &.text-primary {
-      color: #409EFF;
+      color: #409eff;
     }
-    
+
     &.text-warning {
-      color: #E6A23C;
+      color: #e6a23c;
     }
-    
+
     &.text-success {
-      color: #67C23A;
+      color: #67c23a;
     }
-    
+
     &.text-info {
       color: #909399;
     }
-    
+
     &.text-danger {
-      color: #F56C6C;
+      color: #f56c6c;
     }
   }
-  
+
   .stat-trend {
     font-size: 12px;
     color: #909399;
@@ -737,16 +660,16 @@ onMounted(() => {
     font-weight: 500;
     margin-bottom: 4px;
   }
-  
+
   .member-phone {
     font-size: 12px;
     color: #909399;
     margin-bottom: 2px;
   }
-  
+
   .member-no {
     font-size: 11px;
-    color: #C0C4CC;
+    color: #c0c4cc;
     background-color: #f0f0f0;
     padding: 1px 4px;
     border-radius: 2px;
@@ -757,11 +680,11 @@ onMounted(() => {
 .course-info {
   margin-top: 4px;
   font-size: 12px;
-  
+
   .course-name {
-    color: #67C23A;
+    color: #67c23a;
   }
-  
+
   .coach-name {
     color: #909399;
     margin-left: 4px;
@@ -783,7 +706,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  
+
   .selected-count {
     color: #606266;
     font-size: 14px;
@@ -801,19 +724,19 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  
+
   .member-name {
     font-weight: 500;
   }
-  
+
   .member-phone {
     color: #909399;
     font-size: 12px;
     margin: 0 8px;
   }
-  
+
   .member-no {
-    color: #C0C4CC;
+    color: #c0c4cc;
     font-size: 11px;
   }
 }

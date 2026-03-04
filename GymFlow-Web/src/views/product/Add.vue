@@ -6,44 +6,28 @@
           <span class="title">{{ isEdit ? '编辑商品' : '添加商品' }}</span>
           <div class="header-actions">
             <el-button @click="goBack">
-              <el-icon><ArrowLeft /></el-icon>
+              <el-icon>
+                <ArrowLeft />
+              </el-icon>
               返回
             </el-button>
           </div>
         </div>
       </template>
 
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="rules"
-        label-width="120px"
-        class="form-container"
-        :validate-on-rule-change="false"
-      >
+      <el-form ref="formRef" :model="formData" :rules="rules" label-width="120px" class="form-container" :validate-on-rule-change="false">
         <!-- 基础信息 -->
         <div class="form-section">
           <div class="section-title">基础信息</div>
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="商品名称" prop="productName">
-                <el-input
-                  v-model="formData.productName"
-                  placeholder="请输入商品名称"
-                  clearable
-                  maxlength="200"
-                  show-word-limit
-                />
+                <el-input v-model="formData.productName" placeholder="请输入商品名称" clearable maxlength="200" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="商品类型" prop="productType">
-                <el-select
-                  v-model="formData.productType"
-                  placeholder="请选择商品类型"
-                  clearable
-                  @change="handleProductTypeChange"
-                >
+                <el-select v-model="formData.productType" placeholder="请选择商品类型" clearable @change="handleProductTypeChange">
                   <el-option label="会籍卡" :value="0" />
                   <el-option label="私教课" :value="1" />
                   <el-option label="团课" :value="2" />
@@ -56,18 +40,8 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="商品分类" prop="categoryId">
-                <el-select
-                  v-model="formData.categoryId"
-                  placeholder="请选择商品分类"
-                  clearable
-                  filterable
-                >
-                  <el-option
-                    v-for="category in flatCategories"
-                    :key="category.id"
-                    :label="category.fullName"
-                    :value="category.id"
-                  />
+                <el-select v-model="formData.categoryId" placeholder="请选择商品分类" clearable filterable>
+                  <el-option v-for="category in flatCategories" :key="category.id" :label="category.fullName" :value="category.id" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -82,49 +56,25 @@
           </el-row>
 
           <el-form-item label="商品描述">
-            <el-input
-              v-model="formData.description"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入商品描述"
-              maxlength="1000"
-              show-word-limit
-            />
+            <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入商品描述" maxlength="1000" show-word-limit />
           </el-form-item>
 
           <el-form-item label="商品图片">
-            <el-upload
-              v-model:file-list="imageList"
-              :action="uploadUrl"
-              list-type="picture-card"
-              :before-upload="beforeImageUpload"
-              :on-success="handleImageSuccess"
-              :on-remove="handleImageRemove"
-              :on-error="handleUploadError"
-              :headers="uploadHeaders"
-              accept=".jpg,.jpeg,.png,.gif"
-              multiple
-            >
-              <el-icon><Plus /></el-icon>
+            <el-upload v-model:file-list="imageList" :action="uploadUrl" list-type="picture-card" :before-upload="beforeImageUpload" :on-success="handleImageSuccess" :on-remove="handleImageRemove" :on-error="handleUploadError" :headers="uploadHeaders" accept=".jpg,.jpeg,.png,.gif" multiple>
+              <el-icon>
+                <Plus />
+              </el-icon>
               <template #file="{ file }">
                 <div>
-                  <img
-                    class="el-upload-list__item-thumbnail"
-                    :src="file.url"
-                    alt=""
-                  />
+                  <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
                   <span class="el-upload-list__item-actions">
-                    <span
-                      class="el-upload-list__item-preview"
-                      @click="handlePictureCardPreview(file)"
-                    >
+                    <span class="el-upload-list__item-preview" @click="handlePictureCardPreview(file)">
                       <el-icon><zoom-in /></el-icon>
                     </span>
-                    <span
-                      class="el-upload-list__item-delete"
-                      @click="handleImageRemove(file)"
-                    >
-                      <el-icon><Delete /></el-icon>
+                    <span class="el-upload-list__item-delete" @click="handleImageRemove(file)">
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
                     </span>
                   </span>
                 </div>
@@ -142,41 +92,17 @@
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item label="原价(¥)" prop="originalPrice">
-                <el-input-number
-                  v-model="formData.originalPrice"
-                  :min="0"
-                  :precision="2"
-                  :step="0.01"
-                  placeholder="请输入原价"
-                  style="width: 100%"
-                  controls-position="right"
-                />
+                <el-input-number v-model="formData.originalPrice" :min="0" :precision="2" :step="0.01" placeholder="请输入原价" style="width: 100%" controls-position="right" />
               </el-form-item>
             </el-col>
             <el-col :span="8">
               <el-form-item label="现价(¥)" prop="currentPrice">
-                <el-input-number
-                  v-model="formData.currentPrice"
-                  :min="0"
-                  :precision="2"
-                  :step="0.01"
-                  placeholder="请输入现价"
-                  style="width: 100%"
-                  controls-position="right"
-                />
+                <el-input-number v-model="formData.currentPrice" :min="0" :precision="2" :step="0.01" placeholder="请输入现价" style="width: 100%" controls-position="right" />
               </el-form-item>
             </el-col>
             <el-col :span="8">
               <el-form-item label="成本价(¥)">
-                <el-input-number
-                  v-model="formData.costPrice"
-                  :min="0"
-                  :precision="2"
-                  :step="0.01"
-                  placeholder="请输入成本价"
-                  style="width: 100%"
-                  controls-position="right"
-                />
+                <el-input-number v-model="formData.costPrice" :min="0" :precision="2" :step="0.01" placeholder="请输入成本价" style="width: 100%" controls-position="right" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -184,54 +110,31 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="库存数量" prop="stockQuantity">
-                <el-input-number
-                  v-model="formData.stockQuantity"
-                  :min="0"
-                  :step="1"
-                  placeholder="请输入库存数量"
-                  style="width: 100%"
-                  controls-position="right"
-                />
+                <el-input-number v-model="formData.stockQuantity" :min="0" :step="1" placeholder="请输入库存数量" style="width: 100%" controls-position="right" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="单位">
-                <el-input
-                  v-model="formData.unit"
-                  placeholder="请输入单位，如：张、套、件"
-                  maxlength="10"
-                  clearable
-                />
+                <el-input v-model="formData.unit" placeholder="请输入单位，如：张、套、件" maxlength="10" clearable />
               </el-form-item>
             </el-col>
           </el-row>
 
           <el-form-item label="规格信息">
-            <el-input
-              v-model="formData.specifications"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入规格信息，如：颜色、尺寸等"
-              maxlength="500"
-              show-word-limit
-            />
+            <el-input v-model="formData.specifications" type="textarea" :rows="3" placeholder="请输入规格信息，如：颜色、尺寸等" maxlength="500" show-word-limit />
           </el-form-item>
         </div>
 
         <!-- 商品详情 -->
         <div v-if="showDetailSection" class="form-section">
           <div class="section-title">商品详情</div>
-          
+
           <template v-if="formData.productType === 0">
             <!-- 会籍卡详情 -->
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="会籍类型">
-                  <el-select
-                    v-model="formData.detailDTO.membershipType"
-                    placeholder="请选择会籍类型"
-                    clearable
-                  >
+                  <el-select v-model="formData.detailDTO.membershipType" placeholder="请选择会籍类型" clearable>
                     <el-option label="私教课" :value="0" />
                     <el-option label="团课" :value="1" />
                     <el-option label="月卡" :value="2" />
@@ -242,25 +145,13 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="有效期(天)">
-                  <el-input-number
-                    v-model="formData.detailDTO.validityDays"
-                    :min="1"
-                    placeholder="请输入有效期"
-                    style="width: 100%"
-                    controls-position="right"
-                  />
+                  <el-input-number v-model="formData.detailDTO.validityDays" :min="1" placeholder="请输入有效期" style="width: 100%" controls-position="right" />
                 </el-form-item>
               </el-col>
             </el-row>
 
             <el-form-item label="会籍权益">
-              <el-input
-                v-model="benefitsText"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入会籍权益，每行一个权益"
-                @change="handleBenefitsChange"
-              />
+              <el-input v-model="benefitsText" type="textarea" :rows="4" placeholder="请输入会籍权益，每行一个权益" @change="handleBenefitsChange" />
               <div class="form-tip">每行一个权益项，按回车分隔</div>
             </el-form-item>
           </template>
@@ -270,24 +161,12 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="课时长(分钟)">
-                  <el-input-number
-                    v-model="formData.detailDTO.courseDuration"
-                    :min="1"
-                    placeholder="请输入课时长"
-                    style="width: 100%"
-                    controls-position="right"
-                  />
+                  <el-input-number v-model="formData.detailDTO.courseDuration" :min="1" placeholder="请输入课时长" style="width: 100%" controls-position="right" />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="总节数">
-                  <el-input-number
-                    v-model="formData.detailDTO.totalSessions"
-                    :min="1"
-                    placeholder="请输入总节数"
-                    style="width: 100%"
-                    controls-position="right"
-                  />
+                  <el-input-number v-model="formData.detailDTO.totalSessions" :min="1" placeholder="请输入总节数" style="width: 100%" controls-position="right" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -295,42 +174,19 @@
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="课程级别">
-                  <el-input
-                    v-model="formData.detailDTO.courseLevel"
-                    placeholder="请输入课程级别，如：初级、中级、高级"
-                    maxlength="20"
-                    clearable
-                  />
+                  <el-input v-model="formData.detailDTO.courseLevel" placeholder="请输入课程级别，如：初级、中级、高级" maxlength="20" clearable />
                 </el-form-item>
               </el-col>
               <el-col :span="12">
                 <el-form-item label="有效期(天)">
-                  <el-input-number
-                    v-model="formData.detailDTO.validityDays"
-                    :min="1"
-                    placeholder="请输入有效期"
-                    style="width: 100%"
-                    controls-position="right"
-                  />
+                  <el-input-number v-model="formData.detailDTO.validityDays" :min="1" placeholder="请输入有效期" style="width: 100%" controls-position="right" />
                 </el-form-item>
               </el-col>
             </el-row>
 
             <el-form-item v-if="formData.productType === 1" label="适用教练">
-              <el-select
-                v-model="coachIds"
-                multiple
-                placeholder="请选择适用教练"
-                style="width: 100%"
-                clearable
-                filterable
-              >
-                <el-option
-                  v-for="coach in coachList"
-                  :key="coach.id"
-                  :label="`${coach.realName} (${coach.phone})`"
-                  :value="coach.id"
-                />
+              <el-select v-model="coachIds" multiple placeholder="请选择适用教练" style="width: 100%" clearable filterable>
+                <el-option v-for="coach in coachList" :key="coach.id" :label="`${coach.realName} (${coach.phone})`" :value="coach.id" />
               </el-select>
             </el-form-item>
           </template>
@@ -338,37 +194,17 @@
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="最大购买数量">
-                <el-input-number
-                  v-model="formData.detailDTO.maxPurchaseQuantity"
-                  :min="1"
-                  placeholder="请输入最大购买数量"
-                  style="width: 100%"
-                  controls-position="right"
-                />
+                <el-input-number v-model="formData.detailDTO.maxPurchaseQuantity" :min="1" placeholder="请输入最大购买数量" style="width: 100%" controls-position="right" />
               </el-form-item>
             </el-col>
           </el-row>
 
           <el-form-item label="使用规则">
-            <el-input
-              v-model="formData.detailDTO.usageRules"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入使用规则"
-              maxlength="500"
-              show-word-limit
-            />
+            <el-input v-model="formData.detailDTO.usageRules" type="textarea" :rows="4" placeholder="请输入使用规则" maxlength="500" show-word-limit />
           </el-form-item>
 
           <el-form-item label="退款政策">
-            <el-input
-              v-model="formData.detailDTO.refundPolicy"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入退款政策"
-              maxlength="500"
-              show-word-limit
-            />
+            <el-input v-model="formData.detailDTO.refundPolicy" type="textarea" :rows="4" placeholder="请输入退款政策" maxlength="500" show-word-limit />
           </el-form-item>
         </div>
 
@@ -412,7 +248,7 @@ const previewImage = ref('')
 const isEdit = computed(() => route.name === 'ProductEdit')
 
 // 商品ID（编辑模式下使用）
-const productId = computed(() => isEdit.value ? Number(route.params.id) : null)
+const productId = computed(() => (isEdit.value ? Number(route.params.id) : null))
 
 // 表单数据
 const formData = reactive<ProductBasicDTO>({
@@ -441,8 +277,8 @@ const formData = reactive<ProductBasicDTO>({
     maxPurchaseQuantity: undefined,
     refundPolicy: '',
     usageRules: '',
-    coachIds: []
-  }
+    coachIds: [],
+  },
 })
 
 // 图片列表
@@ -464,17 +300,17 @@ const flatCategories = computed(() => {
         id: category.id,
         fullName,
         categoryName: category.categoryName,
-        parentId: category.parentId
+        parentId: category.parentId,
       })
-      
+
       if (category.children && category.children.length > 0) {
         acc.push(...flatten(category.children, fullName))
       }
-      
+
       return acc
     }, [])
   }
-  
+
   return flatten(productStore.categories)
 })
 
@@ -486,22 +322,20 @@ const showDetailSection = computed(() => {
 // 上传配置
 const uploadUrl = ref(`${import.meta.env.VITE_API_BASE_URL}/upload/image`)
 const uploadHeaders = ref({
-  Authorization: `Bearer ${localStorage.getItem('token')}`
+  Authorization: `Bearer ${localStorage.getItem('token')}`,
 })
 
 // 表单验证规则
 const rules: FormRules = {
   productName: [
     { required: true, message: '请输入商品名称', trigger: 'blur' },
-    { max: 200, message: '商品名称长度不能超过200个字符', trigger: 'blur' }
+    { max: 200, message: '商品名称长度不能超过200个字符', trigger: 'blur' },
   ],
-  productType: [
-    { required: true, message: '请选择商品类型', trigger: 'change' }
-  ],
+  productType: [{ required: true, message: '请选择商品类型', trigger: 'change' }],
   originalPrice: [
     { required: true, message: '请输入原价', trigger: 'blur' },
-    { 
-      type: 'number', 
+    {
+      type: 'number',
       validator: (_, value, callback) => {
         if (value < 0) {
           callback(new Error('原价不能小于0'))
@@ -511,13 +345,13 @@ const rules: FormRules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
   currentPrice: [
     { required: true, message: '请输入现价', trigger: 'blur' },
-    { 
-      type: 'number', 
+    {
+      type: 'number',
       validator: (_, value, callback) => {
         if (value < 0) {
           callback(new Error('现价不能小于0'))
@@ -529,13 +363,13 @@ const rules: FormRules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
   stockQuantity: [
     { required: true, message: '请输入库存数量', trigger: 'blur' },
-    { 
-      type: 'number', 
+    {
+      type: 'number',
       validator: (_, value, callback) => {
         if (value < 0) {
           callback(new Error('库存数量不能小于0'))
@@ -545,12 +379,10 @@ const rules: FormRules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
-  status: [
-    { required: true, message: '请选择状态', trigger: 'change' }
-  ]
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
 
 // 初始化数据
@@ -558,7 +390,7 @@ onMounted(async () => {
   try {
     // 加载分类数据
     await productStore.fetchCategories()
-    
+
     // 如果是编辑模式，加载商品数据
     if (isEdit.value && productId.value) {
       await loadProductData(productId.value)
@@ -566,7 +398,7 @@ onMounted(async () => {
       // 添加模式，设置默认值
       setDefaultValues()
     }
-    
+
     // 加载教练数据
     await loadCoachData()
   } catch (error) {
@@ -580,7 +412,7 @@ const loadProductData = async (id: number) => {
   try {
     loading.value = true
     const product = await productStore.fetchProductDetail(id)
-    
+
     if (product) {
       // 复制基础数据
       Object.assign(formData, {
@@ -596,23 +428,23 @@ const loadProductData = async (id: number) => {
         unit: product.unit || '',
         specifications: product.specifications || '',
         status: product.status,
-        detailDTO: product.detailDTO || {}
+        detailDTO: product.detailDTO || {},
       })
-      
+
       // 设置图片列表
       if (product.images && product.images.length > 0) {
         imageList.value = product.images.map((url, index) => ({
           name: `image-${index}.jpg`,
           url: url,
-          status: 'success'
+          status: 'success',
         }))
       }
-      
+
       // 设置教练ID列表
       if (product.detailDTO?.coachIds) {
         coachIds.value = product.detailDTO.coachIds
       }
-      
+
       // 设置会籍权益
       if (product.detailDTO?.membershipBenefits) {
         benefitsText.value = product.detailDTO.membershipBenefits.join('\n')
@@ -641,7 +473,7 @@ const setDefaultValues = () => {
     maxPurchaseQuantity: undefined,
     refundPolicy: '',
     usageRules: '',
-    coachIds: []
+    coachIds: [],
   }
 }
 
@@ -671,9 +503,9 @@ const handleProductTypeChange = (type: number) => {
     maxPurchaseQuantity: undefined,
     refundPolicy: '',
     usageRules: '',
-    coachIds: []
+    coachIds: [],
   }
-  
+
   // 根据类型设置默认值
   switch (type) {
     case 0: // 会籍卡
@@ -692,7 +524,7 @@ const handleProductTypeChange = (type: number) => {
       formData.detailDTO.validityDays = 90
       break
   }
-  
+
   // 重置教练选择
   coachIds.value = []
 }
@@ -706,12 +538,12 @@ const beforeImageUpload: UploadProps['beforeUpload'] = (file) => {
     ElMessage.error('只能上传图片文件！')
     return false
   }
-  
+
   if (!isLt2M) {
     ElMessage.error('图片大小不能超过2MB！')
     return false
   }
-  
+
   return true
 }
 
@@ -719,7 +551,7 @@ const beforeImageUpload: UploadProps['beforeUpload'] = (file) => {
 const handleImageSuccess = (response: any, file: UploadFile) => {
   if (response.code === 200 && response.data) {
     file.url = response.data
-    formData.images = imageList.value.map(item => item.url || '').filter(url => url)
+    formData.images = imageList.value.map((item) => item.url || '').filter((url) => url)
     ElMessage.success('上传成功')
   } else {
     ElMessage.error(response.message || '上传失败')
@@ -728,10 +560,10 @@ const handleImageSuccess = (response: any, file: UploadFile) => {
 
 // 图片移除
 const handleImageRemove = (file: UploadFile) => {
-  const index = imageList.value.findIndex(item => item.uid === file.uid)
+  const index = imageList.value.findIndex((item) => item.uid === file.uid)
   if (index !== -1) {
     imageList.value.splice(index, 1)
-    formData.images = imageList.value.map(item => item.url || '').filter(url => url)
+    formData.images = imageList.value.map((item) => item.url || '').filter((url) => url)
   }
 }
 
@@ -752,8 +584,8 @@ const handleBenefitsChange = (value: string) => {
   if (formData.detailDTO) {
     formData.detailDTO.membershipBenefits = value
       .split('\n')
-      .filter(item => item.trim())
-      .map(item => item.trim())
+      .filter((item) => item.trim())
+      .map((item) => item.trim())
   }
 }
 
@@ -771,13 +603,13 @@ const handleSubmit = async () => {
   try {
     // 表单验证
     await formRef.value.validate()
-    
+
     // 价格验证
     if (formData.currentPrice > formData.originalPrice) {
       ElMessage.error('现价不能高于原价')
       return
     }
-    
+
     // 如果是课程类型，验证必要字段
     if (formData.productType === 1 || formData.productType === 2) {
       if (!formData.detailDTO?.courseDuration) {
@@ -789,9 +621,9 @@ const handleSubmit = async () => {
         return
       }
     }
-    
+
     loading.value = true
-    
+
     if (isEdit.value && productId.value) {
       // 编辑模式
       await productStore.updateProduct(productId.value, formData)
@@ -801,7 +633,7 @@ const handleSubmit = async () => {
       await productStore.addProduct(formData)
       ElMessage.success('添加成功')
     }
-    
+
     goBack()
   } catch (error) {
     console.error('提交失败:', error)
@@ -820,37 +652,37 @@ const goBack = () => {
 <style scoped lang="scss">
 .product-add-edit-container {
   padding: 20px;
-  
+
   .box-card {
     min-height: calc(100vh - 120px);
-    
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .title {
         font-size: 18px;
         font-weight: bold;
         color: #333;
       }
-      
+
       .header-actions {
         display: flex;
         gap: 10px;
       }
     }
-    
+
     .form-container {
       padding: 20px 0;
-      
+
       .form-section {
         margin-bottom: 30px;
         padding: 20px;
         background-color: #fff;
         border-radius: 8px;
         border: 1px solid #ebeef5;
-        
+
         .section-title {
           font-size: 16px;
           font-weight: bold;
@@ -859,43 +691,43 @@ const goBack = () => {
           padding-bottom: 10px;
           border-bottom: 2px solid #409eff;
         }
-        
+
         .form-tip {
           font-size: 12px;
           color: #909399;
           margin-top: 5px;
         }
-        
+
         .upload-tip {
           font-size: 12px;
           color: #909399;
           margin-top: 8px;
         }
-        
+
         :deep(.el-upload-list__item-thumbnail) {
           width: 100%;
           height: 100%;
           object-fit: cover;
         }
-        
+
         :deep(.el-upload--picture-card) {
           width: 100px;
           height: 100px;
           line-height: 100px;
         }
-        
+
         :deep(.el-upload-list__item) {
           width: 100px;
           height: 100px;
         }
       }
-      
+
       .form-actions {
         margin-top: 30px;
         padding-top: 20px;
         border-top: 1px solid #ebeef5;
         text-align: center;
-        
+
         .el-button {
           min-width: 100px;
         }

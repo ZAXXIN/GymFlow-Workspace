@@ -8,7 +8,7 @@
         </div>
       </template>
     </el-page-header>
-    
+
     <!-- 基本信息卡片 -->
     <el-card class="info-card" v-loading="loading">
       <template #header>
@@ -21,7 +21,7 @@
           </div>
         </div>
       </template>
-      
+
       <el-descriptions :column="2" border>
         <el-descriptions-item label="用户ID">{{ currentUser?.id || '-' }}</el-descriptions-item>
         <el-descriptions-item label="用户名">{{ currentUser?.username || '-' }}</el-descriptions-item>
@@ -43,7 +43,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
-    
+
     <!-- 登录记录卡片 -->
     <el-card class="login-card">
       <template #header>
@@ -51,7 +51,7 @@
           <span class="card-title">最近登录记录</span>
         </div>
       </template>
-      
+
       <div v-if="loginRecords && loginRecords.length > 0">
         <el-table :data="loginRecords" style="width: 100%" border stripe>
           <el-table-column prop="loginTime" label="登录时间" width="180">
@@ -70,20 +70,13 @@
             </template>
           </el-table-column>
         </el-table>
-        
+
         <!-- 分页 -->
         <div class="pagination-wrapper">
-          <el-pagination
-            v-model:current-page="loginPageInfo.pageNum"
-            v-model:page-size="loginPageInfo.pageSize"
-            :total="loginTotal"
-            layout="total, prev, pager, next"
-            background
-            small
-          />
+          <el-pagination v-model:current-page="loginPageInfo.pageNum" v-model:page-size="loginPageInfo.pageSize" :total="loginTotal" layout="total, prev, pager, next" background small />
         </div>
       </div>
-      
+
       <div v-else class="empty-data">
         <el-empty description="暂无登录记录" />
       </div>
@@ -95,7 +88,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useWebUserStore } from '@/stores/settings'
+import { useWebUserStore } from '@/stores/settings/webUser'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,35 +106,35 @@ const loginRecords = ref<any[]>([
     ipAddress: '192.168.1.100',
     loginLocation: '北京市 北京市',
     device: 'Chrome 120.0.0.0 / Windows 10',
-    loginStatus: 'SUCCESS'
+    loginStatus: 'SUCCESS',
   },
   {
     loginTime: '2024-01-14 18:22:30',
     ipAddress: '192.168.1.101',
     loginLocation: '上海市 上海市',
     device: 'Safari 17.2 / macOS 14.2',
-    loginStatus: 'SUCCESS'
+    loginStatus: 'SUCCESS',
   },
   {
     loginTime: '2024-01-13 09:15:10',
     ipAddress: '192.168.1.102',
     loginLocation: '广东省 深圳市',
     device: 'WeChat 8.0.0 / iOS 17.2',
-    loginStatus: 'SUCCESS'
+    loginStatus: 'SUCCESS',
   },
   {
     loginTime: '2024-01-12 20:05:00',
     ipAddress: '192.168.1.103',
     loginLocation: '浙江省 杭州市',
     device: 'Chrome 119.0.0.0 / Android 14',
-    loginStatus: 'FAILED'
-  }
+    loginStatus: 'FAILED',
+  },
 ])
 
 const loginPageInfo = ref({
   pageNum: 1,
   pageSize: 5,
-  totalPages: 0
+  totalPages: 0,
 })
 
 const loginTotal = ref(8)
@@ -174,9 +167,9 @@ const goEdit = () => {
 const handleEnable = async () => {
   try {
     await ElMessageBox.confirm('确定要启用该用户吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.updateUserStatus(userId.value, 1)
     ElMessage.success('启用成功')
     await loadUserDetail()
@@ -189,9 +182,9 @@ const handleEnable = async () => {
 const handleDisable = async () => {
   try {
     await ElMessageBox.confirm('确定要禁用该用户吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.updateUserStatus(userId.value, 0)
     ElMessage.success('禁用成功')
     await loadUserDetail()
@@ -204,9 +197,9 @@ const handleDisable = async () => {
 const handleResetPassword = async () => {
   try {
     await ElMessageBox.confirm('确定要重置该用户的密码为123456吗？', '提示', {
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await userStore.resetPassword(userId.value)
     ElMessage.success('密码已重置为123456')
   } catch (error) {
@@ -220,9 +213,9 @@ const handleDelete = async () => {
     await ElMessageBox.confirm('确定要删除该用户吗？', '警告', {
       type: 'warning',
       confirmButtonText: '删除',
-      cancelButtonText: '取消'
+      cancelButtonText: '取消',
     })
-    
+
     await userStore.deleteUser(userId.value)
     ElMessage.success('用户已删除')
     goBack()
@@ -270,7 +263,8 @@ onMounted(() => {
   gap: 8px;
 }
 
-.info-card, .login-card {
+.info-card,
+.login-card {
   margin-bottom: 20px;
 }
 

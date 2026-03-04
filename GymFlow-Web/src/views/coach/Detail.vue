@@ -13,7 +13,7 @@
         </div>
       </template>
     </el-page-header>
-    
+
     <!-- 基本信息卡片 -->
     <el-card class="info-card" v-loading="loading">
       <template #header>
@@ -26,23 +26,15 @@
           </div>
         </div>
       </template>
-      
+
       <div class="basic-info">
         <div class="coach-section">
           <div class="coach-name">{{ coachDetail?.realName }}</div>
           <div class="coach-rating">
-            <el-rate
-              :model-value="coachDetail.rating"
-              disabled
-              show-score
-              text-color="#ff9900"
-              score-template="{value}分"
-              :max="5"
-              :allow-half="true"
-            />
+            <el-rate :model-value="coachDetail.rating" disabled show-score text-color="#ff9900" score-template="{value}分" :max="5" :allow-half="true" />
           </div>
         </div>
-        
+
         <div class="info-details">
           <el-descriptions :column="2" border>
             <el-descriptions-item label="教练ID">{{ coachDetail?.id || '-' }}</el-descriptions-item>
@@ -58,18 +50,12 @@
           </el-descriptions>
         </div>
       </div>
-      
+
       <!-- 资格证书 -->
       <div class="certification-section">
         <h3 class="section-title">资格证书</h3>
         <div class="certification-list">
-          <el-tag
-            v-for="(cert, index) in coachDetail?.certificationList"
-            :key="index"
-            type="info"
-            size="large"
-            class="certification-tag"
-          >
+          <el-tag v-for="(cert, index) in coachDetail?.certificationList" :key="index" type="info" size="large" class="certification-tag">
             {{ cert }}
           </el-tag>
           <div v-if="!coachDetail?.certificationList?.length" class="no-certification">
@@ -77,7 +63,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 个人简介 -->
       <div class="introduction-section">
         <h3 class="section-title">个人简介</h3>
@@ -86,7 +72,7 @@
         </div>
       </div>
     </el-card>
-    
+
     <!-- 统计信息 -->
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
@@ -125,7 +111,7 @@
         </el-card>
       </el-col>
     </el-row>
-    
+
     <!-- 标签页 -->
     <el-tabs v-model="activeTab" class="detail-tabs">
       <!-- 排班信息 -->
@@ -135,12 +121,14 @@
             <div class="tab-header">
               <span class="tab-title">排班信息</span>
               <el-button type="primary" size="small" @click="handleAddSchedule">
-                <el-icon><Plus /></el-icon>
+                <el-icon>
+                  <Plus />
+                </el-icon>
                 添加排班
               </el-button>
             </div>
           </template>
-          
+
           <div v-if="coachDetail?.schedules && coachDetail.schedules.length > 0">
             <el-table :data="coachDetail.schedules" style="width: 100%">
               <el-table-column prop="scheduleDate" label="排班日期" width="120" sortable>
@@ -189,13 +177,13 @@
               </el-table-column>
             </el-table>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无排班信息" />
           </div>
         </el-card>
       </el-tab-pane>
-      
+
       <!-- 课程信息 -->
       <el-tab-pane label="课程信息" name="courses">
         <el-card shadow="never" class="tab-content">
@@ -204,7 +192,7 @@
               <span class="tab-title">课程列表</span>
             </div>
           </template>
-          
+
           <div v-if="coachDetail?.courses && coachDetail.courses.length > 0">
             <el-table :data="coachDetail.courses" style="width: 100%">
               <el-table-column prop="courseName" label="课程名称" min-width="150" />
@@ -248,12 +236,7 @@
               </el-table-column>
               <el-table-column prop="enrollmentRate" label="满员率" width="100" align="center">
                 <template #default="{ row }">
-                  <el-progress 
-                    :percentage="Math.round(row.enrollmentRate)" 
-                    :stroke-width="18" 
-                    :status="getEnrollmentStatus(row.enrollmentRate)"
-                    :show-text="false"
-                  />
+                  <el-progress :percentage="Math.round(row.enrollmentRate)" :stroke-width="18" :status="getEnrollmentStatus(row.enrollmentRate)" :show-text="false" />
                   <span style="font-size: 12px; margin-left: 5px;">{{ Math.round(row.enrollmentRate) }}%</span>
                 </template>
               </el-table-column>
@@ -266,7 +249,7 @@
               </el-table-column>
             </el-table>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无课程信息" />
           </div>
@@ -317,30 +300,44 @@ const getRandomColor = () => {
 
 const getScheduleStatusType = (status: string) => {
   switch (status) {
-    case '空闲': return 'success'
-    case '已预约': return 'warning'
-    case '已取消': return 'danger'
-    default: return 'info'
+    case '空闲':
+      return 'success'
+    case '已预约':
+      return 'warning'
+    case '已取消':
+      return 'danger'
+    default:
+      return 'info'
   }
 }
 
 const getCourseStatusType = (status: number) => {
   switch (status) {
-    case 0: return 'info'      // 待开始
-    case 1: return 'success'   // 进行中
-    case 2: return 'success'   // 已完成
-    case 3: return 'danger'    // 已取消
-    default: return 'info'
+    case 0:
+      return 'info' // 待开始
+    case 1:
+      return 'success' // 进行中
+    case 2:
+      return 'success' // 已完成
+    case 3:
+      return 'danger' // 已取消
+    default:
+      return 'info'
   }
 }
 
 const getCourseStatusText = (status: number) => {
   switch (status) {
-    case 0: return '待开始'
-    case 1: return '进行中'
-    case 2: return '已完成'
-    case 3: return '已取消'
-    default: return '未知'
+    case 0:
+      return '待开始'
+    case 1:
+      return '进行中'
+    case 2:
+      return '已完成'
+    case 3:
+      return '已取消'
+    default:
+      return '未知'
   }
 }
 
@@ -375,15 +372,15 @@ const handleEditSchedule = (schedule: CoachScheduleList) => {
 const handleDeleteSchedule = async (schedule: CoachScheduleList) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除 ${schedule.scheduleDate} ${schedule.startTime?.slice(0,5)} 的排班吗？`,
+      `确定要删除 ${schedule.scheduleDate} ${schedule.startTime?.slice(0, 5)} 的排班吗？`,
       '删除确认',
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     // 这里调用API删除排班
     await coachStore.deleteCoachSchedule(schedule.id)
     ElMessage.success('删除成功')
@@ -545,7 +542,7 @@ onMounted(() => {
 }
 
 .stat-value.amount {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .stat-unit {
@@ -581,7 +578,7 @@ onMounted(() => {
 
 .amount {
   font-weight: 600;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .notes-text {

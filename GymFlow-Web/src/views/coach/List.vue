@@ -6,64 +6,50 @@
         <h1 class="page-title">教练管理</h1>
       </div>
       <div class="header-right">
-        <el-button type="primary" @click="handleAddCoach">
-          <el-icon><Plus /></el-icon>
+        <el-button v-permission="'coach:add'" type="primary" @click="handleAddCoach">
+          <el-icon>
+            <Plus />
+          </el-icon>
           新增教练
         </el-button>
       </div>
     </div>
-    
+
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
         <el-form-item label="姓名">
-          <el-input
-            v-model="filterForm.realName"
-            placeholder="请输入教练姓名"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.realName" placeholder="请输入教练姓名" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input
-            v-model="filterForm.phone"
-            placeholder="请输入手机号"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.phone" placeholder="请输入手机号" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="专长">
-          <el-input
-            v-model="filterForm.specialty"
-            placeholder="请输入专长"
-            clearable
-            style="width: 180px;"
-          />
+          <el-input v-model="filterForm.specialty" placeholder="请输入专长" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select
-            v-model="filterForm.status"
-            placeholder="请选择状态"
-            clearable
-            style="width: 180px;"
-          >
+          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 180px;">
             <el-option label="在职" :value="1" />
             <el-option label="离职" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
-            <el-icon><Search /></el-icon>
+            <el-icon>
+              <Search />
+            </el-icon>
             查询
           </el-button>
           <el-button @click="handleReset" :disabled="loading">
-            <el-icon><Refresh /></el-icon>
+            <el-icon>
+              <Refresh />
+            </el-icon>
             重置
           </el-button>
         </el-form-item>
       </el-form>
     </el-card>
-    
+
     <!-- 数据表格 -->
     <el-card class="table-card">
       <template #header>
@@ -71,21 +57,16 @@
           <span class="table-title">教练列表</span>
           <div class="table-actions">
             <el-button text @click="refreshTable" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
               刷新
             </el-button>
           </div>
         </div>
       </template>
-      
-      <el-table
-        :data="coachStore.coachList"
-        style="width: 100%"
-        row-key="id"
-        v-loading="coachStore.loading"
-        stripe
-        border
-      >
+
+      <el-table :data="coachStore.coachList" style="width: 100%" row-key="id" v-loading="coachStore.loading" stripe border>
         <el-table-column prop="realName" label="姓名" width="100">
           <template #default="{ row }">
             <div class="coach-info">
@@ -140,15 +121,7 @@
         </el-table-column>
         <el-table-column prop="rating" label="评分" width="180" align="center">
           <template #default="{ row }">
-            <el-rate
-              v-model="row.rating"
-              disabled
-              show-score
-              text-color="#ff9900"
-              score-template="{value}"
-              :max="5"
-              :allow-half="true"
-            />
+            <el-rate v-model="row.rating" disabled show-score text-color="#ff9900" score-template="{value}" :max="5" :allow-half="true" />
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="入职时间" width="160">
@@ -161,20 +134,15 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
+            <el-button v-permission="'coach:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button type="info" link size="small" @click="handleViewSchedule(row.id)">
+            <el-button v-permission="'coach:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
               排班
             </el-button>
-            <el-popconfirm
-              title="确定要删除这个教练吗？"
-              @confirm="handleDelete(row.id)"
-              confirm-button-text="确定"
-              cancel-button-text="取消"
-            >
+            <el-popconfirm title="确定要删除这个教练吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
-                <el-button type="danger" link size="small">
+                <el-button v-permission="'coach:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
@@ -182,19 +150,10 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="coachStore.pageNum"
-          v-model:page-size="coachStore.pageSize"
-          :total="coachStore.total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :disabled="loading"
-        />
+        <el-pagination v-model:current-page="coachStore.pageNum" v-model:page-size="coachStore.pageSize" :total="coachStore.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
   </div>
@@ -207,6 +166,9 @@ import { ElMessage } from 'element-plus'
 import { Plus, Search, Refresh, View, Edit, Delete, Calendar } from '@element-plus/icons-vue'
 import { useCoachStore } from '@/stores/coach'
 import type { CoachQueryParams } from '@/types/coach'
+import { usePermission } from '@/composables/usePermission'
+
+const { hasPermission } = usePermission()
 
 const router = useRouter()
 const coachStore = useCoachStore()
@@ -216,7 +178,7 @@ const filterForm = reactive({
   realName: '',
   phone: '',
   specialty: '',
-  status: undefined as number | undefined
+  status: undefined as number | undefined,
 })
 
 const loading = computed(() => coachStore.loading)
@@ -245,9 +207,9 @@ const handleSearch = async () => {
     realName: filterForm.realName,
     phone: filterForm.phone,
     specialty: filterForm.specialty,
-    status: filterForm.status
+    status: filterForm.status,
   }
-  
+
   await coachStore.fetchCoachList(queryParams)
 }
 
@@ -365,7 +327,7 @@ onMounted(() => {
 
 .amount {
   font-weight: 600;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .no-data {

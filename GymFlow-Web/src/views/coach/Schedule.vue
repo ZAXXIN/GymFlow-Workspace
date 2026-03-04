@@ -12,7 +12,9 @@
       <div class="header-actions">
         <el-button @click="goBack">返回</el-button>
         <el-button type="primary" @click="handleAddCourse">
-          <el-icon><Plus /></el-icon>
+          <el-icon>
+            <Plus />
+          </el-icon>
           添加课程
         </el-button>
       </div>
@@ -22,46 +24,22 @@
     <el-card class="filter-card">
       <div class="filter-content">
         <div class="filter-left">
-          <el-date-picker
-            v-model="currentMonth"
-            type="month"
-            placeholder="选择月份"
-            format="YYYY年MM月"
-            value-format="YYYY-MM"
-            @change="handleMonthChange"
-            style="width: 140px;"
-          />
-          <el-select 
-            v-model="courseTypeFilter" 
-            placeholder="课程类型" 
-            clearable
-            style="width: 120px; margin-left: 10px;"
-          >
+          <el-date-picker v-model="currentMonth" type="month" placeholder="选择月份" format="YYYY年MM月" value-format="YYYY-MM" @change="handleMonthChange" style="width: 140px;" />
+          <el-select v-model="courseTypeFilter" placeholder="课程类型" clearable style="width: 120px; margin-left: 10px;">
             <el-option label="全部" :value="null" />
             <el-option label="私教课" :value="0" />
             <el-option label="团课" :value="1" />
           </el-select>
-          <el-button 
-            type="primary" 
-            @click="loadData"
-            style="margin-left: 10px;"
-            :loading="loading"
-          >
+          <el-button type="primary" @click="loadData" style="margin-left: 10px;" :loading="loading">
             查询
           </el-button>
         </div>
         <div class="filter-right">
           <el-button-group>
-            <el-button 
-              :type="viewMode === 'month' ? 'primary' : ''"
-              @click="viewMode = 'month'"
-            >
+            <el-button :type="viewMode === 'month' ? 'primary' : ''" @click="viewMode = 'month'">
               月视图
             </el-button>
-            <el-button 
-              :type="viewMode === 'week' ? 'primary' : ''"
-              @click="viewMode = 'week'"
-            >
+            <el-button :type="viewMode === 'week' ? 'primary' : ''" @click="viewMode = 'week'">
               周视图
             </el-button>
           </el-button-group>
@@ -84,45 +62,25 @@
 
         <!-- 日历主体 -->
         <div class="calendar-body">
-          <div 
-            v-for="week in monthWeeks" 
-            :key="week.weekNum"
-            class="calendar-week"
-          >
-            <div 
-              v-for="day in week.days" 
-              :key="day.date"
-              class="calendar-day"
-              :class="{
+          <div v-for="week in monthWeeks" :key="week.weekNum" class="calendar-week">
+            <div v-for="day in week.days" :key="day.date" class="calendar-day" :class="{
                 'today': day.isToday,
                 'current-month': day.isCurrentMonth,
                 'weekend': day.isWeekend,
                 'has-courses': day.courses && day.courses.length > 0
-              }"
-              @click="handleDayClick(day)"
-            >
+              }" @click="handleDayClick(day)">
               <div class="day-header">
                 <span class="day-number">{{ day.day }}</span>
                 <span class="day-of-week">{{ day.dayOfWeek }}</span>
               </div>
-              
+
               <div class="day-courses" v-if="day.courses && day.courses.length > 0">
-                <div 
-                  v-for="course in day.courses" 
-                  :key="course.id"
-                  class="course-item"
-                  :class="`course-type-${course.scheduleType}`"
-                  @click.stop="handleCourseClick(course)"
-                >
+                <div v-for="course in day.courses" :key="course.id" class="course-item" :class="`course-type-${course.scheduleType}`" @click.stop="handleCourseClick(course)">
                   <div class="course-time">
                     {{ formatTime(course.startTime) }} - {{ formatTime(course.endTime) }}
                   </div>
                   <div class="course-type">
-                    <el-tag 
-                      :type="course.scheduleType === 0 ? 'primary' : 'success'"
-                      size="small"
-                      effect="plain"
-                    >
+                    <el-tag :type="course.scheduleType === 0 ? 'primary' : 'success'" size="small" effect="plain">
                       {{ course.scheduleTypeDesc }}
                     </el-tag>
                   </div>
@@ -131,9 +89,11 @@
                   </div>
                 </div>
               </div>
-              
+
               <div v-else class="empty-day" @click.stop="handleAddCourseForDay(day)">
-                <el-icon><Plus /></el-icon>
+                <el-icon>
+                  <Plus />
+                </el-icon>
                 <span>添加课程</span>
               </div>
             </div>
@@ -148,12 +108,7 @@
         <!-- 周视图头部 -->
         <div class="week-header">
           <div class="time-column"></div>
-          <div 
-            v-for="day in weekDays" 
-            :key="day.date"
-            class="day-header"
-            :class="{ 'today': day.isToday, 'weekend': day.isWeekend }"
-          >
+          <div v-for="day in weekDays" :key="day.date" class="day-header" :class="{ 'today': day.isToday, 'weekend': day.isWeekend }">
             <div class="date-info">
               <div class="date">{{ day.date.split('-')[2] }}</div>
               <div class="day-of-week">{{ day.dayOfWeek }}</div>
@@ -165,36 +120,17 @@
         <!-- 时间轴 -->
         <div class="week-body">
           <div class="time-grid">
-            <div 
-              v-for="time in timeSlots" 
-              :key="time"
-              class="time-slot"
-            >
+            <div v-for="time in timeSlots" :key="time" class="time-slot">
               {{ time }}
             </div>
           </div>
 
           <div class="courses-grid">
-            <div 
-              v-for="day in weekDays" 
-              :key="day.date"
-              class="day-column"
-              :class="{ 'today': day.isToday, 'weekend': day.isWeekend }"
-            >
-              <div 
-                v-for="time in timeSlots" 
-                :key="`${day.date}-${time}`"
-                class="time-cell"
-                @click="handleAddCourseForTime(day, time)"
-              >
+            <div v-for="day in weekDays" :key="day.date" class="day-column" :class="{ 'today': day.isToday, 'weekend': day.isWeekend }">
+              <div v-for="time in timeSlots" :key="`${day.date}-${time}`" class="time-cell" @click="handleAddCourseForTime(day, time)">
                 <!-- 显示该时间段的课程 -->
                 <template v-if="getCourseForTime(day.date, time)">
-                  <div 
-                    class="course-block"
-                    :class="`course-type-${getCourseForTime(day.date, time)?.scheduleType}`"
-                    :style="getCourseBlockStyle(getCourseForTime(day.date, time))"
-                    @click.stop="handleCourseClick(getCourseForTime(day.date, time))"
-                  >
+                  <div class="course-block" :class="`course-type-${getCourseForTime(day.date, time)?.scheduleType}`" :style="getCourseBlockStyle(getCourseForTime(day.date, time))" @click.stop="handleCourseClick(getCourseForTime(day.date, time))">
                     <div class="course-block-content">
                       <div class="course-time">
                         {{ formatTime(getCourseForTime(day.date, time)?.startTime) }}
@@ -216,91 +152,37 @@
     </el-card>
 
     <!-- 课程详情弹窗 -->
-    <el-dialog
-      v-model="courseDialog.visible"
-      :title="courseDialog.title"
-      width="500px"
-      :before-close="handleDialogClose"
-    >
-      <el-form
-        ref="courseFormRef"
-        :model="courseForm"
-        :rules="courseRules"
-        label-width="100px"
-        v-loading="courseDialog.loading"
-      >
+    <el-dialog v-model="courseDialog.visible" :title="courseDialog.title" width="500px" :before-close="handleDialogClose">
+      <el-form ref="courseFormRef" :model="courseForm" :rules="courseRules" label-width="100px" v-loading="courseDialog.loading">
         <el-form-item label="课程日期" prop="scheduleDate">
-          <el-date-picker
-            v-model="courseForm.scheduleDate"
-            type="date"
-            placeholder="选择课程日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-            :disabled="courseDialog.mode === 'edit'"
-          />
+          <el-date-picker v-model="courseForm.scheduleDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled="courseDialog.mode === 'edit'" />
         </el-form-item>
 
         <el-form-item label="开始时间" prop="startTime">
-          <el-time-select
-            v-model="courseForm.startTime"
-            :max-time="courseForm.endTime"
-            placeholder="选择开始时间"
-            start="06:00"
-            step="00:30"
-            end="22:00"
-            style="width: 100%"
-          />
+          <el-time-select v-model="courseForm.startTime" :max-time="courseForm.endTime" placeholder="选择开始时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
         </el-form-item>
 
         <el-form-item label="结束时间" prop="endTime">
-          <el-time-select
-            v-model="courseForm.endTime"
-            :min-time="courseForm.startTime"
-            placeholder="选择结束时间"
-            start="06:00"
-            step="00:30"
-            end="22:00"
-            style="width: 100%"
-          />
+          <el-time-select v-model="courseForm.endTime" :min-time="courseForm.startTime" placeholder="选择结束时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
         </el-form-item>
 
         <el-form-item label="课程类型" prop="scheduleType">
-          <el-select 
-            v-model="courseForm.scheduleType"
-            placeholder="请选择课程类型"
-            style="width: 100%"
-          >
+          <el-select v-model="courseForm.scheduleType" placeholder="请选择课程类型" style="width: 100%">
             <el-option label="私教课" :value="0" />
             <el-option label="团课" :value="1" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="课程名称" prop="notes">
-          <el-input
-            v-model="courseForm.notes"
-            placeholder="请输入课程名称（如：瑜伽入门、动感单车等）"
-            maxlength="50"
-            show-word-limit
-          />
+          <el-input v-model="courseForm.notes" placeholder="请输入课程名称（如：瑜伽入门、动感单车等）" maxlength="50" show-word-limit />
         </el-form-item>
 
         <el-form-item label="上课地点" prop="location">
-          <el-input
-            v-model="courseForm.location"
-            placeholder="请输入上课地点"
-            maxlength="100"
-          />
+          <el-input v-model="courseForm.location" placeholder="请输入上课地点" maxlength="100" />
         </el-form-item>
 
         <el-form-item label="备注" prop="remark">
-          <el-input
-            v-model="courseForm.remark"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入课程备注"
-            maxlength="200"
-            show-word-limit
-          />
+          <el-input v-model="courseForm.remark" type="textarea" :rows="3" placeholder="请输入课程备注" maxlength="200" show-word-limit />
         </el-form-item>
       </el-form>
 
@@ -308,19 +190,11 @@
         <span class="dialog-footer">
           <el-button @click="handleDialogClose" :disabled="courseDialog.loading">取消</el-button>
           <template v-if="courseDialog.mode === 'edit'">
-            <el-button 
-              type="danger" 
-              @click="handleDeleteCourse"
-              :loading="courseDialog.loading"
-            >
+            <el-button type="danger" @click="handleDeleteCourse" :loading="courseDialog.loading">
               删除
             </el-button>
           </template>
-          <el-button 
-            type="primary" 
-            @click="handleSaveCourse" 
-            :loading="courseDialog.loading"
-          >
+          <el-button type="primary" @click="handleSaveCourse" :loading="courseDialog.loading">
             保存
           </el-button>
         </span>
@@ -359,9 +233,23 @@ const courses = ref<any[]>([])
 // 日期相关
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 const timeSlots = [
-  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-  '18:00', '19:00', '20:00', '21:00', '22:00'
+  '06:00',
+  '07:00',
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+  '19:00',
+  '20:00',
+  '21:00',
+  '22:00',
 ]
 
 // 课程弹窗
@@ -371,7 +259,7 @@ const courseDialog = reactive({
   mode: 'add', // 'add' | 'edit'
   title: '',
   loading: false,
-  editingCourseId: null as number | null
+  editingCourseId: null as number | null,
 })
 
 const courseForm = reactive({
@@ -381,25 +269,15 @@ const courseForm = reactive({
   scheduleType: 0,
   notes: '',
   location: '',
-  remark: ''
+  remark: '',
 })
 
 const courseRules: FormRules = {
-  scheduleDate: [
-    { required: true, message: '请选择课程日期', trigger: 'change' }
-  ],
-  startTime: [
-    { required: true, message: '请选择开始时间', trigger: 'change' }
-  ],
-  endTime: [
-    { required: true, message: '请选择结束时间', trigger: 'change' }
-  ],
-  scheduleType: [
-    { required: true, message: '请选择课程类型', trigger: 'change' }
-  ],
-  notes: [
-    { required: true, message: '请输入课程名称', trigger: 'blur' }
-  ]
+  scheduleDate: [{ required: true, message: '请选择课程日期', trigger: 'change' }],
+  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
+  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  scheduleType: [{ required: true, message: '请选择课程类型', trigger: 'change' }],
+  notes: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
 }
 
 // 计算属性
@@ -415,23 +293,23 @@ const monthWeeks = computed(() => {
   const [year, month] = currentMonth.value.split('-').map(Number)
   const firstDay = new Date(year, month - 1, 1)
   const lastDay = new Date(year, month, 0)
-  
+
   // 获取当月第一天是周几（0-6，0是周日）
   const firstDayOfWeek = firstDay.getDay()
-  
+
   // 获取上个月的最后几天
   const prevMonthLastDay = new Date(year, month - 1, 0).getDate()
-  
+
   let currentDate = 1
   let nextMonthDate = 1
-  
+
   for (let week = 0; week < 6; week++) {
     const days = []
-    
+
     for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
       let date: Date
       let isCurrentMonth = true
-      
+
       if (week === 0 && dayOfWeek < firstDayOfWeek) {
         // 上个月的日期
         const prevMonth = month - 2 < 0 ? 11 : month - 2
@@ -448,17 +326,15 @@ const monthWeeks = computed(() => {
         // 当月的日期
         date = new Date(year, month - 1, currentDate++)
       }
-      
+
       const dateStr = formatDate(date, 'YYYY-MM-DD')
       const today = new Date()
       const isToday = formatDate(today, 'YYYY-MM-DD') === dateStr
       const isWeekend = date.getDay() === 0 || date.getDay() === 6
-      
+
       // 获取当天的课程
-      const dayCourses = courses.value.filter(course => 
-        course.scheduleDate === dateStr
-      )
-      
+      const dayCourses = courses.value.filter((course) => course.scheduleDate === dateStr)
+
       days.push({
         date: dateStr,
         day: date.getDate(),
@@ -466,21 +342,21 @@ const monthWeeks = computed(() => {
         isToday,
         isCurrentMonth,
         isWeekend,
-        courses: dayCourses
+        courses: dayCourses,
       })
     }
-    
+
     result.push({
       weekNum: week + 1,
-      days
+      days,
     })
-    
+
     // 如果已经显示完所有日期，并且下个月的日期也从第一天开始，就结束循环
     if (currentDate > lastDay.getDate() && nextMonthDate > 1) {
       break
     }
   }
-  
+
   return result
 })
 
@@ -488,33 +364,32 @@ const monthWeeks = computed(() => {
 const weekDays = computed(() => {
   const result = []
   const today = new Date()
-  const currentDate = currentMonth.value ? 
-    new Date(currentMonth.value + '-01') : today
-  
+  const currentDate = currentMonth.value ? new Date(currentMonth.value + '-01') : today
+
   // 找到本周一
   const monday = new Date(currentDate)
   const day = monday.getDay()
   const diff = monday.getDate() - day + (day === 0 ? -6 : 1)
   monday.setDate(diff)
-  
+
   for (let i = 0; i < 7; i++) {
     const date = new Date(monday)
     date.setDate(monday.getDate() + i)
-    
+
     const dateStr = formatDate(date, 'YYYY-MM-DD')
     const todayStr = formatDate(today, 'YYYY-MM-DD')
     const isToday = dateStr === todayStr
     const isWeekend = date.getDay() === 0 || date.getDay() === 6
-    
+
     result.push({
       date: dateStr,
       dayOfWeek: weekdays[date.getDay()],
       isToday,
       isWeekend,
-      courses: courses.value.filter(course => course.scheduleDate === dateStr)
+      courses: courses.value.filter((course) => course.scheduleDate === dateStr),
     })
   }
-  
+
   return result
 })
 
@@ -523,11 +398,8 @@ const formatDate = (date: Date, format: string) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  
-  return format
-    .replace('YYYY', String(year))
-    .replace('MM', month)
-    .replace('DD', day)
+
+  return format.replace('YYYY', String(year)).replace('MM', month).replace('DD', day)
 }
 
 const formatTime = (time: string) => {
@@ -541,7 +413,7 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 const getCourseForTime = (date: string, time: string) => {
-  return courses.value.find(course => {
+  return courses.value.find((course) => {
     if (course.scheduleDate !== date) return false
     const courseStart = formatTime(course.startTime)
     const courseEnd = formatTime(course.endTime)
@@ -551,14 +423,14 @@ const getCourseForTime = (date: string, time: string) => {
 
 const getCourseBlockStyle = (course: any) => {
   if (!course) return {}
-  
+
   const startTime = new Date(`2000-01-01T${course.startTime}`)
   const endTime = new Date(`2000-01-01T${course.endTime}`)
   const durationMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60)
-  
+
   return {
     height: `${(durationMinutes / 60) * 100}%`,
-    top: `${(startTime.getHours() - 6 + startTime.getMinutes() / 60) * 100}%`
+    top: `${(startTime.getHours() - 6 + startTime.getMinutes() / 60) * 100}%`,
   }
 }
 
@@ -566,42 +438,43 @@ const getCourseBlockStyle = (course: any) => {
 const loadData = async () => {
   try {
     loading.value = true
-    
+
     // 加载教练信息
     const coachResponse = await coachStore.fetchCoachDetail(coachId.value)
     if (coachResponse.code === 200 && coachResponse.data) {
       coachName.value = coachResponse.data.realName
     }
-    
+
     // 加载排班数据
     const scheduleResponse = await coachStore.fetchCoachSchedules(coachId.value)
     if (scheduleResponse.code === 200 && scheduleResponse.data) {
       // 过滤数据
       let filteredCourses = scheduleResponse.data
-      
+
       // 按课程类型过滤
       if (courseTypeFilter.value !== null) {
         filteredCourses = filteredCourses.filter(
           (course: any) => course.scheduleType === courseTypeFilter.value
         )
       }
-      
+
       // 按月份过滤
       if (currentMonth.value) {
         const [year, month] = currentMonth.value.split('-')
         filteredCourses = filteredCourses.filter((course: any) => {
           const courseDate = new Date(course.scheduleDate)
-          return courseDate.getFullYear() === Number(year) && 
-                 (courseDate.getMonth() + 1) === Number(month)
+          return (
+            courseDate.getFullYear() === Number(year) && courseDate.getMonth() + 1 === Number(month)
+          )
         })
       }
-      
+
       // 添加课程类型描述
       filteredCourses = filteredCourses.map((course: any) => ({
         ...course,
-        scheduleTypeDesc: course.scheduleType === 0 ? '私教课' : '团课'
+        scheduleTypeDesc: course.scheduleType === 0 ? '私教课' : '团课',
       }))
-      
+
       courses.value = filteredCourses
     }
   } catch (error) {
@@ -638,7 +511,7 @@ const handleCourseClick = (course: any) => {
   courseDialog.title = '编辑课程'
   courseDialog.editingCourseId = course.id
   courseDialog.visible = true
-  
+
   Object.assign(courseForm, {
     scheduleDate: course.scheduleDate,
     startTime: formatTime(course.startTime),
@@ -646,7 +519,7 @@ const handleCourseClick = (course: any) => {
     scheduleType: course.scheduleType,
     notes: course.notes || '',
     location: course.location || '',
-    remark: ''
+    remark: '',
   })
 }
 
@@ -655,7 +528,7 @@ const handleAddCourse = () => {
   courseDialog.title = '添加课程'
   courseDialog.editingCourseId = null
   courseDialog.visible = true
-  
+
   // 重置表单
   Object.assign(courseForm, {
     scheduleDate: formatDate(new Date(), 'YYYY-MM-DD'),
@@ -664,7 +537,7 @@ const handleAddCourse = () => {
     scheduleType: 0,
     notes: '',
     location: '',
-    remark: ''
+    remark: '',
   })
 }
 
@@ -673,7 +546,7 @@ const handleAddCourseForDay = (day: any) => {
   courseDialog.title = '添加课程'
   courseDialog.editingCourseId = null
   courseDialog.visible = true
-  
+
   Object.assign(courseForm, {
     scheduleDate: day.date,
     startTime: '09:00',
@@ -681,7 +554,7 @@ const handleAddCourseForDay = (day: any) => {
     scheduleType: 0,
     notes: '',
     location: '',
-    remark: ''
+    remark: '',
   })
 }
 
@@ -690,31 +563,34 @@ const handleAddCourseForTime = (day: any, time: string) => {
   courseDialog.title = '添加课程'
   courseDialog.editingCourseId = null
   courseDialog.visible = true
-  
+
   const [hours, minutes] = time.split(':')
   const endTime = new Date()
   endTime.setHours(parseInt(hours) + 1)
   endTime.setMinutes(parseInt(minutes))
-  
+
   Object.assign(courseForm, {
     scheduleDate: day.date,
     startTime: time,
-    endTime: `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`,
+    endTime: `${endTime.getHours().toString().padStart(2, '0')}:${endTime
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`,
     scheduleType: 0,
     notes: '',
     location: '',
-    remark: ''
+    remark: '',
   })
 }
 
 const handleSaveCourse = async () => {
   if (!courseFormRef.value) return
-  
+
   try {
     await courseFormRef.value.validate()
-    
+
     courseDialog.loading = true
-    
+
     const courseData: CoachScheduleDTO = {
       scheduleDate: courseForm.scheduleDate,
       startTime: courseForm.startTime + ':00',
@@ -722,9 +598,9 @@ const handleSaveCourse = async () => {
       scheduleType: courseForm.scheduleType,
       notes: courseForm.notes,
       location: courseForm.location,
-      remark: courseForm.remark
+      remark: courseForm.remark,
     }
-    
+
     if (courseDialog.mode === 'add') {
       await coachStore.addCoachSchedule(coachId.value, courseData)
       ElMessage.success('添加课程成功')
@@ -732,7 +608,7 @@ const handleSaveCourse = async () => {
       await coachStore.updateCoachSchedule(courseDialog.editingCourseId, courseData)
       ElMessage.success('更新课程成功')
     }
-    
+
     courseDialog.visible = false
     loadData()
   } catch (error) {
@@ -745,14 +621,14 @@ const handleSaveCourse = async () => {
 
 const handleDeleteCourse = async () => {
   if (!courseDialog.editingCourseId) return
-  
+
   try {
     await ElMessageBox.confirm('确定要删除这个课程吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     courseDialog.loading = true
     await coachStore.deleteCoachSchedule(courseDialog.editingCourseId)
     ElMessage.success('删除课程成功')
