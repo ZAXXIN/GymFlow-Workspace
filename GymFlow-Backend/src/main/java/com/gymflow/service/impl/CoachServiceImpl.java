@@ -9,6 +9,7 @@ import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.CoachService;
 import com.gymflow.utils.BCryptUtil;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.CoachListVO;
 import com.gymflow.vo.PageResultVO;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,9 @@ public class CoachServiceImpl implements CoachService {
     private final CoachScheduleMapper coachScheduleMapper;
     private final CourseMapper courseMapper;
     private final CourseBookingMapper courseBookingMapper;
+
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
 
     private final BCryptUtil bCryptUtil;
 
@@ -348,6 +352,12 @@ public class CoachServiceImpl implements CoachService {
             throw new BusinessException("教练不存在");
         }
 
+        // ========== 新增：验证排班时间是否在营业时间内 ==========
+        configValidator.validateBusinessHours(
+                scheduleDTO.getStartTime(),
+                scheduleDTO.getEndTime()
+        );
+
         // 2. 检查排班时间冲突
         checkScheduleConflict(coachId, scheduleDTO);
 
@@ -380,6 +390,12 @@ public class CoachServiceImpl implements CoachService {
         if (schedule == null) {
             throw new BusinessException("排班不存在");
         }
+
+        // ========== 新增：验证排班时间是否在营业时间内 ==========
+        configValidator.validateBusinessHours(
+                scheduleDTO.getStartTime(),
+                scheduleDTO.getEndTime()
+        );
 
         // 2. 检查排班时间冲突（排除自身）
         checkScheduleConflict(schedule.getCoachId(), scheduleDTO, scheduleId);
@@ -450,6 +466,13 @@ public class CoachServiceImpl implements CoachService {
                 Long enrollment = courseBookingMapper.selectCount(bookingQuery);
 
                 courseDTO.setCurrentEnrollment(enrollment.intValue());
+
+                // ========== 新增：使用系统配置验证课程容量 ==========
+                configValidator.validateClassCapacity(
+                        enrollment.intValue(),
+                        course.getMaxCapacity()
+                );
+
                 courseDTO.setEnrollmentRate(course.getMaxCapacity() > 0 ?
                         (double) enrollment / course.getMaxCapacity() * 100 : 0);
 
@@ -461,6 +484,8 @@ public class CoachServiceImpl implements CoachService {
 
         return courseList;
     }
+
+    // ... 辅助方法保持不变 ...
 
     /**
      * 将Coach实体转换为CoachListVO

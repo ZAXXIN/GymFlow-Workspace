@@ -1,4 +1,3 @@
-// ProductServiceImpl.java
 package com.gymflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -7,15 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gymflow.dto.product.*;
-import com.gymflow.entity.Product;
-import com.gymflow.entity.ProductCategory;
-import com.gymflow.entity.ProductDetail;
+import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
-import com.gymflow.mapper.OrderItemMapper;
-import com.gymflow.mapper.ProductDetailMapper;
-import com.gymflow.mapper.ProductMapper;
-import com.gymflow.mapper.ProductCategoryMapper;
+import com.gymflow.mapper.*;
 import com.gymflow.service.ProductService;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.PageResultVO;
 import com.gymflow.vo.ProductListVO;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +26,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
@@ -42,8 +37,13 @@ public class ProductServiceImpl implements ProductService {
     private final OrderItemMapper orderItemMapper;
     private final ObjectMapper objectMapper;
 
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
+
     @Override
     public PageResultVO<ProductListVO> getProductList(ProductQueryDTO queryDTO) {
+        log.info("查询商品列表，查询条件：{}", queryDTO);
+
         // 创建分页对象
         Page<Product> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
 
@@ -92,6 +92,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductFullDTO getProductDetail(Long productId) {
+        log.info("获取商品详情，商品ID：{}", productId);
+
         // 获取商品信息
         Product product = productMapper.selectById(productId);
         if (product == null) {
@@ -130,6 +132,12 @@ public class ProductServiceImpl implements ProductService {
         // 验证价格
         if (productDTO.getCurrentPrice().compareTo(productDTO.getOriginalPrice()) > 0) {
             throw new BusinessException("现价不能高于原价");
+        }
+
+        // ========== 新增：验证课程类商品的容量是否符合系统配置 ==========
+        if (productDTO.getProductType() == 2 && productDTO.getDetailDTO() != null) { // 团课
+            configValidator.validateClassCapacity(0,
+                    productDTO.getDetailDTO().getMaxPurchaseQuantity());
         }
 
         // 创建商品记录
@@ -202,6 +210,12 @@ public class ProductServiceImpl implements ProductService {
         // 验证价格
         if (productDTO.getCurrentPrice().compareTo(productDTO.getOriginalPrice()) > 0) {
             throw new BusinessException("现价不能高于原价");
+        }
+
+        // ========== 新增：验证课程类商品的容量是否符合系统配置 ==========
+        if (productDTO.getProductType() == 2 && productDTO.getDetailDTO() != null) { // 团课
+            configValidator.validateClassCapacity(0,
+                    productDTO.getDetailDTO().getMaxPurchaseQuantity());
         }
 
         // 检查商品是否已被购买（如果已被购买，某些字段不允许修改）
@@ -724,8 +738,8 @@ public class ProductServiceImpl implements ProductService {
     private void checkProductCanBeModified(Long productId) {
         // 查询是否有订单包含此商品
         Long orderCount = orderItemMapper.selectCount(
-                new LambdaQueryWrapper<com.gymflow.entity.OrderItem>()
-                        .eq(com.gymflow.entity.OrderItem::getProductId, productId)
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(OrderItem::getProductId, productId)
         );
 
         if (orderCount > 0) {
@@ -737,8 +751,8 @@ public class ProductServiceImpl implements ProductService {
     private void checkProductHasBeenPurchased(Long productId) {
         // 查询是否有订单包含此商品
         Long orderCount = orderItemMapper.selectCount(
-                new LambdaQueryWrapper<com.gymflow.entity.OrderItem>()
-                        .eq(com.gymflow.entity.OrderItem::getProductId, productId)
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(OrderItem::getProductId, productId)
         );
 
         if (orderCount > 0) {
@@ -749,7 +763,6 @@ public class ProductServiceImpl implements ProductService {
     private void checkProductHasActiveOrders(Long productId) {
         // 查询是否有未完成的订单包含此商品
         // 这里需要根据业务需求实现具体逻辑
-        // 暂时只记录日志，不阻止下架
         log.info("商品ID {} 将被下架，建议检查是否有未完成的订单", productId);
     }
 

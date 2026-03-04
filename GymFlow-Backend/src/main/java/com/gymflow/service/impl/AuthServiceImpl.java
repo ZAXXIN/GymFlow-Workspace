@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import com.gymflow.dto.login.LoginDTO;
 import com.gymflow.dto.login.LoginResultDTO;
-import com.gymflow.entity.WebUser;
+import com.gymflow.entity.settings.WebUser;
 import com.gymflow.mapper.UserMapper;
 import com.gymflow.service.AuthService;
 import com.gymflow.utils.JwtTokenUtil;

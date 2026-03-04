@@ -9,6 +9,7 @@ import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.CourseService;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.CourseListVO;
 import com.gymflow.vo.CourseScheduleVO;
 import com.gymflow.vo.PageResultVO;
@@ -42,8 +43,12 @@ public class CourseServiceImpl implements CourseService {
     private final CoachScheduleMapper coachScheduleMapper;
     private final CourseCoachMapper courseCoachMapper;
 
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
+
     @Override
     public PageResultVO<CourseListVO> getCourseList(CourseQueryDTO queryDTO) {
+        // ... 原有代码保持不变
         // 创建分页对象
         Page<Course> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
 
@@ -103,6 +108,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public CourseFullDTO getCourseDetail(Long courseId) {
+        // ... 原有代码保持不变
         // 获取课程信息
         Course course = courseMapper.selectById(courseId);
         if (course == null) {
@@ -331,6 +337,12 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("教练不存在");
         }
 
+        // ========== 新增：验证营业时间 ==========
+        configValidator.validateBusinessHours(
+                scheduleDTO.getStartTime(),
+                scheduleDTO.getEndTime()
+        );
+
         // 检查教练时间冲突
         checkCoachScheduleConflict(scheduleDTO);
 
@@ -346,6 +358,11 @@ public class CourseServiceImpl implements CourseService {
         scheduledCourse.setStartTime(scheduleDTO.getStartTime());
         scheduledCourse.setEndTime(scheduleDTO.getEndTime());
         scheduledCourse.setCurrentEnrollment(0);
+
+        // ========== 新增：设置最大容量（使用系统配置） ==========
+        scheduledCourse.setMaxCapacity(
+                configValidator.getMaxClassCapacity()
+        );
 
         // 设置签到码
         scheduledCourse.setSignCode(generateSignCode());
@@ -451,6 +468,10 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("教练不存在");
         }
 
+        // ========== 新增：验证营业时间 ==========
+        LocalTime endTime = startTime.plusHours(1); // 默认1小时
+        configValidator.validateBusinessHours(startTime, endTime);
+
         // 检查会员是否有可用的私教课程
         checkMemberPrivateCourseSessions(memberId);
 
@@ -464,7 +485,7 @@ public class CourseServiceImpl implements CourseService {
         privateCourse.setCurrentEnrollment(1);
         privateCourse.setCourseDate(courseDate);
         privateCourse.setStartTime(startTime);
-        privateCourse.setEndTime(startTime.plusHours(1)); // 默认1小时
+        privateCourse.setEndTime(endTime);
         privateCourse.setDuration(60);
         privateCourse.setPrice(coach.getHourlyRate());
         privateCourse.setLocation("私教区");
@@ -495,7 +516,7 @@ public class CourseServiceImpl implements CourseService {
         scheduleDTO.setCoachId(coachId);
         scheduleDTO.setCourseDate(courseDate);
         scheduleDTO.setStartTime(startTime);
-        scheduleDTO.setEndTime(startTime.plusHours(1));
+        scheduleDTO.setEndTime(endTime);
         scheduleDTO.setMaxParticipants(1);
         scheduleDTO.setNotes("会员预约私教课");
 
@@ -531,6 +552,12 @@ public class CourseServiceImpl implements CourseService {
 
         // 检查会员是否有可用的团课程
         checkMemberGroupCourseSessions(memberId);
+
+        // ========== 新增：验证课程容量是否符合系统配置 ==========
+        configValidator.validateClassCapacity(
+                course.getCurrentEnrollment() + 1,
+                course.getMaxCapacity()
+        );
 
         // 检查课程是否已满
         if (course.getCurrentEnrollment() >= course.getMaxCapacity()) {
@@ -614,6 +641,19 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("预约已取消");
         }
 
+        // 获取课程信息
+        Course course = courseMapper.selectById(booking.getCourseId());
+        if (course == null) {
+            throw new BusinessException("课程不存在");
+        }
+
+        // ========== 新增：验证是否可以取消（根据系统配置的取消时间限制） ==========
+        LocalDateTime courseDateTime = LocalDateTime.of(
+                course.getCourseDate(),
+                course.getStartTime()
+        );
+        configValidator.validateCourseCancellation(courseDateTime);
+
         // 更新预约状态为已取消
         booking.setBookingStatus(3);
         booking.setCancellationReason(reason);
@@ -625,7 +665,6 @@ public class CourseServiceImpl implements CourseService {
         }
 
         // 如果是团课，减少当前报名人数
-        Course course = courseMapper.selectById(booking.getCourseId());
         if (course != null && course.getCourseType() == 1) {
             course.setCurrentEnrollment(Math.max(0, course.getCurrentEnrollment() - 1));
             courseMapper.updateById(course);

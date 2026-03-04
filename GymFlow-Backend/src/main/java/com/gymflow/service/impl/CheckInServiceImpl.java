@@ -14,6 +14,7 @@ import com.gymflow.entity.Coach;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.CheckInService;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.CheckInListVO;
 import com.gymflow.vo.CheckInDetailVO;
 import com.gymflow.vo.PageResultVO;
@@ -26,12 +27,13 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class CheckInServiceImpl implements CheckInService {
 
@@ -40,6 +42,9 @@ public class CheckInServiceImpl implements CheckInService {
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
     private final CoachMapper coachMapper;
+
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -72,7 +77,23 @@ public class CheckInServiceImpl implements CheckInService {
                 queryWrapper.in(CheckinRecord::getMemberId, memberIds);
             } else {
                 // 如果没有匹配的会员，返回空结果
-                queryWrapper.eq(CheckinRecord::getMemberId, -1);
+                queryWrapper.eq(CheckinRecord::getMemberId, -1L);
+            }
+        }
+
+        // 会员手机号查询
+        if (StringUtils.hasText(queryDTO.getMemberPhone())) {
+            LambdaQueryWrapper<Member> memberQuery = new LambdaQueryWrapper<>();
+            memberQuery.like(Member::getPhone, queryDTO.getMemberPhone());
+            List<Member> members = memberMapper.selectList(memberQuery);
+
+            if (!CollectionUtils.isEmpty(members)) {
+                List<Long> memberIds = members.stream()
+                        .map(Member::getId)
+                        .collect(Collectors.toList());
+                queryWrapper.in(CheckinRecord::getMemberId, memberIds);
+            } else {
+                queryWrapper.eq(CheckinRecord::getMemberId, -1L);
             }
         }
 
@@ -124,9 +145,7 @@ public class CheckInServiceImpl implements CheckInService {
         }
 
         // 转换为详情VO
-        CheckInDetailVO detailVO = convertToCheckInDetailVO(checkinRecord);
-
-        return detailVO;
+        return convertToCheckInDetailVO(checkinRecord);
     }
 
     @Override
@@ -144,6 +163,10 @@ public class CheckInServiceImpl implements CheckInService {
         if (checkinMethod != 0 && checkinMethod != 1) {
             throw new BusinessException("签到方式值只能是0（教练签到）或1（前台签到）");
         }
+
+        // ========== 新增：验证营业时间（只能在营业时间内签到） ==========
+        LocalTime now = LocalTime.now();
+        configValidator.validateBusinessHours(now, now.plusMinutes(1));
 
         // 检查今日是否已签到（自由训练签到）
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
@@ -198,6 +221,10 @@ public class CheckInServiceImpl implements CheckInService {
         if (checkinMethod != 0 && checkinMethod != 1) {
             throw new BusinessException("签到方式值只能是0（教练签到）或1（前台签到）");
         }
+
+        // ========== 新增：验证营业时间（只能在营业时间内签到） ==========
+        LocalTime now = LocalTime.now();
+        configValidator.validateBusinessHours(now, now.plusMinutes(1));
 
         // 检查是否已签到
         LambdaQueryWrapper<CheckinRecord> queryWrapper = new LambdaQueryWrapper<>();
@@ -381,7 +408,7 @@ public class CheckInServiceImpl implements CheckInService {
         Long frontDeskCheckIns = checkInRecordMapper.selectCount(frontDeskQuery);
         statsDTO.setFrontDeskCheckIns(frontDeskCheckIns.intValue());
 
-        // 查询今日签到会员数 - 修复后的代码
+        // 查询今日签到会员数
         LambdaQueryWrapper<CheckinRecord> memberQuery = new LambdaQueryWrapper<>();
         memberQuery.between(CheckinRecord::getCheckinTime, startOfDay, endOfDay);
         memberQuery.select(CheckinRecord::getMemberId);
@@ -393,6 +420,7 @@ public class CheckInServiceImpl implements CheckInService {
                 .collect(Collectors.toSet());
 
         statsDTO.setUniqueMembers(distinctMemberIds.size());
+        statsDTO.setStatDate(today.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
         // 计算签到率（假设今日活跃会员数为10，实际应该从会员表查询）
         int activeMembers = 10; // 这里应该从业务逻辑获取
@@ -486,6 +514,7 @@ public class CheckInServiceImpl implements CheckInService {
         reportDTO.setFrontDeskCheckIns(frontDeskCheckIns);
         reportDTO.setUniqueMembers(uniqueMembers);
         reportDTO.setAvgCheckInsPerMember(Math.round(avgCheckInsPerMember * 100.0) / 100.0);
+        reportDTO.setReportTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // 生成每日签到趋势数据
         Map<String, Integer> dailyTrend = generateDailyTrend(startTime, endTime, checkInRecords);
@@ -563,7 +592,6 @@ public class CheckInServiceImpl implements CheckInService {
         vo.setMemberId(checkinRecord.getMemberId());
         vo.setCheckinTime(checkinRecord.getCheckinTime());
         vo.setCheckinMethod(checkinRecord.getCheckinMethod());
-        vo.setCheckinMethodDesc(getCheckinMethodDesc(checkinRecord.getCheckinMethod()));
         vo.setNotes(checkinRecord.getNotes());
         vo.setCreateTime(checkinRecord.getCreateTime());
 
@@ -574,7 +602,6 @@ public class CheckInServiceImpl implements CheckInService {
             vo.setMemberPhone(member.getPhone());
             vo.setMemberNo(member.getMemberNo());
             vo.setGender(member.getGender());
-            vo.setGenderDesc(getGenderDesc(member.getGender()));
 
             // 获取专属教练信息
             if (member.getPersonalCoachId() != null) {
@@ -587,20 +614,19 @@ public class CheckInServiceImpl implements CheckInService {
 
         // 设置课程预约信息
         if (checkinRecord.getCourseBookingId() != null) {
+            vo.setCourseCheckIn(true);
             vo.setCourseBookingId(checkinRecord.getCourseBookingId());
 
             CourseBooking booking = courseBookingMapper.selectById(checkinRecord.getCourseBookingId());
             if (booking != null) {
                 vo.setBookingTime(booking.getBookingTime());
                 vo.setBookingStatus(booking.getBookingStatus());
-                vo.setBookingStatusDesc(getBookingStatusDesc(booking.getBookingStatus()));
 
                 Course course = courseMapper.selectById(booking.getCourseId());
                 if (course != null) {
                     vo.setCourseId(course.getId());
                     vo.setCourseName(course.getCourseName());
                     vo.setCourseType(course.getCourseType());
-                    vo.setCourseTypeDesc(getCourseTypeDesc(course.getCourseType()));
                     vo.setCourseDate(course.getCourseDate());
                     vo.setStartTime(course.getStartTime());
                     vo.setEndTime(course.getEndTime());
@@ -613,6 +639,8 @@ public class CheckInServiceImpl implements CheckInService {
                     }
                 }
             }
+        } else {
+            vo.setCourseCheckIn(false);
         }
 
         return vo;
@@ -659,7 +687,7 @@ public class CheckInServiceImpl implements CheckInService {
      */
     private Map<String, Integer> generateDailyTrend(LocalDateTime startTime, LocalDateTime endTime,
                                                     List<CheckinRecord> checkInRecords) {
-        Map<String, Integer> dailyTrend = new HashMap<>();
+        Map<String, Integer> dailyTrend = new LinkedHashMap<>();
 
         // 按日期分组统计
         Map<String, Integer> dateCountMap = checkInRecords.stream()
@@ -742,32 +770,6 @@ public class CheckInServiceImpl implements CheckInService {
         switch (type) {
             case 0: return "私教课";
             case 1: return "团课";
-            default: return "未知";
-        }
-    }
-
-    /**
-     * 获取性别描述
-     */
-    private String getGenderDesc(Integer gender) {
-        if (gender == null) return "未知";
-        switch (gender) {
-            case 0: return "女";
-            case 1: return "男";
-            default: return "未知";
-        }
-    }
-
-    /**
-     * 获取预约状态描述
-     */
-    private String getBookingStatusDesc(Integer status) {
-        if (status == null) return "未知";
-        switch (status) {
-            case 0: return "待上课";
-            case 1: return "已签到";
-            case 2: return "已完成";
-            case 3: return "已取消";
             default: return "未知";
         }
     }

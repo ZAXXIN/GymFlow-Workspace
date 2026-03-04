@@ -41,3 +41,10 @@ logging:
     org.springdoc: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+
+# 文件上传配置
+file:
+  upload:
+    path: ./uploads  # 上传文件存储路径（相对路径或绝对路径）
+  access:
+    url: http://localhost:8080/api/files  # 文件访问URL前缀

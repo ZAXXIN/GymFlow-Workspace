@@ -1,3 +1,4 @@
+// service/impl/OrderServiceImpl.java
 package com.gymflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -9,6 +10,7 @@ import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.OrderService;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.OrderListVO;
 import com.gymflow.vo.PageResultVO;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +29,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -37,7 +39,9 @@ public class OrderServiceImpl implements OrderService {
     private final MemberMapper memberMapper;
     private final ProductMapper productMapper;
     private final PaymentRecordMapper paymentRecordMapper;
-    private final ProductDetailMapper productDetailMapper;
+
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
 
     private static final DateTimeFormatter ORDER_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -84,6 +88,11 @@ public class OrderServiceImpl implements OrderService {
             queryWrapper.le(Order::getCreateTime, queryDTO.getEndDate().atTime(23, 59, 59));
         }
 
+        // 是否包含已删除的订单
+        if (!queryDTO.getIncludeDeleted()) {
+            queryWrapper.ne(Order::getOrderStatus, "DELETED");
+        }
+
         // 按创建时间倒序排列
         queryWrapper.orderByDesc(Order::getCreateTime);
 
@@ -112,6 +121,11 @@ public class OrderServiceImpl implements OrderService {
         // 构建完整DTO
         OrderFullDTO fullDTO = new OrderFullDTO();
         BeanUtils.copyProperties(order, fullDTO);
+
+        // 设置类型描述
+        fullDTO.setOrderTypeDesc(getOrderTypeDesc(order.getOrderType()));
+        fullDTO.setPaymentStatusDesc(getPaymentStatusDesc(order.getPaymentStatus()));
+        fullDTO.setOrderStatusDesc(getOrderStatusDesc(order.getOrderStatus()));
 
         // 获取会员信息
         Member member = memberMapper.selectById(order.getMemberId());
@@ -170,6 +184,19 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 验证实付金额
+        if (orderDTO.getActualAmount() != null &&
+                orderDTO.getActualAmount().compareTo(totalAmount) > 0) {
+            throw new BusinessException("实付金额不能大于总金额");
+        }
+
+        // 验证课程类商品的容量是否符合系统配置
+        for (OrderItemDTO item : orderDTO.getOrderItems()) {
+            if (item.getProductType() == 2) { // 团课
+                configValidator.validateClassCapacity(0, item.getTotalSessions());
+            }
+        }
+
         // 生成订单编号
         String orderNo = generateOrderNo();
 
@@ -179,7 +206,8 @@ public class OrderServiceImpl implements OrderService {
         order.setMemberId(orderDTO.getMemberId());
         order.setOrderType(orderDTO.getOrderType());
         order.setTotalAmount(totalAmount);
-        order.setActualAmount(totalAmount); // 默认实际支付金额等于总金额
+        order.setActualAmount(orderDTO.getActualAmount() != null ?
+                orderDTO.getActualAmount() : totalAmount);
         order.setPaymentMethod(orderDTO.getPaymentMethod());
         order.setPaymentStatus(0); // 待支付
         order.setOrderStatus("PENDING"); // 待处理
@@ -202,7 +230,7 @@ public class OrderServiceImpl implements OrderService {
             setOrderItemsValidity(orderId, orderDTO.getOrderType());
         }
 
-        // 发送订单创建通知（可以异步处理）
+        // 发送订单创建通知
         sendOrderCreatedNotification(orderId, member);
 
         return orderId;
@@ -244,9 +272,23 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 验证实付金额
+        if (orderDTO.getActualAmount() != null &&
+                orderDTO.getActualAmount().compareTo(totalAmount) > 0) {
+            throw new BusinessException("实付金额不能大于总金额");
+        }
+
+        // 验证课程类商品的容量是否符合系统配置
+        for (OrderItemDTO item : orderDTO.getOrderItems()) {
+            if (item.getProductType() == 2) { // 团课
+                configValidator.validateClassCapacity(0, item.getTotalSessions());
+            }
+        }
+
         // 更新订单信息
         order.setTotalAmount(totalAmount);
-        order.setActualAmount(totalAmount);
+        order.setActualAmount(orderDTO.getActualAmount() != null ?
+                orderDTO.getActualAmount() : totalAmount);
         order.setRemark(orderDTO.getRemark());
 
         // 更新订单
@@ -576,12 +618,12 @@ public class OrderServiceImpl implements OrderService {
         vo.setId(order.getId());
         vo.setOrderNo(order.getOrderNo());
         vo.setMemberId(order.getMemberId());
-//        vo.setOrderType(order.getOrderType());
-//        vo.setTotalAmount(order.getTotalAmount());
-//        vo.setActualAmount(order.getActualAmount());
-//        vo.setPaymentStatus(order.getPaymentStatus());
-//        vo.setOrderStatus(order.getOrderStatus());
-//        vo.setCreateTime(order.getCreateTime());
+        vo.setOrderType(order.getOrderType());
+        vo.setTotalAmount(order.getTotalAmount());
+        vo.setActualAmount(order.getActualAmount());
+        vo.setPaymentStatus(order.getPaymentStatus());
+        vo.setOrderStatus(order.getOrderStatus());
+        vo.setCreateTime(order.getCreateTime());
 
         // 获取会员信息
         Member member = memberMapper.selectById(order.getMemberId());
@@ -590,10 +632,9 @@ public class OrderServiceImpl implements OrderService {
             vo.setMemberPhone(member.getPhone());
         }
 
-        // 设置支付状态描述
+        // 设置类型描述
+        vo.setOrderTypeDesc(getOrderTypeDesc(order.getOrderType()));
         vo.setPaymentStatusDesc(getPaymentStatusDesc(order.getPaymentStatus()));
-
-        // 设置订单状态描述
         vo.setOrderStatusDesc(getOrderStatusDesc(order.getOrderStatus()));
 
         // 获取订单项数量
@@ -660,7 +701,6 @@ public class OrderServiceImpl implements OrderService {
      */
     private void setDefaultSessions(OrderItem orderItem, Integer productType) {
         // 这里根据商品类型设置默认的课时数
-        // 实际业务中可以从商品详情或配置中获取
         if (productType == 1) { // 私教课
             orderItem.setTotalSessions(10);
             orderItem.setRemainingSessions(10);
@@ -685,7 +725,11 @@ public class OrderServiceImpl implements OrderService {
                 orderItem.setValidityEndDate(LocalDate.now().plusDays(30)); // 默认30天
             } else if (orderType == 1 || orderType == 2) { // 私教课、团课
                 orderItem.setValidityStartDate(LocalDate.now());
-                orderItem.setValidityEndDate(LocalDate.now().plusMonths(6)); // 默认6个月有效期
+
+                // 使用 Validator 获取续约天数
+                int renewalDays = configValidator.getCourseRenewalDays();
+                int validityDays = renewalDays * 30; // 续约天数转换为月
+                orderItem.setValidityEndDate(LocalDate.now().plusDays(validityDays));
             }
 
             orderItemMapper.updateById(orderItem);
@@ -728,8 +772,7 @@ public class OrderServiceImpl implements OrderService {
      */
     private void validateStatusTransition(String currentStatus, String newStatus) {
         // 这里实现状态流转验证逻辑
-        // 例如：只能从PENDING到PROCESSING，不能直接从PENDING到COMPLETED
-        // 实际业务中需要根据具体业务规则实现
+        // 可以根据业务需求完善
     }
 
     /**
@@ -753,8 +796,6 @@ public class OrderServiceImpl implements OrderService {
      * 处理订单退款
      */
     private void processOrderRefund(Long orderId, BigDecimal amount, String reason) {
-        // 这里实现退款逻辑
-        // 可以调用支付接口进行退款，或记录退款申请
         log.info("处理订单退款，订单ID：{}，金额：{}，原因：{}", orderId, amount, reason);
     }
 
@@ -840,14 +881,13 @@ public class OrderServiceImpl implements OrderService {
      */
     private void activateMembershipCard(OrderItem orderItem) {
         // 这里实现会籍卡激活逻辑
-        // 更新会员的有效期等
+        log.info("激活会籍卡，订单项ID：{}", orderItem.getId());
     }
 
     /**
      * 记录订单状态变更日志
      */
     private void logOrderStatusChange(Long orderId, String oldStatus, String newStatus, String remark) {
-        // 这里记录状态变更日志
         log.info("订单状态变更，订单ID：{}，从 {} 变更为 {}，备注：{}",
                 orderId, oldStatus, newStatus, remark);
     }
@@ -856,8 +896,6 @@ public class OrderServiceImpl implements OrderService {
      * 发送订单创建通知
      */
     private void sendOrderCreatedNotification(Long orderId, Member member) {
-        // 这里实现发送通知的逻辑
-        // 可以发送短信、微信通知等
         log.info("发送订单创建通知，订单ID：{}，会员：{}", orderId, member.getRealName());
     }
 
@@ -872,7 +910,6 @@ public class OrderServiceImpl implements OrderService {
         try {
             // 解析JSON数组
             if (images.startsWith("[")) {
-                // 简单实现：取第一个URL
                 String[] urls = images.replace("[", "").replace("]", "").replace("\"", "").split(",");
                 if (urls.length > 0) {
                     return urls[0].trim();
@@ -883,6 +920,20 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return "";
+    }
+
+    /**
+     * 获取订单类型描述
+     */
+    private String getOrderTypeDesc(Integer orderType) {
+        if (orderType == null) return "未知";
+        switch (orderType) {
+            case 0: return "会籍卡";
+            case 1: return "私教课";
+            case 2: return "团课";
+            case 3: return "相关产品";
+            default: return "未知";
+        }
     }
 
     /**
@@ -908,8 +959,8 @@ public class OrderServiceImpl implements OrderService {
             case "COMPLETED": return "已完成";
             case "CANCELLED": return "已取消";
             case "REFUNDED": return "已退款";
-//            case "DELETED": return "已删除";
-            default: return "未知";
+            case "DELETED": return "已删除";
+            default: return status;
         }
     }
 }

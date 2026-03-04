@@ -1,23 +1,25 @@
-package com.gymflow.entity;
+package com.gymflow.entity.settings;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("role")
-public class Role {
+@TableName("web_user")
+public class WebUser {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @TableField("role_name")
-    private String roleName;
+    private String username;
 
-    private String permissions;
+    private String password;
 
-    @TableField("data_scope")
-    private String dataScope;
+    private String realName;
+
+    private Integer role; // 0-老板，1-前台
+
+    private Integer status; // 0-禁用，1-正常
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

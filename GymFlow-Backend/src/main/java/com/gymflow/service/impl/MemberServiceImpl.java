@@ -9,6 +9,7 @@ import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.MemberService;
 import com.gymflow.utils.BCryptUtil;
+import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.MemberListVO;
 import com.gymflow.vo.PageResultVO;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
     private final MemberMapper memberMapper;
-    private final UserMapper userMapper;
     private final CoachMapper coachMapper;
     private final HealthRecordMapper healthRecordMapper;
     private final CheckInRecordMapper checkInRecordMapper;
@@ -43,15 +43,20 @@ public class MemberServiceImpl implements MemberService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
-    private final ProductDetailMapper productDetailMapper;
 
     private final BCryptUtil bCryptUtil;
 
+    // 注入系统配置验证器
+    private final SystemConfigValidator configValidator;
+
     // 日期格式化器
     private static final DateTimeFormatter MEMBER_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public PageResultVO<MemberListVO> getMemberList(MemberQueryDTO queryDTO) {
+        log.info("查询会员列表，查询条件：{}", queryDTO);
+
         // 创建分页对象
         Page<Member> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
 
@@ -73,14 +78,6 @@ public class MemberServiceImpl implements MemberService {
             queryWrapper.like(Member::getRealName, queryDTO.getRealName());
         }
 
-        // 注册时间范围查询
-//        if (queryDTO.getStartDate() != null) {
-//            queryWrapper.ge(Member::getCreateTime, queryDTO.getStartDate().atStartOfDay());
-//        }
-//        if (queryDTO.getEndDate() != null) {
-//            queryWrapper.le(Member::getCreateTime, queryDTO.getEndDate().atTime(23, 59, 59));
-//        }
-
         // 按创建时间倒序排列
         queryWrapper.orderByDesc(Member::getCreateTime);
 
@@ -99,6 +96,8 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public MemberFullDTO getMemberDetail(Long memberId) {
+        log.info("获取会员详情，会员ID：{}", memberId);
+
         // 获取会员基本信息
         Member member = memberMapper.selectById(memberId);
         if (member == null) {
@@ -109,25 +108,16 @@ public class MemberServiceImpl implements MemberService {
         MemberFullDTO fullDTO = new MemberFullDTO();
 
         // 设置会员基本信息
-        fullDTO.setId(member.getId());
-        fullDTO.setMemberNo(member.getMemberNo());
-        fullDTO.setPhone(member.getPhone());
-        fullDTO.setRealName(member.getRealName());
-        fullDTO.setGender(member.getGender());
-        fullDTO.setIdCard(member.getIdCard());
-        fullDTO.setHeight(member.getHeight());
-        fullDTO.setWeight(member.getWeight());
-        fullDTO.setMembershipStartDate(member.getMembershipStartDate());
-        fullDTO.setMembershipEndDate(member.getMembershipEndDate());
-        fullDTO.setPersonalCoachName(getCoachName(member.getPersonalCoachId()));
-        fullDTO.setTotalCheckins(member.getTotalCheckins());
-        fullDTO.setTotalCourseHours(member.getTotalCourseHours());
-        fullDTO.setTotalSpent(member.getTotalSpent());
-        fullDTO.setAddress(member.getAddress());
-        fullDTO.setCreateTime(member.getCreateTime());
+        BeanUtils.copyProperties(member, fullDTO);
+        fullDTO.setUsername(member.getPhone()); // 手机号作为用户名
 
-        // 设置用户名（手机号作为用户名）
-        fullDTO.setUsername(member.getPhone());
+        // 获取专属教练姓名
+        if (member.getPersonalCoachId() != null) {
+            Coach coach = coachMapper.selectById(member.getPersonalCoachId());
+            if (coach != null) {
+                fullDTO.setPersonalCoachName(coach.getRealName());
+            }
+        }
 
         // 获取健康档案列表
         fullDTO.setHealthRecords(getHealthRecords(memberId));
@@ -350,12 +340,26 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("会员不存在");
         }
 
+        // ========== 新增：验证是否可以续约 ==========
+        if (member.getMembershipEndDate() != null) {
+            configValidator.validateCourseRenewal(member.getMembershipEndDate());
+        }
+
         // 2. 创建续费订单
         createRenewalOrder(memberId, cardDTO);
 
         // 3. 更新会员有效期
         if (cardDTO.getEndDate() != null) {
-            member.setMembershipEndDate(cardDTO.getEndDate());
+            // 如果是续费，在原有效期基础上增加
+            if (member.getMembershipEndDate() != null &&
+                    member.getMembershipEndDate().isAfter(LocalDate.now())) {
+                // 当前会员卡还有效，在原有效期基础上增加天数
+                long daysToAdd = Period.between(LocalDate.now(), cardDTO.getEndDate()).getDays();
+                member.setMembershipEndDate(member.getMembershipEndDate().plusDays(daysToAdd));
+            } else {
+                // 当前会员卡已过期或没有，直接设置新有效期
+                member.setMembershipEndDate(cardDTO.getEndDate());
+            }
         }
 
         // 4. 更新统计信息
@@ -371,7 +375,8 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("续费会员卡失败");
         }
 
-        log.info("续费会员卡成功，会员ID：{}", memberId);
+        log.info("续费会员卡成功，会员ID：{}，新有效期至：{}",
+                memberId, member.getMembershipEndDate());
     }
 
     @Override
@@ -413,18 +418,8 @@ public class MemberServiceImpl implements MemberService {
 
         // 3. 创建健康记录
         HealthRecord healthRecord = new HealthRecord();
+        BeanUtils.copyProperties(healthRecordDTO, healthRecord);
         healthRecord.setMemberId(memberId);
-        healthRecord.setRecordDate(healthRecordDTO.getRecordDate());
-        healthRecord.setWeight(healthRecordDTO.getWeight());
-        healthRecord.setBodyFatPercentage(healthRecordDTO.getBodyFatPercentage());
-        healthRecord.setMuscleMass(healthRecordDTO.getMuscleMass());
-        healthRecord.setBmi(healthRecordDTO.getBmi());
-        healthRecord.setChestCircumference(healthRecordDTO.getChestCircumference());
-        healthRecord.setWaistCircumference(healthRecordDTO.getWaistCircumference());
-        healthRecord.setHipCircumference(healthRecordDTO.getHipCircumference());
-        healthRecord.setBloodPressure(healthRecordDTO.getBloodPressure());
-        healthRecord.setHeartRate(healthRecordDTO.getHeartRate());
-        healthRecord.setNotes(healthRecordDTO.getNotes());
         healthRecord.setRecordedBy("系统"); // 可根据实际情况设置记录人
 
         // 4. 保存健康记录
@@ -435,6 +430,8 @@ public class MemberServiceImpl implements MemberService {
 
         log.info("添加健康档案成功，会员ID：{}，记录ID：{}", memberId, healthRecord.getId());
     }
+
+    // ========== 私有辅助方法 ==========
 
     /**
      * 将Member实体转换为MemberListVO
@@ -462,23 +459,21 @@ public class MemberServiceImpl implements MemberService {
         MemberCardDTO currentCard = getCurrentMemberCard(member.getId());
         if (currentCard != null) {
             vo.setCardType(currentCard.getCardType());
-            vo.setCardTypeDesc(vo.getCardTypeDesc()); // 调用VO自己的方法
             vo.setCardStatus(currentCard.getStatus());
-            vo.setCardStatusDesc(vo.getCardStatusDesc()); // 调用VO自己的方法
             vo.setRemainingSessions(currentCard.getRemainingSessions());
 
             if (currentCard.getEndDate() != null) {
                 vo.setCardEndDate(currentCard.getEndDate().atStartOfDay());
             }
         } else {
-            // 设置默认值
-            vo.setCardType(2); // 默认月卡
-            vo.setCardTypeDesc(vo.getCardTypeDesc());
-            vo.setCardStatus("ACTIVE");
-            vo.setCardStatusDesc(vo.getCardStatusDesc());
-
+            // 如果没有有效会员卡，使用会员表的有效期
             if (member.getMembershipEndDate() != null) {
                 vo.setCardEndDate(member.getMembershipEndDate().atStartOfDay());
+                if (member.getMembershipEndDate().isBefore(LocalDate.now())) {
+                    vo.setCardStatus("EXPIRED");
+                } else {
+                    vo.setCardStatus("ACTIVE");
+                }
             }
         }
 
@@ -726,7 +721,7 @@ public class MemberServiceImpl implements MemberService {
     private String generateMemberNo() {
         String dateStr = LocalDate.now().format(MEMBER_NO_FORMATTER);
         String randomStr = String.format("%04d", (int)(Math.random() * 10000));
-        return "GYM" + dateStr + randomStr;
+        return "MF" + dateStr + randomStr;
     }
 
     /**
@@ -734,7 +729,6 @@ public class MemberServiceImpl implements MemberService {
      */
     private void activateMemberCard(Long memberId, MemberCardDTO cardDTO) {
         log.info("激活会员卡，会员ID：{}", memberId);
-
         // 这里可以创建订单、更新订单项等操作
         // 具体实现根据业务需求
     }
@@ -744,7 +738,6 @@ public class MemberServiceImpl implements MemberService {
      */
     private void updateMemberCard(Long memberId, MemberCardDTO cardDTO) {
         log.info("更新会员卡，会员ID：{}", memberId);
-
         // 这里可以更新订单项等操作
         // 具体实现根据业务需求
     }
@@ -755,7 +748,7 @@ public class MemberServiceImpl implements MemberService {
     private void checkUnfinishedOrders(Long memberId) {
         LambdaQueryWrapper<Order> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Order::getMemberId, memberId);
-        queryWrapper.in(Order::getPaymentStatus, 0); // 待支付
+        queryWrapper.eq(Order::getPaymentStatus, 0); // 待支付
         queryWrapper.in(Order::getOrderStatus, "PENDING", "PROCESSING");
 
         Long count = orderMapper.selectCount(queryWrapper);
@@ -793,7 +786,7 @@ public class MemberServiceImpl implements MemberService {
         checkInRecordMapper.delete(checkinQuery);
 
         // 注意：订单、课程预约等重要记录通常不删除，只做关联处理
-        // 这里可以根据业务需求决定是否删除或标记
+        log.info("已删除会员 {} 的相关记录", memberId);
     }
 
     /**
