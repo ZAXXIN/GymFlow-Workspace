@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 // 导入路由模块
 import authRoutes from './routes/auth'
@@ -44,24 +45,54 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
+// 路由白名单（不需要登录的页面）
+const whiteList = ['/login', '/403', '/404']
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
-  // 获取token
-  const token = localStorage.getItem('gymflow_token') || sessionStorage.getItem('gymflow_token')
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
   
-  // 路由白名单（不需要登录的页面）
-  const whiteList = ['/login', '/register', '/forgot-password']
+  // 设置页面标题
+  document.title = (to.meta?.title as string) || 'GymFlow'
   
-  // 如果用户已登录且访问登录页，重定向到首页
-  if (token && to.path === '/login') {
-    next('/dashboard')
-    return
+  // 检查是否需要登录
+  if (to.meta.requiresAuth) {
+    // 如果需要登录，但用户未登录或token无效
+    if (!authStore.isLoggedIn) {
+      // 如果有token但未初始化，尝试验证
+      if (authStore.token && !authStore.initialized) {
+        const isValid = await authStore.validateToken()
+        if (!isValid) {
+          next('/login')
+          return
+        }
+      } else {
+        next('/login')
+        return
+      }
+    }
   }
   
-  // 如果需要登录的页面且没有token，跳转到登录页
-  if (!token && !whiteList.includes(to.path)) {
-    next('/login')
+  // 检查页面权限
+  if (to.meta.permissions && Array.isArray(to.meta.permissions) && to.meta.permissions.length > 0) {
+    const requiredPermissions = to.meta.permissions as string[]
+    const hasRequiredPermission = requiredPermissions.some(p => authStore.hasPermission(p))
+    
+    console.log("页面需要权限:", requiredPermissions)
+    console.log("是否有权限:", hasRequiredPermission)
+    
+    if (!hasRequiredPermission) {
+      next('/403')
+      return
+    }
+  } else {
+    // 没有设置permissions或permissions为空数组，直接放行
+    console.log("页面无需特殊权限，放行")
+  }
+  
+  // 已登录用户访问登录页时重定向到首页
+  if (to.path === '/login' && authStore.isLoggedIn) {
+    next('/dashboard')
     return
   }
   

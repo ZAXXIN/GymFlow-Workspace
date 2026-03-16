@@ -44,14 +44,18 @@ export const useAuthStore = defineStore('auth', () => {
   const permissions = ref<PermissionCode[]>(JSON.parse(localStorage.getItem('gymflow_permissions') || '[]'))
   const menus = ref<any[]>(JSON.parse(localStorage.getItem('gymflow_menus') || '[]'))
   const loading = ref(false)
+  const initialized = ref(false)
 
   // Getter
-  const isLoggedIn = computed(() => !!token.value)
+  const isLoggedIn = computed(() => {
+    // 如果有token并且已经初始化过，才认为是登录状态
+    return !!token.value && initialized.value
+  })
   const userRole = computed(() => userInfo.value?.role || null)
   const isAdmin = computed(() => userRole.value === 0) // 0-老板
   const isReceptionist = computed(() => userRole.value === 1) // 1-前台
-  const isCoach = computed(() => userRole.value === 2) // 2-教练
-  const isMember = computed(() => userRole.value === 3) // 3-会员
+  // const isCoach = computed(() => userRole.value === 2) // 2-教练
+  // const isMember = computed(() => userRole.value === 3) // 3-会员
 
   // 权限相关 Getters
   const hasPermission = (permission: PermissionCode | PermissionCode[]): boolean => {
@@ -90,9 +94,10 @@ export const useAuthStore = defineStore('auth', () => {
     // 🔥 在这里打印用户权限
     console.log('========== 用户权限列表 ==========')
     console.log('用户名:', userInfo.value?.username)
-    console.log('角色:', userInfo.value?.role === 0 ? '老板' : 
-                      userInfo.value?.role === 1 ? '前台' : 
-                      userInfo.value?.role === 2 ? '教练' : '会员')
+    console.log('角色:', userInfo.value?.role === 0 ? '老板' : '前台')
+    // console.log('角色:', userInfo.value?.role === 0 ? '老板' : 
+    // userInfo.value?.role === 1 ? '前台' : 
+    // userInfo.value?.role === 2 ? '教练' : '会员')
     console.log('权限数量:', perms.length)
     console.log('权限列表:', perms)
     console.log('================================')
@@ -112,6 +117,45 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem(StorageKeys.USER_INFO)
     localStorage.removeItem('gymflow_permissions')
     localStorage.removeItem('gymflow_menus')
+  }
+
+  /**
+   * 验证token有效性
+   */
+  const validateToken = async (): Promise<boolean> => {
+    if (!token.value) {
+      initialized.value = false
+      return false
+    }
+
+    try {
+      // 调用获取用户信息的接口验证token
+      const response = await authApi.getUserInfo()
+      if (response.code === 200 && response.data) {
+        setUserInfo(response.data)
+        initialized.value = true
+        return true
+      } else {
+        // token无效，清除登录状态
+        clearAuth()
+        return false
+      }
+    } catch (error) {
+      console.error('Token验证失败:', error)
+      clearAuth()
+      return false
+    }
+  }
+
+  /**
+   * 初始化认证状态（在应用启动时调用）
+   */
+  const initAuth = async () => {
+    if (token.value) {
+      await validateToken()
+    } else {
+      initialized.value = false
+    }
   }
 
   /**
@@ -154,19 +198,10 @@ export const useAuthStore = defineStore('auth', () => {
         'settings:config:view',
         'common:upload'
       ]
-    } else if (role === 2) { // 教练
-      defaultPerms = [
-        'coach:view', 'coach:detail', 'coach:schedule:view',
-        'course:view', 'course:detail', 'course:schedule:view',
-        'checkIn:view', 'checkIn:detail', 'checkIn:member:add', 'checkIn:course:add',
-        'common:upload'
-      ]
-    } else { // 会员
-      defaultPerms = []
-    }
+    } 
     
     if (defaultPerms.length > 0) {
-      console.log('使用基于角色的默认权限:', role === 0 ? '老板' : role === 1 ? '前台' : role === 2 ? '教练' : '会员')
+      console.log('使用基于角色的默认权限:', role === 0 ? '老板' : '前台')
       setPermissions(defaultPerms)
     }
   }
@@ -191,7 +226,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('获取权限失败:', error)
       // 如果获取失败，使用基于角色的默认权限
       console.warn('获取权限接口异常，使用默认权限')
-      // setDefaultPermissionsByRole(userInfo.value?.role)
+      setDefaultPermissionsByRole(userInfo.value?.role)
     }
   }
 
@@ -220,8 +255,11 @@ export const useAuthStore = defineStore('auth', () => {
         }
         setUserInfo(user)
         
-        // 🔥 登录成功后，主动获取权限
+        // 登录成功后，主动获取权限
         await fetchUserPermissions()
+        
+        // 标记为已初始化
+        initialized.value = true
         
         ElMessage.success('登录成功')
         return { success: true, ...response }
@@ -262,6 +300,7 @@ export const useAuthStore = defineStore('auth', () => {
       const response: ApiResponse<User> = await authApi.getUserInfo()
       if (response.code === 200 && response.data) {
         setUserInfo(response.data)
+        initialized.value = true
         return response.data
       }
       throw new Error(response.message || '刷新用户信息失败')
@@ -282,10 +321,7 @@ export const useAuthStore = defineStore('auth', () => {
    * 检查登录状态
    */
   const checkAuth = () => {
-    if (!token.value) {
-      return false
-    }
-    return true
+    return !!token.value && initialized.value
   }
 
   return {
@@ -295,14 +331,15 @@ export const useAuthStore = defineStore('auth', () => {
     permissions,
     menus,
     loading,
+    initialized,
     
     // Getter
     isLoggedIn,
     userRole,
     isAdmin,
     isReceptionist,
-    isCoach,
-    isMember,
+    // isCoach,
+    // isMember,
     
     // 权限相关
     hasPermission,
@@ -318,6 +355,8 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     refreshUserInfo,
     refreshPermissions,
-    checkAuth
+    checkAuth,
+    initAuth,
+    validateToken
   }
 })

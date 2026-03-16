@@ -145,7 +145,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="签到类型" width="120">
+        <el-table-column label="签到类型" width="150">
           <template #default="{ row }">
             <el-tag :type="row.courseCheckIn ? 'success' : 'primary'" size="small">
               {{ row.courseCheckIn ? '课程签到' : '自由训练' }}
@@ -171,7 +171,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTimeFormatted" label="创建时间" width="180" />
-        <el-table-column label="操作" width="80" fixed="right" align="center">
+        <el-table-column label="操作" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
@@ -210,7 +210,7 @@
     <!-- 快速签到对话框 -->
     <el-dialog v-model="quickCheckInDialogVisible" title="快速签到" width="500px" :close-on-click-modal="false">
       <el-form :model="quickCheckInForm" :rules="quickCheckInRules" ref="quickCheckInFormRef">
-        <el-form-item label="会员信息" prop="memberId">
+        <!-- <el-form-item label="会员信息" prop="memberId">
           <el-select v-model="quickCheckInForm.memberId" placeholder="请选择会员" filterable remote :remote-method="searchMembers" :loading="searchLoading" style="width: 100%">
             <el-option v-for="member in memberOptions" :key="member.id" :label="`${member.realName} (${member.phone})`" :value="member.id">
               <div class="member-option">
@@ -220,7 +220,7 @@
               </div>
             </el-option>
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
 
         <!-- <el-form-item label="签到方式" prop="checkinMethod">
           <el-radio-group v-model="quickCheckInForm.checkinMethod">
@@ -229,8 +229,12 @@
           </el-radio-group>
         </el-form-item> -->
 
+        <el-form-item label="签到码" prop="notes">
+          <el-input v-model="quickCheckInForm.notes" placeholder="逻辑还没改！！！" :rows="3" />
+        </el-form-item>
+
         <el-form-item label="备注" prop="notes">
-          <el-input v-model="quickCheckInForm.notes" type="textarea" placeholder="请输入备注信息（选填）" :rows="3" />
+          <el-input v-model="quickCheckInForm.notes" placeholder="请输入备注信息（选填）" :rows="3" />
         </el-form-item>
       </el-form>
 

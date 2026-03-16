@@ -6,6 +6,7 @@ import * as echarts from 'echarts'
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
+import { useAuthStore } from './stores/auth'
 
 // 导入权限指令
 import { setupPermissionDirective } from '@/directives/permission'
@@ -33,4 +34,11 @@ app.use(router)
 // 注册权限指令
 setupPermissionDirective(app)
 
-app.mount('#app')
+// 在应用挂载前初始化认证状态
+const initApp = async () => {
+  const authStore = useAuthStore()
+  await authStore.initAuth()
+  app.mount('#app')
+}
+
+initApp()

@@ -25,7 +25,7 @@
       </el-form>
 
       <!-- 测试账号提示 -->
-      <div class="test-accounts">
+      <!-- <div class="test-accounts">
         <el-row :gutter="20">
           <el-col :span="12" v-for="account in testAccounts" :key="account.username">
             <el-card shadow="hover" class="account-card">
@@ -41,7 +41,7 @@
             </el-card>
           </el-col>
         </el-row>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -52,7 +52,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const authStores = useAuthStore()
+const authStore = useAuthStore()
 const loginFormRef = ref<FormInstance>()
 
 // 登录表单数据
@@ -67,22 +67,6 @@ const loginRules: FormRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 }
 
-// 测试账号
-const testAccounts = ref([
-  {
-    username: 'admin',
-    password: '123456',
-    roleName: '管理员',
-    roleType: 'danger',
-  },
-  {
-    username: 'front1',
-    password: '123456',
-    roleName: '前台',
-    roleType: 'warning',
-  },
-])
-
 // 加载状态
 const loading = ref(false)
 
@@ -95,32 +79,17 @@ const handleLogin = async () => {
     loading.value = true
 
     // 调用登录接口
-    const response = await authStores.login({
+    const response = await authStore.login({
       username: loginForm.username,
       password: loginForm.password,
     })
 
-    if (response.code === 200 && response.data) {
-      // 存储token和用户信息
-      const { token, ...userInfo } = response.data
-
-      // 存储到localStorage
-      localStorage.setItem('gymflow_token', token)
-      localStorage.setItem('gymflow_user_info', JSON.stringify(userInfo))
-
-      ElMessage.success('登录成功')
-
-      router.replace('/dashboard');
-    } else {
-      ElMessage.error(response.message || '登录失败')
+    if (response.success) {
+      router.replace('/dashboard')
     }
   } catch (error: any) {
-    // 这里会捕获到拦截器中的错误
-    if (error.message) {
-      ElMessage.error(error.message)
-    } else {
-      ElMessage.error('登录失败')
-    }
+    // 错误已在 auth store 中处理
+    console.error('登录失败:', error)
   } finally {
     loading.value = false
   }
@@ -128,9 +97,8 @@ const handleLogin = async () => {
 
 // 页面加载时，如果已登录则跳转
 onMounted(() => {
-  const token = localStorage.getItem('gymflow_token')
-  if (token) {
-    router.push('/dashboard')
+  if (authStore.isLoggedIn) {
+    router.replace('/dashboard')
   }
 })
 </script>

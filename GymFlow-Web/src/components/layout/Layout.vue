@@ -280,6 +280,7 @@ onMounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;  /* 防止整个页面滚动 */
 }
 
 .header {
@@ -290,6 +291,7 @@ onMounted(() => {
   align-items: center;
   padding: 0 24px;
   border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;  /* 防止头部被压缩 */
 }
 
 .header-left {
@@ -337,17 +339,23 @@ onMounted(() => {
 .main-container {
   flex: 1;
   display: flex;
+  min-height: 0;  /* 重要：允许flex子项收缩 */
+  overflow: hidden;  /* 防止容器溢出 */
 }
 
 .sidebar {
   background-color: #fff;
   border-right: 1px solid #f0f0f0;
+  height: 100%;
+  overflow-y: auto;  /* 如果侧边栏内容过多，可以在侧边栏内部滚动 */
 }
 
 .main-content {
+  flex: 1;
   padding: 20px;
   background-color: #f5f7fa;
-  overflow-y: auto;
+  overflow-y: auto;  /* 只在main区域滚动 */
+  height: 100%;
 }
 
 /* 菜单样式优化 */
@@ -364,5 +372,24 @@ onMounted(() => {
   height: 40px;
   line-height: 40px;
   padding-left: 50px !important;
+}
+
+/* 可选：美化滚动条样式 */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: #f5f7fa;
 }
 </style>

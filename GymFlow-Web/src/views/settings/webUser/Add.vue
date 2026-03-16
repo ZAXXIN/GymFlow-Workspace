@@ -161,8 +161,8 @@ const usernameAvailable = ref<boolean | null>(null)
 
 // 角色选项 - 只有老板和前台
 const roleOptions = [
-  { value: 0, label: '老板' },
-  { value: 1, label: '前台' },
+  { value: 1, label: '老板' },
+  { value: 2, label: '前台' },
 ]
 
 // 表单验证规则

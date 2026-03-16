@@ -490,5 +490,6 @@ onMounted(() => {
 
 :deep(.el-form-item__content) {
   line-height: 1;
+  display:block;
 }
 </style>

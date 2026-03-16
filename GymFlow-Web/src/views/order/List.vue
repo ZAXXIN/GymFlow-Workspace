@@ -132,7 +132,7 @@
         </el-table-column>
         <el-table-column prop="createTimeFormatted" label="创建时间" width="180" />
         <el-table-column prop="paymentTimeFormatted" label="支付时间" width="180" />
-        <el-table-column label="操作" width="80" fixed="right" align="center">
+        <el-table-column label="操作" width="120" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情

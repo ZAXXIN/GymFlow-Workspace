@@ -579,3 +579,25 @@ hr {
 .gymflow-loading {
   animation: gymflow-spin 1s linear infinite;
 }
+
+// 移除所有 Element Plus 输入框的蓝色聚焦效果
+.el-input__wrapper {
+  &.is-focus,
+  &:focus,
+  &:focus-within,
+  &:focus-visible {
+    box-shadow: none !important;
+    border-color: #dcdfe6 !important;
+  }
+}
+
+// 如果需要同时移除文本域的效果
+.el-textarea__inner {
+  &.is-focus,
+  &:focus,
+  &:focus-visible,
+  &:focus-within {
+    box-shadow: none !important;
+    border-color: #dcdfe6 !important;
+  }
+}

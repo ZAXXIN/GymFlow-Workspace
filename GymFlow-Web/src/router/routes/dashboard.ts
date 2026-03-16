@@ -11,7 +11,7 @@ const dashboardRoutes: RouteRecordRaw[] = [
       icon: 'DataBoard',
       showInMenu: true,
       requiresAuth: true,
-      permissions: [] as PermissionCode[]  // 仪表盘所有人都可见
+      permissions: [] // 仪表盘所有人都可见
     }
   }
 ]

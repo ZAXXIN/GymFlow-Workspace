@@ -31,8 +31,8 @@
         </el-form-item> -->
         <el-form-item label="角色">
           <el-select v-model="filterForm.role" placeholder="请选择角色" clearable style="width: 180px;">
-            <el-option label="老板" :value="0" />
-            <el-option label="前台" :value="1" />
+            <el-option label="老板" :value="1" />
+            <el-option label="前台" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
