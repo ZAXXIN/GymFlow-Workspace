@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "课程学员",
+  "navigationBarBackgroundColor": "#07c160",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "empty-state": "/components/empty-state/index",
+    "loading": "/components/loading/index"
+  }
+}

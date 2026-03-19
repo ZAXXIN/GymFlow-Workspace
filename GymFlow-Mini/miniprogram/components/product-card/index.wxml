@@ -1,0 +1,48 @@
+<view class="product-card product-card-{{layout}}" bindtap="onTap">
+  <!-- 图片区域 -->
+  <view class="product-card-image">
+    <image src="{{product.images && product.images[0] || '/assets/icons/product-default.jpg'}}" mode="aspectFill"
+      binderror="onImageError"></image>
+
+    <!-- 商品标签 -->
+    <view class="product-card-tag product-card-tag-{{product.productType}}">
+      {{product.productTypeDesc}}
+    </view>
+
+    <!-- 折扣标签 - 修复：不能在{{}}中调用方法，移到js中处理 -->
+    <view class="product-card-discount" wx:if="{{product.originalPrice > product.currentPrice}}">
+      {{discountText}}% OFF
+    </view>
+  </view>
+
+  <!-- 信息区域 -->
+  <view class="product-card-info">
+    <view class="product-card-title">{{product.productName}}</view>
+
+    <view class="product-card-desc" wx:if="{{layout === 'list'}}">
+      {{product.description || '暂无描述'}}
+    </view>
+
+    <view class="product-card-footer">
+      <view class="product-card-price">
+        <text class="product-card-price-current">¥{{product.currentPrice}}</text>
+        <text class="product-card-price-original" wx:if="{{product.originalPrice > product.currentPrice}}">
+          ¥{{product.originalPrice}}
+        </text>
+      </view>
+
+      <!-- <view class="product-card-sales" wx:if="{{layout === 'grid'}}">
+        已售{{product.salesVolume || 0}}
+      </view> -->
+      <view>
+        <text class="product-card-sales" wx:if="{{layout === 'grid'}}">
+          已售{{product.salesVolume || 0}}</text>
+        <button class="product-card-buy" bindtap="onBuyTap" catchtap>购买</button>
+      </view>
+    </view>
+
+    <view class="product-card-sales" wx:if="{{layout === 'list'}}">
+      已售{{product.salesVolume || 0}} | 库存{{product.stockQuantity}}
+    </view>
+  </view>
+</view>

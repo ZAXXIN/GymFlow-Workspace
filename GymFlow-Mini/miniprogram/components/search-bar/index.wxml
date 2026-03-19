@@ -1,0 +1,29 @@
+<view class="search-bar">
+  <view class="search-bar-container" bindtap="onTap">
+    <view class="search-bar-input-wrapper">
+      <image class="search-bar-icon" src="/assets/icons/search.png" mode="aspectFit"></image>
+      <input 
+        class="search-bar-input"
+        type="text"
+        placeholder="{{placeholder}}"
+        placeholder-class="search-bar-placeholder"
+        value="{{value}}"
+        focus="{{focus}}"
+        disabled="{{disabled}}"
+        bindinput="onInput"
+        bindconfirm="onConfirm"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+      />
+      <image 
+        class="search-bar-clear" 
+        src="/assets/icons/close.png" 
+        mode="aspectFit"
+        wx:if="{{value}}"
+        bindtap="onClear"
+      ></image>
+    </view>
+    
+    <view class="search-bar-cancel" wx:if="{{showCancel}}" bindtap="onCancel">取消</view>
+  </view>
+</view>

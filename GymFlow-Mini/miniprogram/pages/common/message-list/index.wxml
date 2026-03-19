@@ -1,0 +1,93 @@
+<view class="message-list">
+  <!-- 头部操作栏 -->
+  <view class="message-list-header">
+    <view class="message-list-tabs">
+      <view 
+        class="message-list-tab {{activeTab === 0 ? 'message-list-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="0"
+      >
+        全部
+        <text class="message-list-tab-badge" wx:if="{{unreadCount.total > 0}}">{{unreadCount.total}}</text>
+      </view>
+      <view 
+        class="message-list-tab {{activeTab === 1 ? 'message-list-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="1"
+      >
+        预约
+        <text class="message-list-tab-badge" wx:if="{{unreadCount.BOOKING > 0}}">{{unreadCount.BOOKING}}</text>
+      </view>
+      <view 
+        class="message-list-tab {{activeTab === 2 ? 'message-list-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="2"
+      >
+        签到
+        <text class="message-list-tab-badge" wx:if="{{unreadCount.CHECKIN > 0}}">{{unreadCount.CHECKIN}}</text>
+      </view>
+      <view 
+        class="message-list-tab {{activeTab === 3 ? 'message-list-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="3"
+      >
+        系统
+        <text class="message-list-tab-badge" wx:if="{{unreadCount.SYSTEM > 0}}">{{unreadCount.SYSTEM}}</text>
+      </view>
+    </view>
+    
+    <view class="message-list-actions">
+      <view class="message-list-action" bindtap="onMarkAllRead" wx:if="{{hasUnread}}">
+        <image class="message-list-action-icon" src="/assets/icons/mark-read.png" mode="aspectFit"></image>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 消息列表 -->
+  <view class="message-list-content">
+    <block wx:for="{{messages}}" wx:key="id" wx:for-item="msg">
+      <view 
+        class="message-list-item {{msg.isRead === 0 ? 'message-list-item-unread' : ''}}"
+        bindtap="onMessageTap"
+        data-message="{{msg}}"
+      >
+        <view class="message-list-item-icon">
+          <image src="/assets/icons/message-{{msg.type.toLowerCase()}}.png" mode="aspectFit"></image>
+          <view class="message-list-item-dot" wx:if="{{msg.isRead === 0}}"></view>
+        </view>
+        
+        <view class="message-list-item-content">
+          <view class="message-list-item-header">
+            <text class="message-list-item-title">{{msg.title}}</text>
+            <text class="message-list-item-time">{{formatTime(msg.createTime)}}</text>
+          </view>
+          
+          <view class="message-list-item-preview">
+            <text class="message-list-item-text">{{msg.content}}</text>
+          </view>
+        </view>
+        
+        <view class="message-list-item-delete" bindtap="onDeleteMessage" data-id="{{msg.id}}" catchtap>
+          <image src="/assets/icons/delete.png" mode="aspectFit"></image>
+        </view>
+      </view>
+    </block>
+    
+    <!-- 加载中 -->
+    <view class="message-list-loading" wx:if="{{loading}}">
+      <loading type="circular" text="加载中..."></loading>
+    </view>
+    
+    <!-- 没有更多 -->
+    <view class="message-list-nomore" wx:if="{{!hasMore && messages.length > 0}}">
+      <text>没有更多消息了</text>
+    </view>
+    
+    <!-- 空状态 -->
+    <empty-state 
+      wx:if="{{!loading && messages.length === 0}}"
+      show="{{true}}"
+      text="暂无消息"
+    ></empty-state>
+  </view>
+</view>

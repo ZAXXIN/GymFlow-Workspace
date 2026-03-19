@@ -1,0 +1,80 @@
+<view class="checkin-code-page">
+  <!-- 头部信息 -->
+  <view class="checkin-code-header">
+    <view class="checkin-code-header-bg"></view>
+    <view class="checkin-code-header-content">
+      <view class="checkin-code-course-info">
+        <text class="checkin-code-course-name">{{courseInfo.courseName || '--'}}</text>
+        <text class="checkin-code-course-type">{{courseInfo.courseTypeDesc || '--'}}</text>
+      </view>
+      <view class="checkin-code-time">
+        <image class="checkin-code-time-icon" src="/assets/icons/time-white.png" mode="aspectFit"></image>
+        <text>{{courseInfo.courseDate}} {{formatTime(courseInfo.startTime)}}-{{formatTime(courseInfo.endTime)}}</text>
+      </view>
+      <view class="checkin-code-location" wx:if="{{courseInfo.location}}">
+        <image class="checkin-code-location-icon" src="/assets/icons/location-white.png" mode="aspectFit"></image>
+        <text>{{courseInfo.location}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 签到码卡片 -->
+  <view class="checkin-code-card">
+    <!-- 二维码区域 -->
+    <view class="checkin-code-qrcode">
+      <qr-code 
+        size="400"
+        canvasId="checkinQrcode"
+        text="{{qrCodeContent}}"
+        wx:if="{{qrCodeContent}}"
+      ></qr-code>
+      <view class="checkin-code-qrcode-placeholder" wx:else>
+        <loading type="circular" text="生成签到码中..."></loading>
+      </view>
+    </view>
+    
+    <!-- 数字码区域 -->
+    <view class="checkin-code-number">
+      <view class="checkin-code-number-label">数字签到码</view>
+      <view class="checkin-code-number-value">{{numericCode || '------'}}</view>
+    </view>
+    
+    <!-- 倒计时区域 -->
+    <view class="checkin-code-expire">
+      <image class="checkin-code-expire-icon" src="/assets/icons/clock.png" mode="aspectFit"></image>
+      <text class="checkin-code-expire-text" wx:if="{{expireTime}}">
+        签到码有效期至 {{expireTime}}
+      </text>
+      <text class="checkin-code-expire-text" wx:else>
+        签到码已生成，请在课程开始前30分钟内使用
+      </text>
+    </view>
+  </view>
+  
+  <!-- 使用说明 -->
+  <view class="checkin-code-guide">
+    <view class="checkin-code-guide-title">使用说明</view>
+    <view class="checkin-code-guide-item">
+      <text class="checkin-code-guide-dot">•</text>
+      <text class="checkin-code-guide-text">出示此签到码给教练或前台进行核销</text>
+    </view>
+    <view class="checkin-code-guide-item">
+      <text class="checkin-code-guide-dot">•</text>
+      <text class="checkin-code-guide-text">签到码仅在课程开始前30分钟内有效</text>
+    </view>
+    <view class="checkin-code-guide-item">
+      <text class="checkin-code-guide-dot">•</text>
+      <text class="checkin-code-guide-text">核销后不可再次使用</text>
+    </view>
+    <view class="checkin-code-guide-item">
+      <text class="checkin-code-guide-dot">•</text>
+      <text class="checkin-code-guide-text">如需取消预约，请在课程开始前2小时操作</text>
+    </view>
+  </view>
+  
+  <!-- 底部按钮 -->
+  <view class="checkin-code-footer">
+    <button class="checkin-code-btn checkin-code-btn-cancel" bindtap="onCancelBooking" wx:if="{{showCancel}}">取消预约</button>
+    <button class="checkin-code-btn checkin-code-btn-back" bindtap="onBack">返回</button>
+  </view>
+</view>

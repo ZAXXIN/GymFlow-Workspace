@@ -1,0 +1,7 @@
+<view class="qr-code" style="width: {{size}}px; height: {{size}}px;">
+  <canvas 
+    type="2d" 
+    id="{{canvasId}}"
+    style="width: {{size}}px; height: {{size}}px;"
+  ></canvas>
+</view>

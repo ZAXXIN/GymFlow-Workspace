@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "签到码",
+  "navigationBarBackgroundColor": "#07c160",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "qr-code": "/components/qr-code/index",
+    "loading": "/components/loading/index"
+  }
+}

@@ -1,0 +1,168 @@
+.health-records-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx;
+}
+
+/* 统计卡片 */
+.health-records-stats {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.health-records-stats-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-right: 2rpx solid #f5f5f5;
+}
+
+.health-records-stats-item:last-child {
+  border-right: none;
+}
+
+.health-records-stats-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.health-records-stats-value-wrapper {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 4rpx;
+}
+
+.health-records-stats-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-right: 4rpx;
+}
+
+.health-records-stats-value-large {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1;
+}
+
+.health-records-stats-unit {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.health-records-stats-change {
+  font-size: 22rpx;
+}
+
+.health-records-stats-change.up {
+  color: #f56c6c;
+}
+
+.health-records-stats-change.down {
+  color: #67c23a;
+}
+
+/* 添加按钮 */
+.health-records-add {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.health-records-add-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+  opacity: 0.6;
+}
+
+.health-records-add-text {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: 500;
+}
+
+/* 记录列表 */
+.health-records-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.health-records-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.health-records-item-date {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.health-records-item-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.3;
+}
+
+.health-records-item-content {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.health-records-item-metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.health-records-item-metric-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.health-records-item-metric-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.health-records-item-footer {
+  padding-top: 16rpx;
+  border-top: 2rpx solid #f5f5f5;
+}
+
+.health-records-item-notes {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 加载中 */
+.health-records-loading {
+  padding: 40rpx 0;
+  text-align: center;
+}

@@ -1,0 +1,117 @@
+<view class="coach-member-detail">
+  <!-- 会员基本信息 -->
+  <view class="coach-member-header">
+    <view class="coach-member-header-bg"></view>
+    <view class="coach-member-header-content">
+      <view class="coach-member-avatar">
+        <image src="/assets/icons/avatar-default.png" mode="aspectFill"></image>
+      </view>
+      <view class="coach-member-info">
+        <view class="coach-member-name">{{memberInfo.memberName || '--'}}</view>
+        <view class="coach-member-phone">{{memberInfo.memberPhone || '--'}}</view>
+        <view class="coach-member-no">会员号: {{memberInfo.memberNo || '--'}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 会员卡信息 -->
+  <view class="coach-member-section" wx:if="{{memberInfo.memberCard}}">
+    <view class="coach-member-section-title">会员卡信息</view>
+    <view class="coach-member-card">
+      <view class="coach-member-card-header">
+        <text class="coach-member-card-name">{{memberInfo.memberCard.productName}}</text>
+        <text class="coach-member-card-status {{getCardStatusClass(memberInfo.memberCard.status)}}">
+          {{getCardStatusText(memberInfo.memberCard.status)}}
+        </text>
+      </view>
+      <view class="coach-member-card-info">
+        <view class="coach-member-card-info-item">
+          <text class="coach-member-card-info-label">有效期</text>
+          <text class="coach-member-card-info-value">
+            {{memberInfo.memberCard.startDate || '--'}} 至 {{memberInfo.memberCard.endDate || '--'}}
+          </text>
+        </view>
+        <view class="coach-member-card-info-item" wx:if="{{memberInfo.memberCard.remainingSessions !== undefined}}">
+          <text class="coach-member-card-info-label">剩余课时</text>
+          <text class="coach-member-card-info-value">{{memberInfo.memberCard.remainingSessions}}节</text>
+        </view>
+        <view class="coach-member-card-info-item" wx:if="{{memberInfo.membershipStartDate}}">
+          <text class="coach-member-card-info-label">入会日期</text>
+          <text class="coach-member-card-info-value">{{memberInfo.membershipStartDate}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 课程记录 -->
+  <view class="coach-member-section">
+    <view class="coach-member-section-header">
+      <text class="coach-member-section-title">课程记录 (仅本教练)</text>
+      <text class="coach-member-section-more" bindtap="onViewAllCourses" wx:if="{{courseRecords.length > 3}}">查看全部</text>
+    </view>
+    
+    <view class="coach-member-course-list">
+      <block wx:for="{{displayCourses}}" wx:key="bookingId" wx:for-item="record">
+        <view class="coach-member-course-item">
+          <view class="coach-member-course-time">
+            <text class="coach-member-course-date">{{record.courseDate}}</text>
+            <text class="coach-member-course-time-range">{{formatTime(record.startTime)}}-{{formatTime(record.endTime)}}</text>
+          </view>
+          <view class="coach-member-course-info">
+            <view class="coach-member-course-header">
+              <text class="coach-member-course-name">{{record.courseName}}</text>
+              <text class="coach-member-course-status {{getBookingStatusClass(record.bookingStatus)}}">
+                {{getBookingStatusText(record.bookingStatus)}}
+              </text>
+            </view>
+            <view class="coach-member-course-detail" wx:if="{{record.checkinTime}}">
+              <image class="coach-member-course-icon" src="/assets/icons/checkin.png" mode="aspectFit"></image>
+              <text>签到时间: {{formatDateTime(record.checkinTime)}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <empty-state 
+        wx:if="{{courseRecords.length === 0}}"
+        show="{{true}}"
+        text="暂无课程记录"
+      ></empty-state>
+    </view>
+  </view>
+  
+  <!-- 健康档案 -->
+  <view class="coach-member-section">
+    <view class="coach-member-section-header">
+      <text class="coach-member-section-title">健康档案</text>
+      <text class="coach-member-section-more" bindtap="onAddHealthRecord">+ 添加</text>
+    </view>
+    
+    <view class="coach-member-health-list">
+      <block wx:for="{{healthRecords}}" wx:key="id" wx:for-item="record">
+        <view class="coach-member-health-item">
+          <view class="coach-member-health-header">
+            <text class="coach-member-health-date">{{record.recordDate}}</text>
+            <text class="coach-member-health-weight">{{record.weight}}kg</text>
+          </view>
+          <view class="coach-member-health-detail" wx:if="{{record.bodyFatPercentage || record.muscleMass || record.bmi}}">
+            <text wx:if="{{record.bodyFatPercentage}}">体脂 {{record.bodyFatPercentage}}%</text>
+            <text wx:if="{{record.muscleMass}}">肌肉 {{record.muscleMass}}kg</text>
+            <text wx:if="{{record.bmi}}">BMI {{record.bmi}}</text>
+          </view>
+          <view class="coach-member-health-footer" wx:if="{{record.notes}}">
+            <text class="coach-member-health-notes">{{record.notes}}</text>
+          </view>
+        </view>
+      </block>
+      
+      <empty-state 
+        wx:if="{{healthRecords.length === 0}}"
+        show="{{true}}"
+        text="暂无健康档案"
+        buttonText="添加档案"
+        bindbutton="onAddHealthRecord"
+      ></empty-state>
+    </view>
+  </view>
+</view>

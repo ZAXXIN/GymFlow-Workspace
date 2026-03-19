@@ -1,0 +1,103 @@
+<view class="modify-password">
+  <!-- 表单 -->
+  <view class="modify-password-form">
+    <!-- 原密码 -->
+    <view class="modify-password-input-group">
+      <view class="modify-password-input-item">
+        <image class="modify-password-input-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+        <input 
+          class="modify-password-input"
+          type="{{showOldPassword ? 'text' : 'password'}}"
+          placeholder="请输入原密码"
+          placeholder-class="modify-password-input-placeholder"
+          value="{{oldPassword}}"
+          bindinput="onOldPasswordInput"
+        />
+        <image 
+          class="modify-password-input-eye" 
+          src="/assets/icons/{{showOldPassword ? 'eye-open' : 'eye-close'}}.png" 
+          mode="aspectFit"
+          bindtap="toggleOldPassword"
+        ></image>
+      </view>
+    </view>
+    
+    <!-- 新密码 -->
+    <view class="modify-password-input-group">
+      <view class="modify-password-input-item">
+        <image class="modify-password-input-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+        <input 
+          class="modify-password-input"
+          type="{{showNewPassword ? 'text' : 'password'}}"
+          placeholder="请输入新密码"
+          placeholder-class="modify-password-input-placeholder"
+          value="{{newPassword}}"
+          bindinput="onNewPasswordInput"
+        />
+        <image 
+          class="modify-password-input-eye" 
+          src="/assets/icons/{{showNewPassword ? 'eye-open' : 'eye-close'}}.png" 
+          mode="aspectFit"
+          bindtap="toggleNewPassword"
+        ></image>
+      </view>
+    </view>
+    
+    <!-- 确认新密码 -->
+    <view class="modify-password-input-group">
+      <view class="modify-password-input-item">
+        <image class="modify-password-input-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+        <input 
+          class="modify-password-input"
+          type="{{showConfirmPassword ? 'text' : 'password'}}"
+          placeholder="请再次输入新密码"
+          placeholder-class="modify-password-input-placeholder"
+          value="{{confirmPassword}}"
+          bindinput="onConfirmPasswordInput"
+        />
+        <image 
+          class="modify-password-input-eye" 
+          src="/assets/icons/{{showConfirmPassword ? 'eye-open' : 'eye-close'}}.png" 
+          mode="aspectFit"
+          bindtap="toggleConfirmPassword"
+        ></image>
+      </view>
+    </view>
+    
+    <!-- 密码规则提示 -->
+    <view class="modify-password-rules">
+      <view class="modify-password-rule-item {{checkLength ? 'valid' : ''}}">
+        <image src="/assets/icons/{{checkLength ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
+        <text>密码长度为6-20位</text>
+      </view>
+      <view class="modify-password-rule-item {{checkNumber ? 'valid' : ''}}">
+        <image src="/assets/icons/{{checkNumber ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
+        <text>包含数字</text>
+      </view>
+      <view class="modify-password-rule-item {{checkLetter ? 'valid' : ''}}">
+        <image src="/assets/icons/{{checkLetter ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
+        <text>包含字母</text>
+      </view>
+      <view class="modify-password-rule-item {{checkMatch ? 'valid' : ''}}">
+        <image src="/assets/icons/{{checkMatch ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
+        <text>两次密码输入一致</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 提交按钮 -->
+  <view class="modify-password-footer">
+    <button 
+      class="modify-password-btn {{!canSubmit ? 'modify-password-btn-disabled' : ''}}"
+      disabled="{{!canSubmit || submitting}}"
+      bindtap="onSubmit"
+    >
+      {{submitting ? '提交中...' : '确认修改'}}
+    </button>
+  </view>
+  
+  <!-- 提示 -->
+  <view class="modify-password-tip">
+    <text>修改密码后，下次登录请使用新密码</text>
+  </view>
+</view>

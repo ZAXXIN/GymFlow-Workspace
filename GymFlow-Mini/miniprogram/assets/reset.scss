@@ -1,0 +1,49 @@
+// 重置样式
+page,
+view,
+text,
+image,
+navigator,
+swiper,
+swiper-item,
+scroll-view,
+rich-text,
+button,
+input,
+textarea,
+label,
+form,
+picker,
+checkbox,
+radio,
+slider,
+switch {
+  box-sizing: border-box;
+}
+
+view,
+text {
+  display: flex;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  
+  &::after {
+    border: none;
+  }
+}
+
+image {
+  display: block;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}

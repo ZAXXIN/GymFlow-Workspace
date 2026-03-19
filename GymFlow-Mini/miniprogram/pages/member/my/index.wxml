@@ -1,0 +1,124 @@
+<page-layout>
+  <view class="member-my">
+    <!-- 用户信息头部 -->
+    <view class="member-my-header">
+      <view class="member-my-header-bg"></view>
+      <view class="member-my-header-content">
+        <!-- <view class="member-my-avatar">
+          <image src="/assets/icons/avatar-default.png" mode="aspectFill"></image>
+        </view> -->
+        <view class="member-my-info">
+          <view class="member-my-name">{{userInfo ? userInfo.realName : '会员'}}</view>
+          <view class="member-my-phone">{{userInfo ? userInfo.phone : '未绑定手机'}}</view>
+          <view class="member-my-member-no">会员号: {{userInfo ? userInfo.memberNo : '--'}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 统计数据 -->
+    <view class="member-my-stats">
+      <view class="member-my-stats-item">
+        <text class="member-my-stats-value">{{stats.totalCheckins}}</text>
+        <text class="member-my-stats-label">累计签到</text>
+      </view>
+      <view class="member-my-stats-item">
+        <text class="member-my-stats-value">{{stats.totalCourses}}</text>
+        <text class="member-my-stats-label">课程时长(时)</text>
+      </view>
+      <view class="member-my-stats-item">
+        <text class="member-my-stats-value">¥{{stats.totalSpent}}</text>
+        <text class="member-my-stats-label">累计消费</text>
+      </view>
+      <view class="member-my-stats-item">
+        <text class="member-my-stats-value">{{stats.memberDays}}</text>
+        <text class="member-my-stats-label">会员天数</text>
+      </view>
+    </view>
+    
+    <!-- 会员卡信息 -->
+    <view class="member-my-card" wx:if="{{memberCard}}" bindtap="onCardTap">
+      <view class="member-my-card-header">
+        <text class="member-my-card-title">{{memberCard.productName}}</text>
+        <text class="member-my-card-status member-my-card-status-active">有效</text>
+      </view>
+      <view class="member-my-card-content">
+        <view class="member-my-card-info">
+          <text class="member-my-card-info-label">有效期</text>
+          <text class="member-my-card-info-value">
+            {{memberCard.startDate}} 至 {{memberCard.endDate}}
+          </text>
+        </view>
+        <view class="member-my-card-info" wx:if="{{memberCard.remainingSessions !== undefined}}">
+          <text class="member-my-card-info-label">剩余课时</text>
+          <text class="member-my-card-info-value">{{memberCard.remainingSessions}}节</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 快捷入口 -->
+    <view class="member-my-menu">
+      <view class="member-my-menu-grid">
+        <view 
+          class="member-my-menu-item" 
+          wx:for="{{menuList}}" 
+          wx:key="id"
+          data-item="{{item}}"
+          bindtap="onMenuTap"
+        >
+          <view class="member-my-menu-icon-wrapper">
+            <image class="member-my-menu-icon" src="{{item.icon}}" mode="aspectFit"></image>
+            <message-badge wx:if="{{item.badge > 0}}" count="{{item.badge}}" dot="{{false}}"></message-badge>
+          </view>
+          <text class="member-my-menu-title">{{item.title}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 最近订单 -->
+    <!-- <view class="member-my-recent-orders" wx:if="{{recentOrders.length > 0}}">
+      <view class="member-my-section-header">
+        <text class="member-my-section-title">最近订单</text>
+        <text class="member-my-section-more" bindtap="onViewAllOrders">查看全部</text>
+      </view>
+      
+      <view class="member-my-order-list">
+        <view 
+          class="member-my-order-item" 
+          wx:for="{{recentOrders}}" 
+          wx:key="id"
+          data-order="{{item}}"
+          bindtap="onOrderTap"
+        >
+          <view class="member-my-order-header">
+            <text class="member-my-order-no">{{item.orderNo}}</text>
+            <text class="member-my-order-status {{getOrderStatusClass(item.orderStatus)}}">
+              {{item.orderStatusDesc}}
+            </text>
+          </view>
+          <view class="member-my-order-content">
+            <view class="member-my-order-info">
+              <text class="member-my-order-name">{{item.items && item.items[0] ? item.items[0].productName : ''}}</text>
+              <text class="member-my-order-count" wx:if="{{item.items && item.items.length > 1}}">
+                等{{item.items.length}}件商品
+              </text>
+            </view>
+            <text class="member-my-order-amount">¥{{item.actualAmount}}</text>
+          </view>
+          <view class="member-my-order-footer">
+            <text class="member-my-order-time">{{formatDate(item.createTime)}}</text>
+          </view>
+        </view>
+      </view>
+    </view> -->
+    
+    <!-- 退出登录按钮 -->
+    <view class="member-my-logout" bindtap="onLogout">
+      <text>退出登录</text>
+    </view>
+    
+    <!-- 底部版权 -->
+    <view class="member-my-footer">
+      <text class="member-my-footer-text">© 2026 GymFlow 健身管理系统</text>
+    </view>
+  </view>
+</page-layout>

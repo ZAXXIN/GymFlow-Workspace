@@ -1,0 +1,10 @@
+// 登录页WXS脚本（如果需要）用于样式计算
+// var filter = {
+//   // 格式化手机号显示
+//   formatPhone: function(phone) {
+//     if (!phone || phone.length !== 11) return phone
+//     return phone.substring(0, 3) + '****' + phone.substring(7)
+//   }
+// }
+
+// module.exports = filter

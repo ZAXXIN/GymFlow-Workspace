@@ -1,0 +1,98 @@
+<page-layout>
+  <view class="login-page">
+    <!-- 返回按钮 -->
+    <view class="login-back" bindtap="onBack" wx:if="{{false}}">
+      <image class="login-back-icon" src="/assets/icons/back.png" mode="aspectFit"></image>
+    </view>
+    
+    <!-- Logo区域 -->
+    <view class="login-header">
+      <image class="login-logo" src="{{systemLogo}}" mode="aspectFit"></image>
+      <text class="login-title">{{systemName}}</text>
+      <text class="login-slogan">健康生活，从GymFlow开始</text>
+    </view>
+    
+    <!-- 登录表单 -->
+    <form class="login-form" bindsubmit="onFormSubmit">
+      <!-- 手机号输入 -->
+      <view class="login-input-group">
+        <view class="login-input-item">
+          <image class="login-input-icon" src="/assets/icons/phone.png" mode="aspectFit"></image>
+          <input 
+            class="login-input"
+            type="number"
+            placeholder="请输入手机号"
+            placeholder-class="login-input-placeholder"
+            value="{{phone}}"
+            maxlength="11"
+            bindinput="onPhoneInput"
+            confirm-type="next"
+          />
+        </view>
+        
+        <!-- 密码输入 -->
+        <view class="login-input-item">
+          <image class="login-input-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+          <input 
+            class="login-input"
+            type="{{showPassword ? 'text' : 'password'}}"
+            placeholder="请输入密码"
+            placeholder-class="login-input-placeholder"
+            value="{{password}}"
+            maxlength="20"
+            bindinput="onPasswordInput"
+            confirm-type="done"
+          />
+          <image 
+            class="login-input-eye" 
+            src="/assets/icons/{{showPassword ? 'eye-open' : 'eye-close'}}.png" 
+            mode="aspectFit"
+            bindtap="togglePassword"
+          ></image>
+        </view>
+      </view>
+      
+      <!-- 协议同意 -->
+      <view class="login-agreement">
+        <view class="login-agreement-checkbox {{agreement ? 'checked' : ''}}" bindtap="toggleAgreement">
+          <image class="login-agreement-checkbox-icon" wx:if="{{agreement}}" src="/assets/icons/check.png" mode="aspectFit"></image>
+        </view>
+        <view class="login-agreement-text">
+          我已阅读并同意
+          <text class="login-agreement-link" bindtap="viewAgreement">《用户协议》</text>
+          和
+          <text class="login-agreement-link" bindtap="viewPrivacy">《隐私政策》</text>
+        </view>
+      </view>
+      
+      <!-- 登录按钮 -->
+      <button 
+        class="login-button {{loading ? 'login-button-loading' : ''}}"
+        form-type="submit"
+        disabled="{{loading}}"
+        bindtap="onLogin"
+      >
+        <loading wx:if="{{loading}}" type="circular" text="登录中..."></loading>
+        <text wx:else>登录</text>
+      </button>
+    </form>
+    
+    <!-- 其他登录方式（预留） -->
+    <view class="login-other" wx:if="{{false}}">
+      <view class="login-other-divider">
+        <text class="login-other-divider-text">其他登录方式</text>
+      </view>
+      <view class="login-other-icons">
+        <view class="login-other-icon">
+          <image src="/assets/icons/wechat.png" mode="aspectFit"></image>
+          <text>微信</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部版权 -->
+    <view class="login-footer">
+      <text class="login-footer-text">© 2026 GymFlow 健身管理系统</text>
+    </view>
+  </view>
+</page-layout>

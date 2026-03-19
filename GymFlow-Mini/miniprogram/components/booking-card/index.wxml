@@ -1,0 +1,45 @@
+<view class="booking-card" bindtap="onTap">
+  <!-- 头部 -->
+  <view class="booking-card-header">
+    <view class="booking-card-title">{{booking.courseName}}</view>
+    <view class="booking-card-status {{getStatusClass()}}">{{getStatusText()}}</view>
+  </view>
+  
+  <!-- 内容 -->
+  <view class="booking-card-content">
+    <view class="booking-card-info">
+      <view class="booking-card-info-item">
+        <text class="booking-card-info-label">教练</text>
+        <text class="booking-card-info-value">{{booking.coachName || '待分配'}}</text>
+      </view>
+      <view class="booking-card-info-item">
+        <text class="booking-card-info-label">时间</text>
+        <text class="booking-card-info-value">
+          {{booking.courseDate}} {{formatTime(booking.startTime)}}-{{formatTime(booking.endTime)}}
+        </text>
+      </view>
+      <view class="booking-card-info-item">
+        <text class="booking-card-info-label">地点</text>
+        <text class="booking-card-info-value">{{booking.location || '未指定'}}</text>
+      </view>
+      <view class="booking-card-info-item">
+        <text class="booking-card-info-label">预约时间</text>
+        <text class="booking-card-info-value">{{booking.bookingTime}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="booking-card-actions" wx:if="{{showActions}}" catchtap>
+    <button 
+      class="booking-card-action booking-card-action-cancel" 
+      wx:if="{{booking.bookingStatus === 0}}"
+      bindtap="onCancelTap"
+    >取消预约</button>
+    <button 
+      class="booking-card-action booking-card-action-checkin" 
+      wx:if="{{booking.bookingStatus === 0}}"
+      bindtap="onCheckinTap"
+    >查看签到码</button>
+  </view>
+</view>

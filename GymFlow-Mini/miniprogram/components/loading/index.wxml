@@ -1,0 +1,17 @@
+<view class="loading-mask" wx:if="{{fullscreen && isShow}}" catchtap="onTap">
+  <view class="loading-container">
+    <view class="loading-spinner" wx:if="{{type === 'spinner'}}"></view>
+    <view class="loading-circular" wx:if="{{type === 'circular'}}">
+      <view class="loading-circular-dot" wx:for="{{4}}" wx:key="index" style="animation-delay: -{{index * 0.3}}s"></view>
+    </view>
+    <text class="loading-text" wx:if="{{text}}">{{text}}</text>
+  </view>
+</view>
+
+<view class="loading-inline" wx:if="{{!fullscreen && isShow}}">
+  <view class="loading-spinner" wx:if="{{type === 'spinner'}}"></view>
+  <view class="loading-circular" wx:if="{{type === 'circular'}}">
+    <view class="loading-circular-dot" wx:for="{{4}}" wx:key="index" style="animation-delay: -{{index * 0.3}}s"></view>
+  </view>
+  <text class="loading-text" wx:if="{{text}}">{{text}}</text>
+</view>

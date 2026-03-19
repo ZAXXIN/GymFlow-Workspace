@@ -1,0 +1,9 @@
+.qr-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-code canvas {
+  display: block;
+}

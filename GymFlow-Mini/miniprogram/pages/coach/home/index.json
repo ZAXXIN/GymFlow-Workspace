@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "教练首页",
+  "navigationBarBackgroundColor": "#07c160",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "date-picker": "/components/date-picker/index",
+    "empty-state": "/components/empty-state/index",
+    "loading": "/components/loading/index",
+    "message-badge": "/components/message-badge/index"
+  }
+}

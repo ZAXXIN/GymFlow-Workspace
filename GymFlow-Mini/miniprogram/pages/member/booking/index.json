@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "预约",
+  "usingComponents": {
+    "tab-nav": "/components/tab-nav/index",
+    "search-bar": "/components/search-bar/index",
+    "loading": "/components/loading/index",
+    "empty-state": "/components/empty-state/index",
+    "booking-card": "/components/booking-card/index"
+  },
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

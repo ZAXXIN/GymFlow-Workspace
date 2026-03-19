@@ -1,0 +1,5 @@
+<!-- 全局背景装饰 -->
+<global-bg />
+<view class="page-layout">
+  <slot />
+</view>

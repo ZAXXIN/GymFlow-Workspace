@@ -1,0 +1,47 @@
+<view class="date-picker" bindtap="onTap">
+  <view class="date-picker-input" wx:if="{{value}}">
+    {{value}}
+  </view>
+  <view class="date-picker-input date-picker-placeholder" wx:else>
+    {{placeholder}}
+  </view>
+  
+  <picker 
+    mode="date"
+    value="{{value}}"
+    start="{{start}}"
+    end="{{end}}"
+    fields="{{fields}}"
+    bindchange="onPickerChange"
+    bindcancel="onPickerCancel"
+    disabled="{{disabled}}"
+  >
+    <!-- 隐藏的picker，通过自定义UI触发 -->
+  </picker>
+  
+  <!-- 自定义确认按钮（可选） -->
+  <view class="date-picker-actions" wx:if="{{showPicker}}">
+    <view class="date-picker-mask" bindtap="onPickerCancel"></view>
+    <view class="date-picker-content">
+      <view class="date-picker-header">
+        <text class="date-picker-cancel" bindtap="onPickerCancel">取消</text>
+        <text class="date-picker-confirm" bindtap="onPickerConfirm">确定</text>
+      </view>
+      <picker-view 
+        class="date-picker-view"
+        value="{{pickerValue}}"
+        bindchange="onPickerChange"
+      >
+        <picker-view-column>
+          <view wx:for="{{years}}" wx:key="index" class="date-picker-column-item">{{item}}</view>
+        </picker-view-column>
+        <picker-view-column>
+          <view wx:for="{{months}}" wx:key="index" class="date-picker-column-item">{{item}}</view>
+        </picker-view-column>
+        <picker-view-column>
+          <view wx:for="{{days}}" wx:key="index" class="date-picker-column-item">{{item}}</view>
+        </picker-view-column>
+      </picker-view>
+    </view>
+  </view>
+</view>

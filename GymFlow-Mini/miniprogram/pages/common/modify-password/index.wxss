@@ -1,0 +1,116 @@
+.modify-password {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 32rpx;
+}
+
+/* 表单 */
+.modify-password-form {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.modify-password-input-group {
+  margin-bottom: 32rpx;
+}
+
+.modify-password-input-group:last-child {
+  margin-bottom: 0;
+}
+
+.modify-password-input-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.modify-password-input-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 24rpx;
+  opacity: 0.5;
+}
+
+.modify-password-input {
+  flex: 1;
+  height: 60rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.modify-password-input-placeholder {
+  color: #ccc;
+  font-size: 28rpx;
+}
+
+.modify-password-input-eye {
+  width: 40rpx;
+  height: 40rpx;
+  opacity: 0.5;
+}
+
+/* 密码规则 */
+.modify-password-rules {
+  margin-top: 32rpx;
+  padding-top: 32rpx;
+  border-top: 2rpx solid #f5f5f5;
+}
+
+.modify-password-rule-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+  font-size: 26rpx;
+  color: #999;
+}
+
+.modify-password-rule-item:last-child {
+  margin-bottom: 0;
+}
+
+.modify-password-rule-item image {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+}
+
+.modify-password-rule-item.valid {
+  color: #07c160;
+}
+
+/* 提交按钮 */
+.modify-password-footer {
+  margin-top: 48rpx;
+}
+
+.modify-password-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  text-align: center;
+}
+
+.modify-password-btn::after {
+  border: none;
+}
+
+.modify-password-btn-disabled {
+  opacity: 0.5;
+}
+
+/* 提示 */
+.modify-password-tip {
+  margin-top: 32rpx;
+  text-align: center;
+}
+
+.modify-password-tip text {
+  font-size: 24rpx;
+  color: #999;
+}

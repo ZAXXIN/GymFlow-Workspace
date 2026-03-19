@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "搜索",
+  "navigationBarBackgroundColor": "#07c160",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "search-bar": "/components/search-bar/index",
+    "product-card": "/components/product-card/index",
+    "empty-state": "/components/empty-state/index",
+    "loading": "/components/loading/index"
+  }
+}

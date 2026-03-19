@@ -1,0 +1,26 @@
+<view class="tab-nav-wrapper {{fixed ? 'tab-nav-fixed' : ''}}">
+  <scroll-view 
+    class="tab-nav"
+    scroll-x="{{scrollable}}"
+    scroll-left="{{scrollLeft}}"
+    scroll-with-animation
+    show-scrollbar="{{false}}"
+  >
+    <view class="tab-nav-container">
+      <view 
+        class="tab-nav-item {{index === current ? 'tab-nav-item-active' : ''}}"
+        wx:for="{{tabs}}"
+        wx:key="index"
+        data-index="{{index}}"
+        bindtap="onTabTap"
+      >
+        <text class="tab-nav-item-text">{{item}}</text>
+      </view>
+      <view 
+        class="tab-nav-line"
+        style="width: {{100 / tabs.length}}%; transform: translateX({{current * 100}}%); background-color: {{lineColor}};"
+        wx:if="{{!scrollable}}"
+      ></view>
+    </view>
+  </scroll-view>
+</view>

@@ -1,0 +1,123 @@
+<view class="coach-home">
+  <!-- 用户信息头部 -->
+  <view class="coach-home-header">
+    <view class="coach-home-header-bg"></view>
+    <view class="coach-home-header-content">
+      <view class="coach-home-info">
+        <view class="coach-home-name">{{coachInfo.realName || '教练'}}</view>
+        <view class="coach-home-title">{{coachInfo.specialty || '健身教练'}}</view>
+        <view class="coach-home-stats">
+          <view class="coach-home-stat-item">
+            <text class="coach-home-stat-value">{{coachInfo.totalStudents || 0}}</text>
+            <text class="coach-home-stat-label">学员</text>
+          </view>
+          <view class="coach-home-stat-item">
+            <text class="coach-home-stat-value">{{coachInfo.totalCourses || 0}}</text>
+            <text class="coach-home-stat-label">课程</text>
+          </view>
+          <view class="coach-home-stat-item">
+            <text class="coach-home-stat-value">{{coachInfo.yearsOfExperience || 0}}</text>
+            <text class="coach-home-stat-label">经验(年)</text>
+          </view>
+        </view>
+      </view>
+      <view class="coach-home-message" bindtap="goToMessage">
+        <image class="coach-home-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
+        <message-badge count="{{unreadCount}}" dot="{{false}}"></message-badge>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 当前时段提醒 -->
+  <view class="coach-home-reminder" wx:if="{{currentReminder}}" bindtap="onReminderTap">
+    <view class="coach-home-reminder-icon">
+      <image src="/assets/icons/reminder.png" mode="aspectFit"></image>
+    </view>
+    <view class="coach-home-reminder-content">
+      <view class="coach-home-reminder-title">当前上课提醒</view>
+      <view class="coach-home-reminder-info">
+        <text>{{currentReminder.memberName}} - {{currentReminder.courseName}}</text>
+        <text class="coach-home-reminder-time">{{currentReminder.bookingTime}}</text>
+      </view>
+    </view>
+    <image class="coach-home-reminder-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+  </view>
+  
+  <!-- 日期选择 -->
+  <view class="coach-home-date">
+    <date-picker 
+      value="{{selectedDate}}"
+      placeholder="选择日期"
+      bindchange="onDateChange"
+    ></date-picker>
+    
+    <view class="coach-home-today" bindtap="onTodayTap">今天</view>
+  </view>
+  
+  <!-- 课表列表 -->
+  <view class="coach-home-schedule">
+    <view class="coach-home-schedule-header">
+      <text class="coach-home-schedule-title">{{getDateTitle()}}课表</text>
+      <text class="coach-home-schedule-count">{{scheduleList.length}}节课</text>
+    </view>
+    
+    <!-- 课程列表 -->
+    <view class="coach-home-course-list">
+      <block wx:for="{{scheduleList}}" wx:key="id" wx:for-item="course">
+        <view class="coach-home-course-item" bindtap="onCourseTap" data-course="{{course}}">
+          <view class="coach-home-course-time">
+            <text class="coach-home-course-time-start">{{formatTime(course.startTime)}}</text>
+            <text class="coach-home-course-time-end">{{formatTime(course.endTime)}}</text>
+          </view>
+          
+          <view class="coach-home-course-divider">
+            <view class="coach-home-course-dot {{getCourseStatusClass(course)}}"></view>
+            <view class="coach-home-course-line"></view>
+          </view>
+          
+          <view class="coach-home-course-info">
+            <view class="coach-home-course-header">
+              <text class="coach-home-course-name">{{course.courseName}}</text>
+              <text class="coach-home-course-type">{{course.courseType === 0 ? '私教' : '团课'}}</text>
+            </view>
+            
+            <view class="coach-home-course-detail">
+              <view class="coach-home-course-detail-item">
+                <image class="coach-home-course-detail-icon" src="/assets/icons/location.png" mode="aspectFit"></image>
+                <text>{{course.location || '未指定'}}</text>
+              </view>
+              <view class="coach-home-course-detail-item">
+                <image class="coach-home-course-detail-icon" src="/assets/icons/student.png" mode="aspectFit"></image>
+                <text>{{course.currentEnrollment}}/{{course.maxCapacity}}人</text>
+              </view>
+            </view>
+            
+            <view class="coach-home-course-footer">
+              <view class="coach-home-course-status {{getCourseStatusClass(course)}}">
+                {{getCourseStatusText(course)}}
+              </view>
+              <view class="coach-home-course-students" bindtap="onViewStudents" data-course="{{course}}" catchtap>
+                <image class="coach-home-course-students-icon" src="/assets/icons/group.png" mode="aspectFit"></image>
+                <text>查看学员</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 加载中 -->
+      <view class="coach-home-loading" wx:if="{{loading}}">
+        <loading type="circular" text="加载中..."></loading>
+      </view>
+      
+      <!-- 空状态 -->
+      <empty-state 
+        wx:if="{{!loading && scheduleList.length === 0}}"
+        show="{{true}}"
+        text="暂无课程安排"
+        buttonText="选择其他日期"
+        bindbutton="onTodayTap"
+      ></empty-state>
+    </view>
+  </view>
+</view>

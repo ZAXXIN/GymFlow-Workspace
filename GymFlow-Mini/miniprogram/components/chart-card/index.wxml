@@ -1,0 +1,19 @@
+<view class="chart-card">
+  <view class="chart-card-header" wx:if="{{title}}">
+    <text class="chart-card-title">{{title}}</text>
+    <view class="chart-card-legend" wx:if="{{showLegend}}">
+      <view class="chart-card-legend-item" wx:for="{{data}}" wx:key="index">
+        <view class="chart-card-legend-color" style="background-color: {{item.color || '#07c160'}};"></view>
+        <text class="chart-card-legend-label">{{item.name || '数据' + (index + 1)}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="chart-card-content" style="height: {{height}}px;">
+    <canvas 
+      type="2d" 
+      id="{{chartId}}"
+      style="width: 100%; height: 100%;"
+    ></canvas>
+  </view>
+</view>

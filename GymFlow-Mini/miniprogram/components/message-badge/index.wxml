@@ -1,0 +1,15 @@
+<view class="message-badge">
+  <slot></slot>
+  
+  <view 
+    class="message-badge-dot" 
+    wx:if="{{dot && count > 0}}"
+  ></view>
+  
+  <view 
+    class="message-badge-count" 
+    wx:if="{{!dot && displayCount > 0}}"
+  >
+    {{displayCount}}+{{displayCount >= max ? '' : ''}}
+  </view>
+</view>

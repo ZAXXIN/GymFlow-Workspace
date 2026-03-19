@@ -1,0 +1,323 @@
+.order-list-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 统计卡片 */
+.order-list-stats {
+  background: #fff;
+  padding: 24rpx;
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.order-list-stats-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.order-list-stats-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.order-list-stats-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 筛选栏 */
+.order-list-filter {
+  background: #fff;
+  padding: 16rpx 24rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+}
+
+.order-list-filter-status {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 30rpx;
+}
+
+.order-list-filter-status-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-right: 8rpx;
+}
+
+.order-list-filter-status-icon {
+  width: 24rpx;
+  height: 24rpx;
+  opacity: 0.5;
+}
+
+/* 错误状态 */
+.order-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+  background: #fff;
+  margin: 16rpx 24rpx;
+  border-radius: 16rpx;
+}
+
+.order-list-error image {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
+}
+
+.order-list-error text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.order-list-retry-btn {
+  width: 200rpx;
+  height: 70rpx;
+  line-height: 70rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 35rpx;
+  margin: 0;
+  padding: 0;
+}
+
+.order-list-retry-btn::after {
+  border: none;
+}
+
+/* 加载中 */
+.order-list-loading {
+  padding: 80rpx 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent;
+}
+
+/* 空状态 */
+.order-list-empty {
+  padding: 80rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.order-list-empty image {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
+}
+
+.order-list-empty text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 订单列表 */
+.order-list {
+  padding: 0 24rpx 24rpx;
+}
+
+.order-list-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.order-list-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.order-list-item-header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-list-item-order-no {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 4rpx;
+}
+
+.order-list-item-type {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.order-list-item-status {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  white-space: nowrap;
+}
+
+/* 状态样式 */
+.status-pending {
+  background: #fff7e6;
+  color: #e6a23c;
+}
+
+.status-info {
+  background: #e8f4ff;
+  color: #1890ff;
+}
+
+.status-success {
+  background: #e8f7e8;
+  color: #07c160;
+}
+
+.status-warning {
+  background: #ffeee8;
+  color: #f56c6c;
+}
+
+.status-completed {
+  background: #f5f5f5;
+  color: #999;
+}
+
+/* 商品信息 */
+.order-list-item-product {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+
+.order-list-item-product:last-child {
+  margin-bottom: 0;
+}
+
+.order-list-item-product-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 8rpx;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+  background: #f5f5f5;
+}
+
+.order-list-item-product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.order-list-item-product-name {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+  font-weight: 500;
+}
+
+.order-list-item-product-spec {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.4;
+}
+
+/* 订单金额 */
+.order-list-item-amount {
+  padding: 16rpx 0;
+  text-align: right;
+  border-top: 2rpx solid #f5f5f5;
+  border-bottom: 2rpx solid #f5f5f5;
+  margin-bottom: 16rpx;
+}
+
+.order-list-item-amount-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-right: 8rpx;
+}
+
+.order-list-item-amount-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+/* 操作按钮 */
+.order-list-item-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.order-list-item-action {
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 24rpx;
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  border-radius: 30rpx;
+  text-align: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.order-list-item-action::after {
+  border: none;
+}
+
+.order-list-item-action-cancel {
+  background: #fff;
+  color: #666;
+  border: 2rpx solid #ddd;
+}
+
+.order-list-item-action-pay {
+  background: #07c160;
+  color: #fff;
+}
+
+.order-list-item-action-confirm {
+  background: #1890ff;
+  color: #fff;
+}
+
+.order-list-item-action:active {
+  opacity: 0.8;
+}
+
+/* 没有更多 */
+.order-list-nomore {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.order-list-nomore text {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 底部安全区域 */
+.order-list-safe-bottom {
+  height: env(safe-area-inset-bottom);
+}

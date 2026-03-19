@@ -1,0 +1,262 @@
+.student-list-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+/* 头部 */
+.student-list-header {
+  position: relative;
+  height: 280rpx;
+  background: linear-gradient(135deg, #07c160 0%, #05a54e 100%);
+  padding: 0 32rpx;
+}
+
+.student-list-header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJhIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgzMCkiPjxwYXRoIGQ9Ik0wIDQwIEw0MCAwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+');
+  opacity: 0.3;
+}
+
+.student-list-header-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
+}
+
+.student-list-course-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.student-list-course-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-right: 16rpx;
+}
+
+.student-list-course-type {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20rpx;
+}
+
+.student-list-course-time,
+.student-list-course-location {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.student-list-course-icon {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
+}
+
+.student-list-course-stats {
+  margin-top: 16rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* 内容区域 */
+.student-list-content {
+  margin: 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+/* Tab切换 */
+.student-list-tabs {
+  display: flex;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.student-list-tab {
+  flex: 1;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+}
+
+.student-list-tab-active {
+  color: #07c160;
+  font-weight: 500;
+}
+
+.student-list-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: #07c160;
+  border-radius: 2rpx;
+}
+
+/* 学员列表 */
+.student-list {
+  padding: 0 24rpx;
+}
+
+.student-list-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.student-list-item:last-child {
+  border-bottom: none;
+}
+
+.student-list-avatar {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 24rpx;
+  background: #f0f0f0;
+}
+
+.student-list-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.student-list-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #f56c6c;
+  border: 2rpx solid #fff;
+}
+
+.student-list-status-dot-checked {
+  background: #07c160;
+}
+
+.student-list-info {
+  flex: 1;
+}
+
+.student-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.student-list-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.student-list-status {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.student-list-status-pending {
+  background: #fff2f0;
+  color: #f56c6c;
+}
+
+.student-list-status-checked {
+  background: #e6f7e6;
+  color: #07c160;
+}
+
+.student-list-detail {
+  margin-bottom: 8rpx;
+}
+
+.student-list-detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.student-list-detail-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+  opacity: 0.5;
+}
+
+.student-list-footer {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.student-list-checkin-time {
+  color: #07c160;
+}
+
+.student-list-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.3;
+  margin-left: 16rpx;
+}
+
+/* 加载 */
+.student-list-loading {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+/* 扫码按钮 */
+.student-list-scan {
+  position: fixed;
+  bottom: 32rpx;
+  right: 32rpx;
+  width: 120rpx;
+  height: 120rpx;
+  background: #07c160;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.4);
+  z-index: 10;
+}
+
+.student-list-scan-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 4rpx;
+}
+
+.student-list-scan text {
+  font-size: 22rpx;
+  color: #fff;
+}

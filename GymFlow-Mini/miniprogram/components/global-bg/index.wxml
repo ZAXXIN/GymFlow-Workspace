@@ -1,0 +1,4 @@
+<view class="global-bg">
+  <view class="global-bg-circle global-bg-circle-1"></view>
+  <view class="global-bg-circle global-bg-circle-2"></view>
+</view>

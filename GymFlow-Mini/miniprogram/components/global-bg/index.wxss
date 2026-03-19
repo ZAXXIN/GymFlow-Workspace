@@ -1,0 +1,3 @@
+/* components/global-bg/index.wxss */
+/* 注意：样式已在 app.wxss 中全局定义，此文件可以为空 */
+/* 保留文件是为了组件完整性 */

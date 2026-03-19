@@ -1,0 +1,24 @@
+{
+  "name": "gymflow-mini",
+  "version": "1.0.0",
+  "description": "GymFlow 健身管理系统小程序",
+  "main": "miniprogram/app.js",
+  "scripts": {
+    "dev": "wechat-miniprogram dev",
+    "build": "wechat-miniprogram build"
+  },
+  "keywords": [
+    "gym",
+    "fitness",
+    "mini-program"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "miniprogram-api-typings": "^3.12.3",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.20"
+  }
+}

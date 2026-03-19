@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "会员详情",
+  "navigationBarBackgroundColor": "#07c160",
+  "navigationBarTextStyle": "white",
+  "usingComponents": {
+    "empty-state": "/components/empty-state/index",
+    "loading": "/components/loading/index"
+  }
+}

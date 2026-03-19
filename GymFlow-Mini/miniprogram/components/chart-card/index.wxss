@@ -1,0 +1,52 @@
+.chart-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.chart-card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.chart-card-legend {
+  display: flex;
+  align-items: center;
+}
+
+.chart-card-legend-item {
+  display: flex;
+  align-items: center;
+  margin-left: 24rpx;
+}
+
+.chart-card-legend-color {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 4rpx;
+  margin-right: 8rpx;
+}
+
+.chart-card-legend-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.chart-card-content {
+  position: relative;
+  width: 100%;
+}
+
+.chart-card-content canvas {
+  display: block;
+}

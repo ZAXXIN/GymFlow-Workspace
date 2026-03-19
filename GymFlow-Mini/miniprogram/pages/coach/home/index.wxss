@@ -1,0 +1,363 @@
+.coach-home {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 头部 */
+.coach-home-header {
+  position: relative;
+  height: 300rpx;
+  background: linear-gradient(135deg, #07c160 0%, #05a54e 100%);
+  padding: 0 32rpx;
+}
+
+.coach-home-header-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJhIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSgzMCkiPjxwYXRoIGQ9Ik0wIDQwIEw0MCAwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+');
+  opacity: 0.3;
+}
+
+.coach-home-header-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coach-home-info {
+  flex: 1;
+}
+
+.coach-home-name {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8rpx;
+}
+
+.coach-home-title {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 24rpx;
+}
+
+.coach-home-stats {
+  display: flex;
+  gap: 48rpx;
+}
+
+.coach-home-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.coach-home-stat-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4rpx;
+}
+
+.coach-home-stat-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.coach-home-message {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coach-home-message-icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+/* 提醒 */
+.coach-home-reminder {
+  background: #fff;
+  margin: 24rpx 32rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.coach-home-reminder-icon {
+  width: 64rpx;
+  height: 64rpx;
+  background: #e6f7e6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.coach-home-reminder-icon image {
+  width: 36rpx;
+  height: 36rpx;
+}
+
+.coach-home-reminder-content {
+  flex: 1;
+}
+
+.coach-home-reminder-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #07c160;
+  margin-bottom: 8rpx;
+}
+
+.coach-home-reminder-info {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.coach-home-reminder-time {
+  margin-left: 16rpx;
+  color: #999;
+}
+
+.coach-home-reminder-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.3;
+}
+
+/* 日期选择 */
+.coach-home-date {
+  margin: 0 32rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.coach-home-date date-picker {
+  flex: 1;
+}
+
+.coach-home-today {
+  width: 120rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #fff;
+  border-radius: 36rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #07c160;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 课表 */
+.coach-home-schedule {
+  margin: 0 32rpx 32rpx;
+}
+
+.coach-home-schedule-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.coach-home-schedule-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.coach-home-schedule-count {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 课程项 */
+.coach-home-course-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.coach-home-course-time {
+  width: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8rpx;
+}
+
+.coach-home-course-time-start {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.coach-home-course-time-end {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.coach-home-course-divider {
+  position: relative;
+  width: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 24rpx;
+}
+
+.coach-home-course-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #07c160;
+  margin-bottom: 8rpx;
+  z-index: 1;
+}
+
+.coach-home-course-dot.ongoing {
+  background: #f56c6c;
+  animation: pulse 1.5s infinite;
+}
+
+.coach-home-course-dot.completed {
+  background: #999;
+}
+
+.coach-home-course-line {
+  width: 2rpx;
+  height: 100%;
+  background: #f0f0f0;
+  position: absolute;
+  top: 24rpx;
+  bottom: 0;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.coach-home-course-info {
+  flex: 1;
+}
+
+.coach-home-course-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.coach-home-course-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  margin-right: 16rpx;
+}
+
+.coach-home-course-type {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  background: #f0f0f0;
+  color: #666;
+  border-radius: 20rpx;
+}
+
+.coach-home-course-detail {
+  margin-bottom: 16rpx;
+}
+
+.coach-home-course-detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.coach-home-course-detail-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 12rpx;
+  opacity: 0.5;
+}
+
+.coach-home-course-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coach-home-course-status {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.coach-home-course-status.upcoming {
+  background: #e6f7e6;
+  color: #07c160;
+}
+
+.coach-home-course-status.ongoing {
+  background: #fff2f0;
+  color: #f56c6c;
+}
+
+.coach-home-course-status.completed {
+  background: #f0f0f0;
+  color: #999;
+}
+
+.coach-home-course-students {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  background: #f5f5f5;
+  border-radius: 30rpx;
+}
+
+.coach-home-course-students-icon {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+  opacity: 0.5;
+}
+
+.coach-home-course-students text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 加载 */
+.coach-home-loading {
+  padding: 40rpx 0;
+  text-align: center;
+}

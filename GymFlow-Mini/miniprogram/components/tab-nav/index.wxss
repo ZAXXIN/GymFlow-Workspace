@@ -1,0 +1,54 @@
+.tab-nav-wrapper {
+  background: transparent;
+  width: 100%;
+}
+
+.tab-nav-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.tab-nav {
+  width: 100%;
+  white-space: nowrap;
+  background: transparent;
+}
+
+.tab-nav-container {
+  position: relative;
+  display: inline-block;
+  min-width: 100%;
+}
+
+.tab-nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  padding: 0 32rpx;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.tab-nav-item-active {
+  color: #07c160;
+  font-weight: 500;
+}
+
+.tab-nav-item-text {
+  line-height: 1;
+}
+
+.tab-nav-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4rpx;
+  background-color: #07c160;
+  transition: transform 0.3s;
+}

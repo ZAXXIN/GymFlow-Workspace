@@ -1,0 +1,172 @@
+/* pages/member/add-health-record/index.wxss */.add-health-record-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 24rpx;
+}
+
+/* 表单 */
+.add-health-record-form {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.add-health-record-form-item {
+  margin-bottom: 32rpx;
+}
+
+.add-health-record-form-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.add-health-record-form-label-text {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.add-health-record-form-required {
+  color: #f56c6c;
+  margin-left: 4rpx;
+  font-size: 28rpx;
+}
+
+.add-health-record-form-control {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+}
+
+.add-health-record-form-input {
+  flex: 1;
+  height: 48rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.add-health-record-form-textarea {
+  flex: 1;
+  min-height: 120rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.add-health-record-form-unit {
+  font-size: 26rpx;
+  color: #999;
+  margin-left: 12rpx;
+}
+
+.add-health-record-form-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.add-health-record-form-value.placeholder {
+  color: #ccc;
+}
+
+.add-health-record-form-icon {
+  width: 40rpx;
+  height: 40rpx;
+  opacity: 0.5;
+}
+
+/* 提交按钮 */
+.add-health-record-form-actions {
+  margin-top: 48rpx;
+  padding: 0 24rpx;
+}
+
+.add-health-record-form-submit {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
+  border-radius: 44rpx;
+  border: none;
+}
+
+.add-health-record-form-submit::after {
+  border: none;
+}
+
+.add-health-record-form-submit[disabled] {
+  opacity: 0.7;
+}
+
+/* 日期选择弹窗 */
+.date-picker-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.date-picker-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.date-picker-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.date-picker-cancel {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.date-picker-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.date-picker-confirm {
+  font-size: 28rpx;
+  color: #07c160;
+}
+
+.date-picker-view {
+  height: 400rpx;
+  width: 100%;
+}
+
+.date-picker-column-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  font-size: 32rpx;
+  color: #333;
+}

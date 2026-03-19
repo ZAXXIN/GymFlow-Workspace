@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "首页",
+  "usingComponents": {
+      "tab-nav": "/components/tab-nav/index",
+      "search-bar": "../../../components/search-bar/index",
+      "product-card": "/components/product-card/index",
+      "loading": "/components/loading/index",
+      "empty-state": "/components/empty-state/index",
+      "message-badge": "/components/message-badge/index"
+  },
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

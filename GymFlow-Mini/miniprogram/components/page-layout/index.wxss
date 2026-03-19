@@ -1,0 +1,19 @@
+/* components/page-layout/index.wxss */
+.page-layout {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  width: 100%;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保所有直接子元素都能正常显示 */
+.page-layout > view,
+.page-layout > scroll-view,
+.page-layout > swiper {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+}

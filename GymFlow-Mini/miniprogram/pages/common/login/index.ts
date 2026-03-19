@@ -1,0 +1,194 @@
+// 登录页面逻辑
+import { miniLogin } from '../../../services/api/auth.api'
+import { userStore } from '../../../stores/user.store'
+import { messageStore } from '../../../stores/message.store'
+import { configStore } from '../../../stores/config.store'
+import { showToast, showLoading, hideLoading } from '../../../utils/wx-util'
+import { isValidPhone } from '../../../utils/validator'
+
+Page({
+  data: {
+    phone: '18800000001',
+    password: '123456',
+    loading: false,
+    showPassword: false,
+    agreement: true,
+    systemName: 'GymFlow健身',
+    systemLogo: '/assets/icons/logo.jpg'
+  },
+
+  onLoad: function() {
+    // 检查是否已登录
+    this.checkLoginStatus()
+    
+    // 获取系统名称（从configStore）
+    const app = getApp()
+    if (app.globalData && app.globalData.configStore) {
+      this.setData({
+        systemName: app.globalData.configStore.systemName,
+        systemLogo: app.globalData.configStore.systemLogo
+      })
+    }
+  },
+
+  /**
+   * 检查登录状态
+   */
+  checkLoginStatus: function() {
+    if (userStore.isLogin) {
+      // 已登录，跳转到对应首页
+      this.redirectToHome()
+    }
+  },
+
+  /**
+   * 跳转到对应首页
+   */
+  redirectToHome: function() {
+    const role = userStore.role
+    
+    if (role === 'MEMBER') {
+      wx.reLaunch({
+        url: '/pages/member/home/index'
+      })
+    } else if (role === 'COACH') {
+      wx.reLaunch({
+        url: '/pages/coach/home/index'
+      })
+    }
+  },
+
+  /**
+   * 手机号输入
+   */
+  onPhoneInput: function(e) {
+    this.setData({
+      phone: e.detail.value
+    })
+  },
+
+  /**
+   * 密码输入
+   */
+  onPasswordInput: function(e) {
+    this.setData({
+      password: e.detail.value
+    })
+  },
+
+  /**
+   * 切换密码显示
+   */
+  togglePassword: function() {
+    this.setData({
+      showPassword: !this.data.showPassword
+    })
+  },
+
+  /**
+   * 切换协议同意
+   */
+  toggleAgreement: function() {
+    this.setData({
+      agreement: !this.data.agreement
+    })
+  },
+
+  /**
+   * 查看用户协议
+   */
+  viewAgreement: function() {
+    wx.navigateTo({
+      url: '/pages/common/webview/index?url=agreement'
+    })
+  },
+
+  /**
+   * 查看隐私政策
+   */
+  viewPrivacy: function() {
+    wx.navigateTo({
+      url: '/pages/common/webview/index?url=privacy'
+    })
+  },
+
+  /**
+   * 登录
+   */
+  onLogin: function() {
+    var that = this
+    var phone = this.data.phone
+    var password = this.data.password
+    var agreement = this.data.agreement
+    
+    // 验证协议同意
+    if (!agreement) {
+      showToast('请先同意用户协议和隐私政策', 'none')
+      return
+    }
+    
+    // 验证手机号
+    if (!phone) {
+      showToast('请输入手机号', 'none')
+      return
+    }
+    
+    if (!isValidPhone(phone)) {
+      showToast('请输入正确的手机号', 'none')
+      return
+    }
+    
+    // 验证密码
+    if (!password) {
+      showToast('请输入密码', 'none')
+      return
+    }
+    
+    if (password.length < 6) {
+      showToast('密码不能少于6位', 'none')
+      return
+    }
+    
+    this.setData({ loading: true })
+    showLoading('登录中...')
+    
+    // 调用登录接口
+    miniLogin({
+      phone: phone,
+      password: password
+    }).then(function(result) {
+      // 保存用户信息
+      userStore.setUserInfo(result)
+      
+      // 初始化消息和配置（登录后才加载）
+      return Promise.all([
+        configStore.loadConfig(true),
+        messageStore.init()
+      ]).then(function() {
+        // 刷新未读消息数
+        return messageStore.refreshUnreadCount()
+      }).then(function() {
+        hideLoading()
+        showToast('登录成功', 'success')
+        
+        // 跳转到对应首页
+        setTimeout(function() {
+          that.redirectToHome()
+        }, 1500)
+      })
+      
+    }).catch(function(error) {
+      hideLoading()
+      showToast(error.message || '登录失败', 'none')
+      that.setData({ loading: false })
+    })
+  },
+
+  /**
+   * 表单提交（防止页面滚动）
+   */
+  onFormSubmit: function(e) {
+    // 阻止默认提交行为
+    return false
+  }
+})

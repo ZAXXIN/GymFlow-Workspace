@@ -1,0 +1,118 @@
+<view class="search-result">
+  <!-- 搜索栏 -->
+  <view class="search-result-header">
+    <search-bar 
+      placeholder="搜索商品、课程..."
+      value="{{keyword}}"
+      focus="{{true}}"
+      bindsearch="onSearch"
+      bindclear="onClear"
+    ></search-bar>
+  </view>
+  
+  <!-- 分类筛选 -->
+  <view class="search-result-filter" wx:if="{{showFilter}}">
+    <view class="search-result-filter-tabs">
+      <view 
+        class="search-result-filter-tab {{activeTab === 0 ? 'search-result-filter-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="0"
+      >全部</view>
+      <view 
+        class="search-result-filter-tab {{activeTab === 1 ? 'search-result-filter-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="1"
+      >商品</view>
+      <view 
+        class="search-result-filter-tab {{activeTab === 2 ? 'search-result-filter-tab-active' : ''}}"
+        bindtap="onTabChange"
+        data-index="2"
+      >课程</view>
+    </view>
+    
+    <view class="search-result-filter-sort" bindtap="onSortChange">
+      <text>{{sortText}}</text>
+      <image class="search-result-filter-sort-icon" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+    </view>
+  </view>
+  
+  <!-- 搜索结果 -->
+  <view class="search-result-content">
+    <!-- 商品列表 -->
+    <view class="search-result-products" wx:if="{{activeTab === 0 || activeTab === 1}}">
+      <view class="search-result-section-title" wx:if="{{activeTab === 0 && products.length > 0}}">
+        <text>商品</text>
+        <text class="search-result-section-count">{{productTotal}}个</text>
+      </view>
+      
+      <view class="search-result-product-grid">
+        <block wx:for="{{products}}" wx:key="id" wx:for-item="product">
+          <product-card 
+            product="{{product}}"
+            layout="grid"
+            bindtap="onProductTap"
+            bindbuy="onProductBuy"
+          ></product-card>
+        </block>
+      </view>
+    </view>
+    
+    <!-- 课程列表 -->
+    <view class="search-result-courses" wx:if="{{activeTab === 0 || activeTab === 2}}">
+      <view class="search-result-section-title" wx:if="{{activeTab === 0 && courses.length > 0}}">
+        <text>课程</text>
+        <text class="search-result-section-count">{{courseTotal}}个</text>
+      </view>
+      
+      <view class="search-result-course-list">
+        <block wx:for="{{courses}}" wx:key="scheduleId" wx:for-item="course">
+          <view class="search-result-course-item" bindtap="onCourseTap" data-course="{{course}}">
+            <view class="search-result-course-header">
+              <text class="search-result-course-name">{{course.courseName}}</text>
+              <text class="search-result-course-type">{{course.courseType}}</text>
+            </view>
+            
+            <view class="search-result-course-info">
+              <view class="search-result-course-info-item">
+                <image class="search-result-course-info-icon" src="/assets/icons/coach.png" mode="aspectFit"></image>
+                <text>{{course.coachName}}教练</text>
+              </view>
+              <view class="search-result-course-info-item">
+                <image class="search-result-course-info-icon" src="/assets/icons/time.png" mode="aspectFit"></image>
+                <text>{{course.scheduleDate}} {{formatTime(course.startTime)}}</text>
+              </view>
+              <view class="search-result-course-info-item">
+                <image class="search-result-course-info-icon" src="/assets/icons/location.png" mode="aspectFit"></image>
+                <text>{{course.location || '未指定'}}</text>
+              </view>
+            </view>
+            
+            <view class="search-result-course-footer">
+              <view class="search-result-course-price">¥{{course.price}}</view>
+              <view class="search-result-course-capacity {{course.remainingSlots <= 5 ? 'search-result-course-capacity-warning' : ''}}">
+                剩余{{course.remainingSlots}}席
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+    
+    <!-- 加载中 -->
+    <view class="search-result-loading" wx:if="{{loading}}">
+      <loading type="circular" text="搜索中..."></loading>
+    </view>
+    
+    <!-- 没有更多 -->
+    <view class="search-result-nomore" wx:if="{{!hasMore && (products.length > 0 || courses.length > 0)}}">
+      <text>没有更多了</text>
+    </view>
+    
+    <!-- 空状态 -->
+    <empty-state 
+      wx:if="{{!loading && products.length === 0 && courses.length === 0}}"
+      show="{{true}}"
+      text="没有找到相关结果"
+    ></empty-state>
+  </view>
+</view>

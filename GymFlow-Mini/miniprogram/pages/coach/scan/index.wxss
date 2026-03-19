@@ -1,0 +1,346 @@
+.scan-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+}
+
+/* 扫码容器 */
+.scan-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 相机预览 */
+.scan-camera {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 扫码头部 */
+.scan-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 120rpx 0 60rpx;
+  text-align: center;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%);
+}
+
+.scan-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 16rpx;
+}
+
+.scan-tip {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 扫码框 */
+.scan-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500rpx;
+  height: 500rpx;
+  z-index: 10;
+}
+
+.scan-box-corner {
+  position: absolute;
+  width: 60rpx;
+  height: 60rpx;
+  border-color: #07c160;
+  border-style: solid;
+}
+
+.scan-box-corner-tl {
+  top: 0;
+  left: 0;
+  border-top-width: 6rpx;
+  border-left-width: 6rpx;
+}
+
+.scan-box-corner-tr {
+  top: 0;
+  right: 0;
+  border-top-width: 6rpx;
+  border-right-width: 6rpx;
+}
+
+.scan-box-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 6rpx;
+  border-left-width: 6rpx;
+}
+
+.scan-box-corner-br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 6rpx;
+  border-right-width: 6rpx;
+}
+
+/* 扫描线动画 */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 20rpx;
+  right: 20rpx;
+  height: 4rpx;
+  background: #07c160;
+  box-shadow: 0 0 20rpx #07c160;
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* 底部操作区 */
+.scan-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 60rpx 32rpx 80rpx;
+  display: flex;
+  justify-content: space-between;
+  z-index: 10;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+}
+
+.scan-input-method,
+.scan-torch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160rpx;
+}
+
+.scan-input-icon,
+.scan-torch-icon {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 12rpx;
+}
+
+.scan-input-method text,
+.scan-torch text {
+  font-size: 24rpx;
+  color: #fff;
+}
+
+/* 手动输入弹窗 */
+.scan-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.scan-modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.scan-modal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.scan-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.scan-modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.scan-modal-close {
+  width: 48rpx;
+  height: 48rpx;
+  opacity: 0.5;
+}
+
+.scan-modal-body {
+  padding: 32rpx;
+}
+
+.scan-code-input {
+  background: #f8f8f8;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.scan-code-field {
+  width: 100%;
+  height: 80rpx;
+  font-size: 48rpx;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 16rpx;
+  color: #333;
+}
+
+.scan-code-placeholder {
+  font-size: 48rpx;
+  color: #ccc;
+}
+
+.scan-code-tip {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+
+.scan-modal-footer {
+  display: flex;
+  padding: 24rpx;
+  border-top: 2rpx solid #f5f5f5;
+}
+
+.scan-modal-btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  margin: 0 8rpx;
+  font-size: 28rpx;
+  border-radius: 40rpx;
+  text-align: center;
+}
+
+.scan-modal-btn::after {
+  border: none;
+}
+
+.scan-modal-btn-cancel {
+  background: #fff;
+  color: #666;
+  border: 2rpx solid #ddd;
+}
+
+.scan-modal-btn-confirm {
+  background: #07c160;
+  color: #fff;
+}
+
+.scan-modal-btn-confirm[disabled] {
+  opacity: 0.5;
+}
+
+/* 核销结果提示 */
+.scan-result {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-result-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.scan-result-content {
+  position: relative;
+  width: 500rpx;
+  padding: 48rpx 32rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.scan-result-success {
+  border-top: 8rpx solid #07c160;
+}
+
+.scan-result-error {
+  border-top: 8rpx solid #f56c6c;
+}
+
+.scan-result-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 24rpx;
+}
+
+.scan-result-text {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.scan-result-btn {
+  width: 200rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 32rpx;
+}
+
+.scan-result-btn::after {
+  border: none;
+}

@@ -1,0 +1,159 @@
+.product-card {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 网格布局 */
+.product-card-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card-grid .product-card-image {
+  position: relative;
+  width: 100%;
+  height: 240rpx;
+}
+
+.product-card-grid .product-card-image image {
+  width: 100%;
+  height: 100%;
+}
+
+.product-card-grid .product-card-info {
+  padding: 20rpx;
+}
+
+/* 列表布局 */
+.product-card-list {
+  display: flex;
+  padding: 24rpx;
+}
+
+.product-card-list .product-card-image {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.product-card-list .product-card-image image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+.product-card-list .product-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 图片标签 */
+.product-card-tag {
+  position: absolute;
+  top: 16rpx;
+  left: 16rpx;
+  padding: 4rpx 16rpx;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 20rpx;
+}
+
+.product-card-tag-0 { background: #f88989; } /* 会籍卡 */
+.product-card-tag-1 { background: #edbb6f; } /* 私教课 */
+.product-card-tag-2 { background: #8bd466; } /* 团课 */
+.product-card-tag-3 { background: #909399b7; } /* 相关产品 */
+
+/* 折扣标签 */
+.product-card-discount {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  padding: 4rpx 16rpx;
+  background: #e18989;
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 20rpx;
+}
+
+/* 标题 */
+.product-card-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8rpx;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 描述 */
+.product-card-desc {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 底部 */
+.product-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.product-card-price {
+  /* display: flex; */
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.product-card-price-current {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #f56c6c;
+  margin-right: 8rpx;
+}
+
+.product-card-price-original {
+  font-size: 24rpx;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.product-card-buy {
+  width: 120rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 24rpx;
+  border-radius: 28rpx;
+  text-align: center;
+}
+
+.product-card-buy::after {
+  border: none;
+}
+
+/* 销量 */
+.product-card-sales {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  /* margin-top: -20rpx; */
+  margin:-40rpx 0 20rpx 30rpx;
+}

@@ -1,0 +1,67 @@
+{
+  "pages": [
+    "pages/common/login/index",
+    "pages/member/home/index",
+    "pages/member/booking/index",
+    "pages/member/my/index",
+    "pages/member/order-list/index",
+    "pages/member/health-records/index",
+    "pages/member/add-health-record/index",
+    "pages/member/checkin-code/index",
+    "pages/member/card-info/index",
+    "pages/coach/home/index",
+    "pages/coach/finance/index",
+    "pages/coach/my/index",
+    "pages/coach/student-list/index",
+    "pages/coach/member-detail/index",
+    "pages/coach/scan/index",
+    "pages/common/product-detail/index",
+    "pages/common/booking-detail/index",
+    "pages/common/order-detail/index",
+    "pages/common/message-list/index",
+    "pages/common/search-result/index",
+    "pages/common/modify-password/index",
+    "components/global-bg/index",
+    "components/page-container/index",
+    "components/page-layout/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "GymFlow健身",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/member/home/index",
+        "text": "首页",
+        "iconPath": "assets/icons/member/home.png",
+        "selectedIconPath": "assets/icons/member/home-active.png"
+      },
+      {
+        "pagePath": "pages/member/booking/index",
+        "text": "预约",
+        "iconPath": "assets/icons/member/booking.png",
+        "selectedIconPath": "assets/icons/member/booking-active.png"
+      },
+      {
+        "pagePath": "pages/member/my/index",
+        "text": "我的",
+        "iconPath": "assets/icons/member/my.png",
+        "selectedIconPath": "assets/icons/member/my-active.png"
+      }
+    ]
+  },
+  "usingComponents": {
+    "page-layout": "/components/page-layout/index",
+    "global-bg": "/components/global-bg/index"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

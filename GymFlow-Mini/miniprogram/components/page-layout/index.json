@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "global-bg": "/components/global-bg/index"
+  }
+}

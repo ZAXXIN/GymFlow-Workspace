@@ -1,0 +1,88 @@
+<view class="scan-page">
+  <!-- 扫码区域 -->
+  <view class="scan-container">
+    <view class="scan-header">
+      <text class="scan-title">请扫描会员签到码</text>
+      <text class="scan-tip">将二维码放入框内，即可自动扫描</text>
+    </view>
+    
+    <!-- 扫码框 -->
+    <view class="scan-box">
+      <view class="scan-box-corner scan-box-corner-tl"></view>
+      <view class="scan-box-corner scan-box-corner-tr"></view>
+      <view class="scan-box-corner scan-box-corner-bl"></view>
+      <view class="scan-box-corner scan-box-corner-br"></view>
+      
+      <!-- 扫描线 -->
+      <view class="scan-line"></view>
+    </view>
+    
+    <!-- 相机预览（实际扫码使用 wx.scanCode，这里只是UI） -->
+    <camera 
+      class="scan-camera"
+      device-position="back"
+      flash="off"
+      wx:if="{{showCamera}}"
+    ></camera>
+  </view>
+  
+  <!-- 底部操作区 -->
+  <view class="scan-footer">
+    <view class="scan-input-method" bindtap="onInputCode">
+      <image class="scan-input-icon" src="/assets/icons/keyboard.png" mode="aspectFit"></image>
+      <text>输入6位数字码</text>
+    </view>
+    
+    <view class="scan-torch" bindtap="toggleTorch" wx:if="{{showCamera}}">
+      <image class="scan-torch-icon" src="/assets/icons/{{torchOn ? 'flash-on' : 'flash-off'}}.png" mode="aspectFit"></image>
+      <text>{{torchOn ? '关闭' : '开启'}}手电筒</text>
+    </view>
+  </view>
+  
+  <!-- 手动输入弹窗 -->
+  <view class="scan-modal" wx:if="{{showInputModal}}">
+    <view class="scan-modal-mask" bindtap="onCloseModal"></view>
+    <view class="scan-modal-content">
+      <view class="scan-modal-header">
+        <text class="scan-modal-title">输入签到码</text>
+        <image class="scan-modal-close" src="/assets/icons/close.png" mode="aspectFit" bindtap="onCloseModal"></image>
+      </view>
+      
+      <view class="scan-modal-body">
+        <view class="scan-code-input">
+          <input 
+            class="scan-code-field"
+            type="number"
+            maxlength="6"
+            placeholder="请输入6位数字码"
+            placeholder-class="scan-code-placeholder"
+            value="{{inputCode}}"
+            bindinput="onCodeInput"
+            focus="{{true}}"
+          />
+        </view>
+        
+        <view class="scan-code-tip">签到码可在会员的签到页面查看</view>
+      </view>
+      
+      <view class="scan-modal-footer">
+        <button class="scan-modal-btn scan-modal-btn-cancel" bindtap="onCloseModal">取消</button>
+        <button 
+          class="scan-modal-btn scan-modal-btn-confirm" 
+          bindtap="onConfirmCode"
+          disabled="{{inputCode.length !== 6}}"
+        >确认核销</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 核销结果提示 -->
+  <view class="scan-result" wx:if="{{showResult}}">
+    <view class="scan-result-mask"></view>
+    <view class="scan-result-content {{resultSuccess ? 'scan-result-success' : 'scan-result-error'}}">
+      <image class="scan-result-icon" src="/assets/icons/{{resultSuccess ? 'success' : 'error'}}.png" mode="aspectFit"></image>
+      <text class="scan-result-text">{{resultMessage}}</text>
+      <button class="scan-result-btn" bindtap="onResultConfirm">确定</button>
+    </view>
+  </view>
+</view>

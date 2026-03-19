@@ -1,0 +1,132 @@
+<view class="booking-detail">
+  <!-- 头部状态 -->
+  <view class="booking-detail-header">
+    <view class="booking-detail-header-bg"></view>
+    <view class="booking-detail-header-content">
+      <view class="booking-detail-status-icon">
+        <image src="/assets/icons/{{getStatusIcon(booking.bookingStatus)}}.png" mode="aspectFit"></image>
+      </view>
+      <view class="booking-detail-status-info">
+        <text class="booking-detail-status-text">{{booking.bookingStatusDesc}}</text>
+        <text class="booking-detail-status-time" wx:if="{{booking.checkinTime}}">
+          签到时间: {{formatDateTime(booking.checkinTime)}}
+        </text>
+        <text class="booking-detail-status-time" wx:elif="{{booking.cancellationTime}}">
+          取消时间: {{formatDateTime(booking.cancellationTime)}}
+        </text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 课程信息卡片 -->
+  <view class="booking-detail-card">
+    <view class="booking-detail-card-header">
+      <text class="booking-detail-course-name">{{booking.courseName || '--'}}</text>
+      <text class="booking-detail-course-type">{{getCourseTypeText(booking.courseType)}}</text>
+    </view>
+    
+    <view class="booking-detail-info-list">
+      <view class="booking-detail-info-item">
+        <image class="booking-detail-info-icon" src="/assets/icons/coach.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">教练</text>
+        <text class="booking-detail-info-value">{{booking.coachName || '待分配'}}</text>
+      </view>
+      
+      <view class="booking-detail-info-item">
+        <image class="booking-detail-info-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">日期</text>
+        <text class="booking-detail-info-value">{{booking.courseDate || '--'}}</text>
+      </view>
+      
+      <view class="booking-detail-info-item">
+        <image class="booking-detail-info-icon" src="/assets/icons/time.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">时间</text>
+        <text class="booking-detail-info-value">
+          {{formatTime(booking.startTime)}}-{{formatTime(booking.endTime)}}
+        </text>
+      </view>
+      
+      <view class="booking-detail-info-item">
+        <image class="booking-detail-info-icon" src="/assets/icons/location.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">地点</text>
+        <text class="booking-detail-info-value">{{booking.location || '未指定'}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 会员信息（教练端显示） -->
+  <view class="booking-detail-card" wx:if="{{userRole === 'COACH' && booking.memberInfo}}">
+    <view class="booking-detail-card-header">
+      <text class="booking-detail-card-title">会员信息</text>
+    </view>
+    
+    <view class="booking-detail-member" bindtap="onMemberTap" data-memberid="{{booking.memberId}}">
+      <view class="booking-detail-member-avatar">
+        <image src="/assets/icons/avatar-default.png" mode="aspectFill"></image>
+      </view>
+      <view class="booking-detail-member-info">
+        <text class="booking-detail-member-name">{{booking.memberName}}</text>
+        <text class="booking-detail-member-phone">{{booking.memberPhone}}</text>
+      </view>
+      <image class="booking-detail-member-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+    </view>
+  </view>
+  
+  <!-- 预约信息 -->
+  <view class="booking-detail-card">
+    <view class="booking-detail-card-header">
+      <text class="booking-detail-card-title">预约信息</text>
+    </view>
+    
+    <view class="booking-detail-info-list">
+      <view class="booking-detail-info-item">
+        <image class="booking-detail-info-icon" src="/assets/icons/booking-time.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">预约时间</text>
+        <text class="booking-detail-info-value">{{formatDateTime(booking.bookingTime)}}</text>
+      </view>
+      
+      <view class="booking-detail-info-item" wx:if="{{booking.bookingId}}">
+        <image class="booking-detail-info-icon" src="/assets/icons/booking-id.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">预约编号</text>
+        <text class="booking-detail-info-value">{{booking.bookingId}}</text>
+      </view>
+      
+      <view class="booking-detail-info-item" wx:if="{{booking.checkinCode}}">
+        <image class="booking-detail-info-icon" src="/assets/icons/code.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">签到码</text>
+        <text class="booking-detail-info-value booking-detail-code">{{booking.checkinCode}}</text>
+      </view>
+      
+      <view class="booking-detail-info-item" wx:if="{{booking.cancellationReason}}">
+        <image class="booking-detail-info-icon" src="/assets/icons/reason.png" mode="aspectFit"></image>
+        <text class="booking-detail-info-label">取消原因</text>
+        <text class="booking-detail-info-value">{{booking.cancellationReason}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="booking-detail-actions" wx:if="{{showActions}}">
+    <button 
+      class="booking-detail-btn booking-detail-btn-cancel" 
+      wx:if="{{booking.bookingStatus === 0}}"
+      bindtap="onCancelBooking"
+    >取消预约</button>
+    
+    <button 
+      class="booking-detail-btn booking-detail-btn-checkin" 
+      wx:if="{{booking.bookingStatus === 0 && canCheckin}}"
+      bindtap="onViewCheckinCode"
+    >查看签到码</button>
+    
+    <button 
+      class="booking-detail-btn booking-detail-btn-back" 
+      bindtap="onBack"
+    >返回</button>
+  </view>
+  
+  <!-- 加载中 -->
+  <view class="booking-detail-loading" wx:if="{{loading}}">
+    <loading type="circular" text="加载中..."></loading>
+  </view>
+</view>

@@ -1,0 +1,352 @@
+.card-info-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 120rpx;
+}
+
+/* 头部卡片 */
+.card-info-header {
+  padding: 32rpx;
+}
+
+.card-info-card {
+  position: relative;
+  height: 360rpx;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
+}
+
+.card-info-card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-info-card-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: 32rpx;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+
+.card-info-card-type {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+}
+
+.card-info-card-number {
+  font-size: 28rpx;
+  opacity: 0.9;
+  margin-bottom: 40rpx;
+}
+
+.card-info-card-name {
+  font-size: 36rpx;
+  font-weight: 500;
+  margin-bottom: auto;
+}
+
+.card-info-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-info-card-date {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+.card-info-card-date text {
+  display: block;
+}
+
+.card-info-card-date text:first-child {
+  margin-bottom: 4rpx;
+}
+
+.card-info-card-status {
+  font-size: 24rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-info-card-status-active {
+  background: #52c41a;
+}
+
+.card-info-card-status-expired {
+  background: #999;
+}
+
+.card-info-card-status-used-up {
+  background: #f56c6c;
+}
+
+/* 空卡片 */
+.card-info-card-empty .card-info-card-bg {
+  background: linear-gradient(135deg, #ddd 0%, #bbb 100%);
+}
+
+.card-info-card-content-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.card-info-card-empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.5;
+}
+
+.card-info-card-empty-text {
+  font-size: 28rpx;
+  opacity: 0.8;
+  margin-bottom: 32rpx;
+}
+
+.card-info-card-empty-btn {
+  width: 200rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  background: #fff;
+  color: #07c160;
+  font-size: 26rpx;
+  border-radius: 32rpx;
+}
+
+.card-info-card-empty-btn::after {
+  border: none;
+}
+
+/* 通用区块 */
+.card-info-section {
+  background: #fff;
+  margin: 32rpx;
+  padding: 32rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.card-info-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.card-info-section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.card-info-section-more {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 信息列表 */
+.card-info-info-item {
+  display: flex;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.card-info-info-item:last-child {
+  border-bottom: none;
+}
+
+.card-info-info-label {
+  width: 160rpx;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.card-info-info-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+/* 统计数据 */
+.card-info-stats {
+  display: flex;
+}
+
+.card-info-stats-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.card-info-stats-value {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #07c160;
+  margin-bottom: 8rpx;
+}
+
+.card-info-stats-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 专属教练 */
+.card-info-coach {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+}
+
+.card-info-coach-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 24rpx;
+  background: #f0f0f0;
+}
+
+.card-info-coach-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.card-info-coach-info {
+  flex: 1;
+}
+
+.card-info-coach-name {
+  font-size: 32rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.card-info-coach-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.card-info-coach-arrow {
+  width: 32rpx;
+  height: 32rpx;
+  opacity: 0.3;
+}
+
+/* 历史卡片 */
+.card-info-history-item {
+  background: #f8f8f8;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-info-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.card-info-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.card-info-history-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.card-info-history-status {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.card-info-history-status-active {
+  background: #e6f7e6;
+  color: #52c41a;
+}
+
+.card-info-history-status-expired {
+  background: #f0f0f0;
+  color: #999;
+}
+
+.card-info-history-status-used-up {
+  background: #fff2f0;
+  color: #f56c6c;
+}
+
+.card-info-history-content {
+  padding-left: 8rpx;
+}
+
+.card-info-history-info {
+  display: flex;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+}
+
+.card-info-history-info:last-child {
+  margin-bottom: 0;
+}
+
+.card-info-history-label {
+  width: 140rpx;
+  color: #999;
+}
+
+.card-info-history-value {
+  flex: 1;
+  color: #666;
+}
+
+/* 底部按钮 */
+.card-info-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 24rpx 32rpx;
+  display: flex;
+  gap: 24rpx;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.05);
+  z-index: 10;
+}
+
+.card-info-btn {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 44rpx;
+  text-align: center;
+}
+
+.card-info-btn::after {
+  border: none;
+}
+
+.card-info-btn-outline {
+  background: #fff;
+  color: #07c160;
+  border: 2rpx solid #07c160;
+}

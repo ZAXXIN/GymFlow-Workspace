@@ -1,0 +1,145 @@
+<view class="coach-finance">
+  <!-- 统计周期切换 -->
+  <view class="coach-finance-period">
+    <tab-nav 
+      tabs="{{['日', '月', '年']}}"
+      current="{{activePeriod}}"
+      bindchange="onPeriodChange"
+    ></tab-nav>
+  </view>
+  
+  <!-- 统计卡片 -->
+  <view class="coach-finance-cards" wx:if="{{!loading}}">
+    <view class="coach-finance-card-row">
+      <stat-card 
+        title="本月课时"
+        value="{{stats.totalSessions}}"
+        unit="节"
+        icon="/assets/icons/session.png"
+        color="#07c160"
+        trend="{{stats.sessionsTrend}}"
+        trendText="较{{getTrendText()}}"
+        wx:if="{{activePeriod === 1}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="本日课时"
+        value="{{stats.totalSessions}}"
+        unit="节"
+        icon="/assets/icons/session.png"
+        color="#07c160"
+        trend="{{stats.sessionsTrend}}"
+        trendText="较昨日"
+        wx:if="{{activePeriod === 0}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="本年度课时"
+        value="{{stats.totalSessions}}"
+        unit="节"
+        icon="/assets/icons/session.png"
+        color="#07c160"
+        trend="{{stats.sessionsTrend}}"
+        trendText="较去年"
+        wx:if="{{activePeriod === 2}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="服务会员"
+        value="{{stats.totalMembers}}"
+        unit="人"
+        icon="/assets/icons/member.png"
+        color="#409EFF"
+        trend="{{stats.membersTrend}}"
+        trendText="较{{getTrendText()}}"
+      ></stat-card>
+    </view>
+    
+    <view class="coach-finance-card-row">
+      <stat-card 
+        title="总收入"
+        value="{{stats.totalRevenue}}"
+        unit="元"
+        icon="/assets/icons/revenue.png"
+        color="#f56c6c"
+        trend="{{stats.revenueTrend}}"
+        trendText="较{{getTrendText()}}"
+        wx:if="{{activePeriod === 1}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="本日收入"
+        value="{{stats.totalRevenue}}"
+        unit="元"
+        icon="/assets/icons/revenue.png"
+        color="#f56c6c"
+        trend="{{stats.revenueTrend}}"
+        trendText="较昨日"
+        wx:if="{{activePeriod === 0}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="本年度收入"
+        value="{{stats.totalRevenue}}"
+        unit="元"
+        icon="/assets/icons/revenue.png"
+        color="#f56c6c"
+        trend="{{stats.revenueTrend}}"
+        trendText="较去年"
+        wx:if="{{activePeriod === 2}}"
+      ></stat-card>
+      
+      <stat-card 
+        title="平均课时费"
+        value="{{avgHourlyRate}}"
+        unit="元/节"
+        icon="/assets/icons/rate.png"
+        color="#E6A23C"
+      ></stat-card>
+    </view>
+  </view>
+  
+  <!-- 加载中 -->
+  <view class="coach-finance-loading" wx:if="{{loading}}">
+    <loading type="circular" text="加载统计中..."></loading>
+  </view>
+  
+  <!-- 图表区域 -->
+  <view class="coach-finance-charts" wx:if="{{!loading && dataPoints.length > 0}}">
+    <!-- 课时趋势图 -->
+    <chart-card 
+      title="课时趋势"
+      chartId="sessionsChart"
+      data="{{sessionsChartData}}"
+      height="400"
+    ></chart-card>
+    
+    <!-- 收入趋势图 -->
+    <chart-card 
+      title="收入趋势"
+      chartId="revenueChart"
+      data="{{revenueChartData}}"
+      height="400"
+    ></chart-card>
+    
+    <!-- 会员趋势图 -->
+    <chart-card 
+      title="服务会员趋势"
+      chartId="membersChart"
+      data="{{membersChartData}}"
+      height="400"
+    ></chart-card>
+  </view>
+  
+  <!-- 空状态 -->
+  <empty-state 
+    wx:if="{{!loading && dataPoints.length === 0}}"
+    show="{{true}}"
+    text="暂无统计数据"
+  ></empty-state>
+  
+  <!-- 日期范围 -->
+  <view class="coach-finance-range" wx:if="{{!loading && dataPoints.length > 0}}">
+    <text class="coach-finance-range-text">统计周期: {{startDate}} 至 {{endDate}}</text>
+  </view>
+</view>

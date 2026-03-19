@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types":[],
+    // "types": ["miniprogram-api-typings"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./miniprogram/*"]
+    }
+  },
+  "include": [
+    "miniprogram/**/*.ts",
+    "typings/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

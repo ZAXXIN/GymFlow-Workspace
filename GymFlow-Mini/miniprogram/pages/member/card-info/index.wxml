@@ -1,0 +1,127 @@
+<view class="card-info-page">
+  <!-- 头部卡片 -->
+  <view class="card-info-header">
+    <view class="card-info-card" wx:if="{{activeCard}}">
+      <view class="card-info-card-bg"></view>
+      <view class="card-info-card-content">
+        <view class="card-info-card-type">{{activeCard.productName || '健身会员卡'}}</view>
+        <view class="card-info-card-number">NO. {{memberInfo.memberNo || '------'}}</view>
+        <view class="card-info-card-name">{{memberInfo.realName || '会员'}}</view>
+        <view class="card-info-card-footer">
+          <view class="card-info-card-date">
+            <text>有效期</text>
+            <text>{{activeCard.startDate || '----'}} 至 {{activeCard.endDate || '----'}}</text>
+          </view>
+          <view class="card-info-card-status {{getCardStatusClass(activeCard.status)}}">
+            {{getCardStatusText(activeCard.status)}}
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <view class="card-info-card card-info-card-empty" wx:else>
+      <view class="card-info-card-bg"></view>
+      <view class="card-info-card-content card-info-card-content-empty">
+        <image class="card-info-card-empty-icon" src="/assets/icons/card-empty.png" mode="aspectFit"></image>
+        <text class="card-info-card-empty-text">暂无有效会员卡</text>
+        <button class="card-info-card-empty-btn" bindtap="onBuyCard">去购买</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 会员信息 -->
+  <view class="card-info-section">
+    <view class="card-info-section-title">会员信息</view>
+    <view class="card-info-info-list">
+      <view class="card-info-info-item">
+        <text class="card-info-info-label">会员姓名</text>
+        <text class="card-info-info-value">{{memberInfo.realName || '--'}}</text>
+      </view>
+      <view class="card-info-info-item">
+        <text class="card-info-info-label">手机号码</text>
+        <text class="card-info-info-value">{{memberInfo.phone || '--'}}</text>
+      </view>
+      <view class="card-info-info-item">
+        <text class="card-info-info-label">会员编号</text>
+        <text class="card-info-info-value">{{memberInfo.memberNo || '--'}}</text>
+      </view>
+      <view class="card-info-info-item">
+        <text class="card-info-info-label">注册日期</text>
+        <text class="card-info-info-value">{{formatDate(memberInfo.createTime) || '--'}}</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 统计数据 -->
+  <view class="card-info-section">
+    <view class="card-info-section-title">运动数据</view>
+    <view class="card-info-stats">
+      <view class="card-info-stats-item">
+        <text class="card-info-stats-value">{{memberInfo.totalCheckins || 0}}</text>
+        <text class="card-info-stats-label">累计签到</text>
+      </view>
+      <view class="card-info-stats-item">
+        <text class="card-info-stats-value">{{memberInfo.totalCourseHours || 0}}</text>
+        <text class="card-info-stats-label">课程时长(时)</text>
+      </view>
+      <view class="card-info-stats-item">
+        <text class="card-info-stats-value">{{memberInfo.totalSpent || 0}}</text>
+        <text class="card-info-stats-label">累计消费</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 专属教练 -->
+  <view class="card-info-section" wx:if="{{memberInfo.personalCoachName}}">
+    <view class="card-info-section-title">专属教练</view>
+    <view class="card-info-coach" bindtap="onCoachTap">
+      <view class="card-info-coach-avatar">
+        <image src="/assets/icons/coach-avatar.png" mode="aspectFill"></image>
+      </view>
+      <view class="card-info-coach-info">
+        <text class="card-info-coach-name">{{memberInfo.personalCoachName}}</text>
+        <text class="card-info-coach-label">专属私教</text>
+      </view>
+      <image class="card-info-coach-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+    </view>
+  </view>
+  
+  <!-- 历史卡片 -->
+  <view class="card-info-section" wx:if="{{historyCards.length > 0}}">
+    <view class="card-info-section-header">
+      <text class="card-info-section-title">历史卡片</text>
+      <text class="card-info-section-more" bindtap="toggleHistory">{{showHistory ? '收起' : '展开'}}</text>
+    </view>
+    
+    <view class="card-info-history" wx:if="{{showHistory}}">
+      <view class="card-info-history-item" wx:for="{{historyCards}}" wx:key="productId" wx:for-item="card">
+        <view class="card-info-history-header">
+          <text class="card-info-history-name">{{card.productName}}</text>
+          <text class="card-info-history-status {{getCardStatusClass(card.status)}}">
+            {{getCardStatusText(card.status)}}
+          </text>
+        </view>
+        <view class="card-info-history-content">
+          <view class="card-info-history-info">
+            <text class="card-info-history-label">有效期</text>
+            <text class="card-info-history-value">{{card.startDate || '--'}} 至 {{card.endDate || '--'}}</text>
+          </view>
+          <view class="card-info-history-info" wx:if="{{card.remainingSessions !== undefined}}">
+            <text class="card-info-history-label">剩余课时</text>
+            <text class="card-info-history-value">{{card.remainingSessions}}节</text>
+          </view>
+          <view class="card-info-history-info">
+            <text class="card-info-history-label">购买金额</text>
+            <text class="card-info-history-value">¥{{card.amount || 0}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部按钮 -->
+  <view class="card-info-footer">
+    <button class="card-info-btn" bindtap="onRenewCard" wx:if="{{activeCard}}">续费会员卡</button>
+    <button class="card-info-btn card-info-btn-outline" bindtap="onBuyCard">购买新卡</button>
+  </view>
+</view>

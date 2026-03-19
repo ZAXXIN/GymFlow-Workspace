@@ -1,0 +1,90 @@
+<page-layout>
+<view class="member-home">
+  <!-- 头部 -->
+  <view class="member-home-header">
+    <view class="member-home-header-top">
+      <view class="member-home-header-left">
+        <!-- 修复：不能用 ?.，改用 && 或三元表达式 -->
+        <text class="member-home-greeting">Hi, {{userInfo ? userInfo.realName : '会员'}}</text>
+        <text class="member-home-date">{{getDate()}}</text>
+      </view>
+      <view class="member-home-header-right">
+        <view class="member-home-message" bindtap="goToMessage">
+          <!-- 修复：不能用 ?.，改用 && 或三元表达式 -->
+          <message-badge dot="{{true}}" count="{{messageStore && messageStore.unreadCount ? messageStore.unreadCount : 0}}">
+            <image class="member-home-message-icon" src="/assets/icons/message.png" mode="aspectFit"></image>
+          </message-badge>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 搜索栏 -->
+    <search-bar 
+      placeholder="搜索商品、课程..."
+      value="{{keyword}}"
+      showCancel="{{false}}"
+      bindinput="onSearchInput"
+      bindsearch="onSearch"
+      bindclear="onSearchClear"
+    ></search-bar>
+  </view>
+  
+  <!-- 当前提醒卡片 -->
+  <view class="member-home-reminder" wx:if="{{currentReminder}}" bindtap="onReminderTap">
+    <view class="member-home-reminder-icon">
+      <image src="/assets/icons/reminder.png" mode="aspectFit"></image>
+    </view>
+    <view class="member-home-reminder-content">
+      <view class="member-home-reminder-title">您有一个即将开始的课程</view>
+      <view class="member-home-reminder-info">
+        <text class="member-home-reminder-course">{{currentReminder.courseName}}</text>
+        <text class="member-home-reminder-time">{{currentReminder.bookingTime}}</text>
+        <text class="member-home-reminder-coach">{{currentReminder.coachName}}教练</text>
+      </view>
+    </view>
+    <view class="member-home-reminder-arrow">
+      <image src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+    </view>
+  </view>
+  
+  <!-- 分类导航 -->
+  <tab-nav 
+  tabs="{{categoryNames}}"
+  current="{{activeCategory}}"
+  bindchange="onCategoryChange"
+></tab-nav>
+  
+  <!-- 商品列表 -->
+  <view class="member-home-products">
+    <view class="member-home-products-grid">
+      <block wx:for="{{products}}" wx:key="id">
+        <view class="member-home-products-grid-item">
+          <product-card 
+            product="{{item}}"
+            layout="grid"
+            bindtap="onProductTap"
+            bindbuy="onProductBuy"
+          ></product-card>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 加载中 -->
+    <view class="member-home-products-loading" wx:if="{{loading}}">
+      <loading type="circular" text="加载中..."></loading>
+    </view>
+    
+    <!-- 没有更多 -->
+    <view class="member-home-products-nomore" wx:if="{{!hasMore && products.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+    
+    <!-- 空状态 -->
+    <empty-state 
+      wx:if="{{!loading && products.length === 0}}"
+      show="{{true}}"
+      text="暂无商品"
+    ></empty-state>
+  </view>
+</view>
+</page-layout>
