@@ -280,18 +280,19 @@ onMounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;  /* 防止整个页面滚动 */
+  overflow: hidden;
 }
 
 .header {
-  background-color: #001529;
+  /* 修改为绿色渐变，与小程序主题一致 */
+  background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
-  border-bottom: 1px solid #f0f0f0;
-  flex-shrink: 0;  /* 防止头部被压缩 */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .header-left {

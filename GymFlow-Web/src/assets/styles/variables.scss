@@ -1,25 +1,28 @@
+// src/assets/styles/variables.scss
+
 // 字体变量
 $font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 $font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+
 // 颜色变量
 :root {
-  // 主色调
-  --el-color-primary: #409eff;
-  --el-color-primary-light-3: #79bbff;
-  --el-color-primary-light-5: #a0cfff;
-  --el-color-primary-light-7: #c6e2ff;
-  --el-color-primary-light-8: #d9ecff;
-  --el-color-primary-light-9: #ecf5ff;
-  --el-color-primary-dark-2: #337ecc;
+  // 主色调 - 修改为小程序绿色 (#07c160)
+  --el-color-primary: #07c160;  // 修改这里
+  --el-color-primary-light-3: #28d176;  // 调整亮色
+  --el-color-primary-light-5: #5adc92;  // 调整亮色
+  --el-color-primary-light-7: #8ce8ae;  // 调整亮色
+  --el-color-primary-light-8: #b5f0cb;  // 调整亮色
+  --el-color-primary-light-9: #e6f7e9;  // 调整亮色
+  --el-color-primary-dark-2: #059e4d;  // 调整暗色
   
-  // 成功色
-  --el-color-success: #67c23a;
-  --el-color-success-light-3: #95d475;
-  --el-color-success-light-5: #b3e19d;
-  --el-color-success-light-7: #d1edc4;
-  --el-color-success-light-8: #e1f3d8;
-  --el-color-success-light-9: #f0f9eb;
-  --el-color-success-dark-2: #529b2e;
+  // 成功色 - 使用同色系
+  --el-color-success: #07c160;
+  --el-color-success-light-3: #28d176;
+  --el-color-success-light-5: #5adc92;
+  --el-color-success-light-7: #8ce8ae;
+  --el-color-success-light-8: #b5f0cb;
+  --el-color-success-light-9: #e6f7e9;
+  --el-color-success-dark-2: #059e4d;
   
   // 警告色
   --el-color-warning: #e6a23c;
@@ -63,7 +66,7 @@ $font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier
   
   // 背景颜色
   --el-bg-color: #ffffff;
-  --el-bg-color-page: #f2f3f5;
+  --el-bg-color-page: #f5f7fa;  // 改为更柔和
   --el-bg-color-overlay: #ffffff;
   
   // 填充颜色
@@ -77,7 +80,7 @@ $font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier
   
   // 阴影
   --el-box-shadow: 0 2px 4px rgba(0, 0, 0, .12), 0 0 6px rgba(0, 0, 0, .04);
-  --el-box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, .1);
+  --el-box-shadow-light: 0 2px 12px 0 rgba(7, 193, 96, 0.1);  // 添加绿色阴影
   --el-box-shadow-lighter: 0 1px 6px rgba(0, 0, 0, .2);
   
   // 圆角
@@ -94,15 +97,14 @@ $font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier
   --el-spacing-xl: 32px;
 }
 
-// 深色主题
+// 深色主题（可选修改）
 [data-theme="dark"] {
-  // 调整深色主题变量
-  --el-color-primary: #409eff;
-  --el-color-primary-light-3: #3375b9;
-  --el-color-primary-light-5: #2a598a;
-  --el-color-primary-light-7: #213d5b;
-  --el-color-primary-light-8: #1d3043;
-  --el-color-primary-light-9: #18222c;
+  --el-color-primary: #07c160;
+  --el-color-primary-light-3: #28d176;
+  --el-color-primary-light-5: #5adc92;
+  --el-color-primary-light-7: #8ce8ae;
+  --el-color-primary-light-8: #b5f0cb;
+  --el-color-primary-light-9: #e6f7e9;
   
   // 文字颜色
   --el-text-color-primary: #e5eaf3;
@@ -117,16 +119,16 @@ $font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier
   --el-bg-color-overlay: #1d1e1f;
 }
 
-// 自定义颜色
-$gymflow-primary: #667eea;
-$gymflow-secondary: #764ba2;
-$gymflow-success: #38b2ac;
+// 自定义颜色 - 修改为小程序风格
+$gymflow-primary: #07c160;
+$gymflow-secondary: #764ba2;  // 保留紫色作为辅助色
+$gymflow-success: #07c160;
 $gymflow-warning: #f6ad55;
 $gymflow-danger: #fc8181;
 $gymflow-info: #90cdf4;
 
-// 渐变
-$gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-$gradient-success: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+// 渐变 - 修改为绿色渐变
+$gradient-primary: linear-gradient(135deg, #07c160 0%, #05a350 100%);
+$gradient-success: linear-gradient(135deg, #07c160 0%, #05a350 100%);
 $gradient-warning: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
 $gradient-danger: linear-gradient(135deg, #fc8181 0%, #f56565 100%);

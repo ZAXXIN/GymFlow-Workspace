@@ -1,5 +1,11 @@
 <template>
   <div class="login-container">
+    <!-- 全局背景装饰（和小程序一致） -->
+    <div class="global-bg">
+      <div class="global-bg-circle global-bg-circle-1"></div>
+      <div class="global-bg-circle global-bg-circle-2"></div>
+    </div>
+    
     <div class="login-box">
       <!-- Logo和标题 -->
       <div class="logo-container">
@@ -19,29 +25,10 @@
         </el-form-item>
 
         <!-- 登录按钮 -->
-        <el-button type="primary" size="large" :loading="loading" @click="handleLogin" class="login-button">
+        <el-button type="success" size="large" :loading="loading" @click="handleLogin" class="login-button">
           {{ loading ? '登录中...' : '登录' }}
         </el-button>
       </el-form>
-
-      <!-- 测试账号提示 -->
-      <!-- <div class="test-accounts">
-        <el-row :gutter="20">
-          <el-col :span="12" v-for="account in testAccounts" :key="account.username">
-            <el-card shadow="hover" class="account-card">
-              <template #header>
-                <div class="account-header">
-                  <el-tag :type="account.roleType" size="small">{{ account.roleName }}</el-tag>
-                </div>
-              </template>
-              <div class="account-content">
-                <p><strong>用户名：</strong>{{ account.username }}</p>
-                <p><strong>密码：</strong>{{ account.password }}</p>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div> -->
     </div>
   </div>
 </template>
@@ -50,6 +37,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import type { FormInstance, FormRules } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -104,20 +92,62 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 全局背景渐变 - 和小程序保持一致 */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* 背景渐变 - 小程序风格 */
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* 全局背景装饰组件 - 复制自小程序 */
+.global-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.global-bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(7, 193, 96, 0.1);
+}
+
+.global-bg-circle-1 {
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  right: -200px;
+  background: rgba(7, 193, 96, 0.1);
+}
+
+.global-bg-circle-2 {
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  left: -100px;
+  background: rgba(7, 193, 96, 0.05);
 }
 
 .login-box {
   width: 520px;
-  padding: 40px;
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  padding: 48px;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .logo-container {
@@ -146,12 +176,32 @@ onMounted(() => {
 }
 
 .login-form {
-  .el-form-item {
+  :deep(.el-form-item) {
     margin-bottom: 24px;
   }
 
   :deep(.el-input__wrapper) {
-    border-radius: 6px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(7, 193, 96, 0.1);
+    }
+    
+    &.is-focus {
+      box-shadow: 0 4px 12px rgba(7, 193, 96, 0.2);
+      border-color: #07c160;
+    }
+  }
+
+  :deep(.el-input__inner) {
+    height: 48px;
+  }
+  
+  :deep(.el-input__prefix) {
+    font-size: 20px;
+    color: #07c160;
   }
 }
 
@@ -159,40 +209,44 @@ onMounted(() => {
   width: 100%;
   height: 48px;
   font-size: 16px;
-  border-radius: 6px;
+  border-radius: 24px;
   margin-top: 10px;
+  background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
+  border: none;
+  font-weight: 500;
+  letter-spacing: 2px;
+  
+  &:hover {
+    background: linear-gradient(135deg, #05a350 0%, #048c40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(7, 193, 96, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
-.test-accounts {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.test-accounts h3 {
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #666;
-  text-align: center;
-}
-
-.account-card {
-  margin-bottom: 10px;
-}
-
-.account-header {
-  text-align: center;
-}
-
-.account-content {
-  font-size: 13px;
-}
-
-.account-content p {
-  margin: 5px 0;
-}
-
-.account-content strong {
-  color: #333;
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .login-box {
+    width: 90%;
+    padding: 32px;
+    margin: 0 20px;
+  }
+  
+  .global-bg-circle-1 {
+    width: 400px;
+    height: 400px;
+    top: -150px;
+    right: -150px;
+  }
+  
+  .global-bg-circle-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -80px;
+    left: -80px;
+  }
 }
 </style>

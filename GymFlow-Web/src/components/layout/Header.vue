@@ -189,13 +189,14 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // 修改为绿色渐变
+  background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   z-index: 1000;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(7, 193, 96, 0.2); // 修改阴影颜色
 
   .header-left {
     display: flex;
@@ -372,5 +373,14 @@ onUnmounted(() => {
       display: none;
     }
   }
+}
+
+// 修改菜单激活文字颜色
+:deep(.el-menu-item.is-active) {
+  color: #07c160 !important;
+}
+
+:deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: #07c160 !important;
 }
 </style>

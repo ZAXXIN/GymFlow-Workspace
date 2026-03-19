@@ -13,6 +13,7 @@ import { setupPermissionDirective } from '@/directives/permission'
 
 // 导入全局样式
 import '@/assets/styles/index.scss'
+import '@/assets/styles/element-override.scss' 
 
 const app = createApp(App)
 
