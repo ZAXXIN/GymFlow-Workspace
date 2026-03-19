@@ -13,9 +13,6 @@ import java.nio.file.Paths;
 
 /**
  * Web MVC配置类
- * 功能：
- * 1. 静态资源映射（文件上传访问）
- * 2. 拦截器配置（权限验证）
  */
 @Slf4j
 @Configuration
@@ -29,24 +26,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 配置静态资源映射
-     * 作用：让上传的文件可以通过URL访问
-     *
-     * 配置前：
-     *   文件存储位置：./uploads/images/2026/03/04/uuid.jpg
-     *   访问方式：无法直接通过浏览器访问
-     *
-     * 配置后：
-     *   文件存储位置：./uploads/images/2026/03/04/uuid.jpg
-     *   访问方式：http://localhost:8080/api/files/images/2026/03/04/uuid.jpg
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 获取绝对路径
         String absolutePath = Paths.get(uploadPath).toAbsolutePath().normalize().toString().replace("\\", "/");
-
-        // 配置静态资源映射
-        // 注意：URL路径不要加 /api，因为这是静态资源，不是API
-        // 但访问时需要通过 /api 进来，所以这里配置的是 /files/**
         registry.addResourceHandler("/files/**")
                 .addResourceLocations("file:" + absolutePath + "/");
 
@@ -59,46 +42,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 配置拦截器
-     * 作用：权限验证、日志记录等
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(permissionInterceptor)
-                // 需要拦截的路径
+                // 拦截所有请求
                 .addPathPatterns("/**")
-                // 不需要拦截的路径（白名单）
+                // 不需要拦截的路径（登录和静态资源）
                 .excludePathPatterns(
-                        // 认证相关
-                        "/auth/login",
-                        "/auth/refresh-token",
-
-                        // 文件上传和访问（文件访问是静态资源，已经通过addResourceHandlers配置，不会被拦截器拦截）
-                        "/common/upload/**",
-
-                        // Swagger文档相关
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/swagger-resources/**",
-                        "/webjars/**",
-
-                        // 静态资源（除了文件上传外的其他静态资源）
-                        "/**.html",
-                        "/**.css",
-                        "/**.js",
-                        "/**.png",
-                        "/**.jpg",
-                        "/**.jpeg",
-                        "/**.gif",
-                        "/**.svg",
-                        "/**.ico",
-                        "/**.json"
+                        // 注意：/mini/** 路径不再排除，因为我们要在拦截器内部判断
+                        // 这样我们可以区分小程序端和PC端的权限需求
                 );
 
         log.info("==========================================");
         log.info("拦截器配置:");
         log.info("  拦截路径: /**");
-        log.info("  排除路径: /auth/login, /auth/refresh-token, /common/upload/**, /swagger-ui/**, /v3/api-docs/**");
+        log.info("  小程序端请求: /mini/** 自动放行（无需权限）");
+        log.info("  PC端白名单: /auth/login, /auth/refresh-token, /common/upload/**, /swagger-ui/**");
         log.info("==========================================");
     }
 }

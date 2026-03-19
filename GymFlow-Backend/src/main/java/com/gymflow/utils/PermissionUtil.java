@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * 权限验证工具类
+ * 只用于PC端，小程序端不需要权限验证
  */
 @Component
 public class PermissionUtil {
@@ -25,24 +26,26 @@ public class PermissionUtil {
     }
 
     /**
-     * 获取当前用户角色编码
+     * 获取当前用户角色ID
      */
-    public String getCurrentUserRole() {
-        return UserContext.getCurrentUserRole();
+    public Integer getCurrentRole() {
+        return UserContext.getCurrentRole();
     }
 
     /**
-     * 判断是否为老板
+     * 判断是否为老板（角色ID为0）
      */
     public boolean isBoss() {
-        return "BOSS".equals(getCurrentUserRole());
+        Integer role = getCurrentRole();
+        return role != null && role == 0;
     }
 
     /**
-     * 判断是否为前台
+     * 判断是否为前台（角色ID为1）
      */
     public boolean isReceptionist() {
-        return "RECEPTIONIST".equals(getCurrentUserRole());
+        Integer role = getCurrentRole();
+        return role != null && role == 1;
     }
 
     /**

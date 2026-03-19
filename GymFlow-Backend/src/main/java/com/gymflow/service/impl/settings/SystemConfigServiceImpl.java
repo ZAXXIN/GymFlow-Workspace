@@ -37,6 +37,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     private static final int DEFAULT_MIN_CLASS_SIZE = 5;    // 最低5人开课
     private static final int DEFAULT_MAX_CAPACITY = 30;     // 最多30人
 
+    //默认签到配置
+    private static final int DEFAULT_CHECKIN_START_MINUTES = 30;
+    private static final int DEFAULT_CHECKIN_END_MINUTES = 0;
+    private static final int DEFAULT_AUTO_COMPLETE_HOURS = 1;
+
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
@@ -64,6 +69,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         businessConfig.setCourseCancelHours(config.getCourseCancelHours());
         businessConfig.setMinClassSize(config.getMinClassSize());
         businessConfig.setMaxClassCapacity(config.getMaxClassCapacity());
+
+        //设置签到配置
+        businessConfig.setCheckinStartMinutes(config.getCheckinStartMinutes());
+        businessConfig.setCheckinEndMinutes(config.getCheckinEndMinutes());
+        businessConfig.setAutoCompleteHours(config.getAutoCompleteHours());
         response.setBusiness(businessConfig);
 
         // 设置更新时间
@@ -108,6 +118,17 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             throw new BusinessException("最低开课人数不能大于最大课程容量");
         }
 
+        // 验证签到配置
+        if (businessConfig.getCheckinStartMinutes() < 0) {
+            throw new BusinessException("签到开始时间不能小于0分钟");
+        }
+        if (businessConfig.getCheckinEndMinutes() < 0) {
+            throw new BusinessException("签到截止时间不能小于0分钟");
+        }
+        if (businessConfig.getAutoCompleteHours() < 0) {
+            throw new BusinessException("自动完成时间不能小于0小时");
+        }
+
         // 获取现有配置
         SystemConfig config = systemConfigMapper.selectConfig();
 
@@ -127,6 +148,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             config.setMinClassSize(businessConfig.getMinClassSize());
             config.setMaxClassCapacity(businessConfig.getMaxClassCapacity());
 
+            // 设置签到配置
+            config.setCheckinStartMinutes(businessConfig.getCheckinStartMinutes());
+            config.setCheckinEndMinutes(businessConfig.getCheckinEndMinutes());
+            config.setAutoCompleteHours(businessConfig.getAutoCompleteHours());
+
             systemConfigMapper.insert(config);
             log.info("创建系统配置成功");
         } else {
@@ -142,6 +168,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             config.setCourseCancelHours(businessConfig.getCourseCancelHours());
             config.setMinClassSize(businessConfig.getMinClassSize());
             config.setMaxClassCapacity(businessConfig.getMaxClassCapacity());
+
+            // 更新签到配置
+            config.setCheckinStartMinutes(businessConfig.getCheckinStartMinutes());
+            config.setCheckinEndMinutes(businessConfig.getCheckinEndMinutes());
+            config.setAutoCompleteHours(businessConfig.getAutoCompleteHours());
 
             systemConfigMapper.updateById(config);
             log.info("更新系统配置成功");
@@ -172,8 +203,70 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             config.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
             config.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);
 
+            // 设置默认签到配置
+            config.setCheckinStartMinutes(DEFAULT_CHECKIN_START_MINUTES);
+            config.setCheckinEndMinutes(DEFAULT_CHECKIN_END_MINUTES);
+            config.setAutoCompleteHours(DEFAULT_AUTO_COMPLETE_HOURS);
+
             systemConfigMapper.insert(config);
             log.info("默认系统配置创建成功");
+        }
+    }
+
+    // 签到规则相关方法
+
+    @Override
+    public Integer getCheckinStartMinutes() {
+        SystemConfig config = systemConfigMapper.selectConfig();
+        return config != null ? config.getCheckinStartMinutes() : DEFAULT_CHECKIN_START_MINUTES;
+    }
+
+    @Override
+    public Integer getCheckinEndMinutes() {
+        SystemConfig config = systemConfigMapper.selectConfig();
+        return config != null ? config.getCheckinEndMinutes() : DEFAULT_CHECKIN_END_MINUTES;
+    }
+
+    @Override
+    public Integer getAutoCompleteHours() {
+        SystemConfig config = systemConfigMapper.selectConfig();
+        return config != null ? config.getAutoCompleteHours() : DEFAULT_AUTO_COMPLETE_HOURS;
+    }
+
+    @Override
+    public boolean canCheckIn(LocalDateTime courseDateTime) {
+        LocalDateTime now = LocalDateTime.now();
+        int startMinutes = getCheckinStartMinutes();
+        int endMinutes = getCheckinEndMinutes();
+
+        // 签到开始时间 = 课程开始时间 - startMinutes
+        LocalDateTime checkinStartTime = courseDateTime.minusMinutes(startMinutes);
+
+        // 签到截止时间 = 课程开始时间 + endMinutes
+        LocalDateTime checkinEndTime = courseDateTime.plusMinutes(endMinutes);
+
+        // 如果endMinutes为0，表示课程开始后不可签到
+        if (endMinutes == 0) {
+            return now.isAfter(checkinStartTime) && now.isBefore(courseDateTime);
+        } else {
+            return now.isAfter(checkinStartTime) && now.isBefore(checkinEndTime);
+        }
+    }
+
+    @Override
+    public void validateCheckInTime(LocalDateTime courseDateTime) {
+        if (!canCheckIn(courseDateTime)) {
+            int startMinutes = getCheckinStartMinutes();
+            int endMinutes = getCheckinEndMinutes();
+
+            String message;
+            if (endMinutes == 0) {
+                message = String.format("请在课程开始前%d分钟内签到", startMinutes);
+            } else {
+                message = String.format("请在课程开始前%d分钟至开始后%d分钟内签到",
+                        startMinutes, endMinutes);
+            }
+            throw new BusinessException(message);
         }
     }
 
@@ -197,8 +290,13 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         businessConfig.setCourseCancelHours(DEFAULT_CANCEL_HOURS);
         businessConfig.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
         businessConfig.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);
-        response.setBusiness(businessConfig);
 
+        // 默认签到配置
+        businessConfig.setCheckinStartMinutes(DEFAULT_CHECKIN_START_MINUTES);
+        businessConfig.setCheckinEndMinutes(DEFAULT_CHECKIN_END_MINUTES);
+        businessConfig.setAutoCompleteHours(DEFAULT_AUTO_COMPLETE_HOURS);
+
+        response.setBusiness(businessConfig);
         response.setUpdateTime(LocalDateTime.now().format(DATE_TIME_FORMATTER));
 
         return response;
@@ -221,6 +319,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         vo.setCourseCancelHours(DEFAULT_CANCEL_HOURS);
         vo.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
         vo.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);
+
+        // 默认签到配置
+        vo.setCheckinStartMinutes(DEFAULT_CHECKIN_START_MINUTES);
+        vo.setCheckinEndMinutes(DEFAULT_CHECKIN_END_MINUTES);
+        vo.setAutoCompleteHours(DEFAULT_AUTO_COMPLETE_HOURS);
 
         vo.setUpdateTime(LocalDateTime.now().format(DATE_TIME_FORMATTER));
 

@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -691,7 +692,7 @@ public class CourseServiceImpl implements CourseService {
         // 计算报名率
         if (course.getMaxCapacity() > 0) {
             BigDecimal enrollmentRate = BigDecimal.valueOf(course.getCurrentEnrollment())
-                    .divide(BigDecimal.valueOf(course.getMaxCapacity()), 2, BigDecimal.ROUND_HALF_UP)
+                    .divide(BigDecimal.valueOf(course.getMaxCapacity()), 2, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100));
             vo.setEnrollmentRate(enrollmentRate);
         }

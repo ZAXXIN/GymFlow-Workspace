@@ -28,7 +28,7 @@ public class SystemConfigController {
 
     @GetMapping
     @Operation(summary = "获取系统配置")
-    @PreAuthorize("settings:config:view")  // 查看配置权限（老板和前台都有）
+//    @PreAuthorize("settings:config:view")  // 查看配置权限（老板和前台都有）
     public Result<SystemConfigResponseDTO> getConfig() {
         SystemConfigResponseDTO config = systemConfigService.getConfig();
         return Result.success("获取成功", config);

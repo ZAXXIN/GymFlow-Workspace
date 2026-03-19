@@ -83,6 +83,32 @@ public class SystemConfigValidator {
         return getBusinessConfig().getBusinessEndTime();
     }
 
+    // ========== 新增：签到相关方法 ==========
+
+    /**
+     * 获取签到开始时间（课程开始前多少分钟可签到）
+     */
+    public int getCheckinStartMinutes() {
+        BusinessConfigDTO config = getBusinessConfig();
+        return config.getCheckinStartMinutes() != null ? config.getCheckinStartMinutes() : 30;
+    }
+
+    /**
+     * 获取签到截止时间（课程开始后多少分钟截止）
+     */
+    public int getCheckinEndMinutes() {
+        BusinessConfigDTO config = getBusinessConfig();
+        return config.getCheckinEndMinutes() != null ? config.getCheckinEndMinutes() : 0;
+    }
+
+    /**
+     * 获取自动完成时间（课程结束后多少小时自动完成）
+     */
+    public int getAutoCompleteHours() {
+        BusinessConfigDTO config = getBusinessConfig();
+        return config.getAutoCompleteHours() != null ? config.getAutoCompleteHours() : 1;
+    }
+
     /**
      * 验证课程时间是否在营业时间内
      */
@@ -172,6 +198,48 @@ public class SystemConfigValidator {
         if (!canRenewCourse(courseEndDate)) {
             int renewalDays = getCourseRenewalDays();
             throw new BusinessException("课程只能在结束前" + renewalDays + "天内续约");
+        }
+    }
+
+    // ========== 新增：签到时间验证方法 ==========
+
+    /**
+     * 验证签到时间是否有效
+     * @param courseDateTime 课程开始时间
+     * @return true-可以签到，false-不在签到时间范围内
+     */
+    public boolean canCheckIn(LocalDateTime courseDateTime) {
+        LocalDateTime now = LocalDateTime.now();
+        int startMinutes = getCheckinStartMinutes();
+        int endMinutes = getCheckinEndMinutes();
+
+        // 签到开始时间 = 课程开始时间 - startMinutes
+        LocalDateTime checkinStartTime = courseDateTime.minusMinutes(startMinutes);
+
+        // 签到截止时间 = 课程开始时间 + endMinutes
+        LocalDateTime checkinEndTime = endMinutes == 0 ?
+                courseDateTime : courseDateTime.plusMinutes(endMinutes);
+
+        // 如果endMinutes为0，表示课程开始后不可签到
+        return !now.isBefore(checkinStartTime) && !now.isAfter(checkinEndTime);
+    }
+
+    /**
+     * 验证签到时间是否有效（带异常抛出）
+     */
+    public void validateCheckInTime(LocalDateTime courseDateTime) {
+        if (!canCheckIn(courseDateTime)) {
+            int startMinutes = getCheckinStartMinutes();
+            int endMinutes = getCheckinEndMinutes();
+
+            String message;
+            if (endMinutes == 0) {
+                message = String.format("请在课程开始前%d分钟内签到", startMinutes);
+            } else {
+                message = String.format("请在课程开始前%d分钟至开始后%d分钟内签到",
+                        startMinutes, endMinutes);
+            }
+            throw new BusinessException(message);
         }
     }
 }

@@ -30,6 +30,21 @@ public class CourseBooking {
     @TableField("cancellation_time")
     private LocalDateTime cancellationTime;
 
+
+    // ========== 签到码相关字段 ==========
+
+    /**
+     * 签到码ID（关联mini_checkin_code表）
+     */
+    @TableField("checkin_code_id")
+    private Long checkinCodeId;
+
+    /**
+     * 自动完成时间（用于定时任务）
+     */
+    @TableField("auto_complete_time")
+    private LocalDateTime autoCompleteTime;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

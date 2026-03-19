@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -522,7 +523,7 @@ public class ProductServiceImpl implements ProductService {
         // 计算折扣
         if (product.getOriginalPrice() != null && product.getOriginalPrice().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal discount = product.getCurrentPrice()
-                    .divide(product.getOriginalPrice(), 2, BigDecimal.ROUND_HALF_UP)
+                    .divide(product.getOriginalPrice(), 2, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(10));
             vo.setDiscount(discount);
         }

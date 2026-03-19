@@ -62,15 +62,41 @@ public class CheckInController {
     }
 
     @PostMapping("/course/{bookingId}")
-    @Operation(summary = "课程签到")
-    @PreAuthorize("checkIn:course:add")  // 课程签到权限（老板和前台都有）
+    @Operation(summary = "课程签到（支持扫码和数字码）")
+    @PreAuthorize("checkIn:course:add")
     public Result<Void> courseCheckIn(
             @Parameter(description = "预约ID", required = true)
             @PathVariable @NotNull Long bookingId,
+            @Parameter(description = "签到方式：0-教练签到，1-前台签到", required = true)
             @RequestParam @NotNull Integer checkinMethod,
-            @RequestParam(required = false) String notes) {
-        checkInService.courseCheckIn(bookingId, checkinMethod, notes);
+            @Parameter(description = "备注")
+            @RequestParam(required = false) String notes,
+            @Parameter(description = "数字码（可选，用于PC端核销）")
+            @RequestParam(required = false) String checkinCode) {
+
+        // 如果有数字码，优先验证数字码
+        if (checkinCode != null && !checkinCode.isEmpty()) {
+            checkInService.courseCheckInByCode(bookingId, checkinCode, checkinMethod, notes);
+        } else {
+            checkInService.courseCheckIn(bookingId, checkinMethod, notes);
+        }
         return Result.success("课程签到成功");
+    }
+
+    // ========== 通过数字码核销接口（PC端专用） ==========
+    @PostMapping("/verify-code")
+    @Operation(summary = "通过数字码核销课程")
+    @PreAuthorize("checkIn:verify")
+    public Result<Void> verifyByCode(
+            @Parameter(description = "数字码", required = true)
+            @RequestParam @NotNull String checkinCode,
+            @Parameter(description = "签到方式", required = true)
+            @RequestParam @NotNull Integer checkinMethod,
+            @Parameter(description = "备注")
+            @RequestParam(required = false) String notes) {
+
+        checkInService.verifyByCode(checkinCode, checkinMethod, notes);
+        return Result.success("核销成功");
     }
 
     @PutMapping("/update/{checkInId}")

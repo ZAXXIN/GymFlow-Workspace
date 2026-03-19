@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-//JWT工具类
 @Slf4j
 @Component
 public class JwtTokenUtil {
@@ -59,7 +58,8 @@ public class JwtTokenUtil {
      */
     public Integer getRoleFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        return claims.get("role", Integer.class);
+        Object role = claims.get("role");
+        return role != null ? Integer.parseInt(role.toString()) : null;
     }
 
     /**

@@ -44,4 +44,22 @@ public class BusinessConfigDTO {
     @Max(value = 200, message = "最大课程容量不能超过200")
     @Schema(description = "最大课程容量（团课最多参与人数）", example = "30", required = true)
     private Integer maxClassCapacity;
+
+    @NotNull(message = "签到开始时间不能为空")
+    @Min(value = 0, message = "签到开始时间不能小于0分钟")
+    @Max(value = 120, message = "签到开始时间不能超过120分钟")
+    @Schema(description = "课程开始前多少分钟可签到", example = "30", required = true)
+    private Integer checkinStartMinutes;
+
+    @NotNull(message = "签到截止时间不能为空")
+    @Min(value = 0, message = "签到截止时间不能小于0分钟")
+    @Max(value = 60, message = "签到截止时间不能超过60分钟")
+    @Schema(description = "课程开始后多少分钟截止签到（0表示开始后不可签到）", example = "0", required = true)
+    private Integer checkinEndMinutes;
+
+    @NotNull(message = "自动完成时间不能为空")
+    @Min(value = 0, message = "自动完成时间不能小于0小时")
+    @Max(value = 24, message = "自动完成时间不能超过24小时")
+    @Schema(description = "课程结束后多少小时自动变更为已完成", example = "1", required = true)
+    private Integer autoCompleteHours;
 }

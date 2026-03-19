@@ -31,6 +31,18 @@ public interface CheckInService {
      */
     void courseCheckIn(Long bookingId, Integer checkinMethod, String notes);
 
+    // ========== 课程签到（带数字码） ==========
+    /**
+     * 课程签到（带数字码验证）
+     */
+    void courseCheckInByCode(Long bookingId, String checkinCode, Integer checkinMethod, String notes);
+
+    // ========== 通过数字码核销 ==========
+    /**
+     * 通过数字码核销课程(pc专用）
+     */
+    void verifyByCode(String checkinCode, Integer checkinMethod, String notes);
+
     /**
      * 更新签到信息
      */

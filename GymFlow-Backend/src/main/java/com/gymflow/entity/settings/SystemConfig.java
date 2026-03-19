@@ -66,6 +66,24 @@ public class SystemConfig {
     private Integer maxClassCapacity;
 
     /**
+     * 课程开始前多少分钟可签到（默认30分钟）
+     */
+    @TableField("checkin_start_minutes")
+    private Integer checkinStartMinutes = 30;
+
+    /**
+     * 课程开始后多少分钟截止签到（0表示课程开始后不可签到）
+     */
+    @TableField("checkin_end_minutes")
+    private Integer checkinEndMinutes = 0;
+
+    /**
+     * 课程结束后多少小时自动变更为已完成
+     */
+    @TableField("auto_complete_hours")
+    private Integer autoCompleteHours = 1;
+
+    /**
      * 最后更新时间
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)

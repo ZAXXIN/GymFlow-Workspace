@@ -1,5 +1,7 @@
 package com.gymflow.dto.member;
 
+import com.gymflow.dto.mini.MiniMemberCardDTO;
+import com.gymflow.dto.mini.MyCourseDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -13,17 +15,10 @@ import java.util.List;
 @Schema(description = "会员完整信息DTO")
 public class MemberFullDTO {
 
-    // 会员基本信息
     @NotNull(message = "会员ID不能为空")
     @Positive(message = "会员ID必须为正数")
     @Schema(description = "会员主键ID", example = "10001", required = true)
     private Long id;
-
-    // 移除了userId字段
-    // @NotNull(message = "用户ID不能为空")
-    // @Positive(message = "用户ID必须为正数")
-    // @Schema(description = "关联用户表ID", example = "20001", required = true)
-    // private Long userId;
 
     @NotBlank(message = "会员编号不能为空")
     @Size(max = 20, message = "会员编号长度不能超过20")
@@ -31,7 +26,7 @@ public class MemberFullDTO {
     private String memberNo;
 
     @Schema(description = "登录用户名（手机号）", example = "13800138000")
-    private String username;  // 这里直接使用手机号作为用户名
+    private String username;
 
     @NotBlank(message = "手机号不能为空")
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
@@ -53,7 +48,6 @@ public class MemberFullDTO {
     @Schema(description = "会员创建/注册时间", example = "2026-01-01T10:00:00", required = true)
     private LocalDateTime createTime;
 
-    // 扩展信息
     @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$",
             message = "身份证号格式不正确")
     @Schema(description = "身份证号", example = "110101199001011234")
@@ -98,9 +92,13 @@ public class MemberFullDTO {
     @Schema(description = "会员健康档案列表")
     private List<HealthRecordDTO> healthRecords;
 
-    // 会员卡列表
+    // 会员卡列表（会籍卡 + 课程包）
     @Schema(description = "会员名下会员卡列表")
-    private List<MemberCardDTO> memberCards;
+    private List<MiniMemberCardDTO> memberCards;
+
+    // 课程包列表（单独返回，方便使用）
+    @Schema(description = "会员购买的课程包列表")
+    private List<MyCourseDTO> courses;
 
     // 课程记录列表
     @Schema(description = "会员课程记录列表")
@@ -110,8 +108,7 @@ public class MemberFullDTO {
     @Schema(description = "会员签到记录列表")
     private List<CheckInRecordDTO> checkinRecords;
 
-    // 在getUsername方法中设置用户名
     public String getUsername() {
-        return this.phone; // 手机号作为用户名
+        return this.phone;
     }
 }

@@ -11,7 +11,12 @@ import com.gymflow.entity.Member;
 import com.gymflow.entity.Course;
 import com.gymflow.entity.CourseBooking;
 import com.gymflow.entity.Coach;
+import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.exception.BusinessException;
+import com.gymflow.entity.mini.MiniCheckinCode;
+import com.gymflow.entity.mini.MiniMessage;
+import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
+import com.gymflow.mapper.mini.MiniMessageMapper;
 import com.gymflow.mapper.*;
 import com.gymflow.service.CheckInService;
 import com.gymflow.utils.SystemConfigValidator;
@@ -42,6 +47,8 @@ public class CheckInServiceImpl implements CheckInService {
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
     private final CoachMapper coachMapper;
+    private final MiniCheckinCodeMapper miniCheckinCodeMapper;
+    private final MiniMessageMapper miniMessageMapper;
 
     // 注入系统配置验证器
     private final SystemConfigValidator configValidator;
@@ -257,6 +264,192 @@ public class CheckInServiceImpl implements CheckInService {
         updateMemberCheckinStats(booking.getMemberId());
 
         log.info("课程签到成功，签到ID：{}，预约ID：{}", checkinRecord.getId(), bookingId);
+    }
+
+    // 在 CheckInServiceImpl.java 中增加以下方法
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void courseCheckInByCode(Long bookingId, String checkinCode, Integer checkinMethod, String notes) {
+        log.info("课程签到（带数字码），预约ID：{}，数字码：{}", bookingId, checkinCode);
+
+        // 验证预约记录是否存在
+        CourseBooking booking = courseBookingMapper.selectById(bookingId);
+        if (booking == null) {
+            throw new BusinessException("课程预约不存在");
+        }
+
+        // 验证数字码
+        validateCheckinCode(bookingId, checkinCode);
+
+        // 执行签到
+        executeCourseCheckIn(booking, checkinMethod, notes);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void verifyByCode(String checkinCode, Integer checkinMethod, String notes) {
+        log.info("通过数字码核销，数字码：{}", checkinCode);
+
+        // 查询签到码
+        LambdaQueryWrapper<MiniCheckinCode> codeQuery = new LambdaQueryWrapper<>();
+        codeQuery.eq(MiniCheckinCode::getDigitalCode, checkinCode);
+        codeQuery.eq(MiniCheckinCode::getStatus, 0); // 未使用
+
+        MiniCheckinCode checkinCodeEntity = miniCheckinCodeMapper.selectOne(codeQuery);
+        if (checkinCodeEntity == null) {
+            throw new BusinessException("无效的签到码或已使用");
+        }
+
+        // 验证有效期
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(checkinCodeEntity.getValidStartTime()) ||
+                now.isAfter(checkinCodeEntity.getValidEndTime())) {
+            throw new BusinessException("签到码不在有效期内");
+        }
+
+        // 获取预约记录
+        CourseBooking booking = courseBookingMapper.selectById(checkinCodeEntity.getBookingId());
+        if (booking == null) {
+            throw new BusinessException("预约记录不存在");
+        }
+
+        // 执行签到
+        executeCourseCheckIn(booking, checkinMethod, notes);
+    }
+
+    /**
+     * 执行课程签到
+     */
+    private void executeCourseCheckIn(CourseBooking booking, Integer checkinMethod, String notes) {
+        // 检查预约状态
+        if (booking.getBookingStatus() != 0) {
+            throw new BusinessException("预约状态不正确，无法签到");
+        }
+
+        // 验证签到时间
+        Course course = courseMapper.selectById(booking.getCourseId());
+        if (course == null) {
+            throw new BusinessException("课程不存在");
+        }
+
+        LocalDateTime courseDateTime = LocalDateTime.of(course.getCourseDate(), course.getStartTime());
+        configValidator.validateCheckInTime(courseDateTime);
+
+        // 检查是否已签到
+        LambdaQueryWrapper<CheckinRecord> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CheckinRecord::getCourseBookingId, booking.getId());
+
+        Long checkInCount = checkInRecordMapper.selectCount(queryWrapper);
+        if (checkInCount > 0) {
+            throw new BusinessException("该预约已签到");
+        }
+
+        // 创建签到记录
+        CheckinRecord checkinRecord = new CheckinRecord();
+        checkinRecord.setMemberId(booking.getMemberId());
+        checkinRecord.setCourseBookingId(booking.getId());
+        checkinRecord.setCheckinTime(LocalDateTime.now());
+        checkinRecord.setCheckinMethod(checkinMethod);
+        checkinRecord.setNotes(notes != null ? notes : "课程签到");
+
+        int result = checkInRecordMapper.insert(checkinRecord);
+        if (result <= 0) {
+            throw new BusinessException("签到失败");
+        }
+
+        // 更新预约状态为已签到
+        booking.setBookingStatus(1); // 已签到
+        booking.setCheckinTime(LocalDateTime.now());
+
+        // 设置自动完成时间
+        int autoCompleteHours = configValidator.getAutoCompleteHours();
+        if (autoCompleteHours > 0) {
+            booking.setAutoCompleteTime(LocalDateTime.now().plusHours(autoCompleteHours));
+        }
+
+        courseBookingMapper.updateById(booking);
+
+        // 更新签到码状态
+        if (booking.getCheckinCodeId() != null) {
+            MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectById(booking.getCheckinCodeId());
+            if (checkinCode != null) {
+                checkinCode.setStatus(1); // 已使用
+                checkinCode.setCheckinTime(LocalDateTime.now());
+                miniCheckinCodeMapper.updateById(checkinCode);
+            }
+        }
+
+        // 更新会员签到次数
+        updateMemberCheckinStats(booking.getMemberId());
+
+        // 发送消息通知
+        sendCheckinNotification(booking, checkinMethod);
+
+        log.info("课程签到成功，签到ID：{}，预约ID：{}", checkinRecord.getId(), booking.getId());
+    }
+
+    /**
+     * 验证数字码
+     */
+    private void validateCheckinCode(Long bookingId, String checkinCode) {
+        // 查询签到码
+        LambdaQueryWrapper<MiniCheckinCode> codeQuery = new LambdaQueryWrapper<>();
+        codeQuery.eq(MiniCheckinCode::getBookingId, bookingId);
+
+        MiniCheckinCode codeEntity = miniCheckinCodeMapper.selectOne(codeQuery);
+        if (codeEntity == null) {
+            throw new BusinessException("预约未生成签到码");
+        }
+
+        // 验证数字码是否正确
+        if (!codeEntity.getDigitalCode().equals(checkinCode)) {
+            throw new BusinessException("数字码错误");
+        }
+
+        // 验证状态
+        if (codeEntity.getStatus() != 0) {
+            throw new BusinessException("签到码已使用或已过期");
+        }
+
+        // 验证有效期
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(codeEntity.getValidStartTime()) ||
+                now.isAfter(codeEntity.getValidEndTime())) {
+            throw new BusinessException("签到码不在有效期内");
+        }
+    }
+
+    /**
+     * 发送签到成功通知
+     */
+    private void sendCheckinNotification(CourseBooking booking, Integer checkinMethod) {
+        try {
+            // 获取会员信息
+            Member member = memberMapper.selectById(booking.getMemberId());
+            if (member == null) return;
+
+            // 获取课程信息
+            Course course = courseMapper.selectById(booking.getCourseId());
+            if (course == null) return;
+
+            // 创建消息
+            MiniMessage message = new MiniMessage();
+            message.setUserId(member.getId());
+            message.setUserType(0); // 会员
+            message.setMessageType("CHECKIN_SUCCESS");
+            message.setTitle("签到成功");
+            message.setContent(String.format("您已成功签到课程：%s，签到方式：%s",
+                    course.getCourseName(),
+                    checkinMethod == 0 ? "教练签到" : "前台签到"));
+            message.setRelatedId(booking.getId());
+
+            miniMessageMapper.insert(message);
+
+            log.info("发送签到成功通知，会员ID：{}", member.getId());
+        } catch (Exception e) {
+            log.error("发送签到通知失败", e);
+        }
     }
 
     @Override
