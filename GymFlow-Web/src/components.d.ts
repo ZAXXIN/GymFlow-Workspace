@@ -86,6 +86,7 @@ declare module 'vue' {
     HealthChart: typeof import('./components/business/HealthChart.vue')['default']
     Layout: typeof import('./components/layout/Layout.vue')['default']
     Layout2: typeof import('./components/layout/Layout2.vue')['default']
+    MemberCardSelector: typeof import('./components/business/MemberCardSelector.vue')['default']
     MemberForm: typeof import('./components/business/MemberForm.vue')['default']
     MemberFormDialog: typeof import('./components/business/MemberFormDialog.vue')['default']
     OrderForm: typeof import('./components/business/OrderForm.vue')['default']

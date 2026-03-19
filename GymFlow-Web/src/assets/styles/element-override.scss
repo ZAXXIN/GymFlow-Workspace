@@ -33,3 +33,187 @@
   --el-link-text-color: #07c160;
   --el-link-hover-text-color: #28d176;
 }
+
+/* ===== 输入框样式覆盖 ===== */
+
+/* 普通输入框 - 清除内边框，设置白色背景 */
+.el-input__wrapper {
+  box-shadow: none !important;
+  border: 1px solid var(--el-border-color) !important;
+  border-radius: var(--el-border-radius-base) !important;
+  transition: border-color var(--el-transition-duration) var(--el-transition-function) !important;
+  background-color: #ffffff !important;
+}
+
+.el-input__wrapper:hover {
+  border-color: var(--el-border-color) !important;
+  background-color: #ffffff !important;
+}
+
+.el-input__wrapper.is-focus,
+.el-input__wrapper:focus,
+.el-input__wrapper:focus-within,
+.el-input__wrapper:focus-visible {
+  border-color: var(--el-color-primary) !important;
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+
+.el-input__inner {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+}
+
+/* 文本域 - 清除内边框，设置白色背景 */
+.el-textarea__inner {
+  box-shadow: none !important;
+  border: 1px solid var(--el-border-color) !important;
+  border-radius: var(--el-border-radius-base) !important;
+  transition: border-color var(--el-transition-duration) var(--el-transition-function) !important;
+  background-color: #ffffff !important;
+}
+
+.el-textarea__inner:hover {
+  border-color: var(--el-border-color) !important;
+  background-color: #ffffff !important;
+}
+
+.el-textarea__inner.is-focus,
+.el-textarea__inner:focus,
+.el-textarea__inner:focus-visible,
+.el-textarea__inner:focus-within {
+  border-color: var(--el-color-primary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: #ffffff !important;
+}
+
+/* 数字输入框 */
+.el-input-number .el-input__wrapper {
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+
+.el-input-number .el-input__wrapper.is-focus {
+  border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
+}
+
+/* 选择器 */
+.el-select .el-input__wrapper {
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+
+.el-select .el-input__wrapper.is-focus {
+  border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
+}
+
+/* 日期选择器 */
+.el-date-editor .el-input__wrapper {
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+
+.el-date-editor .el-input__wrapper.is-focus {
+  border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
+}
+
+/* 级联选择器 */
+.el-cascader .el-input__wrapper {
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+}
+
+.el-cascader .el-input__wrapper.is-focus {
+  border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
+}
+
+/* ===== 修复浏览器自动填充背景色 ===== */
+
+/* 移除自动填充时的蓝色背景 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #333333 !important;
+  color: #333333 !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* 确保 Element Plus 输入框内的自动填充也被覆盖 */
+.el-input__wrapper input:-webkit-autofill,
+.el-input__wrapper input:-webkit-autofill:hover,
+.el-input__wrapper input:-webkit-autofill:focus,
+.el-input__wrapper input:-webkit-autofill:active,
+.el-textarea__inner:-webkit-autofill,
+.el-textarea__inner:-webkit-autofill:hover,
+.el-textarea__inner:-webkit-autofill:focus,
+.el-textarea__inner:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #333333 !important;
+  background-color: transparent !important;
+}
+
+/* 针对 Firefox 的自动填充 */
+input:autofill,
+input:autofill:hover,
+input:autofill:focus,
+input:autofill:active,
+textarea:autofill,
+textarea:autofill:hover,
+textarea:autofill:focus,
+textarea:autofill:active {
+  filter: none !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #333333 !important;
+}
+
+/* 时间选择器下拉面板背景色 */
+.el-time-panel {
+  background-color: #ffffff !important;
+}
+
+/* 下拉面板背景色 */
+.el-select-dropdown,
+.el-cascader__dropdown,
+.el-date-picker,
+.el-time-select-panel {
+  background-color: #ffffff !important;
+}
+
+/* 禁用状态下的输入框 */
+.el-input.is-disabled .el-input__wrapper {
+  background-color: #f5f7fa !important;
+  border-color: var(--el-border-color-light) !important;
+}
+
+.el-input.is-disabled .el-input__inner {
+  -webkit-text-fill-color: var(--el-text-color-disabled) !important;
+  color: var(--el-text-color-disabled) !important;
+  background-color: transparent !important;
+}
+
+.el-textarea.is-disabled .el-textarea__inner {
+  background-color: #f5f7fa !important;
+  border-color: var(--el-border-color-light) !important;
+}

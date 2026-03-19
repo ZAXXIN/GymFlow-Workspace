@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { dashboardApi } from '@/api/dashboard'
-import type { 
-  DashboardStatsDTO, 
-  RevenueTrendDTO, 
-  CourseCategoryStatsDTO, 
+import type {
+  DashboardStatsDTO,
+  RevenueTrendDTO,
+  CourseCategoryStatsDTO,
   TodayCourseDTO,
-  QuickStatsDTO 
+  QuickStatsDTO
 } from '@/api/dashboard'
 import { ElMessage } from 'element-plus'
 
@@ -54,10 +54,24 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // 签到增长趋势
   const attendanceTrend = computed(() => {
     if (!stats.value) return 0
+
     const current = stats.value.todayCheckIns || 0
     const last = stats.value.yesterdayCheckIns || 0
-    if (last === 0) return current > 0 ? 100 : 0
-    return Number(((current - last) / last * 100).toFixed(1))
+
+    // 如果昨天为0，今天>0，返回100%增长
+    if (last === 0) {
+      return current > 0 ? 100 : 0
+    }
+
+    // 计算增长率，确保除数不为0
+    const growth = ((current - last) / last) * 100
+
+    // 处理可能的 Infinity 或 NaN
+    if (!isFinite(growth) || isNaN(growth)) {
+      return 0
+    }
+
+    return Number(growth.toFixed(1))
   })
 
   // Actions
@@ -88,8 +102,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const response = await dashboardApi.getRevenueTrend(period, startDate, endDate)
       if (response.code === 200) {
-        revenueTrend.value = response.data
-        currentPeriod.value = period
+        // 验证数据完整性
+        if (response.data && Array.isArray(response.data.values)) {
+          revenueTrend.value = response.data
+          currentPeriod.value = period
+        } else {
+          ElMessage.warning('营收趋势数据格式异常')
+          revenueTrend.value = null
+        }
       }
       return response.data
     } catch (error) {
@@ -176,9 +196,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // 格式化函数
   const formatRevenue = (value: number) => {
-    if (value >= 10000) {
-      return `¥${(value / 10000).toFixed(1)}万`
-    }
     return `¥${value.toFixed(2)}`
   }
 
@@ -208,7 +225,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     todayCheckIns,
     memberTrend,
     coachTrend,
-    revenueTrend: revenueTrendValue,
+    revenueTrendValue,
     attendanceTrend,
 
     // Actions

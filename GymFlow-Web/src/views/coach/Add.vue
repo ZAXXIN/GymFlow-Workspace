@@ -44,6 +44,15 @@
               />
             </el-form-item>
             
+            <el-form-item label="性别" prop="gender" class="form-item">
+              <el-radio-group v-model="formData.gender">
+                <el-radio :label="0">女</el-radio>
+                <el-radio :label="1">男</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </div>
+          
+          <div class="form-row">
             <el-form-item label="手机号" prop="phone" class="form-item">
               <el-input 
                 v-model="formData.phone"
@@ -59,25 +68,12 @@
                 {{ phoneAvailable ? '手机号可用' : '手机号已存在' }}
               </div>
             </el-form-item>
-          </div>
-          
-          <div class="form-row" v-if="!isEditMode">
-            <el-form-item label="密码" prop="password" class="form-item">
+            
+            <el-form-item label="密码" prop="password" class="form-item" v-if="!isEditMode">
               <el-input 
                 v-model="formData.password"
                 type="password"
                 placeholder="请输入密码（默认手机号后6位）"
-                maxlength="255"
-                clearable
-                show-password
-              />
-            </el-form-item>
-            
-            <el-form-item label="确认密码" prop="confirmPassword" class="form-item" v-if="!isEditMode">
-              <el-input 
-                v-model="confirmPassword"
-                type="password"
-                placeholder="请确认密码"
                 maxlength="255"
                 clearable
                 show-password
@@ -197,6 +193,7 @@ const formData = reactive<CoachBasicDTO>({
   realName: '',
   phone: '',
   password: '',
+  gender: 1, // 默认为男
   specialty: '',
   certificationList: [],
   yearsOfExperience: 0,
@@ -204,8 +201,6 @@ const formData = reactive<CoachBasicDTO>({
   commissionRate: 0,
   introduction: ''
 })
-
-const confirmPassword = ref('')
 
 // 手机号检查
 const phoneChecking = ref(false)
@@ -229,6 +224,9 @@ const formRules: FormRules = {
     { required: true, message: '请输入教练姓名', trigger: 'blur' },
     { min: 2, max: 50, message: '姓名长度在2-50个字符', trigger: 'blur' }
   ],
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
+  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
@@ -236,19 +234,6 @@ const formRules: FormRules = {
   password: [
     { required: !isEditMode.value, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 255, message: '密码长度至少6个字符', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: !isEditMode.value, message: '请确认密码', trigger: 'blur' },
-    {
-      validator: (rule, value, callback) => {
-        if (!isEditMode.value && value !== formData.password) {
-          callback(new Error('两次输入的密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
   ],
   yearsOfExperience: [
     { required: true, message: '请输入经验年限', trigger: 'blur' }
@@ -335,12 +320,13 @@ const initFormData = async () => {
       const coach = coachStore.currentCoach
       formData.realName = coach.realName
       formData.phone = coach.phone
+      formData.gender = coach.gender ?? 1 // 设置性别，默认1
       formData.password = '' // 编辑时不显示密码
       formData.specialty = coach.specialty || ''
       formData.certificationList = coach.certificationList || []
-      formData.yearsOfExperience = coach.yearsOfExperience
-      formData.hourlyRate = coach.hourlyRate
-      formData.commissionRate = coach.commissionRate
+      formData.yearsOfExperience = coach.yearsOfExperience || 0
+      formData.hourlyRate = coach.hourlyRate || 0
+      formData.commissionRate = coach.commissionRate || 0
       formData.introduction = coach.introduction || ''
     }
   } catch (error) {
@@ -356,7 +342,6 @@ watch(() => formData.phone, (newVal) => {
   if (!isEditMode.value && newVal && newVal.length === 11) {
     // 如果是新增模式，设置默认密码为手机号后6位
     formData.password = newVal.slice(-6)
-    confirmPassword.value = newVal.slice(-6)
   }
 })
 

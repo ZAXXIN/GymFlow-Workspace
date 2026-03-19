@@ -32,13 +32,6 @@
         <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
         <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
         <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item>
-        
-        <el-descriptions-item label="身份证号">{{ memberDetail?.idCard || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="身高">{{ memberDetail?.height ? memberDetail.height + 'cm' : '-' }}</el-descriptions-item>
-        <!-- <el-descriptions-item label="体重">{{ memberDetail?.weight ? memberDetail.weight + 'kg' : '-' }}</el-descriptions-item> -->
-        
-        <!-- <el-descriptions-item label="专属教练">{{ memberDetail?.personalCoachName || '未分配' }}</el-descriptions-item> -->
-        
         <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item>
 
         <el-descriptions-item label="地址" span="2">{{ memberDetail?.address || '-' }}</el-descriptions-item>

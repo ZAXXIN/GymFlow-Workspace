@@ -18,9 +18,9 @@
     <!-- 筛选条件 -->
     <el-card class="filter-card">
       <el-form :model="filterForm" inline>
-        <el-form-item label="会员编号">
+        <!-- <el-form-item label="会员编号">
           <el-input v-model="filterForm.memberNo" placeholder="请输入会员编号" clearable style="width: 180px;" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="姓名">
           <el-input v-model="filterForm.realName" placeholder="请输入姓名" clearable style="width: 180px;" />
         </el-form-item>
@@ -110,17 +110,10 @@
         </el-table-column>
         <el-table-column prop="remainingSessions" label="剩余课时" width="100" align="center">
           <template #default="{ row }">
-            <div v-if="row.remainingSessions > 0">
-              <el-tag type="success" size="small">
-                {{ row.remainingSessions }}
-              </el-tag>
-            </div>
-            <div v-else-if="row.cardType === 0 || row.cardType === 1">
-              <el-tag type="danger" size="small">0</el-tag>
-            </div>
-            <div v-else>
-              <span class="no-sessions">-</span>
-            </div>
+            <div v-if=" row.cardType == 0">-</div>
+            <el-tag v-else type="success" size="small">
+              {{ row.cardType == 0 ? '-' : row.remainingSessions }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="cardEndDate" label="有效期至" width="120">
@@ -133,7 +126,6 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="personalCoachName" label="专属教练" width="120" />
         <el-table-column prop="totalCheckins" label="总签到" width="100" align="center">
           <template #default="{ row }">
             <el-tag type="info" size="small">
@@ -141,11 +133,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="totalCourseHours" label="总课时" width="100" align="center">
+        <el-table-column prop="totalCourseHours" label="累计课时" width="100" align="center">
           <template #default="{ row }">
-            <el-tag type="warning" size="small">
-              {{ row.totalCourseHours || 0 }}
-            </el-tag>
+            {{ row.cardType == 0 ? '-' : row.totalCourseHours || 0 }}
           </template>
         </el-table-column>
         <el-table-column prop="totalSpent" label="累计消费" width="120" align="right">
@@ -166,7 +156,7 @@
             <el-button v-permission="'member:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-popconfirm  title="确定要删除这个会员吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
+            <el-popconfirm title="确定要删除这个会员吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
                 <el-button v-permission="'member:delete'" type="danger" link size="small">
                   删除
@@ -237,15 +227,11 @@ const getRandomColor = () => {
 const getCardTypeTag = (cardType: number) => {
   switch (cardType) {
     case 0:
-      return 'primary' // 私教课
+      return 'success' //会籍卡
     case 1:
-      return 'success' // 团课
+      return 'warning' // 私教课
     case 2:
-      return 'warning' // 月卡
-    case 3:
-      return 'danger' // 年卡
-    case 4:
-      return 'info' // 周卡
+      return 'danger' // 团课
     default:
       return 'info'
   }
