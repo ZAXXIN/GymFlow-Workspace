@@ -57,14 +57,6 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         BeanUtils.copyProperties(member, dto);
         dto.setUsername(member.getPhone());
 
-        // 获取专属教练姓名
-        if (member.getPersonalCoachId() != null) {
-            Coach coach = coachMapper.selectById(member.getPersonalCoachId());
-            if (coach != null) {
-                dto.setPersonalCoachName(coach.getRealName());
-            }
-        }
-
         // 获取会员卡信息（会籍卡 + 课程包）
         List<MiniMemberCardDTO> cards = getMemberCards(memberId);
         dto.setMemberCards(cards);

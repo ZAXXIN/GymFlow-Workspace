@@ -18,6 +18,7 @@ public class HealthRecord {
     @TableField("record_date")
     private LocalDate recordDate;
 
+    private BigDecimal height;
     private BigDecimal weight;
 
     @TableField("body_fat_percentage")

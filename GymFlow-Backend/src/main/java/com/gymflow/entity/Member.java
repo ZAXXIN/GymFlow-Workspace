@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class Member {
 
     @TableId(type = IdType.AUTO)
-    private Long id;  // 主键，作为唯一标识
+    private Long id;
 
     @TableField("member_no")
     private String memberNo;
@@ -22,9 +22,6 @@ public class Member {
     @TableField("password")
     private String password;
 
-    @TableField("id_card")
-    private String idCard;
-
     @TableField("real_name")
     private String realName;
 
@@ -34,20 +31,11 @@ public class Member {
     @TableField("birthday")
     private LocalDate birthday;
 
-    @TableField("height")
-    private BigDecimal height;
-
-    @TableField("weight")
-    private BigDecimal weight;
-
     @TableField("membership_start_date")
     private LocalDate membershipStartDate;
 
     @TableField("membership_end_date")
     private LocalDate membershipEndDate;
-
-    @TableField("personal_coach_id")
-    private Long personalCoachId;
 
     @TableField("total_checkins")
     private Integer totalCheckins;
@@ -57,9 +45,6 @@ public class Member {
 
     @TableField("total_spent")
     private BigDecimal totalSpent;
-
-    @TableField("address")
-    private String address;
 
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;

@@ -14,32 +14,34 @@ public class MemberListVO {
     private Integer gender;
     private String genderDesc;
     private Integer age;
-    private String personalCoachName;
+    // 移除 personalCoachName
     private LocalDateTime createTime;
 
     // 会员卡信息
-    private Integer cardType; // 主要会员卡类型
-    private String cardTypeDesc; // 类型描述
-    private String cardStatus; // 状态：ACTIVE-有效，EXPIRED-过期，USED_UP-用完
+    private Integer cardType;
+    private String cardTypeDesc;
+    private String cardStatus;
     private String cardStatusDesc;
-    private LocalDateTime cardEndDate; // 有效期结束时间
-    private Integer remainingSessions; // 剩余课时数（仅私教课、团课）
+    private LocalDateTime cardEndDate;
+    private Integer remainingSessions;
 
     // 统计信息
     private Integer totalCheckins;
     private Integer totalCourseHours;
     private BigDecimal totalSpent;
 
-    // 会员卡状态计算方法
+    public String getGenderDesc() {
+        if (gender == null) return "未知";
+        return gender == 1 ? "男" : "女";
+    }
+
     public String getCardTypeDesc() {
         if (cardType == null) return "";
         switch (cardType) {
-            case 0: return "私教课";
-            case 1: return "团课";
-            case 2: return "月卡";
-            case 3: return "年卡";
-            case 4: return "周卡";
-            case 5: return "其他";
+            case 0: return "会籍卡";
+            case 1: return "私教课";
+            case 2: return "团课";
+            case 3: return "相关产品";
             default: return "未知";
         }
     }

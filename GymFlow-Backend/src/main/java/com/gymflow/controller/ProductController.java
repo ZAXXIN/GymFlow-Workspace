@@ -36,6 +36,19 @@ public class ProductController {
         return Result.success("查询成功", result);
     }
 
+    /**
+     * 根据类型查询商品列表（用于会员卡选择）
+     */
+    @GetMapping("/list-by-type")
+    @Operation(summary = "根据类型查询商品列表")
+    @PreAuthorize("product:view")  // 查看权限（老板和前台都有）
+    public Result<List<ProductListVO>> getProductsByType(
+            @Parameter(description = "商品类型：0-会籍卡，1-私教课，2-团课，3-相关产品", required = true)
+            @RequestParam @NotNull Integer productType) {
+        List<ProductListVO> products = productService.getProductsByType(productType);
+        return Result.success("查询成功", products);
+    }
+
     @GetMapping("/detail/{productId}")
     @Operation(summary = "获取商品详情")
     @PreAuthorize("product:detail")  // 查看详情权限（老板和前台都有）

@@ -19,6 +19,9 @@ public class Coach {
 
     private String password;
 
+    // 0-女，1-男
+    private Integer gender;
+
     private String specialty;
 
     private String certifications;

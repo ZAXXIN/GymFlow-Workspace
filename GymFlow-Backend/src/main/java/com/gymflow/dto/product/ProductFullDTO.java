@@ -65,6 +65,9 @@ public class ProductFullDTO {
     @Schema(description = "状态描述")
     private String statusDesc;
 
+    @Schema(description = "总课时数（用于私教课、团课）")
+    private Integer totalSessions;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 

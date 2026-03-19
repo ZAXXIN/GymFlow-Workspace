@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +40,8 @@ public class CoachServiceImpl implements CoachService {
     private final CoachScheduleMapper coachScheduleMapper;
     private final CourseMapper courseMapper;
     private final CourseBookingMapper courseBookingMapper;
+
+    private final ObjectMapper objectMapper;
 
     // 注入系统配置验证器
     private final SystemConfigValidator configValidator;
@@ -109,6 +113,7 @@ public class CoachServiceImpl implements CoachService {
 
         // 设置教练基本信息
         BeanUtils.copyProperties(coach, fullDTO);
+        fullDTO.setGender(coach.getGender());
 
         // 解析证书信息
         if (StringUtils.hasText(coach.getCertifications())) {
@@ -151,6 +156,7 @@ public class CoachServiceImpl implements CoachService {
         // 设置基本信息
         coach.setRealName(basicDTO.getRealName());
         coach.setPhone(basicDTO.getPhone());
+        coach.setGender(basicDTO.getGender()); // 新增性别
 
         // 密码处理：如果有传入密码则使用，否则使用默认密码
         String password = StringUtils.hasText(basicDTO.getPassword()) ?
@@ -159,10 +165,17 @@ public class CoachServiceImpl implements CoachService {
 
         coach.setSpecialty(basicDTO.getSpecialty());
 
-        // 处理证书信息
+        // 处理证书信息 - 转换为JSON格式
         if (!CollectionUtils.isEmpty(basicDTO.getCertificationList())) {
-            String certStr = basicDTO.getCertificationList().toString();
-            coach.setCertifications(certStr);
+            try {
+                String certJson = objectMapper.writeValueAsString(basicDTO.getCertificationList());
+                coach.setCertifications(certJson);
+            } catch (Exception e) {
+                log.error("证书列表转JSON失败", e);
+                throw new BusinessException("证书格式错误");
+            }
+        } else {
+            coach.setCertifications(null);
         }
 
         coach.setYearsOfExperience(basicDTO.getYearsOfExperience());
@@ -176,6 +189,11 @@ public class CoachServiceImpl implements CoachService {
         coach.setTotalCourses(0);
         coach.setTotalIncome(BigDecimal.ZERO);
         coach.setRating(new BigDecimal("5.00")); // 默认评分5.0
+
+        // 设置创建时间和更新时间 - 关键修复
+        LocalDateTime now = LocalDateTime.now();
+        coach.setCreateTime(now);
+        coach.setUpdateTime(now);
 
         // 3. 保存教练
         int result = coachMapper.insert(coach);
@@ -213,12 +231,18 @@ public class CoachServiceImpl implements CoachService {
         // 3. 更新教练基本信息
         coach.setRealName(basicDTO.getRealName());
         coach.setPhone(basicDTO.getPhone());
+        coach.setGender(basicDTO.getGender()); // 新增性别
         coach.setSpecialty(basicDTO.getSpecialty());
 
-        // 处理证书信息
+        // 处理证书信息 - 转换为JSON格式
         if (!CollectionUtils.isEmpty(basicDTO.getCertificationList())) {
-            String certStr = basicDTO.getCertificationList().toString();
-            coach.setCertifications(certStr);
+            try {
+                String certJson = objectMapper.writeValueAsString(basicDTO.getCertificationList());
+                coach.setCertifications(certJson);
+            } catch (Exception e) {
+                log.error("证书列表转JSON失败", e);
+                throw new BusinessException("证书格式错误");
+            }
         } else {
             coach.setCertifications(null);
         }
@@ -232,6 +256,9 @@ public class CoachServiceImpl implements CoachService {
         if (StringUtils.hasText(basicDTO.getPassword())) {
             coach.setPassword(bCryptUtil.encodePassword(basicDTO.getPassword()));
         }
+
+        // 设置更新时间
+        coach.setUpdateTime(LocalDateTime.now());
 
         // 4. 更新教练记录
         int result = coachMapper.updateById(coach);
@@ -497,6 +524,7 @@ public class CoachServiceImpl implements CoachService {
         vo.setId(coach.getId());
         vo.setRealName(coach.getRealName());
         vo.setPhone(coach.getPhone());
+        vo.setGender(coach.getGender());
         vo.setSpecialty(coach.getSpecialty());
         vo.setYearsOfExperience(coach.getYearsOfExperience());
         vo.setHourlyRate(coach.getHourlyRate());
@@ -511,9 +539,10 @@ public class CoachServiceImpl implements CoachService {
         // 设置证书信息
         if (StringUtils.hasText(coach.getCertifications())) {
             try {
-                String certStr = coach.getCertifications();
-                certStr = certStr.replace("[", "").replace("]", "").replace("\"", "");
-                vo.setCertifications(Arrays.asList(certStr.split(",")));
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<String> certList = objectMapper.readValue(coach.getCertifications(),
+                        new TypeReference<List<String>>() {});
+                vo.setCertifications(certList);
             } catch (Exception e) {
                 log.error("解析教练证书信息失败，教练ID：{}", coach.getId(), e);
                 vo.setCertifications(new ArrayList<>());

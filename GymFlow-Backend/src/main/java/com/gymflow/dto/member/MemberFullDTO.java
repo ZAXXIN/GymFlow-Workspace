@@ -48,29 +48,11 @@ public class MemberFullDTO {
     @Schema(description = "会员创建/注册时间", example = "2026-01-01T10:00:00", required = true)
     private LocalDateTime createTime;
 
-    @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$",
-            message = "身份证号格式不正确")
-    @Schema(description = "身份证号", example = "110101199001011234")
-    private String idCard;
-
-    @DecimalMin(value = "50.00", message = "身高不能小于50cm")
-    @DecimalMax(value = "250.00", message = "身高不能大于250cm")
-    @Schema(description = "身高（cm）", example = "175.0")
-    private BigDecimal height;
-
-    @DecimalMin(value = "0.01", message = "体重不能小于0.01kg")
-    @Schema(description = "体重（kg）", example = "65.5")
-    private BigDecimal weight;
-
     @Schema(description = "会员有效期开始日期", example = "2026-01-01")
     private LocalDate membershipStartDate;
 
     @Schema(description = "会员有效期结束日期", example = "2027-01-01")
     private LocalDate membershipEndDate;
-
-    @Size(max = 50, message = "私教姓名长度不能超过50")
-    @Schema(description = "专属私教姓名", example = "李教练")
-    private String personalCoachName;
 
     @Min(value = 0, message = "总签到次数不能小于0")
     @Schema(description = "累计签到次数", example = "25")
@@ -83,10 +65,6 @@ public class MemberFullDTO {
     @DecimalMin(value = "0.00", message = "总消费金额不能小于0")
     @Schema(description = "累计消费金额（元）", example = "5999.00")
     private BigDecimal totalSpent;
-
-    @Size(max = 500, message = "地址长度不能超过500")
-    @Schema(description = "居住地址", example = "北京市朝阳区XX小区")
-    private String address;
 
     // 健康档案列表
     @Schema(description = "会员健康档案列表")

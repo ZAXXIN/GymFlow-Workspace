@@ -37,6 +37,9 @@ public class ProductListVO {
     @Schema(description = "销量")
     private Integer salesVolume;
 
+    @Schema(description = "总课时数（用于私教课、团课）")
+    private Integer totalSessions;
+
     @Schema(description = "状态")
     private Integer status;
 

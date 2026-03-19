@@ -13,6 +13,8 @@ public class CoachFullDTO {
     private Long id;
     private String realName;
     private String phone;
+    private Integer gender;
+    private String genderDesc;
     private String specialty;
     private List<String> certificationList;
     private Integer yearsOfExperience;
@@ -30,4 +32,14 @@ public class CoachFullDTO {
     // 扩展信息
     private List<CoachScheduleDTO> schedules;
     private List<CoachCourseDTO> courses;
+
+    // 获取性别描述
+    public String getGenderDesc() {
+        if (gender == null) return "未知";
+        switch (gender) {
+            case 0: return "女";
+            case 1: return "男";
+            default: return "未知";
+        }
+    }
 }

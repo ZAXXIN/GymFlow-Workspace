@@ -18,6 +18,10 @@ public class HealthRecordDTO {
     @Schema(description = "记录日期", example = "2026-01-28", required = true)
     private LocalDate recordDate;
 
+    @DecimalMin(value = "0.01", message = "身高不能小于0.01")
+    @Schema(description = "身高（cm）", example = "175.0", required = true)
+    private BigDecimal height;
+
     @DecimalMin(value = "0.01", message = "体重不能小于0.01")
     @Schema(description = "体重（kg）", example = "65.5", required = true)
     private BigDecimal weight;

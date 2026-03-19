@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -44,12 +45,12 @@ public class MemberServiceImpl implements MemberService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
+    private final ProductDetailMapper productDetailMapper;
 
     private final BCryptUtil bCryptUtil;
     private final SystemConfigValidator configValidator;
 
     private static final DateTimeFormatter MEMBER_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public PageResultVO<MemberListVO> getMemberList(MemberQueryDTO queryDTO) {
@@ -92,13 +93,6 @@ public class MemberServiceImpl implements MemberService {
         BeanUtils.copyProperties(member, fullDTO);
         fullDTO.setUsername(member.getPhone());
 
-        if (member.getPersonalCoachId() != null) {
-            Coach coach = coachMapper.selectById(member.getPersonalCoachId());
-            if (coach != null) {
-                fullDTO.setPersonalCoachName(coach.getRealName());
-            }
-        }
-
         fullDTO.setHealthRecords(getHealthRecords(memberId));
 
         // 获取会员卡列表并转换为MiniMemberCardDTO
@@ -124,14 +118,12 @@ public class MemberServiceImpl implements MemberService {
             MiniMemberCardDTO miniCard = new MiniMemberCardDTO();
             BeanUtils.copyProperties(pcCard, miniCard);
 
-            // 设置cardType（如果MemberCardDTO中有productType，可以用作cardType）
             if (pcCard.getProductType() != null) {
                 miniCard.setCardType(pcCard.getProductType());
             } else {
                 miniCard.setCardType(pcCard.getCardType());
             }
 
-            // cardTypeDesc和statusDesc会在MiniMemberCardDTO的getter中自动生成
             return miniCard;
         }).collect(Collectors.toList());
     }
@@ -141,6 +133,7 @@ public class MemberServiceImpl implements MemberService {
      */
     private List<MemberCardDTO> getMemberCards(Long memberId) {
         List<MemberCardDTO> cardList = new ArrayList<>();
+        log.info("开始获取会员 {} 的会员卡列表", memberId);
 
         // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
@@ -149,11 +142,14 @@ public class MemberServiceImpl implements MemberService {
                 .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
+        log.info("查询到 {} 个订单", orders.size());
+
         if (CollectionUtils.isEmpty(orders)) {
             return cardList;
         }
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+        log.info("订单ID列表: {}", orderIds);
 
         // 查询订单项（会籍卡、私教课、团课）
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
@@ -164,20 +160,15 @@ public class MemberServiceImpl implements MemberService {
         List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);
 
         for (OrderItem item : orderItems) {
+            log.info("订单项 ID: {}, 产品类型: {}, 有效期开始: {}, 有效期结束: {}, 金额: {}",
+                    item.getId(), item.getProductType(), item.getValidityStartDate(),
+                    item.getValidityEndDate(), item.getTotalPrice());
+
             MemberCardDTO card = new MemberCardDTO();
             card.setProductId(item.getProductId());
             card.setProductName(item.getProductName());
             card.setProductType(item.getProductType());
-
-            // 根据productType设置cardType
-            if (item.getProductType() == 0) {
-                // 会籍卡，需要判断是月卡/季卡/年卡
-                // 这里简化处理，可以根据validityDays判断
-                card.setCardType(2); // 默认月卡
-            } else {
-                card.setCardType(item.getProductType()); // 私教课或团课
-            }
-
+            card.setCardType(item.getProductType());
             card.setStartDate(item.getValidityStartDate());
             card.setEndDate(item.getValidityEndDate());
             card.setTotalSessions(item.getTotalSessions());
@@ -210,6 +201,7 @@ public class MemberServiceImpl implements MemberService {
     public Long addMember(MemberBasicDTO basicDTO, HealthRecordDTO healthRecordDTO, MemberCardDTO cardDTO) {
         log.info("开始添加会员，手机号：{}", basicDTO.getPhone());
 
+        // 检查手机号
         LambdaQueryWrapper<Member> memberQuery = new LambdaQueryWrapper<>();
         memberQuery.eq(Member::getPhone, basicDTO.getPhone());
         Long memberCount = memberMapper.selectCount(memberQuery);
@@ -217,55 +209,155 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("该手机号已注册为会员");
         }
 
-        if (StringUtils.hasText(basicDTO.getMemberNo())) {
-            LambdaQueryWrapper<Member> memberNoQuery = new LambdaQueryWrapper<>();
-            memberNoQuery.eq(Member::getMemberNo, basicDTO.getMemberNo());
-            Long memberNoCount = memberMapper.selectCount(memberNoQuery);
-            if (memberNoCount > 0) {
-                throw new BusinessException("会员编号已存在");
-            }
-        }
-
+        // 创建会员记录
         Member member = new Member();
-        if (!StringUtils.hasText(basicDTO.getMemberNo())) {
-            member.setMemberNo(generateMemberNo());
-        } else {
-            member.setMemberNo(basicDTO.getMemberNo());
-        }
-
+        member.setMemberNo(generateMemberNo()); // 后端自动生成会员编号
         member.setPhone(basicDTO.getPhone());
         member.setPassword(bCryptUtil.encodePassword(basicDTO.getPassword()));
         member.setRealName(basicDTO.getRealName());
-        member.setIdCard(basicDTO.getIdCard());
         member.setGender(basicDTO.getGender());
         member.setBirthday(basicDTO.getBirthday());
-        member.setHeight(basicDTO.getHeight());
-        member.setWeight(basicDTO.getWeight());
-        member.setMembershipStartDate(basicDTO.getMembershipStartDate());
-        member.setMembershipEndDate(basicDTO.getMembershipEndDate());
-        member.setPersonalCoachId(basicDTO.getPersonalCoachId());
-        member.setAddress(basicDTO.getAddress());
+
+        // 初始总消费为0
+        member.setTotalSpent(BigDecimal.ZERO);
+
+        // 会员卡购买时才设置会籍时间，否则为空
+        if (cardDTO != null) {
+            // 根据会员卡类型计算会籍时间
+            calculateMembershipDates(member, cardDTO);
+
+            // 累加会员卡金额到总消费
+            if (cardDTO.getAmount() != null) {
+                member.setTotalSpent(member.getTotalSpent().add(cardDTO.getAmount()));
+            }
+        } else {
+            member.setMembershipStartDate(null);
+            member.setMembershipEndDate(null);
+        }
 
         member.setTotalCheckins(0);
         member.setTotalCourseHours(0);
-        member.setTotalSpent(BigDecimal.ZERO);
+
+        LocalDateTime now = LocalDateTime.now();
+        member.setCreateTime(now);
+        member.setUpdateTime(now);
 
         int result = memberMapper.insert(member);
         if (result <= 0) {
             throw new BusinessException("添加会员失败");
         }
 
-        log.info("添加会员成功，ID：{}，会员编号：{}", member.getId(), member.getMemberNo());
+        log.info("添加会员成功，ID：{}，会员编号：{}，总消费：{}",
+                member.getId(), member.getMemberNo(), member.getTotalSpent());
 
         if (healthRecordDTO != null) {
             addHealthRecord(member.getId(), healthRecordDTO);
         }
 
+        // 如果有会员卡，创建订单
         if (cardDTO != null) {
-            activateMemberCard(member.getId(), cardDTO);
+            createOrderForNewMember(member.getId(), cardDTO);
         }
 
         return member.getId();
+    }
+
+    /**
+     * 为新会员创建订单
+     */
+    private void createOrderForNewMember(Long memberId, MemberCardDTO cardDTO) {
+        log.info("为新会员创建订单，会员ID：{}", memberId);
+
+        // 创建新订单
+        Order order = new Order();
+        order.setOrderNo(generateOrderNo());
+        order.setMemberId(memberId);
+        order.setOrderType(cardDTO.getCardType() <= 1 ? 1 : 0); // 0-会籍卡，1-课程卡
+        order.setTotalAmount(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        order.setActualAmount(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        order.setPaymentStatus(1); // 已支付
+        order.setPaymentTime(LocalDateTime.now());
+        order.setOrderStatus("COMPLETED");
+        order.setRemark("新会员开卡");
+
+        LocalDateTime now = LocalDateTime.now();
+        order.setCreateTime(now);
+        order.setUpdateTime(now);
+
+        orderMapper.insert(order);
+        log.info("订单创建成功，订单ID：{}，订单号：{}", order.getId(), order.getOrderNo());
+
+        // 创建订单项
+        createOrderItem(order.getId(), cardDTO);
+    }
+
+    /**
+     * 创建订单项
+     */
+    private void createOrderItem(Long orderId, MemberCardDTO cardDTO) {
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = null;
+
+        // 根据卡类型计算结束日期
+        switch (cardDTO.getCardType()) {
+            case 0: // 会籍卡 - 年卡
+            case 3: // 年卡
+                endDate = today.plusYears(1);
+                break;
+            case 2: // 月卡
+                endDate = today.plusMonths(1);
+                break;
+            case 4: // 周卡
+                endDate = today.plusWeeks(1);
+                break;
+            case 1: // 私教课
+            case 5: // 团课
+                // 课程卡，从商品详情获取有效期
+                if (cardDTO.getProductId() != null) {
+                    ProductDetail productDetail = productDetailMapper.selectOne(
+                            new LambdaQueryWrapper<ProductDetail>()
+                                    .eq(ProductDetail::getProductId, cardDTO.getProductId())
+                    );
+                    if (productDetail != null && productDetail.getValidityDays() != null) {
+                        endDate = today.plusDays(productDetail.getValidityDays());
+                    } else {
+                        endDate = today.plusMonths(6); // 默认6个月
+                    }
+                } else {
+                    endDate = today.plusMonths(6);
+                }
+                break;
+            default:
+                endDate = today.plusDays(30);
+        }
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrderId(orderId);
+        orderItem.setProductId(cardDTO.getProductId());
+        orderItem.setProductName(cardDTO.getProductName());
+        orderItem.setProductType(cardDTO.getCardType());
+        orderItem.setQuantity(1);
+        orderItem.setUnitPrice(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        orderItem.setTotalPrice(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        orderItem.setValidityStartDate(today);
+        orderItem.setValidityEndDate(endDate);
+
+        // 设置课时数（用于课程卡）
+        if (cardDTO.getCardType() == 1 || cardDTO.getCardType() == 5) {
+            orderItem.setTotalSessions(cardDTO.getTotalSessions() != null ?
+                    cardDTO.getTotalSessions() : 10);
+            orderItem.setRemainingSessions(cardDTO.getTotalSessions() != null ?
+                    cardDTO.getTotalSessions() : 10);
+        }
+
+        orderItem.setStatus("ACTIVE");
+
+        LocalDateTime now = LocalDateTime.now();
+        orderItem.setCreateTime(now);
+        orderItem.setUpdateTime(now);
+
+        orderItemMapper.insert(orderItem);
+        log.info("订单项创建成功，订单项ID：{}，有效期至：{}", orderItem.getId(), endDate);
     }
 
     @Override
@@ -288,17 +380,6 @@ public class MemberServiceImpl implements MemberService {
             }
         }
 
-        if (!member.getMemberNo().equals(basicDTO.getMemberNo())) {
-            LambdaQueryWrapper<Member> memberNoQuery = new LambdaQueryWrapper<>();
-            memberNoQuery.eq(Member::getMemberNo, basicDTO.getMemberNo());
-            memberNoQuery.ne(Member::getId, memberId);
-            Long memberNoCount = memberMapper.selectCount(memberNoQuery);
-            if (memberNoCount > 0) {
-                throw new BusinessException("会员编号已被其他会员使用");
-            }
-        }
-
-        member.setMemberNo(basicDTO.getMemberNo());
         member.setPhone(basicDTO.getPhone());
 
         if (StringUtils.hasText(basicDTO.getPassword())) {
@@ -306,25 +387,65 @@ public class MemberServiceImpl implements MemberService {
         }
 
         member.setRealName(basicDTO.getRealName());
-        member.setIdCard(basicDTO.getIdCard());
         member.setGender(basicDTO.getGender());
         member.setBirthday(basicDTO.getBirthday());
-        member.setHeight(basicDTO.getHeight());
-        member.setWeight(basicDTO.getWeight());
-        member.setMembershipStartDate(basicDTO.getMembershipStartDate());
-        member.setMembershipEndDate(basicDTO.getMembershipEndDate());
-        member.setPersonalCoachId(basicDTO.getPersonalCoachId());
-        member.setAddress(basicDTO.getAddress());
+
+        // 如果有会员卡信息，更新会籍时间和总消费
+        if (cardDTO != null) {
+            calculateMembershipDates(member, cardDTO);
+
+            // 累加新卡金额到总消费
+            if (cardDTO.getAmount() != null) {
+                BigDecimal currentTotal = member.getTotalSpent() != null ?
+                        member.getTotalSpent() : BigDecimal.ZERO;
+                member.setTotalSpent(currentTotal.add(cardDTO.getAmount()));
+            }
+
+            // 创建新订单
+            createOrderForNewMember(memberId, cardDTO);
+        }
+
+        member.setUpdateTime(LocalDateTime.now());
 
         int result = memberMapper.updateById(member);
         if (result <= 0) {
             throw new BusinessException("更新会员失败");
         }
 
-        log.info("更新会员成功，ID：{}", memberId);
+        log.info("更新会员成功，ID：{}，新总消费：{}", memberId, member.getTotalSpent());
+    }
 
-        if (cardDTO != null) {
-            updateMemberCard(memberId, cardDTO);
+    /**
+     * 根据会员卡类型计算会籍开始和结束日期
+     */
+    private void calculateMembershipDates(Member member, MemberCardDTO cardDTO) {
+        if (cardDTO == null) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        member.setMembershipStartDate(today);
+
+        // 根据卡类型计算结束日期
+        switch (cardDTO.getCardType()) {
+            case 0: // 会籍卡 - 年卡
+            case 3: // 年卡
+                member.setMembershipEndDate(today.plusYears(1));
+                break;
+            case 2: // 月卡
+                member.setMembershipEndDate(today.plusMonths(1));
+                break;
+            case 4: // 周卡
+                member.setMembershipEndDate(today.plusWeeks(1));
+                break;
+            case 1: // 私教课
+            case 5: // 团课
+                // 课程卡不设置结束日期，由课时数控制
+                member.setMembershipEndDate(null);
+                break;
+            default:
+                // 其他类型默认30天
+                member.setMembershipEndDate(today.plusDays(30));
         }
     }
 
@@ -386,35 +507,71 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("会员不存在");
         }
 
-        if (member.getMembershipEndDate() != null) {
-            configValidator.validateCourseRenewal(member.getMembershipEndDate());
-        }
+        // 获取会员当前有效的会员卡
+        List<MemberCardDTO> currentCards = getMemberCards(memberId);
 
-        createRenewalOrder(memberId, cardDTO);
+        // 检查续费类型一致性
+        if (!CollectionUtils.isEmpty(currentCards)) {
+            // 获取最近一张有效卡
+            MemberCardDTO latestCard = currentCards.stream()
+                    .filter(card -> "ACTIVE".equals(card.getStatus()))
+                    .findFirst()
+                    .orElse(null);
 
-        if (cardDTO.getEndDate() != null) {
-            if (member.getMembershipEndDate() != null &&
-                    member.getMembershipEndDate().isAfter(LocalDate.now())) {
-                long daysToAdd = Period.between(LocalDate.now(), cardDTO.getEndDate()).getDays();
-                member.setMembershipEndDate(member.getMembershipEndDate().plusDays(daysToAdd));
-            } else {
-                member.setMembershipEndDate(cardDTO.getEndDate());
+            if (latestCard != null) {
+                // 续费类型必须和当前有效卡一致
+                if (!latestCard.getCardType().equals(cardDTO.getCardType())) {
+                    throw new BusinessException("续费类型必须与当前会员卡类型一致");
+                }
             }
         }
 
+        // 创建订单
+        createOrderForNewMember(memberId, cardDTO);
+
+        // 累加金额到总消费
         if (cardDTO.getAmount() != null) {
             BigDecimal currentTotal = member.getTotalSpent() != null ?
                     member.getTotalSpent() : BigDecimal.ZERO;
             member.setTotalSpent(currentTotal.add(cardDTO.getAmount()));
         }
 
-        int result = memberMapper.updateById(member);
-        if (result <= 0) {
-            throw new BusinessException("续费会员卡失败");
+        // 更新会籍时间（如果是时间卡）
+        if (cardDTO.getCardType() == 0 || cardDTO.getCardType() == 2 ||
+                cardDTO.getCardType() == 3 || cardDTO.getCardType() == 4) {
+
+            LocalDate today = LocalDate.now();
+            LocalDate newEndDate = null;
+
+            switch (cardDTO.getCardType()) {
+                case 0: // 会籍卡 - 年卡
+                case 3: // 年卡
+                    newEndDate = today.plusYears(1);
+                    break;
+                case 2: // 月卡
+                    newEndDate = today.plusMonths(1);
+                    break;
+                case 4: // 周卡
+                    newEndDate = today.plusWeeks(1);
+                    break;
+            }
+
+            if (member.getMembershipEndDate() != null &&
+                    member.getMembershipEndDate().isAfter(today)) {
+                // 如果会员卡未过期，在原有效期上增加天数
+                long daysToAdd = Period.between(today, newEndDate).getDays();
+                member.setMembershipEndDate(member.getMembershipEndDate().plusDays(daysToAdd));
+            } else {
+                // 如果已过期，直接设置为新日期
+                member.setMembershipStartDate(today);
+                member.setMembershipEndDate(newEndDate);
+            }
         }
 
-        log.info("续费会员卡成功，会员ID：{}，新有效期至：{}",
-                memberId, member.getMembershipEndDate());
+        member.setUpdateTime(LocalDateTime.now());
+        memberMapper.updateById(member);
+
+        log.info("续费会员卡成功，会员ID：{}，新总消费：{}", memberId, member.getTotalSpent());
     }
 
     @Override
@@ -456,6 +613,18 @@ public class MemberServiceImpl implements MemberService {
         healthRecord.setMemberId(memberId);
         healthRecord.setRecordedBy("系统");
 
+        // 计算BMI
+        if (healthRecord.getHeight() != null && healthRecord.getWeight() != null) {
+            BigDecimal heightInM = healthRecord.getHeight().divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            BigDecimal bmi = healthRecord.getWeight().divide(
+                    heightInM.multiply(heightInM), 1, RoundingMode.HALF_UP);
+            healthRecord.setBmi(bmi);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        healthRecord.setCreateTime(now);
+        healthRecord.setUpdateTime(now);
+
         int result = healthRecordMapper.insert(healthRecord);
         if (result <= 0) {
             throw new BusinessException("添加健康档案失败");
@@ -480,17 +649,25 @@ public class MemberServiceImpl implements MemberService {
             vo.setAge(Period.between(member.getBirthday(), LocalDate.now()).getYears());
         }
 
-        vo.setPersonalCoachName(getCoachName(member.getPersonalCoachId()));
-
         MiniMemberCardDTO currentCard = getCurrentMemberCard(member.getId());
         if (currentCard != null) {
             vo.setCardType(currentCard.getCardType());
             vo.setCardStatus(currentCard.getStatus());
 
-            if (currentCard.getEndDate() != null) {
+            // 只有会籍卡（type=0）才设置结束日期
+            if (currentCard.getCardType() == 0 && currentCard.getEndDate() != null) {
                 vo.setCardEndDate(currentCard.getEndDate().atStartOfDay());
+            } else {
+                // 非会籍卡不设置结束日期
+                vo.setCardEndDate(null);
+            }
+
+            // 如果是课程卡，设置剩余课时
+            if (currentCard.getCardType() == 1 || currentCard.getCardType() == 2) {
+                vo.setRemainingSessions(currentCard.getRemainingSessions());
             }
         } else {
+            // 如果没有当前卡，但有会员的会籍结束日期（可能是旧数据）
             if (member.getMembershipEndDate() != null) {
                 vo.setCardEndDate(member.getMembershipEndDate().atStartOfDay());
                 if (member.getMembershipEndDate().isBefore(LocalDate.now())) {
@@ -513,10 +690,16 @@ public class MemberServiceImpl implements MemberService {
             List<MemberCardDTO> pcCards = getMemberCards(memberId);
             List<MiniMemberCardDTO> miniCards = convertToMiniMemberCards(pcCards);
 
-            return miniCards.stream()
-                    .filter(card -> "ACTIVE".equals(card.getStatus()))
+            MiniMemberCardDTO card = miniCards.stream()
+                    .filter(c -> "ACTIVE".equals(c.getStatus()))
                     .findFirst()
                     .orElse(null);
+
+            if (card != null) {
+                log.info("会员ID: {}, 卡类型: {}, 结束日期: {}", memberId, card.getCardType(), card.getEndDate());
+            }
+
+            return card;
         } catch (Exception e) {
             log.error("获取会员卡信息失败，会员ID：{}", memberId, e);
         }
@@ -542,7 +725,14 @@ public class MemberServiceImpl implements MemberService {
                 CourseRecordDTO recordDTO = new CourseRecordDTO();
                 recordDTO.setCourseId(booking.getCourseId());
                 recordDTO.setCourseName(course.getCourseName());
-                recordDTO.setCoachName(getCoachName(course.getCoachId()));
+
+                if (course.getCoachId() != null) {
+                    Coach coach = coachMapper.selectById(course.getCoachId());
+                    if (coach != null) {
+                        recordDTO.setCoachName(coach.getRealName());
+                    }
+                }
+
                 recordDTO.setCourseDate(course.getCourseDate().atStartOfDay());
                 recordDTO.setStartTime(course.getCourseDate().atTime(course.getStartTime()));
                 recordDTO.setEndTime(course.getCourseDate().atTime(course.getEndTime()));
@@ -581,7 +771,13 @@ public class MemberServiceImpl implements MemberService {
                         Course course = courseMapper.selectById(booking.getCourseId());
                         if (course != null) {
                             dto.setCourseName(course.getCourseName());
-                            dto.setCoachName(getCoachName(course.getCoachId()));
+
+                            if (course.getCoachId() != null) {
+                                Coach coach = coachMapper.selectById(course.getCoachId());
+                                if (coach != null) {
+                                    dto.setCoachName(coach.getRealName());
+                                }
+                            }
                         }
                     }
                 }
@@ -601,31 +797,16 @@ public class MemberServiceImpl implements MemberService {
         return dto;
     }
 
-    private String getCoachName(Long coachId) {
-        if (coachId == null) {
-            return null;
-        }
-        try {
-            Coach coach = coachMapper.selectById(coachId);
-            return coach != null ? coach.getRealName() : null;
-        } catch (Exception e) {
-            log.error("获取教练姓名失败，教练ID：{}", coachId, e);
-            return null;
-        }
-    }
-
     private String generateMemberNo() {
         String dateStr = LocalDate.now().format(MEMBER_NO_FORMATTER);
         String randomStr = String.format("%04d", (int)(Math.random() * 10000));
         return "MF" + dateStr + randomStr;
     }
 
-    private void activateMemberCard(Long memberId, MemberCardDTO cardDTO) {
-        log.info("激活会员卡，会员ID：{}", memberId);
-    }
-
-    private void updateMemberCard(Long memberId, MemberCardDTO cardDTO) {
-        log.info("更新会员卡，会员ID：{}", memberId);
+    private String generateOrderNo() {
+        String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String randomStr = String.format("%06d", (int)(Math.random() * 1000000));
+        return "ORD" + dateStr + randomStr;
     }
 
     private void checkUnfinishedOrders(Long memberId) {
@@ -661,9 +842,5 @@ public class MemberServiceImpl implements MemberService {
         checkInRecordMapper.delete(checkinQuery);
 
         log.info("已删除会员 {} 的相关记录", memberId);
-    }
-
-    private void createRenewalOrder(Long memberId, MemberCardDTO cardDTO) {
-        log.info("创建续费订单，会员ID：{}", memberId);
     }
 }

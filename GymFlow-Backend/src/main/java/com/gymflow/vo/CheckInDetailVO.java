@@ -32,8 +32,8 @@ public class CheckInDetailVO {
     @Schema(description = "会员性别描述")
     private String genderDesc;
 
-    @Schema(description = "专属教练姓名")
-    private String personalCoachName;
+//    @Schema(description = "专属教练姓名")
+//    private String personalCoachName;
 
     @Schema(description = "签到时间")
     private LocalDateTime checkinTime;

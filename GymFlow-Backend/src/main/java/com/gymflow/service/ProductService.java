@@ -14,6 +14,11 @@ public interface ProductService {
     PageResultVO<ProductListVO> getProductList(ProductQueryDTO queryDTO);
 
     /**
+     * 根据类型查询商品列表（用于会员卡选择）
+     */
+    List<ProductListVO> getProductsByType(Integer productType);
+
+    /**
      * 获取商品详情
      */
     ProductFullDTO getProductDetail(Long productId);

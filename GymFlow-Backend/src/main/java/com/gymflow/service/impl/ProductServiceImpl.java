@@ -91,6 +91,29 @@ public class ProductServiceImpl implements ProductService {
                 queryDTO.getPageNum(), queryDTO.getPageSize());
     }
 
+    /**
+     * 根据类型查询商品列表（用于会员卡选择）
+     */
+    @Override
+    public List<ProductListVO> getProductsByType(Integer productType) {
+        log.info("根据类型查询商品列表，商品类型：{}", productType);
+
+        // 构建查询条件
+        LambdaQueryWrapper<Product> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Product::getProductType, productType);
+        queryWrapper.eq(Product::getStatus, 1); // 只在售商品
+        queryWrapper.gt(Product::getStockQuantity, 0); // 库存大于0
+        queryWrapper.orderByDesc(Product::getCreateTime);
+
+        // 查询商品列表
+        List<Product> products = productMapper.selectList(queryWrapper);
+
+        // 转换为VO列表
+        return products.stream()
+                .map(this::convertToProductListVO)
+                .collect(Collectors.toList());
+    }
+
     @Override
     public ProductFullDTO getProductDetail(Long productId) {
         log.info("获取商品详情，商品ID：{}", productId);
@@ -111,6 +134,11 @@ public class ProductServiceImpl implements ProductService {
         );
         if (productDetail != null) {
             fullDTO.setDetailDTO(convertToProductDetailDTO(productDetail));
+
+            // 设置总课时数到商品主表（用于前端显示）
+            if (productDetail.getTotalSessions() != null) {
+                fullDTO.setTotalSessions(productDetail.getTotalSessions());
+            }
         }
 
         return fullDTO;
@@ -526,6 +554,19 @@ public class ProductServiceImpl implements ProductService {
                     .divide(product.getOriginalPrice(), 2, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(10));
             vo.setDiscount(discount);
+        }
+
+        // 查询商品详情，获取总课时数
+        try {
+            ProductDetail productDetail = productDetailMapper.selectOne(
+                    new LambdaQueryWrapper<ProductDetail>()
+                            .eq(ProductDetail::getProductId, product.getId())
+            );
+            if (productDetail != null && productDetail.getTotalSessions() != null) {
+                vo.setTotalSessions(productDetail.getTotalSessions());
+            }
+        } catch (Exception e) {
+            log.error("查询商品详情失败，商品ID：{}", product.getId(), e);
         }
 
         // 解析图片列表

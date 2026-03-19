@@ -48,6 +48,7 @@ public class MiniMemberCardDTO {
             case 0: return "会籍卡";
             case 1: return "私教课";
             case 2: return "团课";
+            case 3: return "相关产品";
             default: return "其他";
         }
     }

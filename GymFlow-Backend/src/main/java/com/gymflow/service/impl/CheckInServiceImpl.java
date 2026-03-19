@@ -796,13 +796,7 @@ public class CheckInServiceImpl implements CheckInService {
             vo.setMemberNo(member.getMemberNo());
             vo.setGender(member.getGender());
 
-            // 获取专属教练信息
-            if (member.getPersonalCoachId() != null) {
-                Coach coach = coachMapper.selectById(member.getPersonalCoachId());
-                if (coach != null) {
-                    vo.setPersonalCoachName(coach.getRealName());
-                }
-            }
+//            vo.setPersonalCoachName(null);
         }
 
         // 设置课程预约信息
