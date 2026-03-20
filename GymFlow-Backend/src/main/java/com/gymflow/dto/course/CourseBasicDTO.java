@@ -43,10 +43,6 @@ public class CourseBasicDTO {
     @Schema(description = "价格（元）", example = "80.00", required = true)
     private BigDecimal price;
 
-    @Size(max = 200, message = "上课地点长度不能超过200")
-    @Schema(description = "上课地点", example = "团课室A")
-    private String location;
-
     @Size(max = 1000, message = "课程须知长度不能超过1000")
     @Schema(description = "课程须知")
     private String notice;

@@ -10,6 +10,9 @@ import java.time.LocalTime;
 @Schema(description = "可预约课程DTO")
 public class MiniAvailableCourseDTO {
 
+    @Schema(description = "排课ID")
+    private Long scheduleId;
+
     @Schema(description = "课程ID")
     private Long courseId;
 
@@ -54,9 +57,6 @@ public class MiniAvailableCourseDTO {
 
     @Schema(description = "剩余名额")
     private Integer remainingSlots;
-
-    @Schema(description = "上课地点")
-    private String location;
 
     @Schema(description = "课程描述")
     private String description;

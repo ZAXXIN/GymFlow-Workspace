@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +27,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final MemberMapper memberMapper;
     private final CoachMapper coachMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final ProductMapper productMapper;
     private final CheckInRecordMapper checkInRecordMapper;
     private final OrderMapper orderMapper;
@@ -51,7 +51,7 @@ public class DashboardServiceImpl implements DashboardService {
         // 2. 总教练数
         stats.setTotalCoaches(coachMapper.selectCount(null).intValue());
 
-        // 3. 总课程数
+        // 3. 总课程数（模板数）
         stats.setTotalCourses(courseMapper.selectCount(null).intValue());
 
         // 4. 今日营收
@@ -215,59 +215,49 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public List<TodayCourseDTO> getTodayCourses() {
-        List<TodayCourseDTO> courses = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
-        // 查询今日的课程
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Course::getCourseDate, today);
-        queryWrapper.orderByAsc(Course::getStartTime);
+        // 查询今天的排课
+        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+        scheduleWrapper.eq(CourseSchedule::getScheduleDate, today)
+                .eq(CourseSchedule::getStatus, 1)
+                .orderByAsc(CourseSchedule::getStartTime);
 
-        List<Course> courseList = courseMapper.selectList(queryWrapper);
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
 
-        for (Course course : courseList) {
+        return schedules.stream().map(schedule -> {
+            Course course = courseMapper.selectById(schedule.getCourseId());
+            Coach coach = coachMapper.selectById(schedule.getCoachId());
+
             TodayCourseDTO dto = new TodayCourseDTO();
-            dto.setId(course.getId());
-            dto.setCourseNo(String.valueOf(course.getId())); // 可以根据需要生成课程编号
+            dto.setId(schedule.getId());  // 使用排课ID
+            dto.setCourseNo("C" + course.getId());
             dto.setName(course.getCourseName());
-            dto.setStartTime(course.getStartTime().toString());
-            dto.setEndTime(course.getEndTime().toString());
-            dto.setCoachId(course.getCoachId());
+            dto.setCoachId(schedule.getCoachId());
+            dto.setCoachName(coach != null ? coach.getRealName() : "");
+            dto.setStartTime(schedule.getStartTime().toString());
+            dto.setEndTime(schedule.getEndTime().toString());
+            dto.setCapacity(schedule.getMaxCapacity());
+            dto.setCurrentBookings(schedule.getCurrentEnrollment());
 
-            // 获取教练姓名
-            Coach coach = coachMapper.selectById(course.getCoachId());
-            if (coach != null) {
-                dto.setCoachName(coach.getRealName());
-            }
+            // 计算状态
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime courseStart = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+            LocalDateTime courseEnd = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
 
-            dto.setCapacity(course.getMaxCapacity());
-            dto.setCurrentBookings(course.getCurrentEnrollment());
-
-            // 设置课程状态
-            if (course.getStatus() == 0) {
-                dto.setStatus("cancelled");
-                dto.setStatusText("已取消");
+            if (now.isBefore(courseStart)) {
+                dto.setStatus("UPCOMING");
+                dto.setStatusText("待开始");
+            } else if (now.isAfter(courseEnd)) {
+                dto.setStatus("FINISHED");
+                dto.setStatusText("已结束");
             } else {
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime startDateTime = LocalDateTime.of(course.getCourseDate(), course.getStartTime());
-                LocalDateTime endDateTime = LocalDateTime.of(course.getCourseDate(), course.getEndTime());
-
-                if (now.isBefore(startDateTime)) {
-                    dto.setStatus("scheduled");
-                    dto.setStatusText("待开始");
-                } else if (now.isAfter(endDateTime)) {
-                    dto.setStatus("completed");
-                    dto.setStatusText("已完成");
-                } else {
-                    dto.setStatus("in-progress");
-                    dto.setStatusText("进行中");
-                }
+                dto.setStatus("ONGOING");
+                dto.setStatusText("进行中");
             }
 
-            courses.add(dto);
-        }
-
-        return courses;
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -280,13 +270,13 @@ public class DashboardServiceImpl implements DashboardService {
         pendingOrderQuery.eq(Order::getOrderStatus, "PENDING");
         stats.setPendingOrders(orderMapper.selectCount(pendingOrderQuery).intValue());
 
-        // 待签到课程数
+        // 待签到课程数（查询今天待上课的排课）
         LocalDateTime now = LocalDateTime.now();
-        LambdaQueryWrapper<Course> pendingCheckInQuery = new LambdaQueryWrapper<>();
-        pendingCheckInQuery.eq(Course::getCourseDate, today)
-                .gt(Course::getStartTime, now.toLocalTime())
-                .orderByAsc(Course::getStartTime);
-        stats.setPendingCheckIns(courseMapper.selectCount(pendingCheckInQuery).intValue());
+        LambdaQueryWrapper<CourseSchedule> pendingCheckInQuery = new LambdaQueryWrapper<>();
+        pendingCheckInQuery.eq(CourseSchedule::getScheduleDate, today)
+                .gt(CourseSchedule::getStartTime, now.toLocalTime())
+                .eq(CourseSchedule::getStatus, 1);
+        stats.setPendingCheckIns(courseScheduleMapper.selectCount(pendingCheckInQuery).intValue());
 
         // 即将过期的会员数
         LocalDate thirtyDaysLater = today.plusDays(30);

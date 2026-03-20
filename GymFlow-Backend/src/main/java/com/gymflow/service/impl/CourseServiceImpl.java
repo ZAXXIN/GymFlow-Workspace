@@ -1,7 +1,6 @@
 package com.gymflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gymflow.dto.coach.CoachBasicDTO;
 import com.gymflow.dto.course.*;
@@ -10,165 +9,167 @@ import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.CourseService;
 import com.gymflow.utils.SystemConfigValidator;
+import com.gymflow.vo.CourseBookingVO;
 import com.gymflow.vo.CourseListVO;
 import com.gymflow.vo.CourseScheduleVO;
 import com.gymflow.vo.PageResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
-import java.math.RoundingMode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
 
     private final CourseMapper courseMapper;
-    private final CoachMapper coachMapper;
-    private final CourseBookingMapper courseBookingMapper;
-    private final MemberMapper memberMapper;
-    private final CheckInRecordMapper checkInRecordMapper;
-    private final OrderItemMapper orderItemMapper;
-    private final CoachScheduleMapper coachScheduleMapper;
     private final CourseCoachMapper courseCoachMapper;
-
-    // 注入系统配置验证器
+    private final CourseScheduleMapper courseScheduleMapper;
+    private final CourseBookingMapper courseBookingMapper;
+    private final CoachMapper coachMapper;
+    private final MemberMapper memberMapper;
+    private final OrderItemMapper orderItemMapper;
     private final SystemConfigValidator configValidator;
 
     @Override
     public PageResultVO<CourseListVO> getCourseList(CourseQueryDTO queryDTO) {
-        // ... 原有代码保持不变
-        // 创建分页对象
-        Page<Course> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
-
         // 构建查询条件
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
 
-        // 课程类型查询
         if (queryDTO.getCourseType() != null) {
-            queryWrapper.eq(Course::getCourseType, queryDTO.getCourseType());
+            wrapper.eq(Course::getCourseType, queryDTO.getCourseType());
         }
-
-        // 课程名称查询
-        if (StringUtils.hasText(queryDTO.getCourseName())) {
-            queryWrapper.like(Course::getCourseName, queryDTO.getCourseName());
+        if (queryDTO.getCourseName() != null && !queryDTO.getCourseName().isEmpty()) {
+            wrapper.like(Course::getCourseName, queryDTO.getCourseName());
         }
-
-        // 教练ID查询
-        if (queryDTO.getCoachId() != null) {
-            queryWrapper.eq(Course::getCoachId, queryDTO.getCoachId());
-        }
-
-        // 课程日期范围查询
-        if (queryDTO.getStartDate() != null) {
-            queryWrapper.ge(Course::getCourseDate, queryDTO.getStartDate());
-        }
-        if (queryDTO.getEndDate() != null) {
-            queryWrapper.le(Course::getCourseDate, queryDTO.getEndDate());
-        }
-
-        // 状态查询
         if (queryDTO.getStatus() != null) {
-            queryWrapper.eq(Course::getStatus, queryDTO.getStatus());
+            wrapper.eq(Course::getStatus, queryDTO.getStatus());
         }
 
-        // 按课程日期倒序排列
-        queryWrapper.orderByDesc(Course::getCourseDate).orderByAsc(Course::getStartTime);
+        wrapper.orderByDesc(Course::getCreateTime);
 
-        // 执行分页查询
-        IPage<Course> coursePage = courseMapper.selectPage(page, queryWrapper);
+        // 分页查询
+        Page<Course> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
+        Page<Course> coursePage = courseMapper.selectPage(page, wrapper);
 
-        // 转换为VO列表
-        List<CourseListVO> voList = coursePage.getRecords().stream()
-                .map(course -> {
-                    CourseListVO vo = convertToCourseListVO(course);
-
-                    // 获取所有绑定的教练姓名
-                    List<String> coachNames = getCourseCoachNames(course.getId());
-                    vo.setCoachNames(coachNames);
-
-                    return vo;
-                })
+        // 获取所有课程ID
+        List<Long> courseIds = coursePage.getRecords().stream()
+                .map(Course::getId)
                 .collect(Collectors.toList());
 
-        return new PageResultVO<>(voList, coursePage.getTotal(),
-                queryDTO.getPageNum(), queryDTO.getPageSize());
+        // 如果有教练筛选条件，需要过滤课程
+        if (queryDTO.getCoachId() != null && !courseIds.isEmpty()) {
+            // 查询包含指定教练的课程ID
+            LambdaQueryWrapper<CourseCoach> coachWrapper = new LambdaQueryWrapper<>();
+            coachWrapper.in(CourseCoach::getCourseId, courseIds)
+                    .eq(CourseCoach::getCoachId, queryDTO.getCoachId());
+
+            List<CourseCoach> courseCoaches = courseCoachMapper.selectList(coachWrapper);
+            Set<Long> validCourseIds = courseCoaches.stream()
+                    .map(CourseCoach::getCourseId)
+                    .collect(Collectors.toSet());
+
+            // 只保留包含指定教练的课程
+            List<Course> filteredCourses = coursePage.getRecords().stream()
+                    .filter(course -> validCourseIds.contains(course.getId()))
+                    .collect(Collectors.toList());
+
+            // 重新设置分页数据
+            coursePage.setRecords(filteredCourses);
+            coursePage.setTotal(filteredCourses.size());
+        }
+
+        // 转换为VO
+        List<CourseListVO> list = coursePage.getRecords().stream().map(course -> {
+            CourseListVO vo = new CourseListVO();
+            vo.setId(course.getId());
+            vo.setCourseType(course.getCourseType());
+            vo.setCourseName(course.getCourseName());
+            vo.setDescription(course.getDescription());
+            vo.setDuration(course.getDuration());
+            vo.setPrice(course.getPrice());
+            vo.setStatus(course.getStatus());
+
+            // 查询绑定教练
+            List<Long> coachIds = courseCoachMapper.selectCoachIdsByCourseId(course.getId());
+            if (!coachIds.isEmpty()) {
+                List<Coach> coaches = coachMapper.selectBatchIds(coachIds);
+                List<String> coachNames = coaches.stream()
+                        .map(Coach::getRealName)
+                        .collect(Collectors.toList());
+                vo.setCoachNames(coachNames);
+            }
+
+            // 查询统计信息
+            LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+            scheduleWrapper.eq(CourseSchedule::getCourseId, course.getId());
+            Long totalSchedules = courseScheduleMapper.selectCount(scheduleWrapper);
+            vo.setTotalSchedules(totalSchedules.intValue());
+
+            LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
+            bookingWrapper.eq(CourseBooking::getCourseId, course.getId());
+            Long totalBookings = courseBookingMapper.selectCount(bookingWrapper);
+            vo.setTotalBookings(totalBookings.intValue());
+
+            return vo;
+        }).collect(Collectors.toList());
+
+        return new PageResultVO<>(list, coursePage.getTotal(), queryDTO.getPageNum(), queryDTO.getPageSize());
     }
 
     @Override
     public CourseFullDTO getCourseDetail(Long courseId) {
-        // ... 原有代码保持不变
-        // 获取课程信息
         Course course = courseMapper.selectById(courseId);
         if (course == null) {
             throw new BusinessException("课程不存在");
         }
 
-        // 构建完整DTO
-        CourseFullDTO fullDTO = new CourseFullDTO();
-        BeanUtils.copyProperties(course, fullDTO);
+        CourseFullDTO dto = new CourseFullDTO();
+        dto.setId(course.getId());
+        dto.setCourseType(course.getCourseType());
+        dto.setCourseName(course.getCourseName());
+        dto.setDescription(course.getDescription());
+        dto.setDuration(course.getDuration());
+        dto.setPrice(course.getPrice());
+        dto.setStatus(course.getStatus());
+        dto.setNotice(course.getNotice());
+        dto.setCreateTime(course.getCreateTime());
+        dto.setUpdateTime(course.getUpdateTime());
 
-        // 设置课程类型描述
-        fullDTO.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
+        // 查询绑定教练
+        List<Long> coachIds = courseCoachMapper.selectCoachIdsByCourseId(courseId);
+        if (!coachIds.isEmpty()) {
+            List<Coach> coaches = coachMapper.selectBatchIds(coachIds);
+            dto.setCoaches(convertToCoachBasicDTO(coaches));
+        }
 
-        // 获取所有绑定的教练信息
-        List<CoachBasicDTO> coachDTOs = getCourseCoaches(courseId);
-        fullDTO.setCoaches(coachDTOs);
+        // 查询排课列表（包含预约信息）
+        List<CourseScheduleVO> schedules = getCourseSchedules(courseId);
+        dto.setSchedules(schedules);
 
-        // 获取预约情况
-        LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-        bookingQuery.eq(CourseBooking::getCourseId, courseId);
-        bookingQuery.orderByDesc(CourseBooking::getBookingTime);
-
-        List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
-
-        List<CourseBookingDTO> bookingDTOs = bookings.stream()
-                .map(booking -> {
-                    CourseBookingDTO dto = new CourseBookingDTO();
-                    BeanUtils.copyProperties(booking, dto);
-
-                    // 获取会员信息
-                    Member member = memberMapper.selectById(booking.getMemberId());
-                    if (member != null) {
-                        dto.setMemberName(member.getRealName());
-                        dto.setMemberPhone(member.getPhone());
-                    }
-
-                    // 设置预约状态描述
-                    dto.setBookingStatusDesc(getBookingStatusDesc(booking.getBookingStatus()));
-
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        fullDTO.setBookings(bookingDTOs);
-
-        return fullDTO;
+        return dto;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long addCourse(CourseBasicDTO courseDTO) {
-        log.info("开始添加课程，课程名称：{}，教练IDs：{}", courseDTO.getCourseName(), courseDTO.getCoachIds());
-
-        // 验证教练信息
-        if (CollectionUtils.isEmpty(courseDTO.getCoachIds())) {
-            throw new BusinessException("必须绑定至少一个教练");
+        // 验证课程名称是否重复
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Course::getCourseName, courseDTO.getCourseName());
+        if (courseMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("课程名称已存在");
         }
 
-        // 验证教练是否存在
+        // 验证教练ID是否有效
         for (Long coachId : courseDTO.getCoachIds()) {
             Coach coach = coachMapper.selectById(coachId);
             if (coach == null) {
@@ -176,53 +177,46 @@ public class CourseServiceImpl implements CourseService {
             }
         }
 
-        // 创建课程记录（默认绑定第一个教练为主教练）
+        // 创建课程
         Course course = new Course();
         course.setCourseType(courseDTO.getCourseType());
         course.setCourseName(courseDTO.getCourseName());
         course.setDescription(courseDTO.getDescription());
-        course.setCoachId(courseDTO.getCoachIds().get(0)); // 绑定第一个教练为主教练
-        course.setMaxCapacity(courseDTO.getMaxCapacity());
         course.setDuration(courseDTO.getDuration());
         course.setPrice(courseDTO.getPrice());
-        course.setLocation(courseDTO.getLocation());
-        course.setStatus(1); // 默认启用
-        course.setCurrentEnrollment(0); // 初始报名人数为0
+        course.setNotice(courseDTO.getNotice());
+        course.setStatus(1); // 默认正常
 
-        // 保存课程
-        int result = courseMapper.insert(course);
-        if (result <= 0) {
-            throw new BusinessException("添加课程失败");
+        courseMapper.insert(course);
+
+        // 绑定教练
+        for (Long coachId : courseDTO.getCoachIds()) {
+            CourseCoach courseCoach = new CourseCoach();
+            courseCoach.setCourseId(course.getId());
+            courseCoach.setCoachId(coachId);
+            courseCoachMapper.insert(courseCoach);
         }
 
-        Long courseId = course.getId();
-        log.info("课程保存成功，课程ID：{}", courseId);
-
-        // 添加教练绑定关系
-        addCourseCoaches(courseId, courseDTO.getCoachIds());
-
-        log.info("添加课程成功，课程ID：{}，绑定了 {} 个教练", courseId, courseDTO.getCoachIds().size());
-
-        return courseId;
+        return course.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCourse(Long courseId, CourseBasicDTO courseDTO) {
-        log.info("开始更新课程，课程ID：{}，教练IDs：{}", courseId, courseDTO.getCoachIds());
-
-        // 检查课程是否存在
         Course course = courseMapper.selectById(courseId);
         if (course == null) {
             throw new BusinessException("课程不存在");
         }
 
-        // 验证教练信息
-        if (CollectionUtils.isEmpty(courseDTO.getCoachIds())) {
-            throw new BusinessException("必须绑定至少一个教练");
+        // 验证课程名称是否重复（排除自己）
+        LambdaQueryWrapper<Course> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Course::getCourseName, courseDTO.getCourseName())
+                .ne(Course::getId, courseId);
+        if (courseMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("课程名称已存在");
         }
 
-        // 验证教练是否存在
+        // 验证教练ID是否有效
         for (Long coachId : courseDTO.getCoachIds()) {
             Coach coach = coachMapper.selectById(coachId);
             if (coach == null) {
@@ -234,846 +228,501 @@ public class CourseServiceImpl implements CourseService {
         course.setCourseType(courseDTO.getCourseType());
         course.setCourseName(courseDTO.getCourseName());
         course.setDescription(courseDTO.getDescription());
-        course.setCoachId(courseDTO.getCoachIds().get(0)); // 绑定第一个教练为主教练
-        course.setMaxCapacity(courseDTO.getMaxCapacity());
         course.setDuration(courseDTO.getDuration());
         course.setPrice(courseDTO.getPrice());
-        course.setLocation(courseDTO.getLocation());
+        course.setNotice(courseDTO.getNotice());
 
-        // 更新课程
-        int result = courseMapper.updateById(course);
-        if (result <= 0) {
-            throw new BusinessException("更新课程失败");
+        courseMapper.updateById(course);
+
+        // 更新教练绑定（先删除后添加）
+        LambdaQueryWrapper<CourseCoach> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(CourseCoach::getCourseId, courseId);
+        courseCoachMapper.delete(deleteWrapper);
+
+        for (Long coachId : courseDTO.getCoachIds()) {
+            CourseCoach courseCoach = new CourseCoach();
+            courseCoach.setCourseId(courseId);
+            courseCoach.setCoachId(coachId);
+            courseCoachMapper.insert(courseCoach);
         }
-
-        // 更新教练绑定关系
-        updateCourseCoaches(courseId, courseDTO.getCoachIds());
-
-        log.info("更新课程成功，课程ID：{}，绑定了 {} 个教练", courseId, courseDTO.getCoachIds().size());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCourse(Long courseId) {
-        log.info("开始删除课程，课程ID：{}", courseId);
-
-        // 检查课程是否存在
-        Course course = courseMapper.selectById(courseId);
-        if (course == null) {
-            throw new BusinessException("课程不存在");
+        // 检查是否有排课
+        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+        scheduleWrapper.eq(CourseSchedule::getCourseId, courseId);
+        Long scheduleCount = courseScheduleMapper.selectCount(scheduleWrapper);
+        if (scheduleCount > 0) {
+            throw new BusinessException("该课程已有排课，无法删除");
         }
 
         // 检查是否有预约记录
-        LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-        bookingQuery.eq(CourseBooking::getCourseId, courseId);
-        bookingQuery.in(CourseBooking::getBookingStatus, 0, 1); // 待上课、已签到
-
-        Long bookingCount = courseBookingMapper.selectCount(bookingQuery);
+        LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
+        bookingWrapper.eq(CourseBooking::getCourseId, courseId);
+        Long bookingCount = courseBookingMapper.selectCount(bookingWrapper);
         if (bookingCount > 0) {
-            throw new BusinessException("课程还有未完成的预约，不能删除");
+            throw new BusinessException("该课程已有预约记录，无法删除");
         }
 
-        // 删除教练绑定关系
-        LambdaQueryWrapper<CourseCoach> deleteWrapper = new LambdaQueryWrapper<>();
-        deleteWrapper.eq(CourseCoach::getCourseId, courseId);
-        int deleteCount = courseCoachMapper.delete(deleteWrapper);
-        log.info("已删除课程ID为 {} 的 {} 条教练绑定关系", courseId, deleteCount);
+        // 删除课程
+        courseMapper.deleteById(courseId);
 
-        // 软删除：更新状态为禁用
-        course.setStatus(0);
-
-        if (courseMapper.updateById(course) <= 0) {
-            throw new BusinessException("删除课程失败");
-        }
-
-        log.info("删除课程成功，课程ID：{}", courseId);
+        // 删除教练关联
+        LambdaQueryWrapper<CourseCoach> coachWrapper = new LambdaQueryWrapper<>();
+        coachWrapper.eq(CourseCoach::getCourseId, courseId);
+        courseCoachMapper.delete(coachWrapper);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void updateCourseStatus(Long courseId, Integer status) {
-        log.info("更新课程状态，课程ID：{}，状态：{}", courseId, status);
-
-        // 检查状态值
-        if (status != 0 && status != 1) {
-            throw new BusinessException("状态值只能是0（禁用）或1（正常）");
-        }
-
-        // 检查课程是否存在
         Course course = courseMapper.selectById(courseId);
         if (course == null) {
             throw new BusinessException("课程不存在");
         }
 
-        // 更新状态
         course.setStatus(status);
-
-        int result = courseMapper.updateById(course);
-        if (result <= 0) {
-            throw new BusinessException("更新课程状态失败");
-        }
-
-        log.info("更新课程状态成功，课程ID：{}，新状态：{}", courseId, status);
+        courseMapper.updateById(course);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void scheduleCourse(CourseScheduleDTO scheduleDTO) {
-        log.info("开始排课，课程ID：{}，教练ID：{}", scheduleDTO.getCourseId(), scheduleDTO.getCoachId());
-
-        // 检查课程是否存在
+        // 验证课程是否存在
         Course course = courseMapper.selectById(scheduleDTO.getCourseId());
         if (course == null) {
             throw new BusinessException("课程不存在");
         }
 
-        // 只能为团课排课
-        if (course.getCourseType() != 1) {
-            throw new BusinessException("只能为团课排课");
+        // 验证教练是否可授课该课程
+        LambdaQueryWrapper<CourseCoach> coachWrapper = new LambdaQueryWrapper<>();
+        coachWrapper.eq(CourseCoach::getCourseId, scheduleDTO.getCourseId())
+                .eq(CourseCoach::getCoachId, scheduleDTO.getCoachId());
+        if (courseCoachMapper.selectCount(coachWrapper) == 0) {
+            throw new BusinessException("该教练不能教授此课程");
         }
 
-        // 检查教练是否存在
-        Coach coach = coachMapper.selectById(scheduleDTO.getCoachId());
-        if (coach == null) {
-            throw new BusinessException("教练不存在");
+        // 验证教练在该时间段是否已有排课
+        LambdaQueryWrapper<CourseSchedule> conflictWrapper = new LambdaQueryWrapper<>();
+        conflictWrapper.eq(CourseSchedule::getCoachId, scheduleDTO.getCoachId())
+                .eq(CourseSchedule::getScheduleDate, scheduleDTO.getScheduleDate())
+                .and(w -> w.between(CourseSchedule::getStartTime, scheduleDTO.getStartTime(), scheduleDTO.getEndTime())
+                        .or(b -> b.between(CourseSchedule::getEndTime, scheduleDTO.getStartTime(), scheduleDTO.getEndTime())
+                                .or(c -> c.le(CourseSchedule::getStartTime, scheduleDTO.getStartTime())
+                                        .ge(CourseSchedule::getEndTime, scheduleDTO.getEndTime()))));
+
+        if (courseScheduleMapper.selectCount(conflictWrapper) > 0) {
+            throw new BusinessException("教练在该时间段已有排课");
         }
 
-        // ========== 新增：验证营业时间 ==========
-        configValidator.validateBusinessHours(
-                scheduleDTO.getStartTime(),
-                scheduleDTO.getEndTime()
-        );
+        // 验证营业时间
+        configValidator.validateBusinessHours(scheduleDTO.getStartTime(), scheduleDTO.getEndTime());
 
-        // 检查教练时间冲突
-        checkCoachScheduleConflict(scheduleDTO);
-
-        // 检查课程时间冲突
-        checkCourseScheduleConflict(scheduleDTO);
-
-        // 创建课程实例
-        Course scheduledCourse = new Course();
-        BeanUtils.copyProperties(course, scheduledCourse);
-        scheduledCourse.setId(null); // 新的实例
-        scheduledCourse.setCoachId(scheduleDTO.getCoachId());
-        scheduledCourse.setCourseDate(scheduleDTO.getCourseDate());
-        scheduledCourse.setStartTime(scheduleDTO.getStartTime());
-        scheduledCourse.setEndTime(scheduleDTO.getEndTime());
-        scheduledCourse.setCurrentEnrollment(0);
-
-        // ========== 新增：设置最大容量（使用系统配置） ==========
-        scheduledCourse.setMaxCapacity(
-                configValidator.getMaxClassCapacity()
-        );
-
-        // 设置签到码
-        scheduledCourse.setSignCode(generateSignCode());
-        scheduledCourse.setSignCodeExpireTime(LocalDateTime.now().plusDays(1));
-
-        // 保存排课
-        int result = courseMapper.insert(scheduledCourse);
-        if (result <= 0) {
-            throw new BusinessException("排课失败");
+        // 验证课程容量 - 从 scheduleDTO 获取
+        if (scheduleDTO.getMaxCapacity() != null) {
+            configValidator.validateClassCapacity(0, scheduleDTO.getMaxCapacity());
         }
 
-        Long scheduledCourseId = scheduledCourse.getId();
+        // 创建排课
+        CourseSchedule schedule = new CourseSchedule();
+        schedule.setCourseId(scheduleDTO.getCourseId());
+        schedule.setCoachId(scheduleDTO.getCoachId());
+        schedule.setScheduleDate(scheduleDTO.getScheduleDate());
+        schedule.setStartTime(scheduleDTO.getStartTime());
+        schedule.setEndTime(scheduleDTO.getEndTime());
+        // 从 DTO 获取 maxCapacity，如果没有则使用默认值 20
+        schedule.setMaxCapacity(scheduleDTO.getMaxCapacity() != null ? scheduleDTO.getMaxCapacity() : 20);
+        schedule.setCurrentEnrollment(0);
+        schedule.setStatus(1); // 正常
 
-        // 获取原课程的所有教练绑定关系
-        List<CourseCoach> originalCourseCoaches = courseCoachMapper.selectList(
-                new LambdaQueryWrapper<CourseCoach>().eq(CourseCoach::getCourseId, scheduleDTO.getCourseId())
-        );
+        LocalDateTime now = LocalDateTime.now();
+        schedule.setCreateTime(now);
+        schedule.setUpdateTime(now);
 
-        // 为新排课复制教练绑定关系
-        if (!CollectionUtils.isEmpty(originalCourseCoaches)) {
-            for (CourseCoach original : originalCourseCoaches) {
-                CourseCoach newCourseCoach = new CourseCoach();
-                newCourseCoach.setCourseId(scheduledCourseId);
-                newCourseCoach.setCoachId(original.getCoachId());
-                courseCoachMapper.insert(newCourseCoach);
-            }
-            log.info("为新排课ID {} 复制了 {} 个教练绑定关系", scheduledCourseId, originalCourseCoaches.size());
+        courseScheduleMapper.insert(schedule);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCourseSchedule(Long scheduleId, CourseScheduleDTO scheduleDTO) {
+        CourseSchedule schedule = courseScheduleMapper.selectById(scheduleId);
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
         }
 
-        // 创建教练排班记录
-        createCoachSchedule(scheduleDTO, scheduledCourseId);
+        // 如果有预约，不能修改关键信息
+        if (schedule.getCurrentEnrollment() > 0) {
+            throw new BusinessException("该排课已有会员预约，无法修改");
+        }
 
-        log.info("排课成功，排课ID：{}", scheduledCourseId);
+        // 验证教练是否可授课该课程
+        LambdaQueryWrapper<CourseCoach> coachWrapper = new LambdaQueryWrapper<>();
+        coachWrapper.eq(CourseCoach::getCourseId, scheduleDTO.getCourseId())
+                .eq(CourseCoach::getCoachId, scheduleDTO.getCoachId());
+        if (courseCoachMapper.selectCount(coachWrapper) == 0) {
+            throw new BusinessException("该教练不能教授此课程");
+        }
+
+        // 验证教练在该时间段是否已有排课（排除自己）
+        LambdaQueryWrapper<CourseSchedule> conflictWrapper = new LambdaQueryWrapper<>();
+        conflictWrapper.eq(CourseSchedule::getCoachId, scheduleDTO.getCoachId())
+                .eq(CourseSchedule::getScheduleDate, scheduleDTO.getScheduleDate())
+                .ne(CourseSchedule::getId, scheduleId)
+                .and(w -> w.between(CourseSchedule::getStartTime, scheduleDTO.getStartTime(), scheduleDTO.getEndTime())
+                        .or(b -> b.between(CourseSchedule::getEndTime, scheduleDTO.getStartTime(), scheduleDTO.getEndTime())
+                                .or(c -> c.le(CourseSchedule::getStartTime, scheduleDTO.getStartTime())
+                                        .ge(CourseSchedule::getEndTime, scheduleDTO.getEndTime()))));
+
+        if (courseScheduleMapper.selectCount(conflictWrapper) > 0) {
+            throw new BusinessException("教练在该时间段已有排课");
+        }
+
+        // 验证营业时间
+        configValidator.validateBusinessHours(scheduleDTO.getStartTime(), scheduleDTO.getEndTime());
+
+        // 更新时间等
+        schedule.setCoachId(scheduleDTO.getCoachId());
+        schedule.setScheduleDate(scheduleDTO.getScheduleDate());
+        schedule.setStartTime(scheduleDTO.getStartTime());
+        schedule.setEndTime(scheduleDTO.getEndTime());
+        if (scheduleDTO.getMaxCapacity() != null) {
+            schedule.setMaxCapacity(scheduleDTO.getMaxCapacity());
+        }
+
+        courseScheduleMapper.updateById(schedule);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteCourseSchedule(Long scheduleId) {
+        CourseSchedule schedule = courseScheduleMapper.selectById(scheduleId);
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        // 检查是否有预约
+        if (schedule.getCurrentEnrollment() > 0) {
+            throw new BusinessException("该排课已有会员预约，无法删除");
+        }
+
+        courseScheduleMapper.deleteById(scheduleId);
     }
 
     @Override
     public List<CourseScheduleVO> getCourseSchedules(Long courseId) {
-        log.info("获取课程排课列表，课程ID：{}", courseId);
+        LambdaQueryWrapper<CourseSchedule> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CourseSchedule::getCourseId, courseId)
+                .orderByAsc(CourseSchedule::getScheduleDate)
+                .orderByAsc(CourseSchedule::getStartTime);
 
-        // 查询该课程的所有排课
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Course::getId, courseId);
-        queryWrapper.ge(Course::getCourseDate, LocalDate.now()); // 只查询未来排课
-        queryWrapper.orderByAsc(Course::getCourseDate).orderByAsc(Course::getStartTime);
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(wrapper);
 
-        List<Course> schedules = courseMapper.selectList(queryWrapper);
-
-        return schedules.stream()
-                .map(this::convertToCourseScheduleVO)
-                .collect(Collectors.toList());
+        return schedules.stream().map(this::convertToScheduleVO).collect(Collectors.toList());
     }
 
     @Override
     public List<CourseScheduleVO> getCourseTimetable(LocalDate startDate, LocalDate endDate) {
-        log.info("获取课程表，开始日期：{}，结束日期：{}", startDate, endDate);
+        LambdaQueryWrapper<CourseSchedule> wrapper = new LambdaQueryWrapper<>();
 
-        // 查询指定日期范围内的所有课程
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
         if (startDate != null) {
-            queryWrapper.ge(Course::getCourseDate, startDate);
+            wrapper.ge(CourseSchedule::getScheduleDate, startDate);
         }
         if (endDate != null) {
-            queryWrapper.le(Course::getCourseDate, endDate);
+            wrapper.le(CourseSchedule::getScheduleDate, endDate);
         }
-        queryWrapper.eq(Course::getStatus, 1);
-        queryWrapper.orderByAsc(Course::getCourseDate).orderByAsc(Course::getStartTime);
 
-        List<Course> courses = courseMapper.selectList(queryWrapper);
+        wrapper.orderByAsc(CourseSchedule::getScheduleDate)
+                .orderByAsc(CourseSchedule::getStartTime);
 
-        return courses.stream()
-                .map(course -> {
-                    CourseScheduleVO vo = convertToCourseScheduleVO(course);
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(wrapper);
 
-                    // 获取该课程的预约信息
-                    LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-                    bookingQuery.eq(CourseBooking::getCourseId, course.getId());
-                    bookingQuery.in(CourseBooking::getBookingStatus, 0, 1); // 待上课、已签到
-
-                    List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
-                    vo.setBookings(bookings.stream()
-                            .map(this::convertToCourseBookingVO)
-                            .collect(Collectors.toList()));
-
-                    return vo;
-                })
-                .collect(Collectors.toList());
+        return schedules.stream().map(this::convertToScheduleVO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void bookPrivateCourse(Long memberId, Long coachId, LocalDate courseDate, LocalTime startTime) {
-        log.info("会员预约私教课，会员ID：{}，教练ID：{}", memberId, coachId);
+        // 查询会员是否有可用的私教课课时
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getProductType, 1) // 私教课
+                .eq(OrderItem::getStatus, "ACTIVE")
+                .gt(OrderItem::getRemainingSessions, 0);
 
-        // 检查会员是否存在
-        Member member = memberMapper.selectById(memberId);
-        if (member == null) {
-            throw new BusinessException("会员不存在");
+        List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
+        if (availableItems.isEmpty()) {
+            throw new BusinessException("您没有可用的私教课时");
         }
 
-        // 检查教练是否存在
-        Coach coach = coachMapper.selectById(coachId);
-        if (coach == null) {
-            throw new BusinessException("教练不存在");
+        // 查询教练在该时间段是否有空
+        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId)
+                .eq(CourseSchedule::getScheduleDate, courseDate)
+                .le(CourseSchedule::getStartTime, startTime)
+                .ge(CourseSchedule::getEndTime, startTime.plusMinutes(60)); // 假设私教课60分钟
+
+        if (courseScheduleMapper.selectCount(scheduleWrapper) > 0) {
+            throw new BusinessException("教练在该时间段已有课程");
         }
 
-        // ========== 新增：验证营业时间 ==========
-        LocalTime endTime = startTime.plusHours(1); // 默认1小时
-        configValidator.validateBusinessHours(startTime, endTime);
+        // 创建临时排课
+        // 这里简化处理，直接创建预约记录
+        CourseBooking booking = new CourseBooking();
+        booking.setMemberId(memberId);
+        // 私教课没有scheduleId，需要特殊处理
+        booking.setBookingStatus(0);
+        booking.setBookingTime(LocalDateTime.now());
 
-        // 检查会员是否有可用的私教课程
-        checkMemberPrivateCourseSessions(memberId);
+        // 生成签到码
+        String signCode = generateSignCode();
+        booking.setSignCode(signCode);
 
-        // 创建私教课程实例
-        Course privateCourse = new Course();
-        privateCourse.setCourseType(0); // 私教课
-        privateCourse.setCourseName(coach.getRealName() + "私教课");
-        privateCourse.setDescription("私教一对一课程");
-        privateCourse.setCoachId(coachId);
-        privateCourse.setMaxCapacity(1);
-        privateCourse.setCurrentEnrollment(1);
-        privateCourse.setCourseDate(courseDate);
-        privateCourse.setStartTime(startTime);
-        privateCourse.setEndTime(endTime);
-        privateCourse.setDuration(60);
-        privateCourse.setPrice(coach.getHourlyRate());
-        privateCourse.setLocation("私教区");
-        privateCourse.setStatus(1);
-        privateCourse.setSignCode(generateSignCode());
-        privateCourse.setSignCodeExpireTime(LocalDateTime.now().plusDays(1));
+        LocalDateTime courseDateTime = LocalDateTime.of(courseDate, startTime);
+        booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
 
-        // 保存课程
-        int result = courseMapper.insert(privateCourse);
-        if (result <= 0) {
-            throw new BusinessException("创建私教课失败");
-        }
+        courseBookingMapper.insert(booking);
 
-        Long privateCourseId = privateCourse.getId();
-
-        // 为私教课添加教练绑定
-        CourseCoach courseCoach = new CourseCoach();
-        courseCoach.setCourseId(privateCourseId);
-        courseCoach.setCoachId(coachId);
-        courseCoachMapper.insert(courseCoach);
-
-        // 创建预约记录
-        createCourseBooking(memberId, privateCourseId);
-
-        // 创建教练排班记录
-        CourseScheduleDTO scheduleDTO = new CourseScheduleDTO();
-        scheduleDTO.setCourseId(privateCourseId);
-        scheduleDTO.setCoachId(coachId);
-        scheduleDTO.setCourseDate(courseDate);
-        scheduleDTO.setStartTime(startTime);
-        scheduleDTO.setEndTime(endTime);
-        scheduleDTO.setMaxParticipants(1);
-        scheduleDTO.setNotes("会员预约私教课");
-
-        createCoachSchedule(scheduleDTO, privateCourseId);
-
-        // 扣减会员私教课时
-        deductMemberPrivateCourseSession(memberId);
-
-        log.info("私教课预约成功，课程ID：{}", privateCourseId);
+        // 扣减课时
+        OrderItem item = availableItems.get(0);
+        item.setRemainingSessions(item.getRemainingSessions() - 1);
+        orderItemMapper.updateById(item);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void bookGroupCourse(Long memberId, Long scheduleId) {
-        log.info("会员预约团课，会员ID：{}，排课ID：{}", memberId, scheduleId);
-
-        // 检查课程是否存在
-        Course course = courseMapper.selectById(scheduleId);
-        if (course == null) {
-            throw new BusinessException("课程不存在");
+        CourseSchedule schedule = courseScheduleMapper.selectById(scheduleId);
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
         }
 
-        // 只能预约团课
-        if (course.getCourseType() != 1) {
-            throw new BusinessException("只能预约团课");
+        // 检查排课状态
+        if (schedule.getStatus() != 1) {
+            throw new BusinessException("该排课已取消");
         }
 
-        // 检查会员是否存在
-        Member member = memberMapper.selectById(memberId);
-        if (member == null) {
-            throw new BusinessException("会员不存在");
+        // 检查是否还有名额 - 从 schedule 获取 maxCapacity
+        if (schedule.getCurrentEnrollment() >= schedule.getMaxCapacity()) {
+            throw new BusinessException("该课程已满员");
         }
 
-        // 检查会员是否有可用的团课程
-        checkMemberGroupCourseSessions(memberId);
+        // 检查会员是否已预约过
+        LambdaQueryWrapper<CourseBooking> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CourseBooking::getMemberId, memberId)
+                .eq(CourseBooking::getScheduleId, scheduleId)
+                .ne(CourseBooking::getBookingStatus, 3); // 排除已取消
 
-        // ========== 新增：验证课程容量是否符合系统配置 ==========
-        configValidator.validateClassCapacity(
-                course.getCurrentEnrollment() + 1,
-                course.getMaxCapacity()
-        );
-
-        // 检查课程是否已满
-        if (course.getCurrentEnrollment() >= course.getMaxCapacity()) {
-            throw new BusinessException("课程已满");
+        if (courseBookingMapper.selectCount(wrapper) > 0) {
+            throw new BusinessException("您已预约过该课程");
         }
 
-        // 检查是否已经预约
-        LambdaQueryWrapper<CourseBooking> existingQuery = new LambdaQueryWrapper<>();
-        existingQuery.eq(CourseBooking::getMemberId, memberId);
-        existingQuery.eq(CourseBooking::getCourseId, scheduleId);
-        existingQuery.in(CourseBooking::getBookingStatus, 0, 1); // 待上课、已签到
-
-        Long existingCount = courseBookingMapper.selectCount(existingQuery);
-        if (existingCount > 0) {
-            throw new BusinessException("已经预约了该课程");
+        // 检查课程开始时间是否有效
+        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        if (courseDateTime.isBefore(LocalDateTime.now())) {
+            throw new BusinessException("不能预约已开始的课程");
         }
 
-        // 创建预约记录
-        createCourseBooking(memberId, scheduleId);
+        // 创建预约
+        CourseBooking booking = new CourseBooking();
+        booking.setMemberId(memberId);
+        booking.setScheduleId(scheduleId);
+        booking.setCourseId(schedule.getCourseId());
+        booking.setBookingStatus(0); // 待上课
+        booking.setBookingTime(LocalDateTime.now());
 
-        // 更新课程当前报名人数
-        course.setCurrentEnrollment(course.getCurrentEnrollment() + 1);
-        courseMapper.updateById(course);
+        // 生成6位随机签到码
+        String signCode = generateSignCode();
+        booking.setSignCode(signCode);
 
-        // 扣减会员团课时
-        deductMemberGroupCourseSession(memberId);
+        // 设置签到码过期时间（课前30分钟到课后15分钟）
+        booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
 
-        log.info("团课预约成功，课程ID：{}，会员ID：{}", scheduleId, memberId);
+        // 设置自动完成时间（课程结束后1小时）
+        LocalDateTime courseEndTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
+        booking.setAutoCompleteTime(courseEndTime.plusHours(1));
+
+        courseBookingMapper.insert(booking);
+
+        // 更新排课当前人数
+        schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() + 1);
+        courseScheduleMapper.updateById(schedule);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void verifyCourseBooking(Long bookingId, Integer checkinMethod) {
-        log.info("核销课程预约，预约ID：{}，签到方式：{}", bookingId, checkinMethod);
-
-        // 检查预约是否存在
         CourseBooking booking = courseBookingMapper.selectById(bookingId);
         if (booking == null) {
             throw new BusinessException("预约记录不存在");
         }
 
-        // 检查预约状态
         if (booking.getBookingStatus() != 0) {
-            throw new BusinessException("预约状态不正确，无法核销");
+            throw new BusinessException("该预约已无法签到");
         }
 
-        // 更新预约状态为已签到
-        booking.setBookingStatus(1);
+        // 验证签到时间
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        configValidator.validateCheckInTime(courseDateTime);
+
+        // 更新预约状态
+        booking.setBookingStatus(1); // 已签到
         booking.setCheckinTime(LocalDateTime.now());
-
-        int result = courseBookingMapper.updateById(booking);
-        if (result <= 0) {
-            throw new BusinessException("核销失败");
-        }
-
-        // 创建签到记录
-        createCheckinRecord(booking, checkinMethod);
-
-        // 更新会员签到次数
-        updateMemberCheckinStats(booking.getMemberId());
-
-        log.info("核销成功，预约ID：{}", bookingId);
+        courseBookingMapper.updateById(booking);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelCourseBooking(Long bookingId, String reason) {
-        log.info("取消课程预约，预约ID：{}", bookingId);
-
-        // 检查预约是否存在
         CourseBooking booking = courseBookingMapper.selectById(bookingId);
         if (booking == null) {
             throw new BusinessException("预约记录不存在");
         }
 
-        // 检查预约状态
-        if (booking.getBookingStatus() == 2) {
-            throw new BusinessException("已完成的预约不能取消");
-        }
-        if (booking.getBookingStatus() == 3) {
-            throw new BusinessException("预约已取消");
+        if (booking.getBookingStatus() != 0) {
+            throw new BusinessException("只有待上课的预约可以取消");
         }
 
-        // 获取课程信息
-        Course course = courseMapper.selectById(booking.getCourseId());
-        if (course == null) {
-            throw new BusinessException("课程不存在");
+        // 验证取消时间
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
         }
 
-        // ========== 新增：验证是否可以取消（根据系统配置的取消时间限制） ==========
-        LocalDateTime courseDateTime = LocalDateTime.of(
-                course.getCourseDate(),
-                course.getStartTime()
-        );
+        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         configValidator.validateCourseCancellation(courseDateTime);
 
-        // 更新预约状态为已取消
-        booking.setBookingStatus(3);
+        // 更新预约状态
+        booking.setBookingStatus(3); // 已取消
         booking.setCancellationReason(reason);
         booking.setCancellationTime(LocalDateTime.now());
+        courseBookingMapper.updateById(booking);
 
-        int result = courseBookingMapper.updateById(booking);
-        if (result <= 0) {
-            throw new BusinessException("取消预约失败");
-        }
+        // 更新排课当前人数
+        schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() - 1);
+        courseScheduleMapper.updateById(schedule);
 
-        // 如果是团课，减少当前报名人数
-        if (course != null && course.getCourseType() == 1) {
-            course.setCurrentEnrollment(Math.max(0, course.getCurrentEnrollment() - 1));
-            courseMapper.updateById(course);
-        }
+        // 如果是私教课，需要恢复课时
+        Course course = courseMapper.selectById(booking.getCourseId());
+        if (course.getCourseType() == 0) { // 私教课
+            // 查询该会员最近使用的私教课时订单项，恢复剩余课时
+            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.eq(OrderItem::getProductType, 1)
+                    .eq(OrderItem::getStatus, "ACTIVE")
+                    .orderByDesc(OrderItem::getUpdateTime)
+                    .last("LIMIT 1");
 
-        // 返还会员课时
-        returnMemberCourseSession(booking.getMemberId(), course.getCourseType());
-
-        log.info("取消预约成功，预约ID：{}", bookingId);
-    }
-
-    // ========== 私有辅助方法 ==========
-
-    private CourseListVO convertToCourseListVO(Course course) {
-        CourseListVO vo = new CourseListVO();
-        BeanUtils.copyProperties(course, vo);
-
-        // 设置课程类型描述
-        vo.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
-
-        // 设置状态描述
-        vo.setStatusDesc(course.getStatus() == 1 ? "正常" : "禁用");
-
-        // 计算报名率
-        if (course.getMaxCapacity() > 0) {
-            BigDecimal enrollmentRate = BigDecimal.valueOf(course.getCurrentEnrollment())
-                    .divide(BigDecimal.valueOf(course.getMaxCapacity()), 2, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            vo.setEnrollmentRate(enrollmentRate);
-        }
-
-        // 教练姓名在调用方法中设置
-        return vo;
-    }
-
-    private CourseScheduleVO convertToCourseScheduleVO(Course course) {
-        CourseScheduleVO vo = new CourseScheduleVO();
-        vo.setScheduleId(course.getId());
-        vo.setCourseId(course.getId());
-        vo.setCourseName(course.getCourseName());
-        vo.setCourseType(course.getCourseType() == 0 ? "私教课" : "团课");
-        vo.setCoachId(course.getCoachId());
-        vo.setScheduleDate(course.getCourseDate());
-        vo.setStartTime(course.getStartTime());
-        vo.setEndTime(course.getEndTime());
-        vo.setMaxParticipants(course.getMaxCapacity());
-        vo.setCurrentParticipants(course.getCurrentEnrollment());
-        vo.setRemainingSlots(Math.max(0, course.getMaxCapacity() - course.getCurrentEnrollment()));
-        vo.setStatus(course.getStatus() == 1 ? "正常" : "禁用");
-
-        // 获取教练姓名
-        Coach coach = coachMapper.selectById(course.getCoachId());
-        if (coach != null) {
-            vo.setCoachName(coach.getRealName());
-        }
-
-        return vo;
-    }
-
-    private com.gymflow.vo.CourseBookingVO convertToCourseBookingVO(CourseBooking booking) {
-        com.gymflow.vo.CourseBookingVO vo = new com.gymflow.vo.CourseBookingVO();
-        BeanUtils.copyProperties(booking, vo);
-
-        // 获取会员信息
-        Member member = memberMapper.selectById(booking.getMemberId());
-        if (member != null) {
-            vo.setMemberName(member.getRealName());
-            vo.setMemberPhone(member.getPhone());
-        }
-
-        // 设置预约状态描述
-        vo.setBookingStatusDesc(getBookingStatusDesc(booking.getBookingStatus()));
-
-        return vo;
-    }
-
-    private String getBookingStatusDesc(Integer status) {
-        if (status == null) return "未知";
-        switch (status) {
-            case 0: return "待上课";
-            case 1: return "已签到";
-            case 2: return "已完成";
-            case 3: return "已取消";
-            default: return "未知";
-        }
-    }
-
-    private void checkCoachScheduleConflict(CourseScheduleDTO scheduleDTO) {
-        // 检查教练在指定时间是否已有排班
-        LambdaQueryWrapper<CoachSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CoachSchedule::getCoachId, scheduleDTO.getCoachId());
-        queryWrapper.eq(CoachSchedule::getScheduleDate, scheduleDTO.getCourseDate());
-        queryWrapper.ne(CoachSchedule::getStatus, "CANCELLED");
-
-        List<CoachSchedule> schedules = coachScheduleMapper.selectList(queryWrapper);
-
-        for (CoachSchedule schedule : schedules) {
-            if (isTimeOverlap(
-                    schedule.getStartTime(), schedule.getEndTime(),
-                    scheduleDTO.getStartTime(), scheduleDTO.getEndTime()
-            )) {
-                throw new BusinessException("教练在该时间段已有排班：" +
-                        schedule.getStartTime() + "-" + schedule.getEndTime());
+            OrderItem item = orderItemMapper.selectOne(itemWrapper);
+            if (item != null) {
+                item.setRemainingSessions(item.getRemainingSessions() + 1);
+                orderItemMapper.updateById(item);
             }
         }
     }
 
-    private void checkCourseScheduleConflict(CourseScheduleDTO scheduleDTO) {
-        // 检查同一地点在指定时间是否已有课程
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Course::getLocation, getCourseLocation(scheduleDTO.getCourseId()));
-        queryWrapper.eq(Course::getCourseDate, scheduleDTO.getCourseDate());
-        queryWrapper.eq(Course::getStatus, 1);
-
-        List<Course> courses = courseMapper.selectList(queryWrapper);
-
-        for (Course course : courses) {
-            if (isTimeOverlap(
-                    course.getStartTime(), course.getEndTime(),
-                    scheduleDTO.getStartTime(), scheduleDTO.getEndTime()
-            )) {
-                throw new BusinessException("该地点在该时间段已有课程：" +
-                        course.getStartTime() + "-" + course.getEndTime());
-            }
-        }
-    }
-
-    private boolean isTimeOverlap(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
-        return (start1.isBefore(end2) && end1.isAfter(start2));
-    }
-
-    private String getCourseLocation(Long courseId) {
-        Course course = courseMapper.selectById(courseId);
-        return course != null ? course.getLocation() : "";
-    }
-
-    private void createCoachSchedule(CourseScheduleDTO scheduleDTO, Long courseId) {
-        CoachSchedule coachSchedule = new CoachSchedule();
-        coachSchedule.setCoachId(scheduleDTO.getCoachId());
-        coachSchedule.setScheduleDate(scheduleDTO.getCourseDate());
-        coachSchedule.setStartTime(scheduleDTO.getStartTime());
-        coachSchedule.setEndTime(scheduleDTO.getEndTime());
-        coachSchedule.setScheduleType(1); // 课程排班
-        coachSchedule.setStatus("SCHEDULED");
-        coachSchedule.setNotes(scheduleDTO.getNotes() != null ? scheduleDTO.getNotes() : "课程排班");
-
-        coachScheduleMapper.insert(coachSchedule);
-    }
-
-    private void createCourseBooking(Long memberId, Long courseId) {
-        CourseBooking booking = new CourseBooking();
-        booking.setMemberId(memberId);
-        booking.setCourseId(courseId);
-        booking.setBookingTime(LocalDateTime.now());
-        booking.setBookingStatus(0); // 待上课
-
-        courseBookingMapper.insert(booking);
-    }
-
-    private void checkMemberPrivateCourseSessions(Long memberId) {
-        // 查询会员的私教课卡
-        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, 1); // 私教课
-        queryWrapper.gt(OrderItem::getRemainingSessions, 0); // 剩余课时大于0
-        queryWrapper.ge(OrderItem::getValidityEndDate, LocalDate.now()); // 未过期
-        queryWrapper.eq(OrderItem::getStatus, "ACTIVE");
-
-        // 这里需要根据实际订单查询会员的私教课卡
-        // 简化实现：假设会员有课时
-        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
-        if (orderItems.isEmpty()) {
-            throw new BusinessException("没有可用的私教课时");
-        }
-    }
-
-    private void checkMemberGroupCourseSessions(Long memberId) {
-        // 查询会员的团课卡
-        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, 2); // 团课
-        queryWrapper.gt(OrderItem::getRemainingSessions, 0); // 剩余课时大于0
-        queryWrapper.ge(OrderItem::getValidityEndDate, LocalDate.now()); // 未过期
-        queryWrapper.eq(OrderItem::getStatus, "ACTIVE");
-
-        // 这里需要根据实际订单查询会员的团课卡
-        // 简化实现：假设会员有课时
-        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
-        if (orderItems.isEmpty()) {
-            throw new BusinessException("没有可用的团课时");
-        }
-    }
-
-    private void deductMemberPrivateCourseSession(Long memberId) {
-        // 扣减会员私教课时
-        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, 1); // 私教课
-        queryWrapper.gt(OrderItem::getRemainingSessions, 0); // 剩余课时大于0
-        queryWrapper.ge(OrderItem::getValidityEndDate, LocalDate.now()); // 未过期
-        queryWrapper.eq(OrderItem::getStatus, "ACTIVE");
-        queryWrapper.orderByAsc(OrderItem::getValidityEndDate); // 先用快要过期的
-
-        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
-        if (!orderItems.isEmpty()) {
-            OrderItem orderItem = orderItems.get(0);
-            orderItem.setRemainingSessions(orderItem.getRemainingSessions() - 1);
-
-            // 如果课时用完，更新状态
-            if (orderItem.getRemainingSessions() <= 0) {
-                orderItem.setStatus("USED_UP");
-            }
-
-            orderItemMapper.updateById(orderItem);
-        }
-    }
-
-    private void deductMemberGroupCourseSession(Long memberId) {
-        // 扣减会员团课时
-        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, 2); // 团课
-        queryWrapper.gt(OrderItem::getRemainingSessions, 0); // 剩余课时大于0
-        queryWrapper.ge(OrderItem::getValidityEndDate, LocalDate.now()); // 未过期
-        queryWrapper.eq(OrderItem::getStatus, "ACTIVE");
-        queryWrapper.orderByAsc(OrderItem::getValidityEndDate); // 先用快要过期的
-
-        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
-        if (!orderItems.isEmpty()) {
-            OrderItem orderItem = orderItems.get(0);
-            orderItem.setRemainingSessions(orderItem.getRemainingSessions() - 1);
-
-            // 如果课时用完，更新状态
-            if (orderItem.getRemainingSessions() <= 0) {
-                orderItem.setStatus("USED_UP");
-            }
-
-            orderItemMapper.updateById(orderItem);
-        }
-    }
-
-    private void returnMemberCourseSession(Long memberId, Integer courseType) {
-        // 返还会员课时
-        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, courseType == 0 ? 1 : 2);
-        queryWrapper.ge(OrderItem::getValidityEndDate, LocalDate.now());
-        queryWrapper.eq(OrderItem::getStatus, "ACTIVE");
-        queryWrapper.orderByDesc(OrderItem::getRemainingSessions);
-
-        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
-        if (!orderItems.isEmpty()) {
-            OrderItem orderItem = orderItems.get(0);
-            orderItem.setRemainingSessions(orderItem.getRemainingSessions() + 1);
-            orderItemMapper.updateById(orderItem);
-        }
-    }
-
-    private void createCheckinRecord(CourseBooking booking, Integer checkinMethod) {
-        CheckinRecord checkinRecord = new CheckinRecord();
-        checkinRecord.setMemberId(booking.getMemberId());
-        checkinRecord.setCourseBookingId(booking.getId());
-        checkinRecord.setCheckinTime(LocalDateTime.now());
-        checkinRecord.setCheckinMethod(checkinMethod);
-        checkinRecord.setNotes("课程签到");
-
-        checkInRecordMapper.insert(checkinRecord);
-    }
-
-    private void updateMemberCheckinStats(Long memberId) {
-        Member member = memberMapper.selectById(memberId);
-        if (member != null) {
-            member.setTotalCheckins((member.getTotalCheckins() != null ? member.getTotalCheckins() : 0) + 1);
-            memberMapper.updateById(member);
-        }
-    }
-
+    /**
+     * 生成6位随机签到码
+     */
     private String generateSignCode() {
         return String.format("%06d", (int)(Math.random() * 1000000));
     }
 
     /**
-     * 更新课程教练绑定关系
+     * 转换为排课VO（包含预约信息）
      */
-    private void updateCourseCoaches(Long courseId, List<Long> coachIds) {
-        log.info("开始更新课程ID {} 的教练绑定关系，新教练IDs：{}", courseId, coachIds);
+    private CourseScheduleVO convertToScheduleVO(CourseSchedule schedule) {
+        CourseScheduleVO vo = new CourseScheduleVO();
+        vo.setScheduleId(schedule.getId());
+        vo.setCourseId(schedule.getCourseId());
+        vo.setCoachId(schedule.getCoachId());
+        vo.setScheduleDate(schedule.getScheduleDate());
+        vo.setStartTime(schedule.getStartTime());
+        vo.setEndTime(schedule.getEndTime());
+        vo.setMaxCapacity(schedule.getMaxCapacity());
+        vo.setCurrentEnrollment(schedule.getCurrentEnrollment());
+        vo.setStatus(schedule.getStatus());
 
-        // 检查现有的教练绑定
-        LambdaQueryWrapper<CourseCoach> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseCoach::getCourseId, courseId);
-        List<CourseCoach> existingCoaches = courseCoachMapper.selectList(queryWrapper);
-        log.info("课程ID {} 现有的教练绑定关系：{}", courseId, existingCoaches);
+        // 查询课程信息
+        Course course = courseMapper.selectById(schedule.getCourseId());
+        if (course != null) {
+            vo.setCourseName(course.getCourseName());
+            vo.setCourseType(course.getCourseType());
+        }
 
-        // 删除原有的教练绑定
-        LambdaQueryWrapper<CourseCoach> deleteWrapper = new LambdaQueryWrapper<>();
-        deleteWrapper.eq(CourseCoach::getCourseId, courseId);
-        int deleteCount = courseCoachMapper.delete(deleteWrapper);
-        log.info("删除课程ID为 {} 的原有教练绑定关系，删除了 {} 条记录", courseId, deleteCount);
+        // 查询教练信息
+        Coach coach = coachMapper.selectById(schedule.getCoachId());
+        if (coach != null) {
+            vo.setCoachName(coach.getRealName());
+        }
 
-        // 添加新的教练绑定
-        addCourseCoaches(courseId, coachIds);
+        // 查询该排课的所有预约（包含会员信息）
+        LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
+        bookingWrapper.eq(CourseBooking::getScheduleId, schedule.getId())
+                .orderByDesc(CourseBooking::getBookingTime);
+
+        List<CourseBooking> bookings = courseBookingMapper.selectList(bookingWrapper);
+
+        List<CourseBookingVO> bookingVOs = bookings.stream().map(booking -> {
+            CourseBookingVO bookingVO = new CourseBookingVO();
+            bookingVO.setBookingId(booking.getId());
+            bookingVO.setMemberId(booking.getMemberId());
+            bookingVO.setBookingTime(booking.getBookingTime());
+            bookingVO.setBookingStatus(booking.getBookingStatus());
+            bookingVO.setCheckinTime(booking.getCheckinTime());
+            bookingVO.setSignCode(booking.getSignCode());
+            bookingVO.setSignCodeExpireTime(booking.getSignCodeExpireTime());
+            bookingVO.setCancellationReason(booking.getCancellationReason());
+            bookingVO.setCancellationTime(booking.getCancellationTime());
+
+            // 查询会员信息
+            Member member = memberMapper.selectById(booking.getMemberId());
+            if (member != null) {
+                bookingVO.setMemberName(member.getRealName());
+                bookingVO.setMemberPhone(member.getPhone());
+                bookingVO.setMemberNo(member.getMemberNo());
+            }
+
+            return bookingVO;
+        }).collect(Collectors.toList());
+
+        vo.setBookings(bookingVOs);
+
+        return vo;
     }
 
     /**
-     * 添加课程教练绑定关系
+     * 转换为教练基础DTO
      */
-    private void addCourseCoaches(Long courseId, List<Long> coachIds) {
-        log.info("开始为课程ID {} 添加教练绑定关系，教练IDs：{}", courseId, coachIds);
+    private List<CoachBasicDTO> convertToCoachBasicDTO(List<Coach> coaches) {
+        return coaches.stream().map(coach -> {
+            CoachBasicDTO dto = new CoachBasicDTO();
+            dto.setId(coach.getId());
+            dto.setRealName(coach.getRealName());
+            dto.setPhone(coach.getPhone());
+            dto.setGender(coach.getGender());
+            dto.setSpecialty(coach.getSpecialty());
 
-        List<CourseCoach> courseCoaches = new ArrayList<>();
-        for (Long coachId : coachIds) {
-            CourseCoach courseCoach = new CourseCoach();
-            courseCoach.setCourseId(courseId);
-            courseCoach.setCoachId(coachId);
-            courseCoaches.add(courseCoach);
-        }
-
-        // 批量插入
-        if (!CollectionUtils.isEmpty(courseCoaches)) {
-            int successCount = 0;
-            for (CourseCoach courseCoach : courseCoaches) {
-                try {
-                    log.debug("正在插入教练绑定关系：课程ID={}, 教练ID={}", courseCoach.getCourseId(), courseCoach.getCoachId());
-                    int result = courseCoachMapper.insert(courseCoach);
-                    if (result > 0) {
-                        successCount++;
-                        log.debug("成功插入教练绑定关系：课程ID={}, 教练ID={}", courseCoach.getCourseId(), courseCoach.getCoachId());
-                    } else {
-                        log.error("插入教练绑定关系失败：课程ID={}, 教练ID={}", courseCoach.getCourseId(), courseCoach.getCoachId());
-                    }
-                } catch (Exception e) {
-                    log.error("插入教练绑定关系异常，课程ID: {}, 教练ID: {}", courseId, courseCoach.getCoachId(), e);
-                }
-            }
-            log.info("为课程ID {} 成功添加了 {} 个教练绑定关系，总共尝试了 {} 个", courseId, successCount, courseCoaches.size());
-
-            if (successCount == 0) {
-                throw new BusinessException("添加教练绑定关系失败");
+            // 将JSON字符串转换为List<String>
+            if (coach.getCertifications() != null) {
+                String certStr = coach.getCertifications();
+                List<String> certs = List.of(certStr.replace("[", "").replace("]", "").replace("\"", "").split(","));
+                dto.setCertificationList(certs);
             }
 
-            // 验证插入的数据
-            LambdaQueryWrapper<CourseCoach> verifyWrapper = new LambdaQueryWrapper<>();
-            verifyWrapper.eq(CourseCoach::getCourseId, courseId);
-            List<CourseCoach> verifyList = courseCoachMapper.selectList(verifyWrapper);
-            log.info("验证课程ID {} 的教练绑定关系，数据库中有 {} 条记录", courseId, verifyList.size());
-        } else {
-            log.warn("没有教练需要绑定到课程ID {}", courseId);
-        }
-    }
+            dto.setYearsOfExperience(coach.getYearsOfExperience());
+            dto.setHourlyRate(coach.getHourlyRate());
+            dto.setCommissionRate(coach.getCommissionRate());
+            dto.setStatus(coach.getStatus());
+            dto.setRating(coach.getRating());
+            dto.setIntroduction(coach.getIntroduction());
+            dto.setCreateTime(coach.getCreateTime());
+            dto.setUpdateTime(coach.getUpdateTime());
 
-    /**
-     * 获取课程绑定的所有教练
-     */
-    private List<CoachBasicDTO> getCourseCoaches(Long courseId) {
-        log.info("开始获取课程ID {} 的教练信息", courseId);
-
-        // 查询课程绑定的所有教练
-        LambdaQueryWrapper<CourseCoach> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseCoach::getCourseId, courseId);
-
-        List<CourseCoach> courseCoaches = courseCoachMapper.selectList(queryWrapper);
-        log.info("查询课程ID {} 的教练绑定关系，找到 {} 条记录", courseId, courseCoaches.size());
-
-        List<CoachBasicDTO> coachDTOs = new ArrayList<>();
-
-        for (CourseCoach courseCoach : courseCoaches) {
-            Coach coach = coachMapper.selectById(courseCoach.getCoachId());
-            if (coach != null) {
-                CoachBasicDTO coachDTO = new CoachBasicDTO();
-                BeanUtils.copyProperties(coach, coachDTO);
-                // 确保设置教练ID
-                coachDTO.setId(coach.getId());
-                coachDTOs.add(coachDTO);
-                log.debug("找到教练: ID={}, Name={}", coach.getId(), coach.getRealName());
-            } else {
-                log.warn("教练ID {} 不存在", courseCoach.getCoachId());
-            }
-        }
-
-        log.info("课程ID {} 共绑定了 {} 个教练", courseId, coachDTOs.size());
-        return coachDTOs;
-    }
-
-    /**
-     * 获取课程绑定的所有教练姓名
-     */
-    private List<String> getCourseCoachNames(Long courseId) {
-        LambdaQueryWrapper<CourseCoach> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseCoach::getCourseId, courseId);
-
-        List<CourseCoach> courseCoaches = courseCoachMapper.selectList(queryWrapper);
-
-        List<String> coachNames = new ArrayList<>();
-        for (CourseCoach courseCoach : courseCoaches) {
-            Coach coach = coachMapper.selectById(courseCoach.getCoachId());
-            if (coach != null && StringUtils.hasText(coach.getRealName())) {
-                coachNames.add(coach.getRealName());
-            }
-        }
-
-        return coachNames;
-    }
-
-    // 以下方法需要根据业务需求实现
-    @Override
-    public void updateCourseSchedule(Long scheduleId, CourseScheduleDTO scheduleDTO) {
-        // 实现更新排课逻辑
-        throw new UnsupportedOperationException("待实现");
-    }
-
-    @Override
-    public void deleteCourseSchedule(Long scheduleId) {
-        // 实现删除排课逻辑
-        throw new UnsupportedOperationException("待实现");
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

@@ -22,6 +22,18 @@ export const productApi = {
       data: params
     })
   },
+  
+  /**
+   * 根据商品类型获取商品列表（用于会员卡选择）
+   * @param productType 商品类型：0-会籍卡，1-私教课，2-团课
+   */
+  getProductsByType(productType: number): Promise<ApiResponse<ProductListVO[]>> {
+    return request({
+      url: '/product/list-by-type',
+      method: 'GET',
+      params: { productType }
+    })
+  },
 
   /**
    * 获取商品详情

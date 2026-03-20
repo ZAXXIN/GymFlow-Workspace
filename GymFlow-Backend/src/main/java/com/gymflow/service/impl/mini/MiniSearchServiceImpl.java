@@ -5,12 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gymflow.dto.mini.MiniAvailableCourseDTO;
 import com.gymflow.dto.product.ProductFullDTO;
-import com.gymflow.entity.Course;
-import com.gymflow.entity.Product;
-import com.gymflow.entity.Coach;
-import com.gymflow.mapper.CourseMapper;
-import com.gymflow.mapper.ProductMapper;
-import com.gymflow.mapper.CoachMapper;
+import com.gymflow.entity.*;
+import com.gymflow.mapper.*;
 import com.gymflow.service.mini.MiniSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,6 +27,7 @@ public class MiniSearchServiceImpl implements MiniSearchService {
 
     private final ProductMapper productMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final CoachMapper coachMapper;
 
     @Override
@@ -73,39 +71,53 @@ public class MiniSearchServiceImpl implements MiniSearchService {
                                                       Integer pageNum, Integer pageSize) {
         LocalDate today = LocalDate.now();
 
-        // 创建分页对象
-        Page<Course> page = new Page<>(pageNum, pageSize);
-
-        // 构建查询条件 - 先查询状态正常且日期在今天的课程
-        LambdaQueryWrapper<Course> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Course::getStatus, 1) // 正常状态
-                .ge(Course::getCourseDate, today); // 今天及以后的课程
+        // 先查询符合条件的课程模板
+        LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
+        courseWrapper.eq(Course::getStatus, 1); // 正常状态
 
         if (courseType != null) {
-            queryWrapper.eq(Course::getCourseType, courseType);
+            courseWrapper.eq(Course::getCourseType, courseType);
         }
 
         if (StringUtils.hasText(keyword)) {
-            queryWrapper.and(wrapper -> wrapper
+            courseWrapper.and(wrapper -> wrapper
                     .like(Course::getCourseName, keyword)
                     .or()
                     .like(Course::getDescription, keyword));
         }
 
-        // 按课程日期和开始时间排序
-        queryWrapper.orderByAsc(Course::getCourseDate)
-                .orderByAsc(Course::getStartTime);
+        List<Course> courses = courseMapper.selectList(courseWrapper);
+        if (courses.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-        // 执行分页查询
-        IPage<Course> coursePage = courseMapper.selectPage(page, queryWrapper);
+        List<Long> courseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
 
-        // 过滤还有名额的课程并转换为DTO
+        // 查询这些课程今天及以后的排课
+        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+        scheduleWrapper.in(CourseSchedule::getCourseId, courseIds)
+                .ge(CourseSchedule::getScheduleDate, today)
+                .eq(CourseSchedule::getStatus, 1)
+                .orderByAsc(CourseSchedule::getScheduleDate)
+                .orderByAsc(CourseSchedule::getStartTime);
+
+        // 分页查询排课
+        Page<CourseSchedule> page = new Page<>(pageNum, pageSize);
+        IPage<CourseSchedule> schedulePage = courseScheduleMapper.selectPage(page, scheduleWrapper);
+
+        // 过滤还有名额的排课并转换为DTO
         List<MiniAvailableCourseDTO> result = new ArrayList<>();
-        for (Course course : coursePage.getRecords()) {
-            // 在内存中过滤还有名额的课程
-            if (course.getCurrentEnrollment() < course.getMaxCapacity()) {
-                MiniAvailableCourseDTO dto = convertToAvailableCourseDTO(course);
-                result.add(dto);
+        for (CourseSchedule schedule : schedulePage.getRecords()) {
+            if (schedule.getCurrentEnrollment() < schedule.getMaxCapacity()) {
+                Course course = courses.stream()
+                        .filter(c -> c.getId().equals(schedule.getCourseId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (course != null) {
+                    MiniAvailableCourseDTO dto = convertToAvailableCourseDTO(schedule, course);
+                    result.add(dto);
+                }
             }
         }
 
@@ -142,39 +154,39 @@ public class MiniSearchServiceImpl implements MiniSearchService {
         // 设置状态描述
         dto.setStatusDesc(product.getStatus() == 1 ? "在售" : "下架");
 
-        // 注意：ProductFullDTO 没有 discount 字段，所以不设置折扣
-
         return dto;
     }
 
     /**
      * 转换为可预约课程DTO
      */
-    private MiniAvailableCourseDTO convertToAvailableCourseDTO(Course course) {
+    private MiniAvailableCourseDTO convertToAvailableCourseDTO(CourseSchedule schedule, Course course) {
         MiniAvailableCourseDTO dto = new MiniAvailableCourseDTO();
+
+        // 排课信息
+        dto.setScheduleId(schedule.getId());
+        dto.setCourseDate(schedule.getScheduleDate());
+        dto.setStartTime(schedule.getStartTime());
+        dto.setEndTime(schedule.getEndTime());
+        dto.setMaxCapacity(schedule.getMaxCapacity());
+        dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
+        dto.setRemainingSlots(schedule.getMaxCapacity() - schedule.getCurrentEnrollment());
+
+        // 课程信息
         dto.setCourseId(course.getId());
         dto.setCourseName(course.getCourseName());
         dto.setCourseType(course.getCourseType());
         dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
-        dto.setCourseDate(course.getCourseDate());
-        dto.setStartTime(course.getStartTime());
-        dto.setEndTime(course.getEndTime());
         dto.setPrice(course.getPrice());
         dto.setOriginalPrice(course.getPrice());
-        dto.setDiscount(BigDecimal.valueOf(10)); // MiniAvailableCourseDTO 有 discount 字段
-        dto.setMaxCapacity(course.getMaxCapacity());
-        dto.setCurrentEnrollment(course.getCurrentEnrollment());
-        dto.setRemainingSlots(course.getMaxCapacity() - course.getCurrentEnrollment());
-        dto.setLocation(course.getLocation());
+        dto.setDiscount(BigDecimal.valueOf(10));
         dto.setDescription(course.getDescription());
 
         // 获取教练信息
-        if (course.getCoachId() != null) {
-            Coach coach = coachMapper.selectById(course.getCoachId());
-            if (coach != null) {
-                dto.setCoachId(coach.getId());
-                dto.setCoachName(coach.getRealName());
-            }
+        Coach coach = coachMapper.selectById(schedule.getCoachId());
+        if (coach != null) {
+            dto.setCoachId(coach.getId());
+            dto.setCoachName(coach.getRealName());
         }
 
         // 默认可预约

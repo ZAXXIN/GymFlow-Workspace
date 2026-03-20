@@ -44,6 +44,12 @@ public class MemberFullDTO {
     @Schema(description = "性别：0-女，1-男", example = "1", required = true)
     private Integer gender;
 
+    @Schema(description = "出生日期")
+    private LocalDate birthday;
+
+    @Schema(description = "年龄")
+    private Integer age;
+
     @NotNull(message = "创建时间不能为空")
     @Schema(description = "会员创建/注册时间", example = "2026-01-01T10:00:00", required = true)
     private LocalDateTime createTime;

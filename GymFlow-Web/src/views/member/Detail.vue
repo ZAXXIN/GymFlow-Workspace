@@ -22,6 +22,19 @@
           </div>
         </div>
       </template>
+<<<<<<< HEAD
+=======
+      
+      <el-descriptions :column="3" border>
+        <el-descriptions-item label="会员编号">{{ memberDetail?.memberNo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ memberDetail?.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>
+        
+        <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
+        <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item>
+>>>>>>> 857f571072f05ed13180b5793a1ea5cb242545a2
 
       <el-descriptions :column="2" border>
         <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>

@@ -1,409 +1,324 @@
 <template>
-  <div class="course-form">
+  <div class="member-form">
     <el-form
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="120px"
-      label-position="left"
+      label-width="100px"
+      label-position="right"
+      v-loading="loading"
     >
       <el-tabs v-model="activeTab">
         <!-- 基础信息 -->
         <el-tab-pane label="基础信息" name="basic">
           <div class="form-section">
-            <el-form-item label="课程名称" prop="name">
-              <el-input
-                v-model="formData.name"
-                placeholder="请输入课程名称"
-                clearable
-              />
-            </el-form-item>
-            
-            <el-form-item label="课程类型" prop="type">
-              <el-select
-                v-model="formData.type"
-                placeholder="请选择课程类型"
-                clearable
-                style="width: 100%"
-              >
-                <el-option label="私人训练" value="PRIVATE_TRAINING" />
-                <el-option label="团体课程" value="GROUP_CLASS" />
-                <el-option label="瑜伽" value="YOGA" />
-                <el-option label="普拉提" value="PILATES" />
-                <el-option label="动感单车" value="SPINNING" />
-                <el-option label{"value"="FUNCTIONAL_TRAINING"} label="功能性训练" />
-                <el-option label{"value"="WEIGHT_LOSS"} label="减脂塑形" />
-                <el-option label{"value"="STRENGTH_TRAINING"} label="力量训练" />
-                <el-option label{"value"="REHABILITATION"} label="康复训练" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="课程难度" prop="level">
-              <el-select
-                v-model="formData.level"
-                placeholder="请选择课程难度"
-                clearable
-                style="width: 100%"
-              >
-                <el-option label="初级" value="BEGINNER" />
-                <el-option label="中级" value="INTERMEDIATE" />
-                <el-option label="高级" value="ADVANCED" />
-                <el-option label{"value"="ALL_LEVELS"} label="所有级别" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="课程状态" prop="status">
-              <el-select
-                v-model="formData.status"
-                placeholder="请选择课程状态"
-                clearable
-                style="width: 100%"
-              >
-                <el-option label="未开始" value="UPCOMING" />
-                <el-option label="进行中" value="ONGOING" />
-                <el-option label="已结束" value="COMPLETED" />
-                <el-option label="已取消" value="CANCELLED" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="授课教练" prop="coachId">
-              <el-select
-                v-model="formData.coachId"
-                placeholder="请选择授课教练"
-                clearable
-                filterable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="coach in availableCoaches"
-                  :key="coach.id"
-                  :label="coach.name"
-                  :value="coach.id"
-                />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="助教" prop="assistantCoachId">
-              <el-select
-                v-model="formData.assistantCoachId"
-                placeholder="请选择助教（可选）"
-                clearable
-                filterable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="coach in availableCoaches"
-                  :key="coach.id"
-                  :label="coach.name"
-                  :value="coach.id"
-                  :disabled="coach.id === formData.coachId"
-                />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="课程封面" prop="coverImage">
-              <app-upload
-                v-model="formData.coverImage"
-                :limit="1"
-                :max-size="2"
-                :action="uploadUrl"
-                accept="image/*"
-                list-type="picture-card"
-                @success="handleCoverImageSuccess"
-              >
-                <el-icon><Plus /></el-icon>
-              </app-upload>
-            </el-form-item>
-            
-            <el-form-item label="课程描述" prop="description">
-              <el-input
-                v-model="formData.description"
-                type="textarea"
-                placeholder="请输入课程描述"
-                :rows="4"
-                maxlength="1000"
-                show-word-limit
-              />
-            </el-form-item>
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="会员姓名" prop="basicDTO.realName">
+                  <el-input
+                    v-model="formData.basicDTO.realName"
+                    placeholder="请输入会员姓名"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="性别" prop="basicDTO.gender">
+                  <el-radio-group v-model="formData.basicDTO.gender">
+                    <el-radio :label="1">男</el-radio>
+                    <el-radio :label="0">女</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="手机号码" prop="basicDTO.phone">
+                  <el-input
+                    v-model="formData.basicDTO.phone"
+                    placeholder="请输入手机号码"
+                    clearable
+                    maxlength="11"
+                    show-word-limit
+                    :disabled="isEdit"
+                    @blur="checkPhone"
+                  />
+                  <div v-if="phoneChecking" class="checking-text">检查中...</div>
+                  <div v-if="phoneAvailable !== null && !isEdit" 
+                       :class="['check-result', phoneAvailable ? 'success' : 'error']">
+                    {{ phoneAvailable ? '手机号可用' : '手机号已存在' }}
+                  </div>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="出生日期" prop="basicDTO.birthday">
+                  <el-date-picker
+                    v-model="formData.basicDTO.birthday"
+                    type="date"
+                    placeholder="选择出生日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="会员编号" prop="basicDTO.memberNo">
+                  <el-input
+                    v-model="formData.basicDTO.memberNo"
+                    placeholder="请输入会员编号"
+                    clearable
+                    :disabled="isEdit"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12" v-if="!isEdit">
+                <el-form-item label="密码" prop="basicDTO.password">
+                  <el-input
+                    v-model="formData.basicDTO.password"
+                    type="password"
+                    placeholder="请输入密码（默认手机号后6位）"
+                    show-password
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="会籍开始" prop="basicDTO.membershipStartDate">
+                  <el-date-picker
+                    v-model="formData.basicDTO.membershipStartDate"
+                    type="date"
+                    placeholder="选择开始日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="会籍结束" prop="basicDTO.membershipEndDate">
+                  <el-date-picker
+                    v-model="formData.basicDTO.membershipEndDate"
+                    type="date"
+                    placeholder="选择结束日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                    :disabled-date="disabledEndDate"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
           </div>
         </el-tab-pane>
-        
-        <!-- 时间设置 -->
-        <el-tab-pane label="时间设置" name="schedule">
+
+        <!-- 健康信息 -->
+        <el-tab-pane label="健康信息" name="health">
           <div class="form-section">
-            <el-form-item label="课程日期" prop="courseDate">
-              <el-date-picker
-                v-model="formData.courseDate"
-                type="date"
-                placeholder="选择课程日期"
-                value-format="YYYY-MM-DD"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="开始时间" prop="startTime">
-              <el-time-picker
-                v-model="formData.startTime"
-                placeholder="选择开始时间"
-                value-format="HH:mm:ss"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="结束时间" prop="endTime">
-              <el-time-picker
-                v-model="formData.endTime"
-                placeholder="选择结束时间"
-                value-format="HH:mm:ss"
-                :disabled-hours="disabledEndHours"
-                :disabled-minutes="disabledEndMinutes"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="课程时长" prop="duration">
-              <el-input-number
-                v-model="formData.duration"
-                :min="30"
-                :max="180"
-                :step="15"
-                controls-position="right"
-                placeholder="请输入课程时长"
-                style="width: 100%"
-              >
-                <template #suffix>分钟</template>
-              </el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="重复设置" prop="repeatType">
-              <el-select
-                v-model="formData.repeatType"
-                placeholder="请选择重复类型"
-                clearable
-                style="width: 100%"
-                @change="handleRepeatTypeChange"
-              >
-                <el-option label="不重复" value="NONE" />
-                <el-option label="每天" value="DAILY" />
-                <el-option label="每周" value="WEEKLY" />
-                <el-option label{"value"="MONTHLY"} label="每月" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item 
-              label="重复次数" 
-              prop="repeatCount"
-              v-if="formData.repeatType !== 'NONE'"
-            >
-              <el-input-number
-                v-model="formData.repeatCount"
-                :min="1"
-                :max="52"
-                :step="1"
-                controls-position="right"
-                placeholder="请输入重复次数"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item 
-              label="每周重复日" 
-              prop="repeatDays"
-              v-if="formData.repeatType === 'WEEKLY'"
-            >
-              <el-checkbox-group v-model="formData.repeatDays">
-                <el-checkbox label="1">周一</el-checkbox>
-                <el-checkbox label="2">周二</el-checkbox>
-                <el-checkbox label="3">周三</el-checkbox>
-                <el-checkbox label="4">周四</el-checkbox>
-                <el-checkbox label="5">周五</el-checkbox>
-                <el-checkbox label="6">周六</el-checkbox>
-                <el-checkbox label="0">周日</el-checkbox>
-              </el-checkbox-group>
-            </el-form-item>
-            
-            <el-form-item label="总课次数" prop="totalSessions">
-              <el-input-number
-                v-model="formData.totalSessions"
-                :min="1"
-                :max="100"
-                :step="1"
-                controls-position="right"
-                placeholder="请输入总课次数"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </div>
-        </el-tab-pane>
-        
-        <!-- 价格设置 -->
-        <el-tab-pane label="价格设置" name="price">
-          <div class="form-section">
-            <el-form-item label="单次价格" prop="singlePrice">
-              <el-input-number
-                v-model="formData.singlePrice"
-                :min="0"
-                :step="10"
-                controls-position="right"
-                placeholder="请输入单次价格"
-                style="width: 100%"
-              >
-                <template #prefix>¥</template>
-              </el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="套餐价格" prop="packagePrice">
-              <el-input-number
-                v-model="formData.packagePrice"
-                :min="0"
-                :step="100"
-                controls-position="right"
-                placeholder="请输入套餐价格"
-                style="width: 100%"
-              >
-                <template #prefix>¥</template>
-              </el-input-number>
-              <div class="price-tips">（购买多次课程享受优惠）</div>
-            </el-form-item>
-            
-            <el-form-item label="套餐次数" prop="packageSessions">
-              <el-input-number
-                v-model="formData.packageSessions"
-                :min="2"
-                :max="50"
-                :step="1"
-                controls-position="right"
-                placeholder="请输入套餐包含次数"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="会员价" prop="memberPrice">
-              <el-input-number
-                v-model="formData.memberPrice"
-                :min="0"
-                :step="10"
-                controls-position="right"
-                placeholder="请输入会员价"
-                style="width: 100%"
-              >
-                <template #prefix>¥</template>
-              </el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="最大人数" prop="maxCapacity">
-              <el-input-number
-                v-model="formData.maxCapacity"
-                :min="1"
-                :max="50"
-                :step="1"
-                controls-position="right"
-                placeholder="请输入最大人数"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="最少开课人数" prop="minCapacity">
-              <el-input-number
-                v-model="formData.minCapacity"
-                :min="1"
-                :max="formData.maxCapacity || 10"
-                :step="1"
-                controls-position="right"
-                placeholder="请输入最少开课人数"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <el-form-item label="取消政策" prop="cancellationPolicy">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="身高(cm)" prop="healthRecordDTO.height">
+                  <el-input-number
+                    v-model="healthRecord.height"
+                    :min="100"
+                    :max="250"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入身高"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="体重(kg)" prop="healthRecordDTO.weight">
+                  <el-input-number
+                    v-model="healthRecord.weight"
+                    :min="30"
+                    :max="200"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入体重"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="记录日期" prop="healthRecordDTO.recordDate">
+                  <el-date-picker
+                    v-model="healthRecord.recordDate"
+                    type="date"
+                    placeholder="选择记录日期"
+                    value-format="YYYY-MM-DD"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="BMI指数">
+                  <el-tag :type="bmiType" size="large">
+                    {{ bmiValue || '--' }}
+                  </el-tag>
+                  <span class="bmi-tip">{{ bmiTip }}</span>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="体脂率(%)" prop="healthRecordDTO.bodyFatPercentage">
+                  <el-input-number
+                    v-model="healthRecord.bodyFatPercentage"
+                    :min="5"
+                    :max="50"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入体脂率"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="肌肉量(kg)" prop="healthRecordDTO.muscleMass">
+                  <el-input-number
+                    v-model="healthRecord.muscleMass"
+                    :min="20"
+                    :max="100"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入肌肉量"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="胸围(cm)" prop="healthRecordDTO.chestCircumference">
+                  <el-input-number
+                    v-model="healthRecord.chestCircumference"
+                    :min="50"
+                    :max="150"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入胸围"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="腰围(cm)" prop="healthRecordDTO.waistCircumference">
+                  <el-input-number
+                    v-model="healthRecord.waistCircumference"
+                    :min="50"
+                    :max="150"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入腰围"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="臀围(cm)" prop="healthRecordDTO.hipCircumference">
+                  <el-input-number
+                    v-model="healthRecord.hipCircumference"
+                    :min="50"
+                    :max="150"
+                    :step="0.1"
+                    controls-position="right"
+                    placeholder="请输入臀围"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item label="血压" prop="healthRecordDTO.bloodPressure">
+                  <el-input
+                    v-model="healthRecord.bloodPressure"
+                    placeholder="如：120/80"
+                    clearable
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <el-form-item label="心率(bpm)" prop="healthRecordDTO.heartRate">
+                  <el-input-number
+                    v-model="healthRecord.heartRate"
+                    :min="40"
+                    :max="200"
+                    :step="1"
+                    controls-position="right"
+                    placeholder="请输入心率"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-form-item label="备注" prop="healthRecordDTO.notes">
               <el-input
-                v-model="formData.cancellationPolicy"
+                v-model="healthRecord.notes"
                 type="textarea"
-                placeholder="请输入取消政策说明"
                 :rows="3"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-            
-            <el-form-item label="退款政策" prop="refundPolicy">
-              <el-input
-                v-model="formData.refundPolicy"
-                type="textarea"
-                placeholder="请输入退款政策说明"
-                :rows="3"
+                placeholder="请输入健康状况备注"
                 maxlength="500"
                 show-word-limit
               />
             </el-form-item>
           </div>
         </el-tab-pane>
-        
-        <!-- 课程内容 -->
-        <el-tab-pane label="课程内容" name="content">
+
+        <!-- 会员卡信息 -->
+        <el-tab-pane label="会员卡信息" name="card">
           <div class="form-section">
-            <el-form-item label="课程目标" prop="objectives">
-              <el-input
-                v-model="formData.objectives"
-                type="textarea"
-                placeholder="请输入课程目标"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
+            <!-- 添加会员卡按钮 -->
+            <div v-if="!hasCard" class="add-card-placeholder">
+              <el-empty description="暂无会员卡信息">
+                <el-button type="primary" @click="handleAddCard">
+                  <el-icon><Plus /></el-icon>
+                  添加会员卡
+                </el-button>
+              </el-empty>
+            </div>
+
+            <!-- 会员卡表单 -->
+            <div v-else class="card-form">
+              <MemberCardSelector
+                v-model="formData.cardDTO"
+                :is-edit-mode="isEdit"
+                @change="handleCardChange"
               />
-            </el-form-item>
-            
-            <el-form-item label="适用人群" prop="suitableFor">
-              <el-input
-                v-model="formData.suitableFor"
-                type="textarea"
-                placeholder="请输入适用人群描述"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-            
-            <el-form-item label="注意事项" prop="precautions">
-              <el-input
-                v-model="formData.precautions"
-                type="textarea"
-                placeholder="请输入注意事项"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-            
-            <el-form-item label="所需装备" prop="equipmentRequired">
-              <el-input
-                v-model="formData.equipmentRequired"
-                type="textarea"
-                placeholder="请输入所需装备"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-            
-            <el-form-item label="课前准备" prop="preparation">
-              <el-input
-                v-model="formData.preparation"
-                type="textarea"
-                placeholder="请输入课前准备要求"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
+
+              <!-- 移除会员卡按钮 -->
+              <div class="card-actions">
+                <el-button type="danger" text @click="handleRemoveCard">
+                  <el-icon><Delete /></el-icon>
+                  移除会员卡
+                </el-button>
+              </div>
+            </div>
           </div>
         </el-tab-pane>
       </el-tabs>
-      
+
       <!-- 表单操作 -->
       <div class="form-actions">
         <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="loading">
+        <el-button type="primary" @click="handleSubmit" :loading="submitting">
           {{ isEdit ? '更新' : '创建' }}
         </el-button>
       </div>
@@ -412,214 +327,367 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import AppUpload from '../common/AppUpload.vue'
-import type { CourseFormData } from '@/types'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus, Delete } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import MemberCardSelector from './MemberCardSelector.vue'
+import { useMemberStore } from '@/stores/member'
+import type { 
+  MemberAddRequest, 
+  MemberUpdateRequest,
+  MemberBasicDTO,
+  HealthRecordDTO,
+  MemberCardDTO 
+} from '@/types/member'
 
 interface Props {
-  formData: CourseFormData
+  formData?: MemberAddRequest
   isEdit?: boolean
+  memberId?: number
 }
 
 interface Emits {
-  (e: 'submit', data: CourseFormData): void
+  (e: 'submit', data: MemberAddRequest | MemberUpdateRequest): void
   (e: 'cancel'): void
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isEdit: false
+})
+
 const emit = defineEmits<Emits>()
+
+// Stores
+const memberStore = useMemberStore()
 
 // 表单引用
 const formRef = ref<FormInstance>()
 
-// 响应式数据
+// 状态
 const loading = ref(false)
+const submitting = ref(false)
 const activeTab = ref('basic')
-const availableCoaches = ref<any[]>([])
-const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL}/upload`)
+const phoneChecking = ref(false)
+const phoneAvailable = ref<boolean | null>(null)
+
+// 表单数据
+const formData = reactive<MemberAddRequest>({
+  basicDTO: {
+    phone: '',
+    password: '',
+    realName: '',
+    gender: 1,
+    birthday: '',
+    memberNo: '',
+    membershipStartDate: '',
+    membershipEndDate: ''
+  },
+  healthRecordDTO: undefined,
+  cardDTO: undefined
+})
+
+// 健康记录（用于表单绑定）
+const healthRecord = reactive<HealthRecordDTO>({
+  recordDate: new Date().toISOString().split('T')[0],
+  height: 170,
+  weight: 65,
+  bodyFatPercentage: 20,
+  muscleMass: 45,
+  chestCircumference: 95,
+  waistCircumference: 85,
+  hipCircumference: 95,
+  bloodPressure: '120/80',
+  heartRate: 75,
+  notes: ''
+})
+
+// 是否有会员卡
+const hasCard = computed(() => !!formData.cardDTO)
+
+// 计算BMI
+const bmiValue = computed(() => {
+  if (healthRecord.height && healthRecord.weight) {
+    const heightInM = healthRecord.height / 100
+    const bmi = healthRecord.weight / (heightInM * heightInM)
+    return bmi.toFixed(1)
+  }
+  return null
+})
+
+// BMI类型
+const bmiType = computed(() => {
+  if (!bmiValue.value) return 'info'
+  const bmi = parseFloat(bmiValue.value)
+  if (bmi < 18.5) return 'warning'
+  if (bmi < 24) return 'success'
+  if (bmi < 28) return 'warning'
+  return 'danger'
+})
+
+// BMI提示
+const bmiTip = computed(() => {
+  if (!bmiValue.value) return ''
+  const bmi = parseFloat(bmiValue.value)
+  if (bmi < 18.5) return '偏瘦'
+  if (bmi < 24) return '正常'
+  if (bmi < 28) return '超重'
+  return '肥胖'
+})
 
 // 表单验证规则
-const formRules = ref<FormRules>({
-  name: [
-    { required: true, message: '请输入课程名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '课程名称长度在2到50个字符', trigger: 'blur' }
+const formRules: FormRules = {
+  'basicDTO.realName': [
+    { required: true, message: '请输入会员姓名', trigger: 'blur' },
+    { min: 2, max: 50, message: '姓名长度在2-50个字符', trigger: 'blur' }
   ],
-  type: [
-    { required: true, message: '请选择课程类型', trigger: 'change' }
+  'basicDTO.gender': [
+    { required: true, message: '请选择性别', trigger: 'change' }
   ],
-  level: [
-    { required: true, message: '请选择课程难度', trigger: 'change' }
+  'basicDTO.phone': [
+    { required: true, message: '请输入手机号码', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
   ],
-  status: [
-    { required: true, message: '请选择课程状态', trigger: 'change' }
+  'basicDTO.birthday': [
+    { required: true, message: '请选择出生日期', trigger: 'change' }
   ],
-  coachId: [
-    { required: true, message: '请选择授课教练', trigger: 'change' }
+  'basicDTO.memberNo': [
+    { required: true, message: '请输入会员编号', trigger: 'blur' }
   ],
-  courseDate: [
-    { required: true, message: '请选择课程日期', trigger: 'change' }
+  'basicDTO.membershipStartDate': [
+    { required: true, message: '请选择会籍开始日期', trigger: 'change' }
   ],
-  startTime: [
-    { required: true, message: '请选择开始时间', trigger: 'change' }
-  ],
-  endTime: [
-    { required: true, message: '请选择结束时间', trigger: 'change' }
-  ],
-  duration: [
-    { required: true, message: '请输入课程时长', trigger: 'blur' },
-    { type: 'number', min: 30, message: '课程时长不能少于30分钟', trigger: 'blur' }
-  ],
-  maxCapacity: [
-    { required: true, message: '请输入最大人数', trigger: 'blur' },
-    { type: 'number', min: 1, message: '最大人数不能少于1人', trigger: 'blur' }
-  ],
-  minCapacity: [
-    { type: 'number', min: 1, message: '最少开课人数不能少于1人', trigger: 'blur' }
-  ],
-  singlePrice: [
-    { required: true, message: '请输入单次价格', trigger: 'blur' },
-    { type: 'number', min: 0, message: '价格不能为负数', trigger: 'blur' }
+  'basicDTO.membershipEndDate': [
+    { required: true, message: '请选择会籍结束日期', trigger: 'change' }
   ]
-})
-
-// 禁用结束时间的小时
-const disabledEndHours = () => {
-  if (!props.formData.startTime) return []
-  const startHour = parseInt(props.formData.startTime.split(':')[0])
-  const hours = []
-  for (let i = 0; i < startHour; i++) {
-    hours.push(i)
-  }
-  return hours
 }
 
-// 禁用结束时间的分钟
-const disabledEndMinutes = (hour: number) => {
-  if (!props.formData.startTime) return []
-  const [startHour, startMinute] = props.formData.startTime.split(':').map(Number)
+// 如果未编辑模式，添加密码验证
+if (!props.isEdit) {
+  formRules['basicDTO.password'] = [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6-20个字符', trigger: 'blur' }
+  ]
+}
+
+// 禁用结束日期（不能早于开始日期）
+const disabledEndDate = (time: Date) => {
+  if (!formData.basicDTO.membershipStartDate) return false
+  const start = new Date(formData.basicDTO.membershipStartDate)
+  return time.getTime() < start.getTime()
+}
+
+// 检查手机号
+const checkPhone = async () => {
+  const phone = formData.basicDTO.phone
+  if (!phone || !/^1[3-9]\d{9}$/.test(phone) || props.isEdit) return
   
-  if (hour === startHour) {
-    const minutes = []
-    for (let i = 0; i <= startMinute; i++) {
-      minutes.push(i)
-    }
-    return minutes
-  }
-  return []
-}
-
-// 处理重复类型变化
-const handleRepeatTypeChange = (value: string) => {
-  if (value === 'NONE') {
-    props.formData.repeatCount = 1
-    props.formData.repeatDays = []
-  } else if (value === 'WEEKLY') {
-    // 默认选择周一
-    props.formData.repeatDays = ['1']
-  }
-}
-
-// 处理封面图片上传成功
-const handleCoverImageSuccess = (response: any, file: any) => {
-  if (response.code === 200 && response.data?.url) {
-    props.formData.coverImage = response.data.url
-    ElMessage.success('封面图片上传成功')
-  }
-}
-
-// 加载可用的教练列表
-const loadAvailableCoaches = async () => {
+  phoneChecking.value = true
   try {
-    // 这里应该调用API获取教练列表
-    // 暂时使用模拟数据
-    availableCoaches.value = [
-      { id: '1', name: '张教练' },
-      { id: '2', name: '李教练' },
-      { id: '3', name: '王教练' },
-      { id: '4', name: '刘教练' }
-    ]
+    // 这里需要调用API检查手机号是否存在
+    // 暂时模拟
+    await new Promise(resolve => setTimeout(resolve, 500))
+    phoneAvailable.value = true
   } catch (error) {
-    console.error('加载教练列表失败:', error)
+    console.error('检查手机号失败:', error)
+    phoneAvailable.value = null
+  } finally {
+    phoneChecking.value = false
   }
 }
 
-// 监听最大人数变化，调整最少人数最大值
-watch(() => props.formData.maxCapacity, (newMax) => {
-  if (newMax && props.formData.minCapacity > newMax) {
-    props.formData.minCapacity = newMax
+// 添加会员卡
+const handleAddCard = () => {
+  const today = new Date().toISOString().split('T')[0]
+  const nextMonth = new Date()
+  nextMonth.setMonth(nextMonth.getMonth() + 1)
+  
+  formData.cardDTO = {
+    cardType: 2, // 默认月卡
+    startDate: today,
+    endDate: nextMonth.toISOString().split('T')[0],
+    amount: 0
   }
-})
+}
 
-// 处理提交
+// 移除会员卡
+const handleRemoveCard = () => {
+  formData.cardDTO = undefined
+}
+
+// 会员卡变化
+const handleCardChange = (card: MemberCardDTO) => {
+  console.log('会员卡变化:', card)
+}
+
+// 加载会员数据（编辑模式）
+const loadMemberData = async () => {
+  if (!props.isEdit || !props.memberId) return
+  
+  try {
+    loading.value = true
+    const member = await memberStore.fetchMemberDetail(props.memberId)
+    
+    if (member) {
+      // 填充基本信息
+      Object.assign(formData.basicDTO, {
+        phone: member.phone,
+        realName: member.realName,
+        gender: member.gender,
+        birthday: member.birthday || '',
+        memberNo: member.memberNo,
+        membershipStartDate: member.membershipStartDate || '',
+        membershipEndDate: member.membershipEndDate || ''
+      })
+      
+      // 填充健康记录（取最新一条）
+      if (member.healthRecords && member.healthRecords.length > 0) {
+        const latest = member.healthRecords[0]
+        Object.assign(healthRecord, latest)
+      }
+      
+      // 填充会员卡（取最新一张）
+      if (member.memberCards && member.memberCards.length > 0) {
+        const card = member.memberCards[0]
+        formData.cardDTO = {
+          productId: card.productId,
+          productName: card.productName,
+          cardType: card.cardType,
+          startDate: card.startDate,
+          endDate: card.endDate,
+          totalSessions: card.totalSessions,
+          remainingSessions: card.remainingSessions,
+          amount: card.amount,
+          status: card.status
+        }
+      }
+    }
+  } catch (error) {
+    console.error('加载会员数据失败:', error)
+    ElMessage.error('加载会员数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
   
   try {
     await formRef.value.validate()
     
-    loading.value = true
+    // 检查手机号（新增时）
+    if (!props.isEdit && phoneAvailable.value === false) {
+      ElMessage.warning('手机号已存在，请更换手机号')
+      return
+    }
     
-    // 提交表单数据
-    emit('submit', props.formData)
+    submitting.value = true
     
-    ElMessage.success(props.isEdit ? '课程信息更新成功' : '课程创建成功')
+    // 如果有健康记录数据，添加到表单
+    if (healthRecord.height && healthRecord.weight) {
+      formData.healthRecordDTO = { ...healthRecord }
+    }
+    
+    // 提交数据
+    emit('submit', formData)
   } catch (error) {
     console.error('表单验证失败:', error)
   } finally {
-    loading.value = false
+    submitting.value = false
   }
 }
 
-// 处理取消
+// 取消
 const handleCancel = () => {
   emit('cancel')
 }
 
+// 监听身高体重变化，自动计算BMI
+watch(
+  () => [healthRecord.height, healthRecord.weight],
+  () => {
+    // BMI已在computed中自动计算
+  }
+)
+
 // 初始化
-loadAvailableCoaches()
+onMounted(() => {
+  if (props.isEdit && props.memberId) {
+    loadMemberData()
+  }
+})
+
+// 暴露方法
+defineExpose({
+  validate: () => formRef.value?.validate(),
+  getFormData: () => formData
+})
 </script>
 
 <style scoped lang="scss">
-.course-form {
+.member-form {
   .form-section {
     padding: 20px 0;
     
-    .el-form-item {
-      margin-bottom: 20px;
-      
-      .price-tips {
-        margin-top: 4px;
-        color: #909399;
-        font-size: 12px;
-      }
+    .el-row {
+      margin-bottom: 18px;
+    }
+  }
+  
+  .checking-text {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 4px;
+  }
+  
+  .check-result {
+    font-size: 12px;
+    margin-top: 4px;
+    
+    &.success {
+      color: #67C23A;
+    }
+    
+    &.error {
+      color: #F56C6C;
+    }
+  }
+  
+  .bmi-tip {
+    margin-left: 10px;
+    color: #909399;
+    font-size: 12px;
+  }
+  
+  .add-card-placeholder {
+    padding: 40px 0;
+  }
+  
+  .card-form {
+    .card-actions {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e4e7ed;
+      text-align: center;
     }
   }
   
   .form-actions {
-    margin-top: 20px;
-    text-align: right;
+    margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e4e7ed;
+    text-align: right;
     
     .el-button {
       min-width: 100px;
+      margin-left: 10px;
     }
   }
 }
 
-:deep(.el-tabs) {
-  .el-tabs__header {
-    margin-bottom: 20px;
-  }
-}
-
-:deep(.el-checkbox-group) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  
-  .el-checkbox {
-    margin-right: 0;
-  }
+:deep(.el-tabs__header) {
+  margin-bottom: 20px;
 }
 </style>

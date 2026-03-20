@@ -39,6 +39,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
     private final HealthRecordMapper healthRecordMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final MiniCheckinCodeMapper miniCheckinCodeMapper;
@@ -224,23 +225,25 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         }
 
         for (CourseBooking booking : bookings) {
-            Course course = courseMapper.selectById(booking.getCourseId());
-            if (course == null || !course.getCourseDate().equals(today)) {
+            CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+            if (schedule == null || !schedule.getScheduleDate().equals(today)) {
                 continue;
             }
 
-            LocalDateTime courseStart = LocalDateTime.of(today, course.getStartTime());
-            LocalDateTime courseEnd = LocalDateTime.of(today, course.getEndTime());
+            LocalDateTime courseStart = LocalDateTime.of(today, schedule.getStartTime());
+            LocalDateTime courseEnd = LocalDateTime.of(today, schedule.getEndTime());
 
             // 如果是当前时段（课程开始前30分钟到课程结束）
             if (now.isAfter(courseStart.minusMinutes(30)) && now.isBefore(courseEnd)) {
+                Course course = courseMapper.selectById(schedule.getCourseId());
+
                 reminder.setHasReminder(true);
                 reminder.setType("MEMBER");
-                reminder.setCourseName(course.getCourseName());
+                reminder.setCourseName(course != null ? course.getCourseName() : "");
                 reminder.setBookingTime(courseStart);
 
                 // 获取教练姓名
-                Coach coach = coachMapper.selectById(course.getCoachId());
+                Coach coach = coachMapper.selectById(schedule.getCoachId());
                 if (coach != null) {
                     reminder.setCoachName(coach.getRealName());
                 }
@@ -252,7 +255,9 @@ public class MiniMemberServiceImpl implements MiniMemberService {
                 if (checkinCode != null) {
                     MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
                     BeanUtils.copyProperties(checkinCode, codeDTO);
-                    codeDTO.setCourseName(course.getCourseName());
+                    if (course != null) {
+                        codeDTO.setCourseName(course.getCourseName());
+                    }
                     codeDTO.setCourseStartTime(courseStart);
                     if (coach != null) {
                         codeDTO.setCoachName(coach.getRealName());

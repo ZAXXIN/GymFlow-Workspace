@@ -15,6 +15,9 @@ public class CourseBooking {
 
     private Long courseId;
 
+    @TableField("schedule_id")  // 新增：关联排课ID
+    private Long scheduleId;
+
     @TableField("booking_time")
     private LocalDateTime bookingTime;
 
@@ -30,18 +33,17 @@ public class CourseBooking {
     @TableField("cancellation_time")
     private LocalDateTime cancellationTime;
 
-
     // ========== 签到码相关字段 ==========
 
-    /**
-     * 签到码ID（关联mini_checkin_code表）
-     */
+    @TableField("sign_code")  // 新增：6位签到码
+    private String signCode;
+
+    @TableField("sign_code_expire_time")  // 新增：签到码过期时间
+    private LocalDateTime signCodeExpireTime;
+
     @TableField("checkin_code_id")
     private Long checkinCodeId;
 
-    /**
-     * 自动完成时间（用于定时任务）
-     */
     @TableField("auto_complete_time")
     private LocalDateTime autoCompleteTime;
 

@@ -17,7 +17,7 @@ public interface CourseService {
     PageResultVO<CourseListVO> getCourseList(CourseQueryDTO queryDTO);
 
     /**
-     * 获取课程详情（包含预约情况）
+     * 获取课程详情（包含可授课教练和排课列表）
      */
     CourseFullDTO getCourseDetail(Long courseId);
 
@@ -57,12 +57,12 @@ public interface CourseService {
     void deleteCourseSchedule(Long scheduleId);
 
     /**
-     * 获取课程排课列表
+     * 获取课程排课列表（包含预约信息）
      */
     List<CourseScheduleVO> getCourseSchedules(Long courseId);
 
     /**
-     * 获取课程表（所有课程的全部预约信息）
+     * 获取课程表（所有课程的全部排课，包含预约信息）
      */
     List<CourseScheduleVO> getCourseTimetable(LocalDate startDate, LocalDate endDate);
 

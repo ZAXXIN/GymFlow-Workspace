@@ -32,9 +32,6 @@ public class CheckInDetailVO {
     @Schema(description = "会员性别描述")
     private String genderDesc;
 
-//    @Schema(description = "专属教练姓名")
-//    private String personalCoachName;
-
     @Schema(description = "签到时间")
     private LocalDateTime checkinTime;
 
@@ -74,6 +71,9 @@ public class CheckInDetailVO {
     @Schema(description = "课程类型描述")
     private String courseTypeDesc;
 
+    @Schema(description = "排课ID")
+    private Long scheduleId;
+
     @Schema(description = "课程日期")
     private LocalDate courseDate;
 
@@ -83,14 +83,14 @@ public class CheckInDetailVO {
     @Schema(description = "结束时间")
     private LocalTime endTime;
 
-    @Schema(description = "上课地点")
-    private String location;
-
     @Schema(description = "教练姓名")
     private String coachName;
 
     @Schema(description = "教练手机号")
     private String coachPhone;
+
+    @Schema(description = "签到码")
+    private String signCode;
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;

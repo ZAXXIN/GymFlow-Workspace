@@ -33,11 +33,11 @@ public class CourseQueryDTO {
     @Schema(description = "教练ID")
     private Long coachId;
 
-    @Schema(description = "课程开始日期")
-    private LocalDate startDate;
-
-    @Schema(description = "课程结束日期")
-    private LocalDate endDate;
+//    @Schema(description = "课程开始日期")
+//    private LocalDate startDate;
+//
+//    @Schema(description = "课程结束日期")
+//    private LocalDate endDate;
 
     @Schema(description = "状态：0-禁用，1-正常")
     private Integer status;

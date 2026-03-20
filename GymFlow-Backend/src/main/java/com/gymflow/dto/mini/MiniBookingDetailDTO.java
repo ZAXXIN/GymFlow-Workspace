@@ -12,6 +12,9 @@ public class MiniBookingDetailDTO {
     @Schema(description = "预约ID")
     private Long bookingId;
 
+    @Schema(description = "排课ID")
+    private Long scheduleId;
+
     @Schema(description = "课程ID")
     private Long courseId;
 
@@ -44,9 +47,6 @@ public class MiniBookingDetailDTO {
 
     @Schema(description = "结束时间")
     private String endTime;
-
-    @Schema(description = "上课地点")
-    private String location;
 
     @Schema(description = "价格")
     private BigDecimal price;

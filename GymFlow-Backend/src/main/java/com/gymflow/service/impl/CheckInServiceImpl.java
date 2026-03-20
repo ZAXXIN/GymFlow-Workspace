@@ -6,22 +6,17 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gymflow.dto.checkin.CheckInQueryDTO;
 import com.gymflow.dto.checkin.CheckInReportDTO;
 import com.gymflow.dto.checkin.CheckInStatsDTO;
-import com.gymflow.entity.CheckinRecord;
-import com.gymflow.entity.Member;
-import com.gymflow.entity.Course;
-import com.gymflow.entity.CourseBooking;
-import com.gymflow.entity.Coach;
-import com.gymflow.entity.mini.MiniCheckinCode;
-import com.gymflow.exception.BusinessException;
+import com.gymflow.entity.*;
 import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.entity.mini.MiniMessage;
+import com.gymflow.exception.BusinessException;
+import com.gymflow.mapper.*;
 import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import com.gymflow.mapper.mini.MiniMessageMapper;
-import com.gymflow.mapper.*;
 import com.gymflow.service.CheckInService;
 import com.gymflow.utils.SystemConfigValidator;
-import com.gymflow.vo.CheckInListVO;
 import com.gymflow.vo.CheckInDetailVO;
+import com.gymflow.vo.CheckInListVO;
 import com.gymflow.vo.PageResultVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,11 +41,10 @@ public class CheckInServiceImpl implements CheckInService {
     private final MemberMapper memberMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final CoachMapper coachMapper;
     private final MiniCheckinCodeMapper miniCheckinCodeMapper;
     private final MiniMessageMapper miniMessageMapper;
-
-    // 注入系统配置验证器
     private final SystemConfigValidator configValidator;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -143,16 +137,68 @@ public class CheckInServiceImpl implements CheckInService {
 
     @Override
     public CheckInDetailVO getCheckInDetail(Long checkInId) {
-        log.info("获取签到详情，签到ID：{}", checkInId);
-
-        // 获取签到记录
-        CheckinRecord checkinRecord = checkInRecordMapper.selectById(checkInId);
-        if (checkinRecord == null) {
+        CheckinRecord record = checkInRecordMapper.selectById(checkInId);
+        if (record == null) {
             throw new BusinessException("签到记录不存在");
         }
 
-        // 转换为详情VO
-        return convertToCheckInDetailVO(checkinRecord);
+        CheckInDetailVO vo = new CheckInDetailVO();
+        vo.setId(record.getId());
+        vo.setMemberId(record.getMemberId());
+        vo.setCheckinTime(record.getCheckinTime());
+        vo.setCheckinMethod(record.getCheckinMethod());
+        vo.setNotes(record.getNotes());
+        vo.setCreateTime(record.getCreateTime());
+
+        // 查询会员信息
+        Member member = memberMapper.selectById(record.getMemberId());
+        if (member != null) {
+            vo.setMemberName(member.getRealName());
+            vo.setMemberPhone(member.getPhone());
+            vo.setMemberNo(member.getMemberNo());
+            vo.setGender(member.getGender());
+        }
+
+        // 如果是课程签到，查询预约和排课信息
+        if (record.getCourseBookingId() != null) {
+            vo.setCourseCheckIn(true);
+            vo.setCourseBookingId(record.getCourseBookingId());
+
+            CourseBooking booking = courseBookingMapper.selectById(record.getCourseBookingId());
+            if (booking != null) {
+                vo.setBookingTime(booking.getBookingTime());
+                vo.setBookingStatus(booking.getBookingStatus());
+                vo.setSignCode(booking.getSignCode());
+
+                // 查询排课信息
+                if (booking.getScheduleId() != null) {
+                    CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                    if (schedule != null) {
+                        vo.setScheduleId(schedule.getId());
+                        vo.setCourseDate(schedule.getScheduleDate());
+                        vo.setStartTime(schedule.getStartTime());
+                        vo.setEndTime(schedule.getEndTime());
+
+                        // 查询课程信息
+                        Course course = courseMapper.selectById(schedule.getCourseId());
+                        if (course != null) {
+                            vo.setCourseId(course.getId());
+                            vo.setCourseName(course.getCourseName());
+                            vo.setCourseType(course.getCourseType());
+                        }
+
+                        // 查询教练信息
+                        Coach coach = coachMapper.selectById(schedule.getCoachId());
+                        if (coach != null) {
+                            vo.setCoachName(coach.getRealName());
+                            vo.setCoachPhone(coach.getPhone());
+                        }
+                    }
+                }
+            }
+        }
+
+        return vo;
     }
 
     @Override
@@ -258,6 +304,13 @@ public class CheckInServiceImpl implements CheckInService {
         // 更新预约状态为已签到
         booking.setBookingStatus(1); // 已签到
         booking.setCheckinTime(LocalDateTime.now());
+
+        // 设置自动完成时间
+        int autoCompleteHours = configValidator.getAutoCompleteHours();
+        if (autoCompleteHours > 0) {
+            booking.setAutoCompleteTime(LocalDateTime.now().plusHours(autoCompleteHours));
+        }
+
         courseBookingMapper.updateById(booking);
 
         // 更新会员签到次数
@@ -265,8 +318,6 @@ public class CheckInServiceImpl implements CheckInService {
 
         log.info("课程签到成功，签到ID：{}，预约ID：{}", checkinRecord.getId(), bookingId);
     }
-
-    // 在 CheckInServiceImpl.java 中增加以下方法
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -327,13 +378,13 @@ public class CheckInServiceImpl implements CheckInService {
             throw new BusinessException("预约状态不正确，无法签到");
         }
 
-        // 验证签到时间
-        Course course = courseMapper.selectById(booking.getCourseId());
-        if (course == null) {
-            throw new BusinessException("课程不存在");
+        // 获取排课信息验证签到时间
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
         }
 
-        LocalDateTime courseDateTime = LocalDateTime.of(course.getCourseDate(), course.getStartTime());
+        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         configValidator.validateCheckInTime(courseDateTime);
 
         // 检查是否已签到
@@ -755,79 +806,24 @@ public class CheckInServiceImpl implements CheckInService {
             // 获取课程预约信息
             CourseBooking booking = courseBookingMapper.selectById(checkinRecord.getCourseBookingId());
             if (booking != null) {
-                // 获取课程信息
-                Course course = courseMapper.selectById(booking.getCourseId());
-                if (course != null) {
-                    vo.setCourseName(course.getCourseName());
-                    vo.setCourseType(course.getCourseType());
-                    vo.setCourseTypeDesc(getCourseTypeDesc(course.getCourseType()));
+                // 获取排课信息
+                CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                if (schedule != null) {
+                    // 获取课程信息
+                    Course course = courseMapper.selectById(schedule.getCourseId());
+                    if (course != null) {
+                        vo.setCourseName(course.getCourseName());
+                        vo.setCourseType(course.getCourseType());
+                        vo.setCourseTypeDesc(getCourseTypeDesc(course.getCourseType()));
+                    }
 
                     // 获取教练信息
-                    Coach coach = coachMapper.selectById(course.getCoachId());
+                    Coach coach = coachMapper.selectById(schedule.getCoachId());
                     if (coach != null) {
                         vo.setCoachName(coach.getRealName());
                     }
                 }
             }
-        }
-
-        return vo;
-    }
-
-    /**
-     * 将CheckinRecord实体转换为CheckInDetailVO
-     */
-    private CheckInDetailVO convertToCheckInDetailVO(CheckinRecord checkinRecord) {
-        CheckInDetailVO vo = new CheckInDetailVO();
-
-        // 设置基本信息
-        vo.setId(checkinRecord.getId());
-        vo.setMemberId(checkinRecord.getMemberId());
-        vo.setCheckinTime(checkinRecord.getCheckinTime());
-        vo.setCheckinMethod(checkinRecord.getCheckinMethod());
-        vo.setNotes(checkinRecord.getNotes());
-        vo.setCreateTime(checkinRecord.getCreateTime());
-
-        // 获取会员详细信息
-        Member member = memberMapper.selectById(checkinRecord.getMemberId());
-        if (member != null) {
-            vo.setMemberName(member.getRealName());
-            vo.setMemberPhone(member.getPhone());
-            vo.setMemberNo(member.getMemberNo());
-            vo.setGender(member.getGender());
-
-//            vo.setPersonalCoachName(null);
-        }
-
-        // 设置课程预约信息
-        if (checkinRecord.getCourseBookingId() != null) {
-            vo.setCourseCheckIn(true);
-            vo.setCourseBookingId(checkinRecord.getCourseBookingId());
-
-            CourseBooking booking = courseBookingMapper.selectById(checkinRecord.getCourseBookingId());
-            if (booking != null) {
-                vo.setBookingTime(booking.getBookingTime());
-                vo.setBookingStatus(booking.getBookingStatus());
-
-                Course course = courseMapper.selectById(booking.getCourseId());
-                if (course != null) {
-                    vo.setCourseId(course.getId());
-                    vo.setCourseName(course.getCourseName());
-                    vo.setCourseType(course.getCourseType());
-                    vo.setCourseDate(course.getCourseDate());
-                    vo.setStartTime(course.getStartTime());
-                    vo.setEndTime(course.getEndTime());
-                    vo.setLocation(course.getLocation());
-
-                    Coach coach = coachMapper.selectById(course.getCoachId());
-                    if (coach != null) {
-                        vo.setCoachName(coach.getRealName());
-                        vo.setCoachPhone(coach.getPhone());
-                    }
-                }
-            }
-        } else {
-            vo.setCourseCheckIn(false);
         }
 
         return vo;

@@ -1,13 +1,12 @@
 package com.gymflow.dto.course;
 
 import com.gymflow.dto.coach.CoachBasicDTO;
+import com.gymflow.vo.CourseScheduleVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -35,26 +34,11 @@ public class CourseFullDTO {
     @Schema(description = "最大容量")
     private Integer maxCapacity;
 
-    @Schema(description = "当前报名人数")
-    private Integer currentEnrollment;
-
-    @Schema(description = "课程日期")
-    private LocalDate courseDate;
-
-    @Schema(description = "开始时间")
-    private LocalTime startTime;
-
-    @Schema(description = "结束时间")
-    private LocalTime endTime;
-
     @Schema(description = "课时长（分钟）")
     private Integer duration;
 
     @Schema(description = "价格")
     private BigDecimal price;
-
-    @Schema(description = "上课地点")
-    private String location;
 
     @Schema(description = "状态：0-禁用，1-正常")
     private Integer status;
@@ -68,6 +52,6 @@ public class CourseFullDTO {
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
-    @Schema(description = "预约情况列表")
-    private List<CourseBookingDTO> bookings;
+    @Schema(description = "排课列表（包含预约信息）")
+    private List<CourseScheduleVO> schedules;
 }

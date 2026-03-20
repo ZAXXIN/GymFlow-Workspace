@@ -31,6 +31,7 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
     private final MiniCheckinCodeMapper miniCheckinCodeMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final MemberMapper memberMapper;
     private final CoachMapper coachMapper;
     private final CheckInRecordMapper checkInRecordMapper;
@@ -61,20 +62,26 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             throw new BusinessException("签到码不存在");
         }
 
+        // 获取排课信息
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
         // 获取课程信息
-        Course course = courseMapper.selectById(booking.getCourseId());
+        Course course = courseMapper.selectById(schedule.getCourseId());
         if (course == null) {
             throw new BusinessException("课程不存在");
         }
 
         // 获取教练信息
-        Coach coach = coachMapper.selectById(course.getCoachId());
+        Coach coach = coachMapper.selectById(schedule.getCoachId());
 
         // 转换为DTO
         MiniCheckinCodeDTO dto = new MiniCheckinCodeDTO();
         BeanUtils.copyProperties(checkinCode, dto);
         dto.setCourseName(course.getCourseName());
-        dto.setCourseStartTime(LocalDateTime.of(course.getCourseDate(), course.getStartTime()));
+        dto.setCourseStartTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()));
         if (coach != null) {
             dto.setCoachName(coach.getRealName());
         }
@@ -195,14 +202,13 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             throw new BusinessException("预约状态不正确，无法签到");
         }
 
-        // 获取课程信息
-        Course course = courseMapper.selectById(booking.getCourseId());
-        if (course == null) {
-            throw new BusinessException("课程不存在");
+        // 获取排课信息验证签到时间
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
         }
 
-        // 验证签到时间
-        LocalDateTime courseDateTime = LocalDateTime.of(course.getCourseDate(), course.getStartTime());
+        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         configValidator.validateCheckInTime(courseDateTime);
 
         // 创建签到记录
@@ -237,13 +243,14 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
 
         // 获取会员信息
         Member member = memberMapper.selectById(booking.getMemberId());
+        Course course = courseMapper.selectById(schedule.getCourseId());
 
         // 构建结果
         MiniScanResultDTO resultDTO = new MiniScanResultDTO();
         resultDTO.setSuccess(true);
         resultDTO.setMessage("核销成功");
         resultDTO.setBookingId(bookingId);
-        resultDTO.setCourseName(course.getCourseName());
+        resultDTO.setCourseName(course != null ? course.getCourseName() : "");
         if (member != null) {
             resultDTO.setMemberName(member.getRealName());
             resultDTO.setMemberPhone(member.getPhone());
@@ -275,24 +282,29 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
 
             for (CourseBooking booking : bookings) {
-                Course course = courseMapper.selectById(booking.getCourseId());
-                if (course == null || !course.getCourseDate().equals(today)) {
+                CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                if (schedule == null || !schedule.getScheduleDate().equals(today)) {
                     continue;
                 }
 
-                LocalDateTime courseStart = LocalDateTime.of(today, course.getStartTime());
-                LocalDateTime courseEnd = LocalDateTime.of(today, course.getEndTime());
+                LocalDateTime courseStart = LocalDateTime.of(today, schedule.getStartTime());
+                LocalDateTime courseEnd = LocalDateTime.of(today, schedule.getEndTime());
 
                 // 课程开始前30分钟到课程结束
                 if (now.isAfter(courseStart.minusMinutes(30)) && now.isBefore(courseEnd)) {
                     reminder.setHasReminder(true);
                     reminder.setType("MEMBER");
-                    reminder.setCourseName(course.getCourseName());
+
+                    Course course = courseMapper.selectById(schedule.getCourseId());
+                    if (course != null) {
+                        reminder.setCourseName(course.getCourseName());
+                    }
+
                     reminder.setBookingTime(courseStart);
                     reminder.setBookingId(booking.getId());
 
                     // 获取教练姓名
-                    Coach coach = coachMapper.selectById(course.getCoachId());
+                    Coach coach = coachMapper.selectById(schedule.getCoachId());
                     if (coach != null) {
                         reminder.setCoachName(coach.getRealName());
                     }
@@ -302,7 +314,9 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
                     if (checkinCode != null) {
                         MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
                         BeanUtils.copyProperties(checkinCode, codeDTO);
-                        codeDTO.setCourseName(course.getCourseName());
+                        if (course != null) {
+                            codeDTO.setCourseName(course.getCourseName());
+                        }
                         codeDTO.setCourseStartTime(courseStart);
                         if (coach != null) {
                             codeDTO.setCoachName(coach.getRealName());
@@ -315,32 +329,34 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
 
         } else if (userType == 1) {
             // 教练端提醒：显示当前时段的学员
-            LambdaQueryWrapper<Course> courseQuery = new LambdaQueryWrapper<>();
-            courseQuery.eq(Course::getCoachId, userId)
-                    .eq(Course::getCourseDate, today)
-                    .le(Course::getStartTime, currentTime.plusMinutes(30))
-                    .ge(Course::getEndTime, currentTime);
+            LambdaQueryWrapper<CourseSchedule> scheduleQuery = new LambdaQueryWrapper<>();
+            scheduleQuery.eq(CourseSchedule::getCoachId, userId)
+                    .eq(CourseSchedule::getScheduleDate, today)
+                    .le(CourseSchedule::getStartTime, currentTime.plusMinutes(30))
+                    .ge(CourseSchedule::getEndTime, currentTime);
 
-            List<Course> courses = courseMapper.selectList(courseQuery);
+            List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleQuery);
 
-            for (Course course : courses) {
-                // 查询该课程的预约学员
+            for (CourseSchedule schedule : schedules) {
+                // 查询该排课的预约学员
                 LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-                bookingQuery.eq(CourseBooking::getCourseId, course.getId())
+                bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
                         .eq(CourseBooking::getBookingStatus, 0);
 
                 List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
                 if (!bookings.isEmpty()) {
                     CourseBooking booking = bookings.get(0);
                     Member member = memberMapper.selectById(booking.getMemberId());
-                    if (member != null) {
+                    Course course = courseMapper.selectById(schedule.getCourseId());
+
+                    if (member != null && course != null) {
                         reminder.setHasReminder(true);
                         reminder.setType("COACH");
                         reminder.setMemberId(member.getId());
                         reminder.setMemberName(member.getRealName());
                         reminder.setBookedCourseName(course.getCourseName());
-                        reminder.setBookedStartTime(LocalDateTime.of(today, course.getStartTime()));
-                        reminder.setBookedEndTime(LocalDateTime.of(today, course.getEndTime()));
+                        reminder.setBookedStartTime(LocalDateTime.of(today, schedule.getStartTime()));
+                        reminder.setBookedEndTime(LocalDateTime.of(today, schedule.getEndTime()));
                     }
                     break;
                 }

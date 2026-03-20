@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { dashboardApi } from '@/api/dashboard'
-import type { 
-  DashboardStatsDTO, 
-  RevenueTrendDTO, 
-  CourseCategoryStatsDTO, 
+import type {
+  DashboardStatsDTO,
+  RevenueTrendDTO,
+  CourseCategoryStatsDTO,
   TodayCourseDTO,
-  QuickStatsDTO 
+  QuickStatsDTO
 } from '@/api/dashboard'
 import { ElMessage } from 'element-plus'
 
@@ -54,10 +54,24 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // 签到增长趋势
   const attendanceTrend = computed(() => {
     if (!stats.value) return 0
+
     const current = stats.value.todayCheckIns || 0
     const last = stats.value.yesterdayCheckIns || 0
-    if (last === 0) return current > 0 ? 100 : 0
-    return Number(((current - last) / last * 100).toFixed(1))
+
+    // 如果昨天为0，今天>0，返回100%增长
+    if (last === 0) {
+      return current > 0 ? 100 : 0
+    }
+
+    // 计算增长率，确保除数不为0
+    const growth = ((current - last) / last) * 100
+
+    // 处理可能的 Infinity 或 NaN
+    if (!isFinite(growth) || isNaN(growth)) {
+      return 0
+    }
+
+    return Number(growth.toFixed(1))
   })
 
   // Actions

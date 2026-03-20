@@ -36,16 +36,18 @@
 
 /* ===== 输入框样式覆盖 ===== */
 
-/* 普通输入框 - 清除内边框 */
+/* 普通输入框 - 清除内边框，设置白色背景 */
 .el-input__wrapper {
   box-shadow: none !important;
   border: 1px solid var(--el-border-color) !important;
   border-radius: var(--el-border-radius-base) !important;
   transition: border-color var(--el-transition-duration) var(--el-transition-function) !important;
+  background-color: #ffffff !important;
 }
 
 .el-input__wrapper:hover {
   border-color: var(--el-border-color) !important;
+  background-color: #ffffff !important;
 }
 
 .el-input__wrapper.is-focus,
@@ -54,24 +56,28 @@
 .el-input__wrapper:focus-visible {
   border-color: var(--el-color-primary) !important;
   box-shadow: none !important;
+  background-color: #ffffff !important;
 }
 
 .el-input__inner {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
+  background-color: transparent !important;
 }
 
-/* 文本域 - 清除内边框 */
+/* 文本域 - 清除内边框，设置白色背景 */
 .el-textarea__inner {
   box-shadow: none !important;
   border: 1px solid var(--el-border-color) !important;
   border-radius: var(--el-border-radius-base) !important;
   transition: border-color var(--el-transition-duration) var(--el-transition-function) !important;
+  background-color: #ffffff !important;
 }
 
 .el-textarea__inner:hover {
   border-color: var(--el-border-color) !important;
+  background-color: #ffffff !important;
 }
 
 .el-textarea__inner.is-focus,
@@ -81,92 +87,133 @@
   border-color: var(--el-color-primary) !important;
   box-shadow: none !important;
   outline: none !important;
+  background-color: #ffffff !important;
 }
 
 /* 数字输入框 */
 .el-input-number .el-input__wrapper {
   box-shadow: none !important;
+  background-color: #ffffff !important;
 }
 
 .el-input-number .el-input__wrapper.is-focus {
   border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
 }
 
 /* 选择器 */
 .el-select .el-input__wrapper {
   box-shadow: none !important;
+  background-color: #ffffff !important;
 }
 
 .el-select .el-input__wrapper.is-focus {
   border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
 }
 
 /* 日期选择器 */
 .el-date-editor .el-input__wrapper {
   box-shadow: none !important;
+  background-color: #ffffff !important;
 }
 
 .el-date-editor .el-input__wrapper.is-focus {
   border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
 }
 
 /* 级联选择器 */
 .el-cascader .el-input__wrapper {
   box-shadow: none !important;
+  background-color: #ffffff !important;
 }
 
 .el-cascader .el-input__wrapper.is-focus {
   border-color: var(--el-color-primary) !important;
+  background-color: #ffffff !important;
+}
+
+/* ===== 修复浏览器自动填充背景色 ===== */
+
+/* 移除自动填充时的蓝色背景 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #333333 !important;
+  color: #333333 !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* 确保 Element Plus 输入框内的自动填充也被覆盖 */
+.el-input__wrapper input:-webkit-autofill,
+.el-input__wrapper input:-webkit-autofill:hover,
+.el-input__wrapper input:-webkit-autofill:focus,
+.el-input__wrapper input:-webkit-autofill:active,
+.el-textarea__inner:-webkit-autofill,
+.el-textarea__inner:-webkit-autofill:hover,
+.el-textarea__inner:-webkit-autofill:focus,
+.el-textarea__inner:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #333333 !important;
+  background-color: transparent !important;
+}
+
+/* 针对 Firefox 的自动填充 */
+input:autofill,
+input:autofill:hover,
+input:autofill:focus,
+input:autofill:active,
+textarea:autofill,
+textarea:autofill:hover,
+textarea:autofill:focus,
+textarea:autofill:active {
+  filter: none !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #333333 !important;
+}
+
+/* 时间选择器下拉面板背景色 */
+.el-time-panel {
+  background-color: #ffffff !important;
+}
+
+/* 下拉面板背景色 */
+.el-select-dropdown,
+.el-cascader__dropdown,
+.el-date-picker,
+.el-time-select-panel {
+  background-color: #ffffff !important;
 }
 
 /* 禁用状态下的输入框 */
 .el-input.is-disabled .el-input__wrapper {
-  background-color: var(--el-fill-color-light) !important;
+  background-color: #f5f7fa !important;
   border-color: var(--el-border-color-light) !important;
 }
 
 .el-input.is-disabled .el-input__inner {
   -webkit-text-fill-color: var(--el-text-color-disabled) !important;
   color: var(--el-text-color-disabled) !important;
-}
-/* ===== 输入框背景色设置为白色 ===== */
-
-/* 强制所有输入框背景为白色 - 直接针对输入框元素 */
-.el-input__inner,
-.el-textarea__inner,
-.el-input-number .el-input__inner,
-.el-select .el-input__inner,
-.el-date-editor .el-input__inner,
-.el-cascader .el-input__inner,
-.el-range-editor .el-input__inner,
-input.el-input__inner,
-textarea.el-textarea__inner {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
+  background-color: transparent !important;
 }
 
-/* 如果上面不行，强制清除背景 */
-.el-input__wrapper,
-.el-textarea__inner,
-.el-input-number .el-input__wrapper,
-.el-select .el-input__wrapper,
-.el-date-editor .el-input__wrapper {
-  background-color: #ffffff !important;
-  background-image: none !important;
-  background: #ffffff !important;
-}
-
-/* 强制清除任何可能存在的蓝色背景 */
-.el-input__wrapper:focus,
-.el-input__wrapper:focus-within,
-.el-input__wrapper.is-focus {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-}
-
-/* 禁用状态保持原样 */
-.el-input.is-disabled .el-input__inner {
-  background-color: var(--el-fill-color-light) !important;
+.el-textarea.is-disabled .el-textarea__inner {
+  background-color: #f5f7fa !important;
+  border-color: var(--el-border-color-light) !important;
 }

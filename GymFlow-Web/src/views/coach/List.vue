@@ -80,6 +80,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="手机号" width="120" />
+        <el-table-column prop="gender" label="性别" width="80" align="center">
+          <template #default="{ row }">
+            {{row.gender == 0 ? '女' : row.gender == 1 ? '男' : '未知'}}</template>
+        </el-table-column>
         <el-table-column prop="specialty" label="专长" width="120">
           <template #default="{ row }">
             <span>{{ row.specialty || '-' }}</span>

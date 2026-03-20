@@ -28,15 +28,19 @@ export interface MemberListVO {
   realName: string
   gender: number
   age?: number
+  birthday?:string
   membershipStartDate?: string
   membershipEndDate?: string
   totalCheckins: number
   totalCourseHours: number
   totalSpent: number
   createTime: string
-  // 会员卡信息（如果有）
+  
+  // 会员卡信息
   cardType?: number
+  cardTypeDesc?: string
   cardStatus?: string
+  cardStatusDesc?: string
   cardEndDate?: string
   remainingSessions?: number
 }

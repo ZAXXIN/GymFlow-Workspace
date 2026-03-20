@@ -6,7 +6,6 @@ import lombok.Data;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @Data
 @Schema(description = "课程排课DTO")
@@ -22,7 +21,7 @@ public class CourseScheduleDTO {
 
     @NotNull(message = "课程日期不能为空")
     @Schema(description = "课程日期", required = true)
-    private LocalDate courseDate;
+    private LocalDate scheduleDate;
 
     @NotNull(message = "开始时间不能为空")
     @Schema(description = "开始时间", required = true)
@@ -32,8 +31,8 @@ public class CourseScheduleDTO {
     @Schema(description = "结束时间", required = true)
     private LocalTime endTime;
 
-    @Schema(description = "最多排课人数")
-    private Integer maxParticipants;
+    @Schema(description = "最大容量")
+    private Integer maxCapacity;
 
     @Schema(description = "备注")
     private String notes;

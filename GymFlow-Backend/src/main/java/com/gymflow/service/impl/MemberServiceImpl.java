@@ -42,6 +42,7 @@ public class MemberServiceImpl implements MemberService {
     private final CheckInRecordMapper checkInRecordMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
@@ -92,6 +93,10 @@ public class MemberServiceImpl implements MemberService {
         MemberFullDTO fullDTO = new MemberFullDTO();
         BeanUtils.copyProperties(member, fullDTO);
         fullDTO.setUsername(member.getPhone());
+        fullDTO.setBirthday(member.getBirthday());
+        if (member.getBirthday() != null) {
+            fullDTO.setAge(Period.between(member.getBirthday(), LocalDate.now()).getYears());
+        }
 
         fullDTO.setHealthRecords(getHealthRecords(memberId));
 
@@ -717,7 +722,12 @@ public class MemberServiceImpl implements MemberService {
             List<CourseBooking> bookings = courseBookingMapper.selectList(queryWrapper);
 
             for (CourseBooking booking : bookings) {
-                Course course = courseMapper.selectById(booking.getCourseId());
+                CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                if (schedule == null) {
+                    continue;
+                }
+
+                Course course = courseMapper.selectById(schedule.getCourseId());
                 if (course == null) {
                     continue;
                 }
@@ -726,17 +736,16 @@ public class MemberServiceImpl implements MemberService {
                 recordDTO.setCourseId(booking.getCourseId());
                 recordDTO.setCourseName(course.getCourseName());
 
-                if (course.getCoachId() != null) {
-                    Coach coach = coachMapper.selectById(course.getCoachId());
-                    if (coach != null) {
-                        recordDTO.setCoachName(coach.getRealName());
-                    }
+                // 获取教练信息
+                Coach coach = coachMapper.selectById(schedule.getCoachId());
+                if (coach != null) {
+                    recordDTO.setCoachName(coach.getRealName());
                 }
 
-                recordDTO.setCourseDate(course.getCourseDate().atStartOfDay());
-                recordDTO.setStartTime(course.getCourseDate().atTime(course.getStartTime()));
-                recordDTO.setEndTime(course.getCourseDate().atTime(course.getEndTime()));
-                recordDTO.setLocation(course.getLocation());
+                // 从排课获取时间信息
+                recordDTO.setCourseDate(schedule.getScheduleDate().atStartOfDay());
+                recordDTO.setStartTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()));
+                recordDTO.setEndTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime()));
                 recordDTO.setBookingStatus(booking.getBookingStatus());
                 recordDTO.setCheckinTime(booking.getCheckinTime());
 
@@ -768,12 +777,13 @@ public class MemberServiceImpl implements MemberService {
                 if (record.getCourseBookingId() != null) {
                     CourseBooking booking = courseBookingMapper.selectById(record.getCourseBookingId());
                     if (booking != null) {
-                        Course course = courseMapper.selectById(booking.getCourseId());
-                        if (course != null) {
-                            dto.setCourseName(course.getCourseName());
+                        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                        if (schedule != null) {
+                            Course course = courseMapper.selectById(schedule.getCourseId());
+                            if (course != null) {
+                                dto.setCourseName(course.getCourseName());
 
-                            if (course.getCoachId() != null) {
-                                Coach coach = coachMapper.selectById(course.getCoachId());
+                                Coach coach = coachMapper.selectById(schedule.getCoachId());
                                 if (coach != null) {
                                     dto.setCoachName(coach.getRealName());
                                 }
