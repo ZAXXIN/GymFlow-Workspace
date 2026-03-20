@@ -12,7 +12,6 @@
         </div>
       </template>
     </el-page-header>
-    
     <!-- 基本信息卡片 -->
     <el-card class="info-card" v-loading="loading">
       <template #header>
@@ -23,27 +22,16 @@
           </div>
         </div>
       </template>
-      
-      <el-descriptions :column="3" border>
-        <el-descriptions-item label="会员编号">{{ memberDetail?.memberNo || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="手机号">{{ memberDetail?.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>
-        
-        <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
-        <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item>
-        
-        <el-descriptions-item label="身份证号">{{ memberDetail?.idCard || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="身高">{{ memberDetail?.height ? memberDetail.height + 'cm' : '-' }}</el-descriptions-item>
-        <!-- <el-descriptions-item label="体重">{{ memberDetail?.weight ? memberDetail.weight + 'kg' : '-' }}</el-descriptions-item> -->
-        
-        <!-- <el-descriptions-item label="专属教练">{{ memberDetail?.personalCoachName || '未分配' }}</el-descriptions-item> -->
-        
-        <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item>
 
-        <el-descriptions-item label="地址" span="2">{{ memberDetail?.address || '-' }}</el-descriptions-item>
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ memberDetail?.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
+        <!-- <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item> -->
+        <!-- <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item> -->
       </el-descriptions>
-      
+
       <!-- 统计信息 -->
       <div class="stats-section">
         <el-row :gutter="20">
@@ -90,13 +78,13 @@
         </el-row>
       </div>
     </el-card>
-    
+
     <!-- 标签页 -->
     <el-tabs v-model="activeTab" class="detail-tabs">
       <!-- 会员卡信息 -->
       <el-tab-pane label="会员卡" name="cards">
         <el-card shadow="never" class="tab-content">
-          <template #header>
+          <!-- <template #header>
             <div class="tab-header">
               <span class="tab-title">会员卡信息</span>
               <el-button type="primary" size="small" @click="handleAddCard">
@@ -104,8 +92,8 @@
                 添加会员卡
               </el-button>
             </div>
-          </template>
-          
+          </template> -->
+
           <div v-if="memberDetail?.memberCards && memberDetail.memberCards.length > 0">
             <div class="cards-grid">
               <div v-for="card in memberDetail.memberCards" :key="card.productId" class="card-item">
@@ -124,28 +112,22 @@
                       </div>
                     </div>
                   </template>
-                  
+
                   <div class="card-details">
                     <!-- 会籍卡显示时间 -->
-                    <template v-if="isMembershipCard(card.cardType)">
+                    <template v-if="card.cardType == 0">
                       <div class="card-field">
-                        <span class="label">有效期：</span>
-                        <span class="value">
-                          {{ formatDate(card.startDate) }} 至 {{ formatDate(card.endDate) }}
-                        </span>
+                        <span class="label">开始日期：</span>
+                        <span class="value">{{ formatDate(card.startDate) }}</span>
                       </div>
                       <div class="card-field">
-                        <span class="label">剩余天数：</span>
-                        <span class="value">
-                          <el-tag :type="getRemainingDaysType(card.endDate)" size="small">
-                            {{ calculateRemainingDays(card.endDate) }} 天
-                          </el-tag>
-                        </span>
+                        <span class="label">结束日期：</span>
+                        <span class="value">{{ formatDate(card.endDate) }}</span>
                       </div>
                     </template>
-                    
+
                     <!-- 课程卡显示课时数 -->
-                    <template v-else-if="isCourseCard(card.cardType)">
+                    <template v-else>
                       <div class="card-field">
                         <span class="label">总课时：</span>
                         <span class="value">
@@ -167,62 +149,47 @@
                         </span>
                       </div>
                     </template>
-                    
-                    <!-- 其他卡类型 -->
-                    <template v-else>
-                      <div class="card-field">
-                        <span class="label">开始日期：</span>
-                        <span class="value">{{ formatDate(card.startDate) }}</span>
-                      </div>
-                      <div class="card-field">
-                        <span class="label">结束日期：</span>
-                        <span class="value">{{ formatDate(card.endDate) }}</span>
-                      </div>
-                    </template>
-                    
+
                     <div class="card-field">
                       <span class="label">金额：</span>
                       <span class="value amount">¥{{ formatAmount(card.amount) }}</span>
                     </div>
-                    
-                    <div class="card-field" v-if="card.productId">
-                      <span class="label">商品ID：</span>
-                      <span class="value">{{ card.productId }}</span>
-                    </div>
-                    
-                    <div class="card-actions">
+
+                    <!-- <div class="card-actions">
                       <el-button type="text" size="small" @click="handleRenewCard(card)">
                         续费
                       </el-button>
                       <el-button type="text" size="small" @click="handleViewCardDetail(card)">
                         详情
                       </el-button>
-                    </div>
+                    </div> -->
                   </div>
                 </el-card>
               </div>
             </div>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无会员卡信息" />
           </div>
         </el-card>
       </el-tab-pane>
-      
+
       <!-- 健康档案 -->
       <el-tab-pane label="健康档案" name="health">
         <el-card shadow="never" class="tab-content">
-          <template #header>
+          <!-- <template #header>
             <div class="tab-header">
               <span class="tab-title">健康档案记录</span>
               <el-button type="primary" size="small" @click="handleAddHealthRecord">
-                <el-icon><Plus /></el-icon>
+                <el-icon>
+                  <Plus />
+                </el-icon>
                 添加记录
               </el-button>
             </div>
-          </template>
-          
+          </template> -->
+
           <div v-if="memberDetail?.healthRecords && memberDetail.healthRecords.length > 0">
             <el-table :data="memberDetail.healthRecords" style="width: 100%">
               <el-table-column prop="recordDate" label="记录日期" width="120" sortable>
@@ -294,22 +261,22 @@
               </el-table-column>
             </el-table>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无健康档案记录" />
           </div>
         </el-card>
       </el-tab-pane>
-      
+
       <!-- 课程记录 -->
       <el-tab-pane label="课程记录" name="courses">
         <el-card shadow="never" class="tab-content">
-          <template #header>
+          <!-- <template #header>
             <div class="tab-header">
               <span class="tab-title">课程记录</span>
             </div>
-          </template>
-          
+          </template> -->
+
           <div v-if="memberDetail?.courseRecords && memberDetail.courseRecords.length > 0">
             <el-table :data="memberDetail.courseRecords" style="width: 100%">
               <el-table-column prop="courseId" label="课程ID" width="100" />
@@ -349,22 +316,22 @@
               </el-table-column>
             </el-table>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无课程记录" />
           </div>
         </el-card>
       </el-tab-pane>
-      
+
       <!-- 签到记录 -->
       <el-tab-pane label="签到记录" name="checkins">
         <el-card shadow="never" class="tab-content">
-          <template #header>
+          <!-- <template #header>
             <div class="tab-header">
               <span class="tab-title">签到记录</span>
             </div>
-          </template>
-          
+          </template> -->
+
           <div v-if="memberDetail?.checkinRecords && memberDetail.checkinRecords.length > 0">
             <el-table :data="memberDetail.checkinRecords" style="width: 100%">
               <el-table-column prop="checkinTime" label="签到时间" width="160" sortable>
@@ -396,7 +363,7 @@
               </el-table-column>
             </el-table>
           </div>
-          
+
           <div v-else class="empty-data">
             <el-empty description="暂无签到记录" />
           </div>
@@ -459,33 +426,38 @@ const isCourseCard = (cardType: number | undefined) => {
 // 获取卡状态标签类型
 const getCardStatusType = (status: string | undefined) => {
   switch (status) {
-    case 'ACTIVE': return 'success'
-    case 'EXPIRED': return 'danger'
-    case 'USED_UP': return 'warning'
-    case 'INACTIVE': return 'info'
-    default: return 'info'
+    case 'ACTIVE':
+      return 'success'
+    case 'EXPIRED':
+      return 'danger'
+    case 'USED_UP':
+      return 'warning'
+    case 'INACTIVE':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
 // 计算剩余天数
-const calculateRemainingDays = (endDate: string | null | undefined) => {
-  if (!endDate) return 0
-  
-  const end = new Date(endDate)
-  const today = new Date()
-  const diffTime = end.getTime() - today.getTime()
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return days > 0 ? days : 0
-}
+// const calculateRemainingDays = (endDate: string | null | undefined) => {
+//   if (!endDate) return 0
+
+//   const end = new Date(endDate)
+//   const today = new Date()
+//   const diffTime = end.getTime() - today.getTime()
+//   const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+//   return days > 0 ? days : 0
+// }
 
 // 获取剩余天数标签类型
-const getRemainingDaysType = (endDate: string | null | undefined) => {
-  const days = calculateRemainingDays(endDate)
-  if (days <= 0) return 'danger'
-  if (days <= 7) return 'warning'
-  if (days <= 30) return 'info'
-  return 'success'
-}
+// const getRemainingDaysType = (endDate: string | null | undefined) => {
+//   const days = calculateRemainingDays(endDate)
+//   if (days <= 0) return 'danger'
+//   if (days <= 7) return 'warning'
+//   if (days <= 30) return 'info'
+//   return 'success'
+// }
 
 // BMI类型
 const getBmiType = (bmi: number | null | undefined) => {
@@ -499,21 +471,31 @@ const getBmiType = (bmi: number | null | undefined) => {
 // 预约状态
 const getBookingStatusType = (status: number | undefined) => {
   switch (status) {
-    case 0: return 'info'      // 待上课
-    case 1: return 'success'   // 已签到
-    case 2: return 'success'   // 已完成
-    case 3: return 'danger'    // 已取消
-    default: return 'info'
+    case 0:
+      return 'info' // 待上课
+    case 1:
+      return 'success' // 已签到
+    case 2:
+      return 'success' // 已完成
+    case 3:
+      return 'danger' // 已取消
+    default:
+      return 'info'
   }
 }
 
 const getBookingStatusText = (status: number | undefined) => {
   switch (status) {
-    case 0: return '待上课'
-    case 1: return '已签到'
-    case 2: return '已完成'
-    case 3: return '已取消'
-    default: return '未知'
+    case 0:
+      return '待上课'
+    case 1:
+      return '已签到'
+    case 2:
+      return '已完成'
+    case 3:
+      return '已取消'
+    default:
+      return '未知'
   }
 }
 
@@ -543,16 +525,12 @@ const handleEditHealthRecord = (record: HealthRecordDTO, index: number) => {
 // 删除健康记录
 const handleDeleteHealthRecord = async (index: number) => {
   try {
-    await ElMessageBox.confirm(
-      '确定要删除这条健康记录吗？',
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm('确定要删除这条健康记录吗？', '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
     ElMessage.success('删除成功')
     // 这里需要调用API删除健康记录
     // await memberStore.deleteHealthRecord(memberId.value, index)
@@ -562,32 +540,32 @@ const handleDeleteHealthRecord = async (index: number) => {
 }
 
 // 添加会员卡
-const handleAddCard = () => {
-  router.push(`/member/${memberId.value}/card/add`)
-}
+// const handleAddCard = () => {
+//   router.push(`/member/${memberId.value}/card/add`)
+// }
 
 // 续费会员卡
-const handleRenewCard = (card: MemberCardDTO) => {
-  ElMessageBox.confirm(
-    `确定要为【${card.cardName}】续费吗？`,
-    '续费确认',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'info'
-    }
-  ).then(() => {
-    router.push(`/member/${memberId.value}/card/renew?cardId=${card.productId}`)
-  }).catch(() => {
-    // 用户取消
-  })
-}
+// const handleRenewCard = (card: MemberCardDTO) => {
+//   ElMessageBox.confirm(
+//     `确定要为【${card.cardName}】续费吗？`,
+//     '续费确认',
+//     {
+//       confirmButtonText: '确定',
+//       cancelButtonText: '取消',
+//       type: 'info'
+//     }
+//   ).then(() => {
+//     router.push(`/member/${memberId.value}/card/renew?cardId=${card.productId}`)
+//   }).catch(() => {
+//     // 用户取消
+//   })
+// }
 
 // 查看会员卡详情
-const handleViewCardDetail = (card: MemberCardDTO) => {
-  ElMessage.info(`查看会员卡详情：${card.cardName}`)
-  // 这里可以跳转到会员卡详情页或打开详情弹窗
-}
+// const handleViewCardDetail = (card: MemberCardDTO) => {
+//   ElMessage.info(`查看会员卡详情：${card.cardName}`)
+//   // 这里可以跳转到会员卡详情页或打开详情弹窗
+// }
 
 // 导航
 const goBack = () => {
@@ -646,7 +624,7 @@ onMounted(() => {
 .member-no {
   font-size: 16px;
   font-weight: 600;
-  color: #409EFF;
+  color: #409eff;
   padding: 4px 12px;
   background-color: #ecf5ff;
   border-radius: 4px;
@@ -681,7 +659,7 @@ onMounted(() => {
 }
 
 .stat-value.amount {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .stat-unit {
@@ -756,7 +734,7 @@ onMounted(() => {
 
 .card-header-right .card-type {
   font-size: 12px;
-  color: #409EFF;
+  color: #409eff;
   background-color: #ecf5ff;
   padding: 2px 8px;
   border-radius: 12px;
@@ -788,7 +766,7 @@ onMounted(() => {
 }
 
 .card-field .value.amount {
-  color: #67C23A;
+  color: #67c23a;
   font-weight: 600;
 }
 
@@ -802,7 +780,7 @@ onMounted(() => {
 /* 表格样式 */
 .value-highlight {
   font-weight: 600;
-  color: #409EFF;
+  color: #409eff;
 }
 
 .notes-text {

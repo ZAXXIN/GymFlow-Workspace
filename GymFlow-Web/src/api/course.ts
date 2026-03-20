@@ -6,8 +6,7 @@ import type {
   CourseDetail,
   CourseListVO,
   PageResultVO,
-  CourseScheduleVO,
-  CourseBookingDTO
+  CourseScheduleVO
 } from '@/types/course'
 import type { ApiResponse } from '@/types/auth'
 
@@ -150,17 +149,6 @@ export const courseApi = {
       url: `/course/cancel/${bookingId}`,
       method: 'POST',
       params: { reason }
-    })
-  },
-
-  /**
-   * 批量删除课程
-   */
-  batchDeleteCourse(ids: number[]): Promise<ApiResponse> {
-    return request({
-      url: '/course/batchDelete',
-      method: 'DELETE',
-      data: ids
     })
   }
 }

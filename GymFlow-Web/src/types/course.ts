@@ -6,11 +6,10 @@ export interface CourseBasicDTO {
   courseName: string
   description?: string
   coachIds: number[]
-  maxCapacity: number
   duration: number
   price: number
-  location?: string
   notice?: string
+  // 移除 maxCapacity 和 location
 }
 
 // 课程查询DTO
@@ -20,19 +19,18 @@ export interface CourseQueryParams {
   courseType?: number
   courseName?: string
   coachId?: number
-  startDate?: string
-  endDate?: string
   status?: number
+  // 移除 startDate 和 endDate
 }
 
 // 课程排课DTO
 export interface CourseScheduleDTO {
   courseId: number
   coachId: number
-  courseDate: string
+  scheduleDate: string      // 改名，从 courseDate 改为 scheduleDate
   startTime: string
   endTime: string
-  maxParticipants?: number
+  maxCapacity?: number      // 改名，从 maxParticipants 改为 maxCapacity
   notes?: string
 }
 
@@ -44,19 +42,14 @@ export interface CourseListVO {
   courseName: string
   description?: string
   coachNames: string[]
-  maxCapacity: number
-  currentEnrollment: number
-  enrollmentRate: number
-  courseDate?: string
-  startTime?: string
-  endTime?: string
   duration: number
   price: number
-  location?: string
   status: number
   statusDesc: string
-  createTime?: string
-  updateTime?: string
+  // 统计信息
+  totalSchedules: number    // 总排课数
+  totalBookings: number     // 总预约数
+  // 移除 maxCapacity, currentEnrollment, enrollmentRate, courseDate, startTime, endTime, location, createTime, updateTime
 }
 
 // 课程详情
@@ -67,20 +60,15 @@ export interface CourseDetail {
   courseName: string
   description?: string
   coaches: CoachBasicDTO[]
-  maxCapacity: number
-  currentEnrollment: number
-  courseDate?: string
-  startTime?: string
-  endTime?: string
   duration: number
   price: number
-  location?: string
   status: number
   statusDesc: string
   notice?: string
   createTime?: string
   updateTime?: string
-  bookings: CourseBookingDTO[]
+  schedules: CourseScheduleVO[]  // 改为 schedules，包含排课信息
+  // 移除 maxCapacity, currentEnrollment, courseDate, startTime, endTime, location, bookings
 }
 
 // 课程预约DTO
@@ -93,6 +81,8 @@ export interface CourseBookingDTO {
   bookingStatus: number
   bookingStatusDesc: string
   checkinTime?: string
+  signCode?: string          // 签到码
+  signCodeExpireTime?: string // 签到码过期时间
   cancellationReason?: string
   cancellationTime?: string
 }
@@ -102,28 +92,37 @@ export interface CourseScheduleVO {
   scheduleId: number
   courseId: number
   courseName: string
-  courseType: string
+  courseType: number
+  courseTypeDesc?: string
   coachId: number
   coachName: string
   scheduleDate: string
   startTime: string
   endTime: string
-  maxParticipants: number
-  currentParticipants: number
+  maxCapacity: number
+  currentEnrollment: number
   remainingSlots: number
-  status: string
+  status: number
+  statusDesc: string
   notes?: string
-  bookings: CourseBookingVO[]
+  bookings: CourseBookingVO[]    // 该排课的预约列表
 }
 
-// 课程预约VO
+// 课程预约VO（用于排课详情）
 export interface CourseBookingVO {
-  id: number
+  bookingId: number
+  memberId: number
   memberName: string
   memberPhone: string
-  bookingStatusDesc: string
+  memberNo?: string
   bookingTime: string
+  bookingStatus: number
+  bookingStatusDesc: string
   checkinTime?: string
+  signCode?: string
+  signCodeExpireTime?: string
+  cancellationReason?: string
+  cancellationTime?: string
 }
 
 // 分页结果

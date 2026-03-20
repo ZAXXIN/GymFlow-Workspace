@@ -32,16 +32,6 @@
             <el-option v-for="coach in coachOptions" :key="coach.id" :label="coach.realName" :value="coach.id" />
           </el-select>
         </el-form-item>
-        <!-- <el-form-item label="日期范围">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            style="width: 240px;"
-          />
-        </el-form-item> -->
         <el-form-item label="状态">
           <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 100px;">
             <el-option label="正常" :value="1" />
@@ -81,7 +71,7 @@
         </div>
       </template>
 
-      <el-table :data="courseStore.formattedCourseList()" style="width: 100%" row-key="id" v-loading="courseStore.loading" stripe border>
+      <el-table :data="courseList" style="width: 100%" row-key="id" v-loading="loading" stripe border>
         <el-table-column prop="courseName" label="课程名称" min-width="150">
           <template #default="{ row }">
             <div class="course-info">
@@ -92,7 +82,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="coachNames" label="教练" width="120">
+        <el-table-column prop="coachNames" label="教练" width="150">
           <template #default="{ row }">
             <span v-if="row.coachNames && row.coachNames.length > 0">
               {{ row.coachNames.join(', ') }}
@@ -100,24 +90,14 @@
             <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="maxCapacity" label="容量" width="100" align="center">
-          <template #default="{ row }">
-            {{ row.currentEnrollment }}/{{ row.maxCapacity }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="enrollmentRateFormatted" label="满员率" width="120" align="center">
-          <template #default="{ row }">
-            <el-progress :percentage="parseFloat(row.enrollmentRate) || 0" :stroke-width="16" :status="getEnrollmentStatus(row.enrollmentRate)" :show-text="false" />
-            <span style="font-size: 12px; margin-left: 5px;">{{ row.enrollmentRateFormatted }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="durationFormatted" label="时长" width="100" align="center" />
+        <el-table-column prop="durationFormatted" label="课时长" width="100" align="center" />
         <el-table-column prop="priceFormatted" label="价格" width="100" align="right">
           <template #default="{ row }">
             <span class="amount">{{ row.priceFormatted }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="location" label="地点" width="120" />
+        <el-table-column prop="totalSchedules" label="总排课" width="80" align="center" />
+        <el-table-column prop="totalBookings" label="总预约" width="80" align="center" />
         <el-table-column prop="statusDesc" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
@@ -125,13 +105,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="courseDateFormatted" label="课程日期" width="120">
-          <template #default="{ row }">
-            {{ row.courseDateFormatted || '-' }}
-          </template>
-        </el-table-column>
-        <!-- <el-table-column prop="createTimeFormatted" label="创建时间" width="160" /> -->
-        <el-table-column label="操作" width="220" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-permission="'course:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
@@ -139,7 +113,7 @@
             <el-button v-permission="'course:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button v-permission="'course:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
+            <el-button v-permission="'course:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)" v-if="row.courseType === 1">
               排课
             </el-button>
             <el-popconfirm title="确定要删除这个课程吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
@@ -155,7 +129,7 @@
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
-        <el-pagination v-model:current-page="courseStore.pageInfo.pageNum" v-model:page-size="courseStore.pageInfo.pageSize" :total="courseStore.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
+        <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
   </div>
@@ -168,9 +142,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { useCourseStore } from '@/stores/course'
 import type { CourseQueryParams } from '@/types/course'
-import { usePermission } from '@/composables/usePermission'
-
-const { hasPermission } = usePermission()
+import { coachApi } from '@/api/coach'
 
 const router = useRouter()
 const courseStore = useCourseStore()
@@ -183,33 +155,22 @@ const filterForm = reactive({
   status: undefined as number | undefined,
 })
 
-// const dateRange = ref<string[]>([])
 const coachOptions = ref<any[]>([])
 const loading = computed(() => courseStore.loading)
-
-// 方法
-const getEnrollmentStatus = (rate: number) => {
-  if (rate >= 90) return 'success'
-  if (rate >= 70) return 'warning'
-  return 'exception'
-}
+const courseList = computed(() => courseStore.formattedCourseList())
+const total = computed(() => courseStore.total)
+const pageInfo = computed(() => courseStore.pageInfo)
 
 // 搜索处理
 const handleSearch = async () => {
   const queryParams: CourseQueryParams = {
-    pageNum: courseStore.pageInfo.pageNum,
-    pageSize: courseStore.pageInfo.pageSize,
-    courseName: filterForm.courseName,
+    pageNum: pageInfo.value.pageNum,
+    pageSize: pageInfo.value.pageSize,
+    courseName: filterForm.courseName || undefined,
     courseType: filterForm.courseType,
     coachId: filterForm.coachId,
     status: filterForm.status,
   }
-
-  // if (dateRange.value && dateRange.value.length === 2) {
-  //   queryParams.startDate = dateRange.value[0]
-  //   queryParams.endDate = dateRange.value[1]
-  // }
-
   await courseStore.fetchCourseList(queryParams)
 }
 
@@ -218,21 +179,18 @@ const handleReset = () => {
   filterForm.courseType = undefined
   filterForm.coachId = undefined
   filterForm.status = undefined
-  // dateRange.value = []
-  courseStore.pageInfo.pageNum = 1
-  courseStore.pageInfo.pageSize = 10
+  courseStore.setPageInfo(1, pageInfo.value.pageSize)
   handleSearch()
 }
 
 // 分页处理
 const handleSizeChange = (size: number) => {
-  courseStore.pageInfo.pageSize = size
-  courseStore.pageInfo.pageNum = 1
+  courseStore.setPageInfo(1, size)
   handleSearch()
 }
 
 const handleCurrentChange = (current: number) => {
-  courseStore.pageInfo.pageNum = current
+  courseStore.setPageInfo(current, pageInfo.value.pageSize)
   handleSearch()
 }
 
@@ -264,22 +222,23 @@ const handleDelete = async (id: number) => {
   try {
     await courseStore.deleteCourse(id)
     ElMessage.success('删除成功')
+    await handleSearch()
   } catch (error) {
     console.error('删除失败:', error)
     ElMessage.error('删除失败')
   }
 }
 
-// 加载教练列表（模拟）
+// 加载教练列表
 const loadCoachOptions = async () => {
   try {
-    // 这里应该调用教练API获取教练列表
-    // 为了演示，这里使用模拟数据
-    coachOptions.value = [
-      { id: 1, realName: '张三' },
-      { id: 2, realName: '李四' },
-      { id: 3, realName: '王五' },
-    ]
+    const response = await coachApi.getCoachList({ pageNum: 1, pageSize: 100 })
+    if (response.code === 200) {
+      coachOptions.value = response.data.list.map((item: any) => ({
+        id: item.id,
+        realName: item.realName,
+      }))
+    }
   } catch (error) {
     console.error('加载教练列表失败:', error)
   }

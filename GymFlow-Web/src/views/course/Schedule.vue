@@ -30,21 +30,15 @@
           </el-tag>
           <span class="meta-item">
             <el-icon>
-              <User />
-            </el-icon>
-            最大容量：{{ maxCapacity }}人
-          </span>
-          <span class="meta-item">
-            <el-icon>
               <Clock />
             </el-icon>
             时长：{{ duration }}分钟
           </span>
           <span class="meta-item">
             <el-icon>
-              <Location />
+              <PriceTag />
             </el-icon>
-            地点：{{ location }}
+            价格：¥{{ price }}
           </span>
         </div>
       </div>
@@ -86,8 +80,8 @@
               </template>
             </el-table-column>
             <el-table-column prop="coachName" label="教练" width="120" />
-            <el-table-column prop="maxParticipants" label="最大人数" width="100" align="center" />
-            <el-table-column prop="currentParticipants" label="已报人数" width="100" align="center" />
+            <el-table-column prop="maxCapacity" label="最大人数" width="100" align="center" />
+            <el-table-column prop="currentEnrollment" label="已报人数" width="100" align="center" />
             <el-table-column prop="remainingSlots" label="剩余名额" width="100" align="center">
               <template #default="{ row }">
                 <el-tag :type="getRemainingSlotsType(row.remainingSlots)" size="small">
@@ -95,10 +89,10 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            <el-table-column prop="statusDesc" label="状态" width="80" align="center">
               <template #default="{ row }">
                 <el-tag :type="getScheduleStatusType(row.status)" size="small">
-                  {{ row.status }}
+                  {{ row.statusDesc }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -115,9 +109,13 @@
                 <el-button type="text" size="small" @click="handleEditSchedule(row)">
                   编辑
                 </el-button>
-                <el-button type="text" size="small" style="color: #f56c6c;" @click="handleDeleteSchedule(row)">
-                  删除
-                </el-button>
+                <el-popconfirm title="确定要删除这个排课吗？" @confirm="handleDeleteSchedule(row)" confirm-button-text="确定" cancel-button-text="取消">
+                  <template #reference>
+                    <el-button type="text" size="small" style="color: #f56c6c;">
+                      删除
+                    </el-button>
+                  </template>
+                </el-popconfirm>
               </template>
             </el-table-column>
           </el-table>
@@ -131,11 +129,11 @@
       </div>
     </el-card>
 
-    <!-- 排课详情弹窗 -->
+    <!-- 排课表单弹窗 -->
     <el-dialog v-model="scheduleDialog.visible" :title="scheduleDialog.title" width="600px" :before-close="handleDialogClose">
       <el-form ref="scheduleFormRef" :model="scheduleForm" :rules="scheduleRules" label-width="100px" v-loading="scheduleDialog.loading">
-        <el-form-item label="课程日期" prop="courseDate">
-          <el-date-picker v-model="scheduleForm.courseDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" />
+        <el-form-item label="课程日期" prop="scheduleDate">
+          <el-date-picker v-model="scheduleForm.scheduleDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" />
         </el-form-item>
 
         <el-form-item label="开始时间" prop="startTime">
@@ -152,8 +150,8 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="最多人数" prop="maxParticipants">
-          <el-input-number v-model="scheduleForm.maxParticipants" :min="1" :max="maxCapacity" :step="1" controls-position="right" style="width: 100%" placeholder="请输入最多排课人数" />
+        <el-form-item label="最大人数" prop="maxCapacity">
+          <el-input-number v-model="scheduleForm.maxCapacity" :min="1" :max="100" :step="1" controls-position="right" style="width: 100%" placeholder="请输入最大人数" />
         </el-form-item>
 
         <el-form-item label="备注" prop="notes">
@@ -164,11 +162,6 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="handleDialogClose" :disabled="scheduleDialog.loading">取消</el-button>
-          <template v-if="scheduleDialog.mode === 'edit'">
-            <el-button type="danger" @click="handleDeleteScheduleConfirm" :loading="scheduleDialog.loading">
-              删除
-            </el-button>
-          </template>
           <el-button type="primary" @click="handleSaveSchedule" :loading="scheduleDialog.loading">
             保存
           </el-button>
@@ -181,17 +174,16 @@
       <div v-if="selectedSchedule" class="schedule-detail">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="课程名称">{{ selectedSchedule.courseName }}</el-descriptions-item>
-          <el-descriptions-item label="课程类型">{{ selectedSchedule.courseType }}</el-descriptions-item>
+          <el-descriptions-item label="课程类型">{{ selectedSchedule.courseTypeDesc }}</el-descriptions-item>
           <el-descriptions-item label="教练">{{ selectedSchedule.coachName }}</el-descriptions-item>
-          <el-descriptions-item label="上课地点">{{ location }}</el-descriptions-item>
           <el-descriptions-item label="上课日期">{{ formatDate(selectedSchedule.scheduleDate) }}</el-descriptions-item>
           <el-descriptions-item label="上课时间">
             {{ selectedSchedule.startTime?.slice(0, 5) }} - {{ selectedSchedule.endTime?.slice(0, 5) }}
           </el-descriptions-item>
-          <el-descriptions-item label="最大人数">{{ selectedSchedule.maxParticipants }}</el-descriptions-item>
-          <el-descriptions-item label="当前报名">{{ selectedSchedule.currentParticipants }}</el-descriptions-item>
+          <el-descriptions-item label="最大人数">{{ selectedSchedule.maxCapacity }}</el-descriptions-item>
+          <el-descriptions-item label="当前报名">{{ selectedSchedule.currentEnrollment }}</el-descriptions-item>
           <el-descriptions-item label="剩余名额">{{ selectedSchedule.remainingSlots }}</el-descriptions-item>
-          <el-descriptions-item label="状态">{{ selectedSchedule.status }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{ selectedSchedule.statusDesc }}</el-descriptions-item>
           <el-descriptions-item label="备注" :span="2">
             {{ selectedSchedule.notes || '无' }}
           </el-descriptions-item>
@@ -215,6 +207,17 @@
                 {{ formatDateTime(row.bookingTime) }}
               </template>
             </el-table-column>
+            <el-table-column prop="checkinTime" label="签到时间" width="160">
+              <template #default="{ row }">
+                {{ row.checkinTime ? formatDateTime(row.checkinTime) : '-' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="签到码" width="100">
+              <template #default="{ row }">
+                <span v-if="row.signCode">{{ row.signCode }}</span>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
           </el-table>
         </div>
         <div v-else class="no-booking">
@@ -232,10 +235,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useCourseStore } from '@/stores/course'
 import type { CourseScheduleDTO, CourseScheduleVO } from '@/types/course'
-import { coachApi } from '@/api/coach'
-import { usePermission } from '@/composables/usePermission'
-
-const { hasPermission } = usePermission()
 
 const router = useRouter()
 const route = useRoute()
@@ -247,9 +246,8 @@ const courseId = computed(() => Number(route.params.id))
 // 课程信息
 const courseName = ref('')
 const courseType = ref(1)
-const maxCapacity = ref(20)
 const duration = ref(60)
-const location = ref('')
+const price = ref(0)
 const isGroupCourse = computed(() => courseType.value === 1)
 
 // 排课数据
@@ -272,27 +270,21 @@ const scheduleDialog = reactive({
 const scheduleForm = reactive({
   courseId: 0,
   coachId: undefined as number | undefined,
-  courseDate: '',
+  scheduleDate: '',
   startTime: '',
   endTime: '',
-  maxParticipants: 20,
+  maxCapacity: 20,
   notes: '',
 })
 
 const scheduleRules: FormRules = {
-  courseDate: [{ required: true, message: '请选择课程日期', trigger: 'change' }],
+  scheduleDate: [{ required: true, message: '请选择课程日期', trigger: 'change' }],
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
   coachId: [{ required: true, message: '请选择教练', trigger: 'change' }],
-  maxParticipants: [
-    { required: true, message: '请输入最多人数', trigger: 'blur' },
-    {
-      type: 'number',
-      min: 1,
-      max: maxCapacity.value,
-      message: `最多人数在1-${maxCapacity.value}之间`,
-      trigger: 'blur',
-    },
+  maxCapacity: [
+    { required: true, message: '请输入最大人数', trigger: 'blur' },
+    { type: 'number', min: 1, max: 100, message: '最大人数在1-100之间', trigger: 'blur' },
   ],
 }
 
@@ -300,7 +292,6 @@ const scheduleRules: FormRules = {
 const detailDialog = ref({
   visible: false,
 })
-
 const selectedSchedule = ref<CourseScheduleVO | null>(null)
 
 // 格式化函数
@@ -320,22 +311,20 @@ const getRemainingSlotsType = (slots: number) => {
   return 'danger'
 }
 
-const getScheduleStatusType = (status: string) => {
-  if (status === '正常') return 'success'
-  if (status === '禁用') return 'danger'
-  return 'info'
+const getScheduleStatusType = (status: number) => {
+  return status === 1 ? 'success' : 'danger'
 }
 
 const getBookingStatusType = (status: number) => {
   switch (status) {
     case 0:
-      return 'warning' // 待上课
+      return 'warning'
     case 1:
-      return 'success' // 已签到
+      return 'success'
     case 2:
-      return 'info' // 已完成
+      return 'info'
     case 3:
-      return 'danger' // 已取消
+      return 'danger'
     default:
       return 'info'
   }
@@ -351,10 +340,10 @@ const loadData = async () => {
     if (courseResponse) {
       courseName.value = courseResponse.courseName
       courseType.value = courseResponse.courseType
-      maxCapacity.value = courseResponse.maxCapacity
       duration.value = courseResponse.duration
-      location.value = courseResponse.location || ''
-      // 加载教练列表
+      price.value = courseResponse.price
+
+      // 加载教练列表（从课程绑定的教练中获取）
       coachOptions.value = courseResponse.coaches.map((item) => ({
         id: item.id,
         realName: item.realName,
@@ -376,31 +365,15 @@ const loadData = async () => {
 // 加载排课列表
 const loadSchedules = async () => {
   try {
-    const response = await courseStore.fetchCourseSchedules(courseId.value)
-    if (response) {
-      schedules.value = response
+    const schedulesData = await courseStore.fetchCourseSchedules(courseId.value)
+    if (schedulesData) {
+      schedules.value = schedulesData
     }
   } catch (error) {
     console.error('加载排课列表失败:', error)
     throw error
   }
 }
-
-// 加载教练列表
-// const loadCoachOptions = async () => {
-
-//   const response = await coachApi.getCoachList({})
-//   try {
-//     if (response.code === 200) {
-//       coachOptions.value = response.data.list.map(item => ({
-//         id: item.id,
-//         realName: item.realName
-//       }));
-//     }
-//   } catch (error) {
-//     console.error('加载教练列表失败:', error)
-//   }
-// }
 
 // 日期过滤
 const disabledDate = (time: Date) => {
@@ -434,10 +407,10 @@ const handleAddSchedule = () => {
   Object.assign(scheduleForm, {
     courseId: courseId.value,
     coachId: undefined,
-    courseDate: '',
+    scheduleDate: '',
     startTime: '09:00',
     endTime: '10:00',
-    maxParticipants: maxCapacity.value,
+    maxCapacity: 20,
     notes: '',
   })
 }
@@ -452,10 +425,10 @@ const handleEditSchedule = (schedule: CourseScheduleVO) => {
   Object.assign(scheduleForm, {
     courseId: courseId.value,
     coachId: schedule.coachId,
-    courseDate: schedule.scheduleDate,
+    scheduleDate: schedule.scheduleDate,
     startTime: schedule.startTime.slice(0, 5),
     endTime: schedule.endTime.slice(0, 5),
-    maxParticipants: schedule.maxParticipants,
+    maxCapacity: schedule.maxCapacity,
     notes: schedule.notes || '',
   })
 }
@@ -469,22 +442,16 @@ const handleViewScheduleDetail = (schedule: CourseScheduleVO) => {
 // 删除排课
 const handleDeleteSchedule = async (schedule: CourseScheduleVO) => {
   try {
-    await ElMessageBox.confirm(
-      `确定要删除 ${schedule.scheduleDate} ${schedule.startTime.slice(0, 5)} 的排课吗？`,
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    // 这里应该调用API删除排课
-    // 为了演示，这里从列表中移除
+    scheduleDialog.loading = true
+    // 这里需要调用API删除排课
+    // 暂时从列表中移除
     schedules.value = schedules.value.filter((s) => s.scheduleId !== schedule.scheduleId)
     ElMessage.success('删除成功')
   } catch (error) {
-    // 用户取消
+    console.error('删除排课失败:', error)
+    ElMessage.error('删除失败')
+  } finally {
+    scheduleDialog.loading = false
   }
 }
 
@@ -500,10 +467,10 @@ const handleSaveSchedule = async () => {
     const scheduleData: CourseScheduleDTO = {
       courseId: scheduleForm.courseId,
       coachId: scheduleForm.coachId!,
-      courseDate: scheduleForm.courseDate,
+      scheduleDate: scheduleForm.scheduleDate,
       startTime: scheduleForm.startTime + ':00',
       endTime: scheduleForm.endTime + ':00',
-      maxParticipants: scheduleForm.maxParticipants,
+      maxCapacity: scheduleForm.maxCapacity,
       notes: scheduleForm.notes,
     }
 
@@ -519,32 +486,6 @@ const handleSaveSchedule = async () => {
   } catch (error) {
     console.error('保存排课失败:', error)
     ElMessage.error('保存排课失败')
-  } finally {
-    scheduleDialog.loading = false
-  }
-}
-
-// 确认删除排课
-const handleDeleteScheduleConfirm = async () => {
-  if (!scheduleDialog.editingScheduleId) return
-
-  try {
-    await ElMessageBox.confirm('确定要删除这个排课吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-
-    scheduleDialog.loading = true
-    // 这里应该调用API删除排课
-    schedules.value = schedules.value.filter(
-      (s) => s.scheduleId !== scheduleDialog.editingScheduleId
-    )
-    ElMessage.success('删除排课成功')
-    scheduleDialog.visible = false
-    await loadSchedules()
-  } catch (error) {
-    console.error('删除排课失败:', error)
   } finally {
     scheduleDialog.loading = false
   }
@@ -646,10 +587,6 @@ onMounted(() => {
 .empty-data {
   padding: 40px 0;
   text-align: center;
-}
-
-.empty-actions {
-  margin-top: 20px;
 }
 
 .private-course-notice {

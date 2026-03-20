@@ -40,6 +40,9 @@
             <el-descriptions-item label="教练ID">{{ coachDetail?.id || '-' }}</el-descriptions-item>
             <el-descriptions-item label="手机号">{{ coachDetail?.phone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="专长领域">{{ coachDetail?.specialty || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="性别">
+              {{ coachDetail.gender == 0 ? '女' : coachDetail.gender == 1 ? '男' : '未知' }}
+            </el-descriptions-item>
             <el-descriptions-item label="经验年限">{{ coachDetail?.yearsOfExperience || 0 }}年</el-descriptions-item>
             <el-descriptions-item label="时薪">
               <span class="amount">¥{{ formatAmount(coachDetail?.hourlyRate) }}</span>

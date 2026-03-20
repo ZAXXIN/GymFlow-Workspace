@@ -8,7 +8,6 @@ import type {
   CourseListVO,
   CourseDetail,
   CourseScheduleVO,
-  CourseBookingDTO,
   PageResultVO
 } from '@/types/course'
 
@@ -64,7 +63,6 @@ export const useCourseStore = defineStore('course', () => {
       loading.value = true
       const response = await courseApi.addCourse(data)
       if (response.code === 200) {
-        // 添加成功后重新加载列表
         await fetchCourseList({
           pageNum: pageInfo.value.pageNum,
           pageSize: pageInfo.value.pageSize
@@ -87,11 +85,9 @@ export const useCourseStore = defineStore('course', () => {
       loading.value = true
       const response = await courseApi.updateCourse(courseId, data)
       if (response.code === 200) {
-        // 更新成功后刷新当前课程详情
         if (currentCourse.value?.id === courseId) {
           await fetchCourseDetail(courseId)
         }
-        // 刷新列表
         await fetchCourseList({
           pageNum: pageInfo.value.pageNum,
           pageSize: pageInfo.value.pageSize
@@ -114,11 +110,9 @@ export const useCourseStore = defineStore('course', () => {
       loading.value = true
       const response = await courseApi.deleteCourse(courseId)
       if (response.code === 200) {
-        // 从本地列表中移除
         courseList.value = courseList.value.filter(item => item.id !== courseId)
         total.value -= 1
         
-        // 如果删除的是当前查看的课程，清空当前课程数据
         if (currentCourse.value?.id === courseId) {
           currentCourse.value = null
           courseSchedules.value = []
@@ -134,33 +128,6 @@ export const useCourseStore = defineStore('course', () => {
   }
 
   /**
-   * 批量删除课程
-   */
-  const batchDeleteCourse = async (ids: number[]) => {
-    try {
-      loading.value = true
-      const response = await courseApi.batchDeleteCourse(ids)
-      if (response.code === 200) {
-        // 从本地列表中移除
-        courseList.value = courseList.value.filter(item => !ids.includes(item.id))
-        total.value -= ids.length
-        
-        // 如果删除的包含当前查看的课程，清空当前课程数据
-        if (currentCourse.value && ids.includes(currentCourse.value.id)) {
-          currentCourse.value = null
-          courseSchedules.value = []
-        }
-      }
-      return response
-    } catch (error) {
-      console.error('批量删除课程失败:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
    * 更新课程状态
    */
   const updateCourseStatus = async (courseId: number, status: number) => {
@@ -168,13 +135,11 @@ export const useCourseStore = defineStore('course', () => {
       loading.value = true
       const response = await courseApi.updateCourseStatus(courseId, status)
       if (response.code === 200) {
-        // 更新列表中的状态
         const index = courseList.value.findIndex(item => item.id === courseId)
         if (index !== -1) {
           courseList.value[index].status = status
           courseList.value[index].statusDesc = status === 1 ? '正常' : '禁用'
         }
-        // 更新当前课程的状态
         if (currentCourse.value?.id === courseId) {
           currentCourse.value.status = status
           currentCourse.value.statusDesc = status === 1 ? '正常' : '禁用'
@@ -198,7 +163,6 @@ export const useCourseStore = defineStore('course', () => {
       const response = await courseApi.getCourseDetail(courseId)
       if (response.code === 200) {
         currentCourse.value = response.data
-        // 同时加载该课程的排课
         await fetchCourseSchedules(courseId)
       }
       return response.data
@@ -256,44 +220,11 @@ export const useCourseStore = defineStore('course', () => {
       loading.value = true
       const response = await courseApi.scheduleCourse(data)
       if (response.code === 200 && currentCourse.value) {
-        // 排课成功后刷新排课列表
         await fetchCourseSchedules(currentCourse.value.id)
       }
       return response
     } catch (error) {
       console.error('课程排课失败:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * 会员预约私教课
-   */
-  const bookPrivateCourse = async (memberId: number, coachId: number, courseDate: string, startTime: string) => {
-    try {
-      loading.value = true
-      const response = await courseApi.bookPrivateCourse(memberId, coachId, courseDate, startTime)
-      return response
-    } catch (error) {
-      console.error('预约私教课失败:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * 会员预约团课
-   */
-  const bookGroupCourse = async (memberId: number, scheduleId: number) => {
-    try {
-      loading.value = true
-      const response = await courseApi.bookGroupCourse(memberId, scheduleId)
-      return response
-    } catch (error) {
-      console.error('预约团课失败:', error)
       throw error
     } finally {
       loading.value = false
@@ -365,25 +296,13 @@ export const useCourseStore = defineStore('course', () => {
     }
   }
 
-  // Getters
-  const hasNextPage = () => {
-    return pageInfo.value.pageNum < pageInfo.value.totalPages
-  }
-
-  const hasPrevPage = () => {
-    return pageInfo.value.pageNum > 1
-  }
-
   // 格式化课程列表
   const formattedCourseList = () => {
     return courseList.value.map(course => ({
       ...course,
       priceFormatted: course.price ? `¥${course.price.toFixed(2)}` : '-',
-      enrollmentRateFormatted: course.enrollmentRate ? `${course.enrollmentRate}%` : '0%',
       durationFormatted: course.duration ? `${course.duration}分钟` : '-',
-      statusDesc: course.status === 1 ? '正常' : '禁用',
-      createTimeFormatted: course.createTime ? new Date(course.createTime).toLocaleString() : '-',
-      courseDateFormatted: course.courseDate ? new Date(course.courseDate).toLocaleDateString() : '-'
+      statusDesc: course.status === 1 ? '正常' : '禁用'
     }))
   }
 
@@ -402,14 +321,11 @@ export const useCourseStore = defineStore('course', () => {
     addCourse,
     updateCourse,
     deleteCourse,
-    batchDeleteCourse,
     updateCourseStatus,
     fetchCourseDetail,
     fetchCourseSchedules,
     fetchCourseTimetable,
     scheduleCourse,
-    bookPrivateCourse,
-    bookGroupCourse,
     verifyCourseBooking,
     cancelCourseBooking,
     setPageInfo,
@@ -417,8 +333,6 @@ export const useCourseStore = defineStore('course', () => {
     resetState,
     
     // Getters
-    hasNextPage,
-    hasPrevPage,
     formattedCourseList
   }
 })

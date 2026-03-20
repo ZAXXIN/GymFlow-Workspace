@@ -49,7 +49,6 @@
                 v-model="formData.courseType"
                 placeholder="请选择课程类型"
                 style="width: 100%"
-                @change="handleCourseTypeChange"
               >
                 <el-option label="私教课" :value="0" />
                 <el-option label="团课" :value="1" />
@@ -77,18 +76,6 @@
           </div>
           
           <div class="form-row">
-            <el-form-item label="最大容量" prop="maxCapacity" class="form-item">
-              <el-input-number
-                v-model="formData.maxCapacity"
-                :min="1"
-                :max="formData.courseType === 0 ? 1 : 100"
-                :step="1"
-                controls-position="right"
-                style="width: 100%"
-                placeholder="请输入最大容量"
-              />
-            </el-form-item>
-            
             <el-form-item label="课时长" prop="duration" class="form-item">
               <el-input-number
                 v-model="formData.duration"
@@ -102,9 +89,7 @@
                 <template #append>分钟</template>
               </el-input-number>
             </el-form-item>
-          </div>
-          
-          <div class="form-row">
+            
             <el-form-item label="价格" prop="price" class="form-item">
               <el-input-number
                 v-model="formData.price"
@@ -116,15 +101,6 @@
               >
                 <template #prepend>¥</template>
               </el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="上课地点" prop="location" class="form-item">
-              <el-input 
-                v-model="formData.location"
-                placeholder="请输入上课地点"
-                maxlength="200"
-                clearable
-              />
             </el-form-item>
           </div>
           
@@ -160,9 +136,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useCourseStore } from '@/stores/course'
 import type { CourseBasicDTO } from '@/types/course'
@@ -182,10 +158,8 @@ const formData = reactive<CourseBasicDTO>({
   courseName: '',
   description: '',
   coachIds: [],
-  maxCapacity: 20,
   duration: 60,
   price: 0,
-  location: '',
   notice: ''
 })
 
@@ -214,10 +188,6 @@ const formRules: FormRules = {
       trigger: 'change'
     }
   ],
-  maxCapacity: [
-    { required: true, message: '请输入最大容量', trigger: 'blur' },
-    { type: 'number', min: 1, message: '最大容量不能小于1', trigger: 'blur' }
-  ],
   duration: [
     { required: true, message: '请输入课时长', trigger: 'blur' },
     { type: 'number', min: 1, message: '课时长不能小于1分钟', trigger: 'blur' }
@@ -226,17 +196,6 @@ const formRules: FormRules = {
     { required: true, message: '请输入价格', trigger: 'blur' },
     { type: 'number', min: 0, message: '价格不能为负数', trigger: 'blur' }
   ]
-}
-
-// 课程类型变化处理
-const handleCourseTypeChange = (value: number) => {
-  if (value === 0) {
-    // 私教课最大容量为1
-    formData.maxCapacity = 1
-  } else {
-    // 团课默认容量为20
-    formData.maxCapacity = 20
-  }
 }
 
 // 提交表单
@@ -303,10 +262,8 @@ const initFormData = async () => {
       formData.courseName = course.courseName
       formData.description = course.description || ''
       formData.coachIds = course.coaches.map(coach => coach.id)
-      formData.maxCapacity = course.maxCapacity
       formData.duration = course.duration
       formData.price = course.price
-      formData.location = course.location || ''
       formData.notice = course.notice || ''
     }
   } catch (error) {

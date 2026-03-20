@@ -88,8 +88,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const response = await dashboardApi.getRevenueTrend(period, startDate, endDate)
       if (response.code === 200) {
-        revenueTrend.value = response.data
-        currentPeriod.value = period
+        // 验证数据完整性
+        if (response.data && Array.isArray(response.data.values)) {
+          revenueTrend.value = response.data
+          currentPeriod.value = period
+        } else {
+          ElMessage.warning('营收趋势数据格式异常')
+          revenueTrend.value = null
+        }
       }
       return response.data
     } catch (error) {
@@ -176,9 +182,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // 格式化函数
   const formatRevenue = (value: number) => {
-    if (value >= 10000) {
-      return `¥${(value / 10000).toFixed(1)}万`
-    }
     return `¥${value.toFixed(2)}`
   }
 
@@ -208,7 +211,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     todayCheckIns,
     memberTrend,
     coachTrend,
-    revenueTrend: revenueTrendValue,
+    revenueTrendValue,
     attendanceTrend,
 
     // Actions

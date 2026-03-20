@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { type User, type UserRole } from '@/types'
 import { StorageKeys } from '@/utils/constants'
 import { authApi } from '@/api/auth'
+import { systemConfigApi } from '@/api/settings/systemConfig' // 导入 systemConfig API
 import type { PermissionCode } from '@/types/permission'
 // 导入Element Plus的提示组件（可选，用于统一提示）
 import { ElMessage } from 'element-plus'
@@ -95,9 +96,6 @@ export const useAuthStore = defineStore('auth', () => {
     console.log('========== 用户权限列表 ==========')
     console.log('用户名:', userInfo.value?.username)
     console.log('角色:', userInfo.value?.role === 0 ? '老板' : '前台')
-    // console.log('角色:', userInfo.value?.role === 0 ? '老板' : 
-    // userInfo.value?.role === 1 ? '前台' : 
-    // userInfo.value?.role === 2 ? '教练' : '会员')
     console.log('权限数量:', perms.length)
     console.log('权限列表:', perms)
     console.log('================================')
@@ -120,7 +118,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * 验证token有效性
+   * 验证token有效性 - 改为调用系统配置接口
    */
   const validateToken = async (): Promise<boolean> => {
     if (!token.value) {
@@ -129,10 +127,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      // 调用获取用户信息的接口验证token
-      const response = await authApi.getUserInfo()
-      if (response.code === 200 && response.data) {
-        setUserInfo(response.data)
+      // 调用系统配置接口验证token
+      const response = await systemConfigApi.getConfig()
+      if (response.code === 200) {
+        // 接口调用成功，说明token有效
+        // 注意：这里不设置用户信息，因为系统配置接口不返回用户信息
+        // 用户信息应该已经在登录时存储了
         initialized.value = true
         return true
       } else {
@@ -293,15 +293,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * 刷新用户信息
+   * 刷新用户信息 - 现在调用系统配置接口
    */
   const refreshUserInfo = async () => {
     try {
-      const response: ApiResponse<User> = await authApi.getUserInfo()
-      if (response.code === 200 && response.data) {
-        setUserInfo(response.data)
+      const response = await systemConfigApi.getConfig()
+      if (response.code === 200) {
+        // 系统配置接口不返回用户信息，所以只标记为已初始化
         initialized.value = true
-        return response.data
+        return userInfo.value
       }
       throw new Error(response.message || '刷新用户信息失败')
     } catch (error) {

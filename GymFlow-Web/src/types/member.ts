@@ -7,9 +7,8 @@ export interface MemberQueryDTO {
   memberNo?: string
   realName?: string
   phone?: string
-  // status?: number
-  startDate?: string // YYYY-MM-DD
-  endDate?: string   // YYYY-MM-DD
+  startDate?: string
+  endDate?: string
 }
 
 // 分页结果
@@ -25,44 +24,42 @@ export interface PageResult<T> {
 export interface MemberListVO {
   id: number
   memberNo: string
-  username: string
   phone: string
   realName: string
   gender: number
-  genderDesc: string
   age?: number
-  birthday?: string
-  personalCoachName?: string
   membershipStartDate?: string
   membershipEndDate?: string
-  // status: number
-  // statusDesc: string
   totalCheckins: number
   totalCourseHours: number
   totalSpent: number
   createTime: string
+  // 会员卡信息（如果有）
+  cardType?: number
+  cardStatus?: string
+  cardEndDate?: string
+  remainingSessions?: number
 }
 
-// 会员基本信息
-export interface MemberBasicDTO {
-  username: string
-  password: string
-  phone: string
-  realName: string
-  gender: number
-  birthday?: string
-  idCard?: string
-  height?: number
-  weight?: number
-  address?: string
-  department?: string
-  position?: string
-  personalCoachId?: number
+// 小程序端会员卡DTO（后端返回的格式）
+export interface MiniMemberCardDTO {
+  productId: number
+  productName: string
+  cardType: number
+  cardTypeDesc: string
+  startDate?: string
+  endDate?: string
+  totalSessions?: number
+  usedSessions?: number
+  remainingSessions?: number
+  status: string
+  statusDesc: string
 }
 
-// 健康档案
+// 健康档案（从 health_record 表）
 export interface HealthRecordDTO {
   recordDate: string
+  height?: number
   weight: number
   bodyFatPercentage?: number
   muscleMass?: number
@@ -75,20 +72,6 @@ export interface HealthRecordDTO {
   notes?: string
 }
 
-// 会员卡信息
-export interface MemberCardDTO {
-  productId?: number
-  // cardName: string
-  cardType: number // 0-私教课，1-团课，2-月卡，3-年卡
-  startDate: string
-  endDate: string
-  totalSessions?: number
-  usedSessions?: number
-  remainingSessions?: number
-  amount: number
-  quantity?: number
-}
-
 // 课程记录
 export interface CourseRecordDTO {
   courseId: number
@@ -98,51 +81,39 @@ export interface CourseRecordDTO {
   startTime?: string
   endTime?: string
   location?: string
-  bookingStatus: number // 0-待上课，1-已签到，2-已完成，3-已取消
+  bookingStatus: number
   checkinTime?: string
 }
 
 // 签到记录
 export interface CheckinRecordDTO {
   checkinTime: string
-  checkinMethod: number // 0-教练，1-前台
+  checkinMethod: number
   courseName?: string
   coachName?: string
   notes?: string
 }
 
-// 完整会员信息
+// 完整会员信息（与后端 MemberFullDTO 对应）
 export interface MemberFullDTO {
-  // 会员基本信息
   id: number
-  userId: number
   memberNo: string
   username: string
   phone: string
   realName: string
   gender: number
+  birthday?: string  // 添加 birthday
   createTime: string
-  // status: number
-  
-  // 扩展信息
-  idCard?: string
-  height?: number
-  weight?: number
   membershipStartDate?: string
   membershipEndDate?: string
-  personalCoachName?: string
   totalCheckins: number
   totalCourseHours: number
   totalSpent: number
-  address?: string
-  department?: string
-  position?: string
-  
-  // 关联信息
   healthRecords: HealthRecordDTO[]
-  memberCards: MemberCardDTO[]
+  memberCards: MiniMemberCardDTO[]
+  courses: MyCourseDTO[]
   courseRecords: CourseRecordDTO[]
-  checkinRecords: CheckinRecordDTO[]
+  checkinRecords: CheckInRecordDTO[]
 }
 
 // 添加会员请求
@@ -159,22 +130,31 @@ export interface MemberUpdateRequest {
   cardDTO?: MemberCardDTO
 }
 
+// 会员基本信息（用于新增/编辑表单）
+export interface MemberBasicDTO {
+  phone: string
+  password?: string
+  realName: string
+  gender: number
+  birthday?: string
+}
+
+// 会员卡信息（用于新增/编辑表单）
+export interface MemberCardDTO {
+  productId?: number
+  productName?: string
+  cardType: number  // 0-私教课,1-团课,2-月卡,3-年卡,4-周卡,5-其他
+  startDate?: string
+  endDate?: string
+  totalSessions?: number
+  remainingSessions?: number
+  amount?: number
+}
+
 // 会员统计数据
 export interface MemberStats {
   totalMembers: number
   activeMembers: number
   newMembersToday: number
   expiringMembers: number
-  genderDistribution: Array<{
-    gender: string
-    count: number
-  }>
-  ageDistribution: Array<{
-    range: string
-    count: number
-  }>
-  membershipDistribution: Array<{
-    type: string
-    count: number
-  }>
 }
