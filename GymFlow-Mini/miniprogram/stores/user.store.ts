@@ -39,12 +39,11 @@ class UserStore {
       role: role,
       // 会员字段 - 从 userId 获取 memberId
       memberId: userInfo.userType === 0 ? userInfo.userId : undefined,
-      memberNo: userInfo.memberNo, // 直接使用返回的 memberNo
-      // 教练字段（预留）
+      memberNo: userInfo.memberNo,
+      // 教练字段
       coachId: userInfo.userType === 1 ? userInfo.userId : undefined,
       
-      // 其他会员信息（这些可能需要从后续的 /mini/member/my-info 接口获取）
-      // 暂时设为 undefined，等加载 my-info 后再更新
+      // 其他会员信息
       membershipStartDate: undefined,
       membershipEndDate: undefined,
       totalCheckins: 0,
@@ -93,6 +92,12 @@ class UserStore {
       
       wx.removeStorageSync('userInfo')
       wx.removeStorageSync('token')
+      
+      // 重置 TabBar 为默认会员配置
+      const app = getApp() as any
+      if (app && app.setMemberTabBar) {
+        app.setMemberTabBar()
+      }
     }
   }
 
@@ -136,7 +141,7 @@ class UserStore {
     return this._userInfo?.realName
   }
 
-  // 会员特有字段（从 my-info 接口获取）
+  // 会员特有字段
   get membershipStartDate() {
     return this._userInfo?.membershipStartDate
   }
@@ -189,7 +194,6 @@ class UserStore {
     return this._userInfo?.address
   }
 
-  // 会员卡信息
   get cards() {
     return this._userInfo?.cards || []
   }

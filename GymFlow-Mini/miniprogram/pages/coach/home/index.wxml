@@ -1,30 +1,29 @@
+<page-layout>
 <view class="coach-home">
-  <!-- 用户信息头部 -->
+  <!-- 头部 -->
   <view class="coach-home-header">
-    <view class="coach-home-header-bg"></view>
-    <view class="coach-home-header-content">
-      <view class="coach-home-info">
-        <view class="coach-home-name">{{coachInfo.realName || '教练'}}</view>
-        <view class="coach-home-title">{{coachInfo.specialty || '健身教练'}}</view>
-        <view class="coach-home-stats">
-          <view class="coach-home-stat-item">
-            <text class="coach-home-stat-value">{{coachInfo.totalStudents || 0}}</text>
-            <text class="coach-home-stat-label">学员</text>
-          </view>
-          <view class="coach-home-stat-item">
-            <text class="coach-home-stat-value">{{coachInfo.totalCourses || 0}}</text>
-            <text class="coach-home-stat-label">课程</text>
-          </view>
-          <view class="coach-home-stat-item">
-            <text class="coach-home-stat-value">{{coachInfo.yearsOfExperience || 0}}</text>
-            <text class="coach-home-stat-label">经验(年)</text>
-          </view>
+    <view class="coach-home-header-top">
+      <view class="coach-home-header-left">
+        <text class="coach-home-greeting">Hi, {{coachInfo.realName || '教练'}}</text>
+        <text class="coach-home-title">{{coachInfo.specialty || '健身教练'}}</text>
+      </view>
+      <view class="coach-home-header-right">
+        <view class="coach-home-message" bindtap="goToMessage">
+          <message-badge dot="{{false}}" count="{{unreadCount ? unreadCount : 0}}">
+            <image class="coach-home-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
+          </message-badge>
         </view>
       </view>
-      <view class="coach-home-message" bindtap="goToMessage">
-        <image class="coach-home-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
-        <message-badge count="{{unreadCount}}" dot="{{false}}"></message-badge>
-      </view>
+    </view>
+    
+    <!-- 日期选择 + 今日按钮 -->
+    <view class="coach-home-date">
+      <date-picker 
+        value="{{selectedDate}}"
+        placeholder="选择日期"
+        bindchange="onDateChange"
+      ></date-picker>
+      <view class="coach-home-today" bindtap="onTodayTap">今天</view>
     </view>
   </view>
   
@@ -36,22 +35,13 @@
     <view class="coach-home-reminder-content">
       <view class="coach-home-reminder-title">当前上课提醒</view>
       <view class="coach-home-reminder-info">
-        <text>{{currentReminder.memberName}} - {{currentReminder.courseName}}</text>
+        <text class="coach-home-reminder-course">{{currentReminder.memberName}} - {{currentReminder.courseName}}</text>
         <text class="coach-home-reminder-time">{{currentReminder.bookingTime}}</text>
       </view>
     </view>
-    <image class="coach-home-reminder-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-  </view>
-  
-  <!-- 日期选择 -->
-  <view class="coach-home-date">
-    <date-picker 
-      value="{{selectedDate}}"
-      placeholder="选择日期"
-      bindchange="onDateChange"
-    ></date-picker>
-    
-    <view class="coach-home-today" bindtap="onTodayTap">今天</view>
+    <view class="coach-home-reminder-arrow">
+      <image src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+    </view>
   </view>
   
   <!-- 课表列表 -->
@@ -121,3 +111,7 @@
     </view>
   </view>
 </view>
+
+<!-- 自定义 TabBar -->
+<tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
+</page-layout>

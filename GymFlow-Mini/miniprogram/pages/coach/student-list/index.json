@@ -3,6 +3,7 @@
   "navigationBarBackgroundColor": "#07c160",
   "navigationBarTextStyle": "white",
   "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
     "empty-state": "/components/empty-state/index",
     "loading": "/components/loading/index"
   }

@@ -1,4 +1,5 @@
 // 会员端我的页面逻辑
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
 import { getMyMemberInfo } from '../../../services/api/member.api'
@@ -7,6 +8,7 @@ import { formatDate } from '../../../utils/date'
 
 Page({
   data: {
+    selectedTab: 0,
     // 用户信息
     userInfo: null,
     
@@ -67,6 +69,14 @@ Page({
   },
 
   onLoad: function() {
+    // 获取当前页面在 TabBar 中的索引
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const pagePath = '/' + currentPage.route
+    this.setData({
+      selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+    })
+
     this.initData()
   },
 
@@ -75,6 +85,11 @@ Page({
     // 不自动加载订单列表
     this.loadUserInfo()
     this.updateUnreadCount()
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

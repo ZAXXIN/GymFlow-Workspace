@@ -1,4 +1,5 @@
 // 会员端首页逻辑
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { configStore } from '../../../stores/config.store'
 import { getCurrentReminder } from '../../../services/api/checkin.api'
@@ -7,6 +8,7 @@ import { showToast } from '../../../utils/wx-util'
 
 Page({
   data: {
+    selectedTab: 0,
     // 用户信息
     userInfo: null,
     
@@ -39,6 +41,14 @@ Page({
   },
 
   onLoad: function() {
+     // 获取当前页面在 TabBar 中的索引
+     const pages = getCurrentPages()
+     const currentPage = pages[pages.length - 1]
+     const pagePath = '/' + currentPage.route
+     this.setData({
+       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+     })
+
     // 获取app实例
     const app = getApp()
     console.log('会员信息:', userStore.userInfo)
@@ -54,6 +64,11 @@ Page({
   onShow: function() {
     // 每次显示页面时刷新提醒
     this.loadCurrentReminder()
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

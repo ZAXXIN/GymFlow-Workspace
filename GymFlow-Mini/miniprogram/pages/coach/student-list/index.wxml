@@ -104,4 +104,7 @@
     <image class="student-list-scan-icon" src="/assets/icons/scan.png" mode="aspectFit"></image>
     <text>扫码核销</text>
   </view>
+  
+  <!-- 自定义 TabBar -->
+  <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
 </view>

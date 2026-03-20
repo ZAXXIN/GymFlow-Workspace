@@ -1,0 +1,20 @@
+<view class="tab-bar" wx:if="{{show}}">
+  <view 
+    wx:for="{{list}}" 
+    wx:key="index"
+    class="tab-item {{selected === index ? 'active' : ''}}"
+    bindtap="switchTab"
+    data-index="{{index}}"
+    data-path="{{item.pagePath}}"
+  >
+    <image 
+      class="tab-icon" 
+      src="{{selected === index ? item.selectedIconPath : item.iconPath}}"
+      mode="aspectFit"
+    />
+    <text class="tab-text">{{item.text}}</text>
+    <view wx:if="{{item.badge && item.badge > 0}}" class="badge">
+      {{item.badge > 99 ? '99+' : item.badge}}
+    </view>
+  </view>
+</view>

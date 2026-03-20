@@ -21,9 +21,7 @@
     "pages/common/message-list/index",
     "pages/common/search-result/index",
     "pages/common/modify-password/index",
-    "components/global-bg/index",
-    "components/page-container/index",
-    "components/page-layout/index"
+    "components/tab-bar/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -32,35 +30,10 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f5f5"
   },
-  "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#07c160",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
-    "list": [
-      {
-        "pagePath": "pages/member/home/index",
-        "text": "首页",
-        "iconPath": "assets/icons/member/home.png",
-        "selectedIconPath": "assets/icons/member/home-active.png"
-      },
-      {
-        "pagePath": "pages/member/booking/index",
-        "text": "预约",
-        "iconPath": "assets/icons/member/booking.png",
-        "selectedIconPath": "assets/icons/member/booking-active.png"
-      },
-      {
-        "pagePath": "pages/member/my/index",
-        "text": "我的",
-        "iconPath": "assets/icons/member/my.png",
-        "selectedIconPath": "assets/icons/member/my-active.png"
-      }
-    ]
-  },
   "usingComponents": {
     "page-layout": "/components/page-layout/index",
-    "global-bg": "/components/global-bg/index"
+    "global-bg": "/components/global-bg/index",
+    "tab-bar": "/components/tab-bar/index"
   },
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

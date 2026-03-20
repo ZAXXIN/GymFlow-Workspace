@@ -1,4 +1,5 @@
 // 教练端财务页面逻辑
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { getFinanceStats } from '../../../services/api/coach.api'
 import { showToast } from '../../../utils/wx-util'
@@ -6,6 +7,7 @@ import { formatDate } from '../../../utils/date'
 
 Page({
   data: {
+    selectedTab: 0,
     // 当前选中周期 0-日 1-月 2-年
     activePeriod: 1,
     
@@ -39,11 +41,24 @@ Page({
   },
 
   onLoad() {
+    // 获取当前页面在 TabBar 中的索引
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const pagePath = '/' + currentPage.route
+    this.setData({
+      selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+    })
+
     this.loadFinanceStats()
   },
 
   onPullDownRefresh() {
     this.loadFinanceStats(true)
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

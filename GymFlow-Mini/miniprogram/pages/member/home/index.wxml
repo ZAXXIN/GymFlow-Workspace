@@ -87,4 +87,7 @@
     ></empty-state>
   </view>
 </view>
+
+<!-- 自定义 TabBar -->
+<tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
 </page-layout>

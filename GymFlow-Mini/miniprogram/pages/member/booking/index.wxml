@@ -3,64 +3,39 @@
     <!-- 固定顶部区域 -->
     <view class="booking-fixed-header">
       <!-- Tab导航 -->
-      <tab-nav 
-        tabs="{{['可预约', '我的预约']}}"
-        current="{{activeTab}}"
-        bindchange="onTabChange"
-      ></tab-nav>
-      
+      <tab-nav tabs="{{['可预约', '我的预约']}}" current="{{activeTab}}" bindchange="onTabChange"></tab-nav>
+
       <!-- 可预约Tab的搜索栏（固定在顶部） -->
       <view class="booking-search" wx:if="{{activeTab === 0}}">
-        <search-bar 
-          placeholder="搜索课程、教练..."
-          value="{{keyword}}"
-          showCancel="{{false}}"
-          bindinput="onSearchInput"
-          bindsearch="onSearch"
-          bindclear="onSearchClear"
-        ></search-bar>
+        <search-bar placeholder="搜索课程、教练..." value="{{keyword}}" showCancel="{{false}}" bindinput="onSearchInput"
+          bindsearch="onSearch" bindclear="onSearchClear"></search-bar>
       </view>
-      
+
       <!-- 我的预约Tab的状态Tab（固定在顶部） -->
       <view class="booking-status-tabs" wx:if="{{activeTab === 1}}">
         <view class="booking-status-tabs-container">
-          <view 
-            class="booking-status-tab {{item.value === bookingStatus ? 'booking-status-tab-active' : ''}}"
-            wx:for="{{statusTabs}}"
-            wx:key="value"
-            data-value="{{item.value}}"
-            bindtap="onStatusTabTap"
-          >
+          <view class="booking-status-tab {{item.value === bookingStatus ? 'booking-status-tab-active' : ''}}"
+            wx:for="{{statusTabs}}" wx:key="value" data-value="{{item.value}}" bindtap="onStatusTabTap">
             <text class="booking-status-tab-text">{{item.label}}</text>
           </view>
         </view>
       </view>
     </view>
-    
+
     <!-- 可滚动内容区域 -->
-    <scroll-view 
-      class="booking-scroll-content" 
-      scroll-y 
-      enhanced
-      show-scrollbar="{{false}}"
-      bindscrolltolower="onScrollToLower"
-      lower-threshold="100"
-    >
+    <scroll-view class="booking-scroll-content" scroll-y enhanced show-scrollbar="{{false}}"
+      bindscrolltolower="onScrollToLower" lower-threshold="100">
       <!-- 可预约Tab的内容 -->
       <view class="booking-tab-content" wx:if="{{activeTab === 0}}">
         <!-- 课程列表 -->
         <view class="booking-course-list">
           <block wx:for="{{availableCourses}}" wx:key="scheduleId" wx:for-item="course">
-            <view 
-              class="booking-course-item" 
-              data-course="{{course}}"
-              bindtap="onCourseTap"
-            >
+            <view class="booking-course-item" data-course="{{course}}" bindtap="onCourseTap">
               <view class="booking-course-header">
                 <view class="booking-course-title">{{course.courseName}}</view>
                 <view class="booking-course-tag">{{course.courseType}}</view>
               </view>
-              
+
               <view class="booking-course-info">
                 <view class="booking-course-info-item">
                   <image class="booking-course-info-icon" src="/assets/icons/coach.png" mode="aspectFit"></image>
@@ -75,81 +50,71 @@
                   <text>{{course.location || '未指定'}}</text>
                 </view>
               </view>
-              
+
               <view class="booking-course-footer">
                 <view class="booking-course-price">¥{{course.price}}</view>
-                <view class="booking-course-capacity {{course.remainingSlots <= 5 ? 'booking-course-capacity-warning' : ''}}">
+                <view
+                  class="booking-course-capacity {{course.remainingSlots <= 5 ? 'booking-course-capacity-warning' : ''}}">
                   {{getRemainingText(course.remainingSlots)}}
                 </view>
               </view>
             </view>
           </block>
-          
+
           <!-- 加载中 -->
           <view class="booking-loading" wx:if="{{availableLoading}}">
             <loading type="circular" text="加载中..."></loading>
           </view>
-          
+
           <!-- 没有更多 -->
           <view class="booking-nomore" wx:if="{{!availableHasMore && availableCourses.length > 0}}">
             <text>没有更多了</text>
           </view>
-          
+
           <!-- 空状态 -->
-          <empty-state 
-            wx:if="{{!availableLoading && availableCourses.length === 0}}"
-            show="{{true}}"
-            text="暂无可预约课程"
-          ></empty-state>
+          <empty-state wx:if="{{!availableLoading && availableCourses.length === 0}}" show="{{true}}" text="暂无可预约课程">
+          </empty-state>
         </view>
       </view>
-      
+
       <!-- 我的预约Tab的内容 -->
       <view class="booking-tab-content" wx:if="{{activeTab === 1}}">
         <!-- 预约列表 -->
         <view class="booking-list">
           <block wx:for="{{myBookings}}" wx:key="id">
-            <booking-card 
-              booking="{{item}}"
-              showActions="{{item.bookingStatus === 0}}"
-              bindtap="onBookingTap"
-              bindcancel="onCancelBooking"
-              bindcheckin="onViewCheckinCode"
-            ></booking-card>
+            <booking-card booking="{{item}}" showActions="{{item.bookingStatus === 0}}" bindtap="onBookingTap"
+              bindcancel="onCancelBooking" bindcheckin="onViewCheckinCode"></booking-card>
           </block>
-          
+
           <!-- 加载中 -->
           <view class="booking-loading" wx:if="{{myLoading}}">
             <loading type="circular" text="加载中..."></loading>
           </view>
-          
+
           <!-- 没有更多 -->
           <view class="booking-nomore" wx:if="{{!myHasMore && myBookings.length > 0}}">
             <text>没有更多了</text>
           </view>
-          
+
           <!-- 空状态 -->
-          <empty-state 
-            wx:if="{{!myLoading && myBookings.length === 0}}"
-            show="{{true}}"
-            text="暂无预约记录"
-          ></empty-state>
+          <empty-state wx:if="{{!myLoading && myBookings.length === 0}}" show="{{true}}" text="暂无预约记录"></empty-state>
         </view>
       </view>
-      
+
       <!-- 底部安全区域 -->
       <view class="booking-safe-bottom"></view>
     </scroll-view>
-    
+
     <!-- 预约弹窗 -->
     <view class="booking-modal" wx:if="{{showBookingModal}}">
       <view class="booking-modal-mask" bindtap="onCloseBookingModal"></view>
       <view class="booking-modal-content">
         <view class="booking-modal-header">
           <text class="booking-modal-title">确认预约</text>
-          <image class="booking-modal-close" src="/assets/icons/close.png" mode="aspectFit" bindtap="onCloseBookingModal"></image>
+          <image class="booking-modal-close" src="/assets/icons/close.png" mode="aspectFit"
+            bindtap="onCloseBookingModal"></image>
         </view>
-        
+
         <view class="booking-modal-body" wx:if="{{selectedCourse}}">
           <view class="booking-modal-info">
             <view class="booking-modal-info-item">
@@ -163,7 +128,8 @@
             <view class="booking-modal-info-item">
               <text class="booking-modal-info-label">时间</text>
               <text class="booking-modal-info-value">
-                {{selectedCourse.scheduleDate}} {{formatTime(selectedCourse.startTime)}}-{{formatTime(selectedCourse.endTime)}}
+                {{selectedCourse.scheduleDate}}
+                {{formatTime(selectedCourse.startTime)}}-{{formatTime(selectedCourse.endTime)}}
               </text>
             </view>
             <view class="booking-modal-info-item">
@@ -176,18 +142,18 @@
             </view>
           </view>
         </view>
-        
+
         <view class="booking-modal-footer">
           <button class="booking-modal-btn booking-modal-btn-cancel" bindtap="onCloseBookingModal">取消</button>
-          <button 
-            class="booking-modal-btn booking-modal-btn-confirm" 
-            bindtap="onConfirmBooking"
-            disabled="{{bookingLoading}}"
-          >
+          <button class="booking-modal-btn booking-modal-btn-confirm" bindtap="onConfirmBooking"
+            disabled="{{bookingLoading}}">
             {{bookingLoading ? '预约中...' : '确认预约'}}
           </button>
         </view>
       </view>
     </view>
   </view>
+
+  <!-- 自定义 TabBar -->
+  <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
 </page-layout>

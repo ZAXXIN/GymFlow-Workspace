@@ -1,4 +1,5 @@
 // 教练端我的页面逻辑
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
 import { getMyCoachInfo } from '../../../services/api/coach.api'
@@ -6,6 +7,7 @@ import { showModal } from '../../../utils/wx-util'
 
 Page({
   data: {
+    selectedTab: 0,
     // 教练信息
     coachInfo: {
       realName: '',
@@ -27,6 +29,14 @@ Page({
   },
 
   onLoad() {
+    // 获取当前页面在 TabBar 中的索引
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const pagePath = '/' + currentPage.route
+    this.setData({
+      selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+    })
+
     this.initData()
   },
 
@@ -34,6 +44,11 @@ Page({
     // 每次显示时刷新数据
     this.loadCoachInfo()
     this.updateUnreadCount()
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

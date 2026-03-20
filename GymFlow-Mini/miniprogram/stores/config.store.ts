@@ -7,7 +7,7 @@ export class ConfigStore {
   private _checkinRules: CheckinRules | null = null
   private _systemConfig: SystemConfig | null = null
   private _systemName: string = 'GymFlow健身'
-  private _systemLogo: string = '/logo.jpg'
+  private _systemLogo: string = '/assets/icons/logo.jpg'
   private _checkinRulesLoaded: boolean = false
   private _systemConfigLoaded: boolean = false
 
@@ -42,7 +42,7 @@ export class ConfigStore {
       // 更新系统名称和logo
       if (config && config.basic) {
         this._systemName = config.basic.systemName || 'GymFlow健身'
-        this._systemLogo = config.basic.systemLogo || '/logo.jpg'
+        this._systemLogo = config.basic.systemLogo || '/assets/icons/logo.jpg'
       }
       
       // 如果配置中有签到规则，也一并更新

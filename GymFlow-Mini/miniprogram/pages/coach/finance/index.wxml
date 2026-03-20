@@ -142,4 +142,7 @@
   <view class="coach-finance-range" wx:if="{{!loading && dataPoints.length > 0}}">
     <text class="coach-finance-range-text">统计周期: {{startDate}} 至 {{endDate}}</text>
   </view>
+
+  <!-- 自定义 TabBar -->
+  <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
 </view>

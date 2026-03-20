@@ -1,4 +1,5 @@
 // 教练端首页逻辑
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
 import { getMyCoachInfo, getMySchedule } from '../../../services/api/coach.api'
@@ -8,6 +9,7 @@ import { showToast } from '../../../utils/wx-util'
 
 Page({
   data: {
+    selectedTab: 0,
     // 教练信息
     coachInfo: {
       realName: '',
@@ -34,6 +36,14 @@ Page({
   },
 
   onLoad() {
+     // 获取当前页面在 TabBar 中的索引
+     const pages = getCurrentPages()
+     const currentPage = pages[pages.length - 1]
+     const pagePath = '/' + currentPage.route
+     this.setData({
+       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+     })
+
     // 设置默认日期为今天
     const today = new Date()
     const year = today.getFullYear()
@@ -57,6 +67,11 @@ Page({
 
   onPullDownRefresh() {
     this.refreshData()
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

@@ -221,7 +221,7 @@ declare namespace WechatMiniprogram.Component {
          **/
         groupSetData(callback?: () => void): void
         /**
-         * 返回当前页面的 custom-tab-bar 的组件实例
+         * 返回当前页面的 tab-bar 的组件实例
          *
          * 最低基础库版本：[`2.6.2`](https://developers.weixin.qq.com/miniprogram/dev/framework/compatibility.html)
          **/

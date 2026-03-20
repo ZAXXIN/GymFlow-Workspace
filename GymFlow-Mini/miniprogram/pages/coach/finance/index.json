@@ -4,6 +4,7 @@
   "navigationBarTextStyle": "white",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
     "tab-nav": "/components/tab-nav/index",
     "stat-card": "/components/stat-card/index",
     "chart-card": "/components/chart-card/index",

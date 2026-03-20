@@ -3,6 +3,7 @@
   "navigationBarBackgroundColor": "#07c160",
   "navigationBarTextStyle": "white",
   "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
     "message-badge": "/components/message-badge/index"
   }
 }

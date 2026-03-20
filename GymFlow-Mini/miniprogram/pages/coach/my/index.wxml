@@ -106,4 +106,7 @@
   <view class="coach-my-footer">
     <text class="coach-my-footer-text">© 2026 GymFlow 健身管理系统</text>
   </view>
+
+  <!-- 自定义 TabBar -->
+  <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
 </view>

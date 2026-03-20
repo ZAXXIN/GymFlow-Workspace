@@ -1,4 +1,5 @@
 // 教练端课程学员列表页面
+import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { getCourseStudents } from '../../../services/api/coach.api'
 import { scanCheckin } from '../../../services/api/checkin.api'
 import { formatTime, formatDateTime } from '../../../utils/date'
@@ -7,6 +8,7 @@ import { configStore } from '../../../stores/config.store'
 
 Page({
   data: {
+    selectedTab: 0,
     // 课程ID
     courseId: 0,
     
@@ -27,6 +29,14 @@ Page({
   },
 
   onLoad(options: any) {
+    // 获取当前页面在 TabBar 中的索引
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const pagePath = '/' + currentPage.route
+    this.setData({
+      selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+    })
+
     const { courseId, courseName } = options
     
     if (!courseId) {
@@ -43,6 +53,11 @@ Page({
     })
     
     this.initData()
+  },
+
+  onTabChange(e: any) {
+    const { index } = e.detail
+    this.setData({ selectedTab: index })
   },
 
   /**

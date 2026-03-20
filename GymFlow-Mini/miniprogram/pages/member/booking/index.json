@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "预约",
   "usingComponents": {
+    "tab-bar": "/components/tab-bar/index",
     "tab-nav": "/components/tab-nav/index",
     "search-bar": "/components/search-bar/index",
     "loading": "/components/loading/index",
