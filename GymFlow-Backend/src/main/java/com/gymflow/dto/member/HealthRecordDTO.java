@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
+import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -13,6 +14,8 @@ import java.time.LocalDate;
 @Data
 @Schema(description = "健康记录DTO")
 public class HealthRecordDTO {
+    @Schema(description = "健康记录ID")
+    private Long id;
 
     @NotNull(message = "记录日期不能为空")
     @Schema(description = "记录日期", example = "2026-01-28", required = true)
@@ -27,7 +30,7 @@ public class HealthRecordDTO {
     private BigDecimal weight;
 
     @DecimalMin(value = "0.00", message = "体脂率不能小于0")
-    @DecimalMin(value = "100.00", message = "体脂率不能大于100")
+    @DecimalMax(value = "100.00", message = "体脂率不能大于100")
     @Schema(description = "体脂率（%）", example = "18.5")
     private BigDecimal bodyFatPercentage;
 

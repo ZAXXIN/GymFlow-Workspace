@@ -218,7 +218,8 @@ public class MemberServiceImpl implements MemberService {
         Member member = new Member();
         member.setMemberNo(generateMemberNo()); // 后端自动生成会员编号
         member.setPhone(basicDTO.getPhone());
-        member.setPassword(bCryptUtil.encodePassword(basicDTO.getPassword()));
+        //密码默认123456
+        member.setPassword(bCryptUtil.encodePassword("123456"));
         member.setRealName(basicDTO.getRealName());
         member.setGender(basicDTO.getGender());
         member.setBirthday(basicDTO.getBirthday());
@@ -303,37 +304,20 @@ public class MemberServiceImpl implements MemberService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = null;
 
-        // 根据卡类型计算结束日期
-        switch (cardDTO.getCardType()) {
-            case 0: // 会籍卡 - 年卡
-            case 3: // 年卡
-                endDate = today.plusYears(1);
-                break;
-            case 2: // 月卡
-                endDate = today.plusMonths(1);
-                break;
-            case 4: // 周卡
-                endDate = today.plusWeeks(1);
-                break;
-            case 1: // 私教课
-            case 5: // 团课
-                // 课程卡，从商品详情获取有效期
-                if (cardDTO.getProductId() != null) {
-                    ProductDetail productDetail = productDetailMapper.selectOne(
-                            new LambdaQueryWrapper<ProductDetail>()
-                                    .eq(ProductDetail::getProductId, cardDTO.getProductId())
-                    );
-                    if (productDetail != null && productDetail.getValidityDays() != null) {
-                        endDate = today.plusDays(productDetail.getValidityDays());
-                    } else {
-                        endDate = today.plusMonths(6); // 默认6个月
-                    }
-                } else {
-                    endDate = today.plusMonths(6);
-                }
-                break;
-            default:
-                endDate = today.plusDays(30);
+        // 根据商品ID获取商品信息
+        Product product = productMapper.selectById(cardDTO.getProductId());
+        if (product == null) {
+            throw new BusinessException("商品不存在");
+        }
+
+        // 根据商品的有效期天数计算结束日期
+        if (product.getValidityDays() != null && product.getValidityDays() > 0) {
+            endDate = today.plusDays(product.getValidityDays());
+            log.info("商品有效期天数：{}，结束日期：{}", product.getValidityDays(), endDate);
+        } else {
+            // 如果没有有效期天数，默认30天
+            endDate = today.plusDays(30);
+            log.warn("商品未设置有效期天数，使用默认30天");
         }
 
         OrderItem orderItem = new OrderItem();
@@ -348,7 +332,7 @@ public class MemberServiceImpl implements MemberService {
         orderItem.setValidityEndDate(endDate);
 
         // 设置课时数（用于课程卡）
-        if (cardDTO.getCardType() == 1 || cardDTO.getCardType() == 5) {
+        if (cardDTO.getCardType() == 1 || cardDTO.getCardType() == 2) {
             orderItem.setTotalSessions(cardDTO.getTotalSessions() != null ?
                     cardDTO.getTotalSessions() : 10);
             orderItem.setRemainingSessions(cardDTO.getTotalSessions() != null ?
@@ -367,7 +351,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateMember(Long memberId, MemberBasicDTO basicDTO, MemberCardDTO cardDTO) {
+    public void updateMember(Long memberId, MemberBasicDTO basicDTO, HealthRecordDTO healthRecordDTO) {
         log.info("开始更新会员，ID：{}", memberId);
 
         Member member = memberMapper.selectById(memberId);
@@ -375,6 +359,7 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("会员不存在");
         }
 
+        // 检查手机号是否已被其他会员使用
         if (!member.getPhone().equals(basicDTO.getPhone())) {
             LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(Member::getPhone, basicDTO.getPhone());
@@ -385,30 +370,11 @@ public class MemberServiceImpl implements MemberService {
             }
         }
 
+        // 更新基本信息（不更新密码）
         member.setPhone(basicDTO.getPhone());
-
-        if (StringUtils.hasText(basicDTO.getPassword())) {
-            member.setPassword(bCryptUtil.encodePassword(basicDTO.getPassword()));
-        }
-
         member.setRealName(basicDTO.getRealName());
         member.setGender(basicDTO.getGender());
         member.setBirthday(basicDTO.getBirthday());
-
-        // 如果有会员卡信息，更新会籍时间和总消费
-        if (cardDTO != null) {
-            calculateMembershipDates(member, cardDTO);
-
-            // 累加新卡金额到总消费
-            if (cardDTO.getAmount() != null) {
-                BigDecimal currentTotal = member.getTotalSpent() != null ?
-                        member.getTotalSpent() : BigDecimal.ZERO;
-                member.setTotalSpent(currentTotal.add(cardDTO.getAmount()));
-            }
-
-            // 创建新订单
-            createOrderForNewMember(memberId, cardDTO);
-        }
 
         member.setUpdateTime(LocalDateTime.now());
 
@@ -417,41 +383,95 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("更新会员失败");
         }
 
-        log.info("更新会员成功，ID：{}，新总消费：{}", memberId, member.getTotalSpent());
+        // 更新健康档案（根据 id 判断是更新还是新增）
+        if (healthRecordDTO != null) {
+            if (healthRecordDTO.getId() != null) {
+                // 有 id，更新现有记录
+                HealthRecord existingRecord = healthRecordMapper.selectById(healthRecordDTO.getId());
+                if (existingRecord == null) {
+                    throw new BusinessException("健康记录不存在");
+                }
+                // 检查是否属于该会员
+                if (!existingRecord.getMemberId().equals(memberId)) {
+                    throw new BusinessException("无权修改其他会员的健康记录");
+                }
+
+                BeanUtils.copyProperties(healthRecordDTO, existingRecord, "id", "memberId", "createTime");
+                existingRecord.setUpdateTime(LocalDateTime.now());
+
+                // 重新计算BMI
+                if (existingRecord.getHeight() != null && existingRecord.getWeight() != null) {
+                    BigDecimal heightInM = existingRecord.getHeight().divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                    BigDecimal bmi = existingRecord.getWeight().divide(
+                            heightInM.multiply(heightInM), 1, RoundingMode.HALF_UP);
+                    existingRecord.setBmi(bmi);
+                }
+
+                healthRecordMapper.updateById(existingRecord);
+                log.info("更新健康档案成功，记录ID：{}", existingRecord.getId());
+            } else {
+                // 无 id，新增记录
+                // 检查该日期是否已有记录
+                LambdaQueryWrapper<HealthRecord> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(HealthRecord::getMemberId, memberId)
+                        .eq(HealthRecord::getRecordDate, healthRecordDTO.getRecordDate());
+                HealthRecord existingRecord = healthRecordMapper.selectOne(queryWrapper);
+
+                if (existingRecord != null) {
+                    throw new BusinessException("该日期已存在健康记录，请编辑已有记录");
+                }
+
+                HealthRecord newRecord = new HealthRecord();
+                BeanUtils.copyProperties(healthRecordDTO, newRecord);
+                newRecord.setMemberId(memberId);
+                newRecord.setCreateTime(LocalDateTime.now());
+                newRecord.setUpdateTime(LocalDateTime.now());
+
+                // 计算BMI
+                if (newRecord.getHeight() != null && newRecord.getWeight() != null) {
+                    BigDecimal heightInM = newRecord.getHeight().divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                    BigDecimal bmi = newRecord.getWeight().divide(
+                            heightInM.multiply(heightInM), 1, RoundingMode.HALF_UP);
+                    newRecord.setBmi(bmi);
+                }
+
+                healthRecordMapper.insert(newRecord);
+                log.info("新增健康档案成功，记录ID：{}", newRecord.getId());
+            }
+        }
+
+        log.info("更新会员成功，ID：{}", memberId);
     }
 
     /**
-     * 根据会员卡类型计算会籍开始和结束日期
+     * 根据会员卡商品信息计算会籍开始和结束日期
      */
     private void calculateMembershipDates(Member member, MemberCardDTO cardDTO) {
-        if (cardDTO == null) {
+        if (cardDTO == null || cardDTO.getProductId() == null) {
             return;
         }
 
         LocalDate today = LocalDate.now();
         member.setMembershipStartDate(today);
 
-        // 根据卡类型计算结束日期
-        switch (cardDTO.getCardType()) {
-            case 0: // 会籍卡 - 年卡
-            case 3: // 年卡
-                member.setMembershipEndDate(today.plusYears(1));
-                break;
-            case 2: // 月卡
-                member.setMembershipEndDate(today.plusMonths(1));
-                break;
-            case 4: // 周卡
-                member.setMembershipEndDate(today.plusWeeks(1));
-                break;
-            case 1: // 私教课
-            case 5: // 团课
-                // 课程卡不设置结束日期，由课时数控制
-                member.setMembershipEndDate(null);
-                break;
-            default:
-                // 其他类型默认30天
-                member.setMembershipEndDate(today.plusDays(30));
+        // 根据商品ID获取商品信息
+        Product product = productMapper.selectById(cardDTO.getProductId());
+        if (product == null) {
+            log.warn("商品不存在，productId: {}", cardDTO.getProductId());
+            member.setMembershipEndDate(today.plusDays(30));
+            return;
         }
+
+        // 根据商品的有效期天数计算结束日期
+        if (product.getValidityDays() != null && product.getValidityDays() > 0) {
+            member.setMembershipEndDate(today.plusDays(product.getValidityDays()));
+        } else {
+            member.setMembershipEndDate(today.plusDays(30));
+        }
+
+        log.info("计算会籍有效期，开始日期：{}，结束日期：{}，有效期天数：{}",
+                member.getMembershipStartDate(), member.getMembershipEndDate(),
+                product.getValidityDays());
     }
 
     @Override
@@ -636,6 +656,53 @@ public class MemberServiceImpl implements MemberService {
         }
 
         log.info("添加健康档案成功，会员ID：{}，记录ID：{}", memberId, healthRecord.getId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateHealthRecord(Long recordId, HealthRecordDTO healthRecordDTO) {
+        log.info("更新健康档案，记录ID：{}", recordId);
+
+        HealthRecord existingRecord = healthRecordMapper.selectById(recordId);
+        if (existingRecord == null) {
+            throw new BusinessException("健康记录不存在");
+        }
+
+        BeanUtils.copyProperties(healthRecordDTO, existingRecord, "id", "memberId", "createTime");
+        existingRecord.setUpdateTime(LocalDateTime.now());
+
+        // 重新计算BMI
+        if (existingRecord.getHeight() != null && existingRecord.getWeight() != null) {
+            BigDecimal heightInM = existingRecord.getHeight().divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+            BigDecimal bmi = existingRecord.getWeight().divide(
+                    heightInM.multiply(heightInM), 1, RoundingMode.HALF_UP);
+            existingRecord.setBmi(bmi);
+        }
+
+        int result = healthRecordMapper.updateById(existingRecord);
+        if (result <= 0) {
+            throw new BusinessException("更新健康记录失败");
+        }
+
+        log.info("更新健康记录成功，记录ID：{}", recordId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteHealthRecord(Long recordId) {
+        log.info("删除健康档案，记录ID：{}", recordId);
+
+        HealthRecord record = healthRecordMapper.selectById(recordId);
+        if (record == null) {
+            throw new BusinessException("健康记录不存在");
+        }
+
+        int result = healthRecordMapper.deleteById(recordId);
+        if (result <= 0) {
+            throw new BusinessException("删除健康记录失败");
+        }
+
+        log.info("删除健康记录成功，记录ID：{}", recordId);
     }
 
     // ========== 私有辅助方法 ==========

@@ -25,10 +25,9 @@ public interface MemberService {
     Long addMember(MemberBasicDTO basicDTO, HealthRecordDTO healthRecordDTO, MemberCardDTO cardDTO);
 
     /**
-     * 更新会员
+     * 更新会员信息（不包括会员卡）
      */
-    void updateMember(Long memberId, MemberBasicDTO basicDTO, MemberCardDTO cardDTO);
-//    void updateMember(Long memberId, MemberBasicDTO basicDTO, HealthRecordDTO healthRecordDTO, MemberCardDTO cardDTO);
+    void updateMember(Long memberId, MemberBasicDTO basicDTO, HealthRecordDTO healthRecordDTO);
 
     /**
      * 删除会员（软删除）
@@ -54,4 +53,14 @@ public interface MemberService {
      * 添加健康档案
      */
     void addHealthRecord(Long memberId, HealthRecordDTO healthRecordDTO);
+
+    /**
+     * 更新健康档案
+     */
+    void updateHealthRecord(Long recordId, HealthRecordDTO healthRecordDTO);
+
+    /**
+     * 删除健康档案
+     */
+    void deleteHealthRecord(Long recordId);
 }

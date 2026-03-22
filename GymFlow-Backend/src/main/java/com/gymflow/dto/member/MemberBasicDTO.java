@@ -14,10 +14,9 @@ public class MemberBasicDTO {
     @Schema(description = "会员ID", example = "1001")
     private Long id;
 
-    @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 20, message = "密码长度需在6-20之间")
-    @Schema(description = "密码", example = "123456", required = true)
-    private String password;
+//    @Size(min = 6, max = 20, message = "密码长度需在6-20之间")
+//    @Schema(description = "密码", example = "123456", required = true)
+//    private String password;
 
     @NotBlank(message = "手机号不能为空")
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")

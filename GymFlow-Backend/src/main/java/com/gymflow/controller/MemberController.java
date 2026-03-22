@@ -61,15 +61,16 @@ public class MemberController {
 
     @PutMapping("/update/{memberId}")
     @Operation(summary = "更新会员信息")
-    @PreAuthorize("member:edit")  // 编辑权限（老板和前台都有）
+    @PreAuthorize("member:edit")  // 编辑权限
     public Result<Void> updateMember(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody MemberUpdateRequest request) {
+        // 只更新基本信息和健康档案，不更新会员卡
         memberService.updateMember(
                 memberId,
                 request.getBasicDTO(),
-                request.getCardDTO()
+                request.getHealthRecordDTO()
         );
         return Result.success("更新成功");
     }
@@ -123,6 +124,31 @@ public class MemberController {
         memberService.addHealthRecord(memberId, healthRecordDTO);
         return Result.success("添加成功");
     }
+
+    /**
+     * 更新健康档案
+     */
+    @PutMapping("/update-health-record/{recordId}")
+    @Operation(summary = "更新健康档案")
+    @PreAuthorize("member:health:edit")
+    public Result<Void> updateHealthRecord(
+            @Parameter(description = "健康档案ID", required = true)
+            @PathVariable @NotNull Long recordId,
+            @Valid @RequestBody HealthRecordDTO healthRecordDTO) {
+        memberService.updateHealthRecord(recordId, healthRecordDTO);
+        return Result.success("更新成功");
+    }
+
+
+    @DeleteMapping("/delete-health-record/{recordId}")
+    @Operation(summary = "删除健康档案")
+    @PreAuthorize("member:health:delete")
+    public Result<Void> deleteHealthRecord(
+            @Parameter(description = "健康档案ID", required = true)
+            @PathVariable @NotNull Long recordId) {
+        memberService.deleteHealthRecord(recordId);
+        return Result.success("删除成功");
+    }
 }
 
 // 请求包装类（保持不变）
@@ -139,5 +165,6 @@ class MemberUpdateRequest {
     @Valid
     private MemberBasicDTO basicDTO;
     private HealthRecordDTO healthRecordDTO;
-    private MemberCardDTO cardDTO;
+    // 移除 cardDTO，或者设为可选，但后端不处理
+    // private MemberCardDTO cardDTO;
 }
