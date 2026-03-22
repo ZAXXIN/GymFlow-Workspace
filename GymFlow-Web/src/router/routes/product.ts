@@ -3,9 +3,9 @@ import type { PermissionCode } from '@/types/permission'
 
 const productRoutes: RouteRecordRaw[] = [
   {
-    path: '/product/list',  // 注意：这里统一改为小写 product
+    path: '/product/list',
     name: 'ProductList',
-    component: () => import('@/views/product/List.vue'),  // 注意：路径统一改为小写 product
+    component: () => import('@/views/product/List.vue'),
     meta: {
       title: '商品管理',
       icon: 'Shop',

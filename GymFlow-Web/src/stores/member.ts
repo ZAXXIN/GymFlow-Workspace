@@ -92,10 +92,10 @@ export const useMemberStore = defineStore('member', () => {
       const response = await memberApi.addMember(memberData)
       if (response.code === 200) {
         // 添加成功后重新加载列表
-        await fetchMembers({
-          pageNum: pageInfo.value.pageNum,
-          pageSize: pageInfo.value.pageSize
-        })
+        // await fetchMembers({
+        //   pageNum: pageInfo.value.pageNum,
+        //   pageSize: pageInfo.value.pageSize
+        // })
       }
       return response
     } catch (error) {
@@ -115,14 +115,14 @@ export const useMemberStore = defineStore('member', () => {
       const response = await memberApi.updateMember(memberId, memberData)
       if (response.code === 200) {
         // 更新成功后刷新当前会员详情
-        if (currentMember.value?.id === memberId) {
-          await fetchMemberDetail(memberId)
-        }
+        // if (currentMember.value?.id === memberId) {
+        //   await fetchMemberDetail(memberId)
+        // }
         // 刷新列表
-        await fetchMembers({
-          pageNum: pageInfo.value.pageNum,
-          pageSize: pageInfo.value.pageSize
-        })
+        // await fetchMembers({
+        //   pageNum: pageInfo.value.pageNum,
+        //   pageSize: pageInfo.value.pageSize
+        // })
       }
       return response
     } catch (error) {
@@ -249,6 +249,65 @@ export const useMemberStore = defineStore('member', () => {
   }
 
   /**
+   * 更新健康档案
+   */
+  const updateHealthRecord = async (recordId: number, healthData: HealthRecordDTO) => {
+    try {
+      loading.value = true
+      const response = await memberApi.updateHealthRecord(recordId, healthData)
+      if (response.code === 200) {
+        // 更新本地健康记录
+        const index = healthRecords.value.findIndex(r => r.id === recordId)
+        if (index !== -1) {
+          healthRecords.value[index] = { ...healthData, id: recordId }
+        }
+        // 同时更新 currentMember 中的健康记录
+        if (currentMember.value) {
+          const memberIndex = currentMember.value.healthRecords.findIndex(r => r.id === recordId)
+          if (memberIndex !== -1) {
+            currentMember.value.healthRecords[memberIndex] = { ...healthData, id: recordId }
+          }
+        }
+        ElMessage.success('健康档案更新成功')
+      }
+      return response
+    } catch (error) {
+      console.error('更新健康档案失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+
+  /**
+   * 删除健康档案
+   */
+  const deleteHealthRecord = async (recordId: number) => {
+    try {
+      loading.value = true
+      const response = await memberApi.deleteHealthRecord(recordId)
+      if (response.code === 200) {
+        // 从本地健康记录列表中移除
+        healthRecords.value = healthRecords.value.filter(record => record.id !== recordId)
+        // 同时更新 currentMember 中的健康记录
+        if (currentMember.value) {
+          currentMember.value.healthRecords = currentMember.value.healthRecords.filter(
+            record => record.id !== recordId
+          )
+        }
+        ElMessage.success('健康档案删除成功')
+      }
+      return response
+    } catch (error) {
+      console.error('删除健康档案失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * 检查用户名是否存在
    */
   const checkUsernameExists = async (username: string): Promise<boolean> => {
@@ -327,6 +386,8 @@ export const useMemberStore = defineStore('member', () => {
     renewMemberCard,
     fetchHealthRecords,
     addHealthRecord,
+    updateHealthRecord,
+    deleteHealthRecord,
     checkUsernameExists,
     setPageInfo,
     clearCurrentMember,

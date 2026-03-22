@@ -120,6 +120,27 @@ export const memberApi = {
     })
   },
 
+    /**
+   * 更新健康档案
+   */
+    updateHealthRecord(recordId: number, data: HealthRecordDTO): Promise<ApiResponse> {
+      return request({
+        url: `/member/update-health-record/${recordId}`,
+        method: 'PUT',
+        data
+      })
+    },
+
+  /**
+   * 删除健康档案
+   */
+  deleteHealthRecord(recordId: number): Promise<ApiResponse> {
+    return request({
+      url: `/member/delete-health-record/${recordId}`,
+      method: 'DELETE'
+    })
+  },
+
   /**
    * 检查用户名是否存在
    */

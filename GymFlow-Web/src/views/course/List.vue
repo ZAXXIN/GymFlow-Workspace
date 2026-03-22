@@ -72,7 +72,7 @@
       </template>
 
       <el-table :data="courseList" style="width: 100%" row-key="id" v-loading="loading" stripe border>
-        <el-table-column prop="courseName" label="课程名称" min-width="150">
+        <el-table-column prop="courseName" label="课程名称" width="250">
           <template #default="{ row }">
             <div class="course-info">
               <span class="course-name">{{ row.courseName }}</span>
@@ -82,7 +82,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="coachNames" label="教练" width="150">
+        <el-table-column prop="coachNames" label="教练" width="250">
           <template #default="{ row }">
             <span v-if="row.coachNames && row.coachNames.length > 0">
               {{ row.coachNames.join(', ') }}

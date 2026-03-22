@@ -22,27 +22,14 @@
           </div>
         </div>
       </template>
-<<<<<<< HEAD
-=======
-      
-      <el-descriptions :column="3" border>
-        <el-descriptions-item label="会员编号">{{ memberDetail?.memberNo || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="手机号">{{ memberDetail?.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>
-        
-        <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
-        <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item>
-        <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item>
->>>>>>> 857f571072f05ed13180b5793a1ea5cb242545a2
 
       <el-descriptions :column="2" border>
         <el-descriptions-item label="真实姓名">{{ memberDetail?.realName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="性别">{{ getGenderText(memberDetail?.gender) }}</el-descriptions-item>
         <el-descriptions-item label="手机号">{{ memberDetail?.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="年龄">{{ memberDetail?.age || '-' }}</el-descriptions-item>
-        <!-- <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item> -->
-        <!-- <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item> -->
+        <el-descriptions-item label="年龄">{{ memberDetail?.age !== undefined && memberDetail?.age !== null ? memberDetail.age : '-' }}</el-descriptions-item>
+        <el-descriptions-item label="出生日期">{{ formatDate(memberDetail?.birthday) }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ formatDateTime(memberDetail?.createTime) }}</el-descriptions-item>
       </el-descriptions>
 
       <!-- 统计信息 -->
@@ -51,7 +38,7 @@
           <el-col :span="4">
             <div class="stat-item">
               <div class="stat-label">总签到次数</div>
-              <div class="stat-value">{{ memberDetail?.totalCheckins || 0 }}</div>
+              <div class="stat-value stat-value-alone">{{ memberDetail?.totalCheckins || 0 }}</div>
             </div>
           </el-col>
           <el-col :span="4">
@@ -64,7 +51,7 @@
           <el-col :span="4">
             <div class="stat-item">
               <div class="stat-label">累计消费</div>
-              <div class="stat-value amount">¥{{ formatAmount(memberDetail?.totalSpent) }}</div>
+              <div class="stat-value amount stat-value-alone">¥{{ formatAmount(memberDetail?.totalSpent) }}</div>
             </div>
           </el-col>
           <el-col :span="4">
@@ -163,10 +150,10 @@
                       </div>
                     </template>
 
-                    <div class="card-field">
+                    <!-- <div class="card-field">
                       <span class="label">金额：</span>
                       <span class="value amount">¥{{ formatAmount(card.amount) }}</span>
-                    </div>
+                    </div> -->
 
                     <!-- <div class="card-actions">
                       <el-button type="text" size="small" @click="handleRenewCard(card)">
@@ -262,14 +249,14 @@
                   <span class="notes-text">{{ row.notes || '-' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="100" fixed="right">
+              <el-table-column label="操作" width="100" align="center" fixed="right">
                 <template #default="{ row, $index }">
-                  <el-button type="text" size="small" @click="handleEditHealthRecord(row, $index)">
+                  <!-- <el-button type="text" size="small" @click="handleEditHealthRecord(row, $index)">
                     编辑
-                  </el-button>
-                  <el-button type="text" size="small" @click="handleDeleteHealthRecord($index)" style="color: #f56c6c;">
-                    删除
-                  </el-button>
+                  </el-button> -->
+                  <el-button type="text" size="small" @click="handleDeleteHealthRecord(row)" style="color: #f56c6c;">
+      删除
+    </el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -526,17 +513,17 @@ const loadMemberDetail = async () => {
 }
 
 // 添加健康记录
-const handleAddHealthRecord = () => {
-  router.push(`/member/${memberId.value}/health-record/add`)
-}
+// const handleAddHealthRecord = () => {
+//   router.push(`/member/${memberId.value}/health-record/add`)
+// }
 
 // 编辑健康记录
-const handleEditHealthRecord = (record: HealthRecordDTO, index: number) => {
-  ElMessage.info('编辑健康记录功能开发中...')
-}
+// const handleEditHealthRecord = (record: HealthRecordDTO, index: number) => {
+//   ElMessage.info('编辑健康记录功能开发中...')
+// }
 
 // 删除健康记录
-const handleDeleteHealthRecord = async (index: number) => {
+const handleDeleteHealthRecord = async (record: HealthRecordDTO, index: number) => {
   try {
     await ElMessageBox.confirm('确定要删除这条健康记录吗？', '删除确认', {
       confirmButtonText: '确定',
@@ -544,11 +531,22 @@ const handleDeleteHealthRecord = async (index: number) => {
       type: 'warning',
     })
 
-    ElMessage.success('删除成功')
-    // 这里需要调用API删除健康记录
-    // await memberStore.deleteHealthRecord(memberId.value, index)
+    // 需要确保 record 对象有 id 字段
+    // 如果后端返回的健康记录没有 id，需要修改后端
+    if (!record.id) {
+      ElMessage.error('记录ID不存在')
+      return
+    }
+
+    await memberStore.deleteHealthRecord(record.id)
+    // 刷新会员详情
+    await loadMemberDetail()
   } catch (error) {
-    // 用户取消
+    // 用户取消或删除失败
+    if (error !== 'cancel') {
+      console.error('删除健康记录失败:', error)
+      ElMessage.error('删除失败')
+    }
   }
 }
 
@@ -656,6 +654,10 @@ onMounted(() => {
   border-radius: 4px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 90px;  /* 添加最小高度，统一所有卡片高度 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stat-label {
@@ -671,6 +673,11 @@ onMounted(() => {
   margin-bottom: 4px;
 }
 
+.stat-value-alone{
+  min-height: 55px;
+  line-height: 55px;
+}
+
 .stat-value.amount {
   color: #67c23a;
 }
@@ -678,6 +685,8 @@ onMounted(() => {
 .stat-unit {
   font-size: 12px;
   color: #909399;
+  min-height: 18px;  /* 统一单位区域高度，即使没有单位也占位 */
+  line-height: 18px;
 }
 
 .detail-tabs {

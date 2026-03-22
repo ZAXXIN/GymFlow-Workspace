@@ -62,6 +62,7 @@ export interface MiniMemberCardDTO {
 
 // 健康档案（从 health_record 表）
 export interface HealthRecordDTO {
+  id?: number
   recordDate: string
   height?: number
   weight: number

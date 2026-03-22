@@ -19,13 +19,7 @@
 
     <!-- 主表单区域 -->
     <div class="form-content">
-      <el-form 
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-        class="member-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" class="member-form">
         <!-- 基本信息 -->
         <el-card shadow="never" class="form-section">
           <template #header>
@@ -36,14 +30,9 @@
 
           <div class="form-row">
             <el-form-item label="真实姓名" prop="basicDTO.realName" class="form-item">
-              <el-input 
-                v-model="formData.basicDTO.realName"
-                placeholder="请输入真实姓名"
-                maxlength="50"
-                clearable
-              />
+              <el-input v-model="formData.basicDTO.realName" placeholder="请输入真实姓名" maxlength="50" clearable />
             </el-form-item>
-            
+
             <el-form-item label="性别" prop="basicDTO.gender" class="form-item">
               <el-radio-group v-model="formData.basicDTO.gender">
                 <el-radio :label="0">女</el-radio>
@@ -51,59 +40,27 @@
               </el-radio-group>
             </el-form-item>
           </div>
-          
+
           <div class="form-row">
             <el-form-item label="手机号" prop="basicDTO.phone" class="form-item">
-              <el-input 
-                v-model="formData.basicDTO.phone"
-                placeholder="请输入手机号"
-                maxlength="11"
-                clearable
-                @blur="checkPhoneAvailability"
-                :disabled="isEditMode"
-              />
+              <el-input v-model="formData.basicDTO.phone" placeholder="请输入手机号" maxlength="11" clearable @blur="checkPhoneAvailability" :disabled="isEditMode" />
               <div v-if="phoneChecking" class="checking-text">检查中...</div>
-              <div v-if="phoneAvailable !== null && !isEditMode" 
-                   :class="['check-result', phoneAvailable ? 'success' : 'error']">
+              <div v-if="phoneAvailable !== null && !isEditMode" :class="['check-result', phoneAvailable ? 'success' : 'error']">
                 <!-- 提示信息可保留或隐藏 -->
               </div>
             </el-form-item>
-            
-            <el-form-item label="密码" prop="basicDTO.password" class="form-item" v-if="!isEditMode">
-              <el-input 
-                v-model="formData.basicDTO.password"
-                type="password"
-                placeholder="请输入密码"
-                maxlength="255"
-                clearable
-                show-password
-              />
-            </el-form-item>
-          </div>
-          
-          <div class="form-row">
+
+            <!-- <el-form-item label="密码" prop="basicDTO.password" class="form-item" v-if="!isEditMode">
+              <el-input v-model="formData.basicDTO.password" type="password" placeholder="请输入密码" maxlength="255" clearable show-password />
+            </el-form-item> -->
+
             <el-form-item label="出生日期" prop="basicDTO.birthday" class="form-item">
-              <el-date-picker
-                v-model="formData.basicDTO.birthday"
-                type="date"
-                placeholder="选择出生日期"
-                value-format="YYYY-MM-DD"
-                style="width: 100%"
-              />
-            </el-form-item>
-            
-            <!-- 会员编号：编辑模式下显示，新增模式下不显示（后端自动生成） -->
-            <el-form-item v-if="isEditMode" label="会员编号" prop="basicDTO.memberNo" class="form-item">
-              <el-input 
-                v-model="formData.basicDTO.memberNo"
-                disabled
-                placeholder="系统自动生成"
-              />
+              <el-date-picker v-model="formData.basicDTO.birthday" type="date" placeholder="选择出生日期" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </div>
-          
+
           <!-- 会籍时间：只在编辑模式且已有会籍卡时显示，新增时不显示 -->
-          <div v-if="isEditMode && hasMembershipCard" class="form-row">
+          <!-- <div v-if="isEditMode && hasMembershipCard" class="form-row">
             <el-form-item label="会籍开始" class="form-item">
               <el-input 
                 :value="formData.basicDTO.membershipStartDate || '未开通'"
@@ -117,7 +74,7 @@
                 disabled
               />
             </el-form-item>
-          </div>
+          </div> -->
         </el-card>
 
         <!-- 健康档案（完整保留） -->
@@ -130,158 +87,236 @@
               </el-button>
             </div>
           </template>
-          
-          <div v-if="formData.healthRecordDTO" class="health-info">
-            <div class="form-row">
-              <el-form-item label="记录日期" prop="healthRecordDTO.recordDate" class="form-item">
-                <el-date-picker
-                  v-model="formData.healthRecordDTO.recordDate"
-                  type="date"
-                  placeholder="选择记录日期"
-                  value-format="YYYY-MM-DD"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              
-              <el-form-item label="身高(cm)" prop="healthRecordDTO.height" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.height"
-                  :min="100"
-                  :max="250"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </div>
-            
-            <div class="form-row">
-              <el-form-item label="体重(kg)" prop="healthRecordDTO.weight" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.weight"
-                  :min="30"
-                  :max="200"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              
-              <el-form-item label="BMI指数">
-                <el-tag :type="bmiType" size="large">
-                  {{ bmiValue || '--' }}
-                </el-tag>
-                <span class="bmi-tip">{{ bmiTip }}</span>
-              </el-form-item>
-            </div>
-            
-            <div class="form-row">
-              <el-form-item label="体脂率(%)" prop="healthRecordDTO.bodyFatPercentage" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.bodyFatPercentage"
-                  :min="5"
-                  :max="50"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              
-              <el-form-item label="肌肉量(kg)" prop="healthRecordDTO.muscleMass" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.muscleMass"
-                  :min="20"
-                  :max="100"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </div>
-            
-            <div class="form-row">
-              <el-form-item label="胸围(cm)" prop="healthRecordDTO.chestCircumference" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.chestCircumference"
-                  :min="50"
-                  :max="150"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              
-              <el-form-item label="腰围(cm)" prop="healthRecordDTO.waistCircumference" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.waistCircumference"
-                  :min="50"
-                  :max="150"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </div>
-            
-            <div class="form-row">
-              <el-form-item label="臀围(cm)" prop="healthRecordDTO.hipCircumference" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.hipCircumference"
-                  :min="50"
-                  :max="150"
-                  :step="0.1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-              
-              <el-form-item label="血压" prop="healthRecordDTO.bloodPressure" class="form-item">
-                <el-input 
-                  v-model="formData.healthRecordDTO.bloodPressure"
-                  placeholder="如：120/80"
-                  clearable
-                />
-              </el-form-item>
-            </div>
-            
-            <div class="form-row">
-              <el-form-item label="心率(bpm)" prop="healthRecordDTO.heartRate" class="form-item">
-                <el-input-number
-                  v-model="formData.healthRecordDTO.heartRate"
-                  :min="40"
-                  :max="200"
-                  :step="1"
-                  controls-position="right"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </div>
-            
-            <el-form-item label="备注" prop="healthRecordDTO.notes" class="full-width">
-              <el-input
-                v-model="formData.healthRecordDTO.notes"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入健康状况备注"
-                maxlength="500"
-                show-word-limit
-              />
-            </el-form-item>
-            
-            <div class="health-actions">
+
+          <div v-if="healthRecords.length > 0" class="health-records-container">
+            <el-collapse v-model="activeHealthRecordIndex" accordion>
+              <el-collapse-item 
+                v-for="(record, index) in healthRecords" 
+                :key="index"
+                :name="index"
+              >
+                <template #title>
+                  <div class="collapse-title">
+                    <span class="record-date">{{ record.recordDate }}</span>
+                    <el-tag 
+                      size="small" 
+                      :type="record.id ? 'primary' : 'warning'"
+                      style="margin-left: 12px;"
+                    >
+                      {{ record.id ? '已有记录' : '新增记录' }}
+                    </el-tag>
+                    <el-button 
+                      type="danger" 
+                      text 
+                      size="small"
+                      style="margin-left: auto;"
+                      @click.stop="handleDeleteHealthRecord(index)"
+                    >
+                      删除
+                    </el-button>
+                  </div>
+                </template>
+
+                <!-- 健康记录表单 -->
+                <div class="health-record-form">
+                  <div class="form-row">
+                    <el-form-item 
+                      label="记录日期" 
+                      :prop="`healthRecords.${index}.recordDate`"
+                      class="form-item"
+                    >
+                      <el-date-picker
+                        v-model="record.recordDate"
+                        type="date"
+                        placeholder="选择记录日期"
+                        value-format="YYYY-MM-DD"
+                        style="width: 100%"
+                        :disabled="!!record.id"
+                      />
+                    </el-form-item>
+                    
+                    <el-form-item 
+                      label="身高(cm)" 
+                      :prop="`healthRecords.${index}.height`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.height"
+                        :min="100"
+                        :max="250"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                  </div>
+                  
+                  <div class="form-row">
+                    <el-form-item 
+                      label="体重(kg)" 
+                      :prop="`healthRecords.${index}.weight`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.weight"
+                        :min="30"
+                        :max="200"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                    
+                    <el-form-item label="BMI指数" class="form-item">
+                      <el-tag :type="getBmiType(record)" size="large">
+                        {{ calculateBmi(record) || '--' }}
+                      </el-tag>
+                      <span class="bmi-tip">{{ getBmiTip(record) }}</span>
+                    </el-form-item>
+                  </div>
+                  
+                  <div class="form-row">
+                    <el-form-item 
+                      label="体脂率(%)" 
+                      :prop="`healthRecords.${index}.bodyFatPercentage`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.bodyFatPercentage"
+                        :min="5"
+                        :max="50"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                    
+                    <el-form-item 
+                      label="肌肉量(kg)" 
+                      :prop="`healthRecords.${index}.muscleMass`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.muscleMass"
+                        :min="20"
+                        :max="100"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                  </div>
+                  
+                  <div class="form-row">
+                    <el-form-item 
+                      label="胸围(cm)" 
+                      :prop="`healthRecords.${index}.chestCircumference`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.chestCircumference"
+                        :min="50"
+                        :max="150"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                    
+                    <el-form-item 
+                      label="腰围(cm)" 
+                      :prop="`healthRecords.${index}.waistCircumference`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.waistCircumference"
+                        :min="50"
+                        :max="150"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                  </div>
+                  
+                  <div class="form-row">
+                    <el-form-item 
+                      label="臀围(cm)" 
+                      :prop="`healthRecords.${index}.hipCircumference`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.hipCircumference"
+                        :min="50"
+                        :max="150"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                    
+                    <el-form-item 
+                      label="血压" 
+                      :prop="`healthRecords.${index}.bloodPressure`"
+                      class="form-item"
+                    >
+                      <el-input 
+                        v-model="record.bloodPressure"
+                        placeholder="如：120/80"
+                        clearable
+                      />
+                    </el-form-item>
+                  </div>
+                  
+                  <div class="form-row">
+                    <el-form-item 
+                      label="心率(bpm)" 
+                      :prop="`healthRecords.${index}.heartRate`"
+                      class="form-item"
+                    >
+                      <el-input-number
+                        v-model="record.heartRate"
+                        :min="40"
+                        :max="200"
+                        :step="1"
+                        controls-position="right"
+                        style="width: 100%"
+                      />
+                    </el-form-item>
+                  </div>
+                  
+                  <el-form-item 
+                    label="备注" 
+                    :prop="`healthRecords.${index}.notes`"
+                    class="full-width"
+                  >
+                    <el-input
+                      v-model="record.notes"
+                      type="textarea"
+                      :rows="3"
+                      placeholder="请输入健康状况备注"
+                      maxlength="500"
+                      show-word-limit
+                    />
+                  </el-form-item>
+                </div>
+              </el-collapse-item>
+            </el-collapse>
+          </div>
+
+            <!-- <div class="health-actions">
               <el-button type="danger" text @click="handleRemoveHealthRecord">
                 移除健康记录
               </el-button>
-            </div>
-          </div>
-          
+            </div> -->
+          <!-- </div> -->
+
           <div v-else class="no-health-record">
             <el-empty description="暂无健康档案信息" :image-size="80" />
           </div>
         </el-card>
 
-        <!-- 会员卡信息（重构后，不再使用 MemberCardSelector） -->
-        <el-card shadow="never" class="form-section">
+        <el-card shadow="never" class="form-section" v-if="!isEditMode">
           <template #header>
             <div class="card-header">
               <span class="card-title">会员卡信息</span>
@@ -290,36 +325,18 @@
               </el-button>
             </div>
           </template>
-          
+
           <div v-if="formData.cardDTO" class="card-info">
             <!-- 商品级联选择（只显示 productType 0,1,2） -->
             <el-form-item label="卡类型" prop="cardDTO.productId" required>
-              <el-cascader
-                v-model="selectedProduct"
-                :options="productOptions"
-                :props="cascaderProps"
-                placeholder="请选择卡类型"
-                style="width: 100%"
-                clearable
-                filterable
-                :show-all-levels="false"
-                @change="handleProductChange"
-              />
+              <el-cascader v-model="selectedProduct" :options="productOptions" :props="cascaderProps" placeholder="请选择卡类型" style="width: 100%" clearable filterable :show-all-levels="false" @change="handleProductChange" />
             </el-form-item>
 
             <!-- 课程卡：显示总课时数（私教课、团课） -->
             <el-row :gutter="20" v-if="isCourseCard">
               <el-col :span="24">
                 <el-form-item label="总课时" prop="cardDTO.totalSessions">
-                  <el-input-number
-                    v-model="formData.cardDTO.totalSessions"
-                    :min="1"
-                    :max="999"
-                    :step="1"
-                    controls-position="right"
-                    style="width: 100%"
-                    placeholder="请输入总课时"
-                  />
+                  <el-input-number v-model="formData.cardDTO.totalSessions" :min="1" :max="999" :step="1" controls-position="right" style="width: 100%" placeholder="请输入总课时" />
                 </el-form-item>
               </el-col>
             </el-row>
@@ -328,16 +345,7 @@
             <el-row :gutter="20">
               <el-col :span="24">
                 <el-form-item label="金额" prop="cardDTO.amount" required>
-                  <el-input-number
-                    v-model="formData.cardDTO.amount"
-                    :min="0"
-                    :step="100"
-                    :precision="2"
-                    controls-position="right"
-                    style="width: 100%"
-                    placeholder="请先选择商品"
-                    :disabled="true"
-                  >
+                  <el-input-number v-model="formData.cardDTO.amount" :min="0" :step="100" :precision="2" controls-position="right" style="width: 100%" placeholder="请先选择商品" :disabled="true">
                     <template #prepend>¥</template>
                   </el-input-number>
                 </el-form-item>
@@ -345,14 +353,7 @@
             </el-row>
 
             <!-- 商品信息提示 -->
-            <el-alert
-              v-if="selectedProductInfo"
-              :title="selectedProductInfo.productName"
-              :description="productDescription"
-              type="info"
-              :closable="false"
-              show-icon
-            />
+            <el-alert v-if="selectedProductInfo" :title="selectedProductInfo.productName" :description="productDescription" type="info" :closable="false" show-icon />
 
             <div class="card-actions">
               <el-button type="danger" text @click="handleRemoveCard">
@@ -360,7 +361,7 @@
               </el-button>
             </div>
           </div>
-          
+
           <div v-else class="no-card">
             <el-empty description="暂无会员卡信息" :image-size="80" />
           </div>
@@ -371,7 +372,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -380,7 +381,6 @@ import { productApi } from '@/api/product'
 import type { 
   MemberAddRequest, 
   MemberUpdateRequest,
-  MemberBasicDTO,
   HealthRecordDTO,
   MemberCardDTO
 } from '@/types/member'
@@ -393,16 +393,11 @@ const formRef = ref<FormInstance>()
 const loading = ref(false)
 const isEditMode = computed(() => !!route.params.id)
 
-// 判断是否有会籍卡（月卡/年卡/周卡）
-const hasMembershipCard = computed(() => {
-  return formData.cardDTO && [2, 3, 4].includes(formData.cardDTO.cardType)
-})
-
 // 表单数据
 const formData = reactive<MemberAddRequest>({
   basicDTO: {
     phone: '',
-    password: '',
+    // password: '', // 密码字段保留但不使用，后端默认设置
     realName: '',
     gender: 1,
     birthday: '',
@@ -414,19 +409,19 @@ const formData = reactive<MemberAddRequest>({
   cardDTO: undefined
 })
 
+// 健康记录列表
+const healthRecords = ref<HealthRecordDTO[]>([])
+const activeHealthRecordIndex = ref<number | string | null>(null)
+
 // 手机号检查
 const phoneChecking = ref(false)
 const phoneAvailable = ref<boolean | null>(null)
 
-// 表单验证规则
+// 表单验证规则（移除密码验证）
 const formRules: FormRules = {
   'basicDTO.phone': [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  'basicDTO.password': [
-    { required: !isEditMode.value, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 255, message: '密码长度至少6个字符', trigger: 'blur' }
   ],
   'basicDTO.realName': [
     { required: true, message: '请输入真实姓名', trigger: 'blur' },
@@ -456,9 +451,11 @@ const cascaderProps = {
 }
 
 // 判断是否为课程卡（私教课、团课）
+// cardType: 0-会籍卡, 1-私教课, 2-团课, 3-相关产品
 const isCourseCard = computed(() => {
   const type = formData.cardDTO?.cardType
-  return type === 0 || type === 1
+  // 只有私教课(1)或团课(2)才显示总课时
+  return type === 1 || type === 2
 })
 
 // 商品描述
@@ -472,7 +469,7 @@ const productDescription = computed(() => {
   return desc.join(' | ')
 })
 
-// 加载商品列表（只加载 productType = 0,1,2）
+// 加载商品列表
 const loadProducts = async () => {
   try {
     const productTypes = [0, 1, 2]
@@ -520,7 +517,6 @@ const loadProducts = async () => {
     
     productOptions.value = options
     
-    // 商品列表加载完成后，如果有编辑模式且已有会员卡，进行回显
     if (isEditMode.value && formData.cardDTO?.productId) {
       const product = productMap.value.get(formData.cardDTO.productId)
       if (product) {
@@ -556,7 +552,8 @@ const handleProductChange = (value: number) => {
     formData.cardDTO.cardType = product.productType
     formData.cardDTO.amount = product.currentPrice
     
-    if (product.productType === 0 || product.productType === 1) {
+    // 私教课(1)或团课(2)设置默认课时
+    if (product.productType === 1 || product.productType === 2) {
       formData.cardDTO.totalSessions = product.totalSessions || 10
     } else {
       formData.cardDTO.totalSessions = undefined
@@ -565,33 +562,95 @@ const handleProductChange = (value: number) => {
 }
 
 // ---------- 健康档案相关 ----------
-const bmiValue = computed(() => {
-  if (formData.healthRecordDTO?.height && formData.healthRecordDTO?.weight) {
-    const heightInM = formData.healthRecordDTO.height / 100
-    const bmi = formData.healthRecordDTO.weight / (heightInM * heightInM)
+// BMI计算函数
+const calculateBmi = (record: HealthRecordDTO) => {
+  if (record.height && record.weight) {
+    const heightInM = record.height / 100
+    const bmi = record.weight / (heightInM * heightInM)
     return bmi.toFixed(1)
   }
   return null
-})
+}
 
-const bmiType = computed(() => {
-  if (!bmiValue.value) return 'info'
-  const bmi = parseFloat(bmiValue.value)
-  if (bmi < 18.5) return 'warning'
-  if (bmi < 24) return 'success'
-  if (bmi < 28) return 'warning'
+// BMI类型
+const getBmiType = (record: HealthRecordDTO) => {
+  const bmi = calculateBmi(record)
+  if (!bmi) return 'info'
+  const bmiNum = parseFloat(bmi)
+  if (bmiNum < 18.5) return 'warning'
+  if (bmiNum < 24) return 'success'
+  if (bmiNum < 28) return 'warning'
   return 'danger'
-})
+}
 
-const bmiTip = computed(() => {
-  if (!bmiValue.value) return ''
-  const bmi = parseFloat(bmiValue.value)
-  if (bmi < 18.5) return '偏瘦'
-  if (bmi < 24) return '正常'
-  if (bmi < 28) return '超重'
+// BMI提示
+const getBmiTip = (record: HealthRecordDTO) => {
+  const bmi = calculateBmi(record)
+  if (!bmi) return ''
+  const bmiNum = parseFloat(bmi)
+  if (bmiNum < 18.5) return '偏瘦'
+  if (bmiNum < 24) return '正常'
+  if (bmiNum < 28) return '超重'
   return '肥胖'
-})
+}
 
+// 添加健康记录
+const handleAddHealthRecord = () => {
+  const today = new Date().toISOString().split('T')[0]
+  const hasTodayRecord = healthRecords.value.some(r => r.recordDate === today)
+  if (hasTodayRecord) {
+    ElMessage.warning('今日已有健康记录，请编辑已有记录')
+    return
+  }
+  
+  healthRecords.value.push({
+    id: undefined,
+    recordDate: today,
+    height: 170,
+    weight: 65,
+    bodyFatPercentage: 20,
+    muscleMass: 45,
+    chestCircumference: 95,
+    waistCircumference: 85,
+    hipCircumference: 95,
+    bloodPressure: '120/80',
+    heartRate: 75,
+    notes: ''
+  })
+  activeHealthRecordIndex.value = healthRecords.value.length - 1
+}
+
+// 删除健康记录
+const handleDeleteHealthRecord = async (index: number) => {
+  const record = healthRecords.value[index]
+  if (record.id) {
+    try {
+      await ElMessageBox.confirm('确定要删除这条健康记录吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+      await memberStore.deleteHealthRecord(record.id)
+      healthRecords.value.splice(index, 1)
+      if (activeHealthRecordIndex.value === index) {
+        activeHealthRecordIndex.value = healthRecords.value.length > 0 ? 0 : null
+      }
+      ElMessage.success('删除成功')
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('删除失败:', error)
+        ElMessage.error('删除失败')
+      }
+    }
+  } else {
+    healthRecords.value.splice(index, 1)
+    if (activeHealthRecordIndex.value === index) {
+      activeHealthRecordIndex.value = healthRecords.value.length > 0 ? 0 : null
+    }
+  }
+}
+
+// 手机号检查
 const checkPhoneAvailability = async () => {
   const phone = formData.basicDTO.phone
   if (!phone || !/^1[3-9]\d{9}$/.test(phone) || isEditMode.value) return
@@ -608,34 +667,7 @@ const checkPhoneAvailability = async () => {
   }
 }
 
-const handleAddHealthRecord = () => {
-  const today = new Date().toISOString().split('T')[0]
-  formData.healthRecordDTO = {
-    recordDate: today,
-    height: 170,
-    weight: 65,
-    bodyFatPercentage: 20,
-    muscleMass: 45,
-    chestCircumference: 95,
-    waistCircumference: 85,
-    hipCircumference: 95,
-    bloodPressure: '120/80',
-    heartRate: 75,
-    notes: ''
-  }
-}
-
-const handleRemoveHealthRecord = async () => {
-  try {
-    await ElMessageBox.confirm('确定要移除健康记录吗？', '警告', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    formData.healthRecordDTO = undefined
-  } catch {}
-}
-
+// 添加会员卡
 const handleAddCard = () => {
   formData.cardDTO = {
     productId: undefined,
@@ -647,6 +679,7 @@ const handleAddCard = () => {
   selectedProductInfo.value = null
 }
 
+// 移除会员卡
 const handleRemoveCard = async () => {
   try {
     await ElMessageBox.confirm('确定要移除会员卡吗？', '警告', {
@@ -660,6 +693,7 @@ const handleRemoveCard = async () => {
   } catch {}
 }
 
+// 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
   
@@ -675,10 +709,21 @@ const handleSubmit = async () => {
       ElMessage.warning('请选择会员卡商品')
       return
     }
+
+    // 验证健康记录的日期
+    for (let i = 0; i < healthRecords.value.length; i++) {
+      const record = healthRecords.value[i]
+      if (!record.recordDate) {
+        ElMessage.warning(`第${i + 1}条健康记录的日期不能为空`)
+        activeHealthRecordIndex.value = i
+        return
+      }
+    }
     
     loading.value = true
     
     if (isEditMode.value) {
+      // 1. 更新基本信息（不传密码）
       const updateData: MemberUpdateRequest = {
         basicDTO: { 
           phone: formData.basicDTO.phone,
@@ -689,17 +734,27 @@ const handleSubmit = async () => {
           membershipStartDate: '',
           membershipEndDate: ''
         },
-        healthRecordDTO: formData.healthRecordDTO,
-        cardDTO: formData.cardDTO
+        healthRecordDTO: undefined,
+        cardDTO: undefined
       }
-      delete updateData.basicDTO.password
       await memberStore.updateMember(Number(route.params.id), updateData)
+      
+      // 2. 处理健康记录：有id的更新，无id的新增
+      for (const record of healthRecords.value) {
+        if (record.id) {
+          await memberStore.updateHealthRecord(record.id, record)
+        } else {
+          await memberStore.addHealthRecord(Number(route.params.id), record)
+        }
+      }
+      
       ElMessage.success('会员信息更新成功')
     } else {
+      // 新增模式（密码由后端默认设置为123456，前端不传）
       const addData: MemberAddRequest = {
         basicDTO: {
           phone: formData.basicDTO.phone,
-          password: formData.basicDTO.password,
+          // password: '', // 密码留空，后端默认设置
           realName: formData.basicDTO.realName,
           gender: formData.basicDTO.gender,
           birthday: formData.basicDTO.birthday,
@@ -707,7 +762,7 @@ const handleSubmit = async () => {
           membershipStartDate: '',
           membershipEndDate: ''
         },
-        healthRecordDTO: formData.healthRecordDTO,
+        healthRecordDTO: healthRecords.value.length > 0 ? healthRecords.value[0] : undefined,
         cardDTO: formData.cardDTO
       }
       await memberStore.addMember(addData)
@@ -723,11 +778,12 @@ const handleSubmit = async () => {
   }
 }
 
+// 取消
 const handleCancel = () => {
   router.push('/member/list')
 }
 
-// 回显会员详情
+// 初始化表单数据
 const initFormData = async () => {
   if (!isEditMode.value) return
   
@@ -740,21 +796,22 @@ const initFormData = async () => {
       // 基本信息回显
       formData.basicDTO = {
         phone: memberDetail.phone || '',
-        password: '',
+        // password: '',
         realName: memberDetail.realName || '',
         gender: memberDetail.gender ?? 1,
         birthday: memberDetail.birthday || '',
         memberNo: memberDetail.memberNo || '',
-        membershipStartDate: memberDetail.membershipStartDate || '',
-        membershipEndDate: memberDetail.membershipEndDate || ''
+        membershipStartDate: '',
+        membershipEndDate: ''
       }
       
       // 健康档案回显
       if (memberDetail.healthRecords && memberDetail.healthRecords.length > 0) {
-        formData.healthRecordDTO = { ...memberDetail.healthRecords[0] }
+        healthRecords.value = [...memberDetail.healthRecords]
+        activeHealthRecordIndex.value = null
       }
       
-      // 会员卡回显
+      // 会员卡回显（仅用于编辑时显示，不参与编辑）
       if (memberDetail.memberCards && memberDetail.memberCards.length > 0) {
         const card = memberDetail.memberCards[0]
         formData.cardDTO = {
@@ -770,19 +827,17 @@ const initFormData = async () => {
           status: card.status
         }
         
-        // 级联选择器回显 - 需要等待商品列表加载完成
-        // 如果商品列表已加载，直接设置；否则等待加载完成后设置
-        const setCardValue = () => {
-          if (card.productId && productMap.value.has(card.productId)) {
-            const product = productMap.value.get(card.productId)
-            selectedProduct.value = [card.productId]
-            selectedProductInfo.value = product
-          } else if (card.productId) {
-            // 如果商品还没加载，延迟重试
-            setTimeout(setCardValue, 100)
+        if (card.productId) {
+          const setCardValue = () => {
+            if (card.productId && productMap.value.has(card.productId)) {
+              selectedProduct.value = [card.productId]
+              selectedProductInfo.value = productMap.value.get(card.productId)
+            } else if (card.productId) {
+              setTimeout(setCardValue, 100)
+            }
           }
+          setCardValue()
         }
-        setCardValue()
       }
     }
   } catch (error) {
@@ -793,7 +848,7 @@ const initFormData = async () => {
   }
 }
 
-// 监听商品列表变化，确保会员卡回显正确
+// 监听商品列表变化
 watch(productMap, () => {
   if (isEditMode.value && formData.cardDTO?.productId) {
     const product = productMap.value.get(formData.cardDTO.productId)
@@ -803,11 +858,6 @@ watch(productMap, () => {
     }
   }
 }, { deep: true })
-
-// 监听生日变化，确保显示正确
-watch(() => formData.basicDTO.birthday, (newVal) => {
-  console.log('birthday changed:', newVal)
-})
 
 onMounted(() => {
   initFormData()
@@ -890,11 +940,11 @@ onMounted(() => {
 }
 
 .check-result.success {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .check-result.error {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .bmi-tip {

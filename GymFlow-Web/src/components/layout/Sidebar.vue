@@ -1,52 +1,8 @@
-<template>
-  <aside class="app-sidebar" :class="{ 'collapsed': isCollapsed }">
-    <!-- Logo区域 -->
-    <div class="sidebar-logo" @click="goHome">
-      <img src="@/assets/images/logo.png" alt="GymFlow" class="logo-image">
-      <span class="logo-text" v-show="!isCollapsed">GymFlow</span>
-    </div>
-    
-    <!-- 菜单区域 -->
-    <div class="sidebar-menu">
-      <el-scrollbar class="menu-scrollbar">
-        <el-menu
-          :default-active="activeMenu"
-          :collapse="isCollapsed"
-          :collapse-transition="false"
-          :unique-opened="true"
-          background-color="#304156"
-          text-color="#bfcbd9"
-          active-text-color="#409eff"
-          @select="handleMenuSelect"
-        >
-          <sidebar-item
-            v-for="route in menuRoutes"
-            :key="route.path"
-            :item="route"
-          />
-        </el-menu>
-      </el-scrollbar>
-    </div>
-    
-    <!-- 底部操作 -->
-    <!-- <div class="sidebar-footer">
-      <div class="collapse-toggle" @click="toggleCollapse">
-        <el-icon>
-          <component :is="isCollapsed ? 'Expand' : 'Fold'" />
-        </el-icon>
-        <span v-show="!isCollapsed">收起菜单</span>
-      </div>
-    </div> -->
-  </aside>
-</template>
-
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePermission } from '@/composables/usePermission'
 import { useSettingsStore } from '@/stores/settings'
-// import { filterMenuByPermission } from '@/composables/usePermission'
-// import SidebarItem from '../common/SidebarItem.vue'
 import type { RouteRecordRaw } from 'vue-router'
 
 const router = useRouter()
@@ -57,43 +13,50 @@ const settingsStore = useSettingsStore()
 // 菜单路由配置
 const menuRoutes = computed(() => {
   const allRoutes = router.getRoutes()
-  // console.log('所有路由及meta：', allRoutes.map(route => ({
-  //   path: route.path,
-  //   name: route.name,
-  //   showInMenu: route.meta?.showInMenu,
-  //   hidden: route.meta?.hidden,
-  //   isMatch: route.meta?.showInMenu && !route.meta?.hidden
-  // })))
-
   const routes = allRoutes.filter(route => {
-    // console.log('当前路由：', route.path, '，是否满足条件：', route.meta?.showInMenu && !route.meta?.hidden)
     return route.meta?.showInMenu && !route.meta?.hidden
   })  
-
-  // console.log('过滤后路由数量：', routes.length) 
   // 过滤权限
   const permissionRoutes = filterMenuByPermission(routes as RouteRecordRaw[])
-  // console.log('权限过滤后路由数量：', permissionRoutes.length) 
   return permissionRoutes
 })
-// const menuRoutes = computed(() => {
-//   const routes = router.getRoutes().filter(route => {
-//     console.log(route,1)
-//     return route.meta?.showInMenu && !route.meta?.hidden
-//     // return true
-//   })  
-//   // 过滤权限
-//   return filterMenuByPermission(routes as RouteRecordRaw[])
-// })
-// console.log(menuRoutes,2)
 
-
-// 当前激活的菜单
+// 当前激活的菜单 - 修复：子页面应高亮父菜单
 const activeMenu = computed(() => {
   const { meta, path } = route
+  
+  // 优先使用 meta.activeMenu 指定的菜单
   if (meta?.activeMenu) {
     return meta.activeMenu as string
   }
+  
+  // 如果有 parent 字段，返回父菜单路径
+  if (meta?.parent) {
+    // 查找父菜单路由的完整路径
+    const parentRoute = router.getRoutes().find(r => r.name === meta.parent)
+    if (parentRoute) {
+      return parentRoute.path
+    }
+  }
+  
+  // 检查是否为子路由（如 /member/detail/:id 应该匹配 /member/list）
+  const pathSegments = path.split('/')
+  if (pathSegments.length >= 3) {
+    // 尝试匹配父级路径：如 /member/list 或 /member
+    const parentPath = '/' + pathSegments[1] + '/' + pathSegments[2]
+    // 检查是否有菜单路由匹配
+    const hasParentMenu = menuRoutes.value.some(r => r.path === parentPath)
+    if (hasParentMenu) {
+      return parentPath
+    }
+    
+    const rootPath = '/' + pathSegments[1]
+    const hasRootMenu = menuRoutes.value.some(r => r.path === rootPath)
+    if (hasRootMenu) {
+      return rootPath
+    }
+  }
+  
   return path
 })
 
@@ -110,7 +73,6 @@ const toggleCollapse = () => {
 }
 
 const handleMenuSelect = (index: string) => {
-  // 菜单选择逻辑已由 SidebarItem 组件处理
   console.log('菜单选择:', index)
 }
 
