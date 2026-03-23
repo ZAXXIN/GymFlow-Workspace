@@ -40,7 +40,12 @@ export const useCoachStore = defineStore('coach', () => {
       
       const response = await coachApi.getCoachList(queryParams)
       if (response.code === 200) {
-        coachList.value = response.data.list
+        // 对列表进行排序：在职(1)在前，离职(0)在后
+        const sortedList = [...response.data.list].sort((a, b) => {
+          // 按状态排序：在职(1) > 离职(0)
+          return b.status - a.status
+        })
+        coachList.value = sortedList
         total.value = response.data.total
         pageInfo.value = {
           pageNum: response.data.pageNum,
@@ -89,14 +94,14 @@ export const useCoachStore = defineStore('coach', () => {
       const response = await coachApi.updateCoach(coachId, data)
       if (response.code === 200) {
         // 更新成功后刷新当前教练详情
-        if (currentCoach.value?.id === coachId) {
-          await fetchCoachDetail(coachId)
-        }
-        // 刷新列表
-        await fetchCoachList({
-          pageNum: pageInfo.value.pageNum,
-          pageSize: pageInfo.value.pageSize
-        })
+        // if (currentCoach.value?.id === coachId) {
+        //   await fetchCoachDetail(coachId)
+        // }
+        // // 刷新列表
+        // await fetchCoachList({
+        //   pageNum: pageInfo.value.pageNum,
+        //   pageSize: pageInfo.value.pageSize
+        // })
       }
       return response
     } catch (error) {

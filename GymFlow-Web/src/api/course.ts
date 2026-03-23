@@ -88,6 +88,16 @@ export const courseApi = {
   },
 
   /**
+   * 删除排课
+   */
+  deleteCourseSchedule(scheduleId: number): Promise<ApiResponse> {
+    return request({
+      url: `/course/schedule/${scheduleId}`,
+      method: 'DELETE'
+    })
+  },
+
+  /**
    * 获取课程排课列表
    */
   getCourseSchedules(courseId: number): Promise<ApiResponse<CourseScheduleVO[]>> {

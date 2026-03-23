@@ -42,9 +42,9 @@
             <el-option label="自由训练" :value="false" />
           </el-select>
         </el-form-item>
-        <el-form-item label="签到时间">
+        <!-- <el-form-item label="签到时间">
           <el-date-picker v-model="filterForm.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px;" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon>

@@ -138,7 +138,7 @@
             {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
@@ -146,9 +146,16 @@
             <el-button v-permission="'coach:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button v-permission="'coach:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
+            <!-- <el-button v-permission="'coach:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
               排班
-            </el-button>
+            </el-button> -->
+            <!-- <el-popconfirm title="确定改变教练状态吗？" @confirm="handleChangeStatus(row.id,row.status)" confirm-button-text="确定" cancel-button-text="取消">
+              <template #reference>
+                <el-button v-permission="'coach:delete'" type="danger" link size="small">
+                  {{ row.status == 1 ? '离职' : '在职' }}
+                </el-button>
+              </template>
+            </el-popconfirm> -->
             <el-popconfirm title="确定要删除这个教练吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
                 <el-button v-permission="'coach:delete'" type="danger" link size="small">
@@ -265,6 +272,19 @@ const handleEdit = (id: number) => {
 
 const handleViewSchedule = (id: number) => {
   router.push(`/coach/schedule/${id}`)
+}
+
+// 更新教练状态（在职/离职）
+const handleChangeStatus = async (id: number, newStatus: number) => {
+  try {
+    await coachStore.updateCoachStatus(id, newStatus)
+    ElMessage.success(newStatus === 1 ? '已设置为在职' : '已设置为离职')
+    // 刷新列表
+    await handleSearch()
+  } catch (error) {
+    console.error('状态变更失败:', error)
+    ElMessage.error('状态变更失败')
+  }
 }
 
 // 删除教练

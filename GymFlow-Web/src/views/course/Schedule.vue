@@ -443,16 +443,31 @@ const handleViewScheduleDetail = (schedule: CourseScheduleVO) => {
 // 删除排课
 const handleDeleteSchedule = async (schedule: CourseScheduleVO) => {
   try {
-    scheduleDialog.loading = true
-    // 这里需要调用API删除排课
-    // 暂时从列表中移除
-    schedules.value = schedules.value.filter((s) => s.scheduleId !== schedule.scheduleId)
+    // 检查是否有预约
+    if (schedule.currentEnrollment > 0) {
+      ElMessage.warning('该排课已有会员预约，无法删除')
+      return
+    }
+    
+    await ElMessageBox.confirm(
+      `确定要删除 ${schedule.scheduleDate} ${schedule.startTime?.slice(0, 5)} 的排课吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    await courseStore.deleteCourseSchedule(schedule.scheduleId)
     ElMessage.success('删除成功')
+    // 刷新排课列表
+    await loadSchedules()
   } catch (error) {
-    console.error('删除排课失败:', error)
-    ElMessage.error('删除失败')
-  } finally {
-    scheduleDialog.loading = false
+    if (error !== 'cancel') {
+      console.error('删除排课失败:', error)
+      ElMessage.error('删除失败')
+    }
   }
 }
 

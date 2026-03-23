@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { 
+import type {
   MemberQueryDTO,
   MemberListVO,
   PageResult,
@@ -28,7 +28,7 @@ export const useMemberStore = defineStore('member', () => {
   })
 
   // Actions
-  
+
   /**
    * 分页查询会员列表
    */
@@ -40,7 +40,7 @@ export const useMemberStore = defineStore('member', () => {
         pageSize: params.pageSize || 10,
         ...params
       }
-      
+
       const response = await memberApi.getMemberList(queryParams)
       if (response.code === 200) {
         members.value = response.data.list
@@ -69,7 +69,7 @@ export const useMemberStore = defineStore('member', () => {
       const response = await memberApi.getMemberDetail(memberId)
       if (response.code === 200) {
         currentMember.value = response.data
-        
+
         // 同时存储相关的健康档案、会员卡等信息
         healthRecords.value = response.data.healthRecords || []
         memberCards.value = response.data.memberCards || []
@@ -144,7 +144,7 @@ export const useMemberStore = defineStore('member', () => {
         // 从本地列表中移除
         members.value = members.value.filter(member => member.id !== memberId)
         total.value -= 1
-        
+
         // 如果删除的是当前查看的会员，清空当前会员数据
         if (currentMember.value?.id === memberId) {
           currentMember.value = null
@@ -172,7 +172,7 @@ export const useMemberStore = defineStore('member', () => {
         // 从本地列表中移除
         members.value = members.value.filter(member => !memberIds.includes(member.id))
         total.value -= memberIds.length
-        
+
         // 如果删除的包含当前查看的会员，清空当前会员数据
         if (currentMember.value && memberIds.includes(currentMember.value.id)) {
           currentMember.value = null
@@ -190,24 +190,45 @@ export const useMemberStore = defineStore('member', () => {
   }
 
   /**
-   * 续费会员卡
-   */
-  const renewMemberCard = async (memberId: number, cardData: MemberCardDTO) => {
+ * 为会员添加新卡
+ */
+  const addMemberCard = async (memberId: number, cardData: MemberCardDTO) => {
     try {
       loading.value = true
-      const response = await memberApi.renewMemberCard(memberId, cardData)
+      const response = await memberApi.addMemberCard(memberId, cardData)
       if (response.code === 200) {
-        // 续费成功后刷新会员详情
+        // 添加成功后刷新会员详情
         await fetchMemberDetail(memberId)
+        ElMessage.success('添加成功')
       }
       return response
     } catch (error) {
-      console.error('续费会员卡失败:', error)
+      console.error('添加会员卡失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
+
+  /**
+   * 续费会员卡
+   */
+  // const renewMemberCard = async (memberId: number, cardData: MemberCardDTO) => {
+  //   try {
+  //     loading.value = true
+  //     const response = await memberApi.renewMemberCard(memberId, cardData)
+  //     if (response.code === 200) {
+  //       // 续费成功后刷新会员详情
+  //       await fetchMemberDetail(memberId)
+  //     }
+  //     return response
+  //   } catch (error) {
+  //     console.error('续费会员卡失败:', error)
+  //     throw error
+  //   } finally {
+  //     loading.value = false
+  //   }
+  // }
 
   /**
    * 获取健康档案列表
@@ -375,7 +396,7 @@ export const useMemberStore = defineStore('member', () => {
     total,
     loading,
     pageInfo,
-    
+
     // Actions
     fetchMembers,
     fetchMemberDetail,
@@ -383,7 +404,8 @@ export const useMemberStore = defineStore('member', () => {
     updateMember,
     deleteMember,
     batchDeleteMembers,
-    renewMemberCard,
+    addMemberCard,
+    // renewMemberCard,
     fetchHealthRecords,
     addHealthRecord,
     updateHealthRecord,
@@ -392,7 +414,7 @@ export const useMemberStore = defineStore('member', () => {
     setPageInfo,
     clearCurrentMember,
     resetState,
-    
+
     // Getters
     hasNextPage,
     hasPrevPage

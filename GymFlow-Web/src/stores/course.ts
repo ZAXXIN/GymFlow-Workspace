@@ -232,6 +232,34 @@ export const useCourseStore = defineStore('course', () => {
   }
 
   /**
+   * 删除排课
+   */
+  const deleteCourseSchedule = async (scheduleId: number) => {
+    try {
+      loading.value = true
+      const response = await courseApi.deleteCourseSchedule(scheduleId)
+      if (response.code === 200) {
+        // 从本地列表中移除
+        courseSchedules.value = courseSchedules.value.filter(
+          item => item.scheduleId !== scheduleId
+        )
+        // 如果当前课程有排课列表，也同步更新
+        if (currentCourse.value?.schedules) {
+          currentCourse.value.schedules = currentCourse.value.schedules.filter(
+            item => item.scheduleId !== scheduleId
+          )
+        }
+      }
+      return response
+    } catch (error) {
+      console.error('删除排课失败:', error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
    * 核销课程预约
    */
   const verifyCourseBooking = async (bookingId: number, checkinMethod: number) => {
@@ -326,6 +354,7 @@ export const useCourseStore = defineStore('course', () => {
     fetchCourseSchedules,
     fetchCourseTimetable,
     scheduleCourse,
+    deleteCourseSchedule,
     verifyCourseBooking,
     cancelCourseBooking,
     setPageInfo,

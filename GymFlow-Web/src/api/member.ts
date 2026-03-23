@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 import type { ApiResponse } from '@/types/common'
-import type { 
+import type {
   MemberQueryDTO,
   MemberListVO,
   PageResult,
@@ -78,6 +78,17 @@ export const memberApi = {
   },
 
   /**
+ * 为会员添加新卡
+ */
+  addMemberCard(memberId: number, data: MemberCardDTO): Promise<ApiResponse> {
+    return request({
+      url: `/member/add-card/${memberId}`,
+      method: 'POST',
+      data
+    })
+  },
+
+  /**
    * 启用/禁用会员
    */
   // changeMemberStatus(memberId: number, status: number): Promise<ApiResponse> {
@@ -88,16 +99,16 @@ export const memberApi = {
   //   })
   // },
 
-  /**
-   * 续费会员卡
-   */
-  renewMemberCard(memberId: number, data: MemberCardDTO): Promise<ApiResponse> {
-    return request({
-      url: `/member/renew-card/${memberId}`,
-      method: 'POST',
-      data
-    })
-  },
+  // /**
+  //  * 续费会员卡
+  //  */
+  // renewMemberCard(memberId: number, data: MemberCardDTO): Promise<ApiResponse> {
+  //   return request({
+  //     url: `/member/renew-card/${memberId}`,
+  //     method: 'POST',
+  //     data
+  //   })
+  // },
 
   /**
    * 获取健康档案列表
@@ -120,16 +131,16 @@ export const memberApi = {
     })
   },
 
-    /**
-   * 更新健康档案
-   */
-    updateHealthRecord(recordId: number, data: HealthRecordDTO): Promise<ApiResponse> {
-      return request({
-        url: `/member/update-health-record/${recordId}`,
-        method: 'PUT',
-        data
-      })
-    },
+  /**
+ * 更新健康档案
+ */
+  updateHealthRecord(recordId: number, data: HealthRecordDTO): Promise<ApiResponse> {
+    return request({
+      url: `/member/update-health-record/${recordId}`,
+      method: 'PUT',
+      data
+    })
+  },
 
   /**
    * 删除健康档案
@@ -179,7 +190,7 @@ export const memberApi = {
   // importMembers(file: File): Promise<ApiResponse> {
   //   const formData = new FormData()
   //   formData.append('file', file)
-    
+
   //   return request({
   //     url: '/api/member/import',
   //     method: 'POST',

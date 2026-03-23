@@ -219,9 +219,6 @@ const revenuePeriod = ref('week')
 
 // 格式化函数
 const formatRevenue = (value: number) => {
-  if (value >= 10000) {
-    return (value / 10000).toFixed(1) + '万'
-  }
   return value.toFixed(2)
 }
 
