@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -96,7 +95,7 @@ public class CourseServiceImpl implements CourseService {
             vo.setCourseName(course.getCourseName());
             vo.setDescription(course.getDescription());
             vo.setDuration(course.getDuration());
-            vo.setPrice(course.getPrice());
+            vo.setSessionCost(course.getSessionCost());
             vo.setStatus(course.getStatus());
 
             // 查询绑定教练
@@ -139,7 +138,7 @@ public class CourseServiceImpl implements CourseService {
         dto.setCourseName(course.getCourseName());
         dto.setDescription(course.getDescription());
         dto.setDuration(course.getDuration());
-        dto.setPrice(course.getPrice());
+        dto.setSessionCost(course.getSessionCost());
         dto.setStatus(course.getStatus());
         dto.setNotice(course.getNotice());
         dto.setCreateTime(course.getCreateTime());
@@ -183,7 +182,7 @@ public class CourseServiceImpl implements CourseService {
         course.setCourseName(courseDTO.getCourseName());
         course.setDescription(courseDTO.getDescription());
         course.setDuration(courseDTO.getDuration());
-        course.setPrice(courseDTO.getPrice());
+        course.setSessionCost(courseDTO.getSessionCost());
         course.setNotice(courseDTO.getNotice());
         course.setStatus(1); // 默认正常
 
@@ -229,7 +228,7 @@ public class CourseServiceImpl implements CourseService {
         course.setCourseName(courseDTO.getCourseName());
         course.setDescription(courseDTO.getDescription());
         course.setDuration(courseDTO.getDuration());
-        course.setPrice(courseDTO.getPrice());
+        course.setSessionCost(courseDTO.getSessionCost());
         course.setNotice(courseDTO.getNotice());
 
         courseMapper.updateById(course);
@@ -319,7 +318,7 @@ public class CourseServiceImpl implements CourseService {
         // 验证营业时间
         configValidator.validateBusinessHours(scheduleDTO.getStartTime(), scheduleDTO.getEndTime());
 
-        // 验证课程容量 - 从 scheduleDTO 获取
+        // 验证课程容量
         if (scheduleDTO.getMaxCapacity() != null) {
             configValidator.validateClassCapacity(0, scheduleDTO.getMaxCapacity());
         }
@@ -331,7 +330,6 @@ public class CourseServiceImpl implements CourseService {
         schedule.setScheduleDate(scheduleDTO.getScheduleDate());
         schedule.setStartTime(scheduleDTO.getStartTime());
         schedule.setEndTime(scheduleDTO.getEndTime());
-        // 从 DTO 获取 maxCapacity，如果没有则使用默认值 20
         schedule.setMaxCapacity(scheduleDTO.getMaxCapacity() != null ? scheduleDTO.getMaxCapacity() : 20);
         schedule.setCurrentEnrollment(0);
         schedule.setStatus(1); // 正常
@@ -443,49 +441,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void bookPrivateCourse(Long memberId, Long coachId, LocalDate courseDate, LocalTime startTime) {
-        // 查询会员是否有可用的私教课课时
-        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-        itemWrapper.eq(OrderItem::getProductType, 1) // 私教课
-                .eq(OrderItem::getStatus, "ACTIVE")
-                .gt(OrderItem::getRemainingSessions, 0);
-
-        List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
-        if (availableItems.isEmpty()) {
-            throw new BusinessException("您没有可用的私教课时");
-        }
-
-        // 查询教练在该时间段是否有空
-        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
-        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId)
-                .eq(CourseSchedule::getScheduleDate, courseDate)
-                .le(CourseSchedule::getStartTime, startTime)
-                .ge(CourseSchedule::getEndTime, startTime.plusMinutes(60)); // 假设私教课60分钟
-
-        if (courseScheduleMapper.selectCount(scheduleWrapper) > 0) {
-            throw new BusinessException("教练在该时间段已有课程");
-        }
-
-        // 创建临时排课
-        // 这里简化处理，直接创建预约记录
-        CourseBooking booking = new CourseBooking();
-        booking.setMemberId(memberId);
-        // 私教课没有scheduleId，需要特殊处理
-        booking.setBookingStatus(0);
-        booking.setBookingTime(LocalDateTime.now());
-
-        // 生成签到码
-        String signCode = generateSignCode();
-        booking.setSignCode(signCode);
-
-        LocalDateTime courseDateTime = LocalDateTime.of(courseDate, startTime);
-        booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
-
-        courseBookingMapper.insert(booking);
-
-        // 扣减课时
-        OrderItem item = availableItems.get(0);
-        item.setRemainingSessions(item.getRemainingSessions() - 1);
-        orderItemMapper.updateById(item);
+        // 私教课预约逻辑
+        throw new BusinessException("私教课预约功能开发中");
     }
 
     @Override
@@ -501,7 +458,7 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("该排课已取消");
         }
 
-        // 检查是否还有名额 - 从 schedule 获取 maxCapacity
+        // 检查是否还有名额
         if (schedule.getCurrentEnrollment() >= schedule.getMaxCapacity()) {
             throw new BusinessException("该课程已满员");
         }
@@ -510,7 +467,7 @@ public class CourseServiceImpl implements CourseService {
         LambdaQueryWrapper<CourseBooking> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CourseBooking::getMemberId, memberId)
                 .eq(CourseBooking::getScheduleId, scheduleId)
-                .ne(CourseBooking::getBookingStatus, 3); // 排除已取消
+                .ne(CourseBooking::getBookingStatus, 3);
 
         if (courseBookingMapper.selectCount(wrapper) > 0) {
             throw new BusinessException("您已预约过该课程");
@@ -522,24 +479,62 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("不能预约已开始的课程");
         }
 
+        // 获取课程信息
+        Course course = courseMapper.selectById(schedule.getCourseId());
+        if (course == null) {
+            throw new BusinessException("课程不存在");
+        }
+
+        // 根据课程类型确定需要查询的课时类型
+        Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
+
+        // 查询可用的课时
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getProductType, targetProductType)
+                .eq(OrderItem::getStatus, "ACTIVE")
+                .gt(OrderItem::getRemainingSessions, 0)
+                .orderByDesc(OrderItem::getValidityEndDate);
+
+        List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
+        if (availableItems.isEmpty()) {
+            throw new BusinessException("您没有可用的课时");
+        }
+
+        // 计算需要消耗的课时
+        Integer sessionCost = course.getSessionCost();
+        if (sessionCost == null) {
+            sessionCost = 1;
+        }
+
+        // 使用最早过期的课时
+        OrderItem item = availableItems.get(0);
+        if (item.getRemainingSessions() < sessionCost) {
+            throw new BusinessException(String.format("课时不足，本课程需要 %d 课时，您只有 %d 课时",
+                    sessionCost, item.getRemainingSessions()));
+        }
+
+        // 扣减课时
+        item.setRemainingSessions(item.getRemainingSessions() - sessionCost);
+        orderItemMapper.updateById(item);
+
         // 创建预约
         CourseBooking booking = new CourseBooking();
         booking.setMemberId(memberId);
         booking.setScheduleId(scheduleId);
         booking.setCourseId(schedule.getCourseId());
-        booking.setBookingStatus(0); // 待上课
+        booking.setBookingStatus(0);
         booking.setBookingTime(LocalDateTime.now());
 
         // 生成6位随机签到码
         String signCode = generateSignCode();
         booking.setSignCode(signCode);
 
-        // 设置签到码过期时间（课前30分钟到课后15分钟）
+        // 设置签到码过期时间
         booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
 
-        // 设置自动完成时间（课程结束后1小时）
+        // 设置自动完成时间
         LocalDateTime courseEndTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
-        booking.setAutoCompleteTime(courseEndTime.plusHours(1));
+        booking.setAutoCompleteTime(courseEndTime.plusHours(configValidator.getAutoCompleteHours()));
 
         courseBookingMapper.insert(booking);
 
@@ -570,7 +565,7 @@ public class CourseServiceImpl implements CourseService {
         configValidator.validateCheckInTime(courseDateTime);
 
         // 更新预约状态
-        booking.setBookingStatus(1); // 已签到
+        booking.setBookingStatus(1);
         booking.setCheckinTime(LocalDateTime.now());
         courseBookingMapper.updateById(booking);
     }
@@ -597,7 +592,7 @@ public class CourseServiceImpl implements CourseService {
         configValidator.validateCourseCancellation(courseDateTime);
 
         // 更新预约状态
-        booking.setBookingStatus(3); // 已取消
+        booking.setBookingStatus(3);
         booking.setCancellationReason(reason);
         booking.setCancellationTime(LocalDateTime.now());
         courseBookingMapper.updateById(booking);
@@ -606,19 +601,22 @@ public class CourseServiceImpl implements CourseService {
         schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() - 1);
         courseScheduleMapper.updateById(schedule);
 
-        // 如果是私教课，需要恢复课时
+        // 恢复课时
         Course course = courseMapper.selectById(booking.getCourseId());
-        if (course.getCourseType() == 0) { // 私教课
-            // 查询该会员最近使用的私教课时订单项，恢复剩余课时
+        if (course != null) {
+            Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
+            Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
+
+            // 查询该会员最近使用的课时包
             LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-            itemWrapper.eq(OrderItem::getProductType, 1)
+            itemWrapper.eq(OrderItem::getProductType, targetProductType)
                     .eq(OrderItem::getStatus, "ACTIVE")
                     .orderByDesc(OrderItem::getUpdateTime)
                     .last("LIMIT 1");
 
             OrderItem item = orderItemMapper.selectOne(itemWrapper);
             if (item != null) {
-                item.setRemainingSessions(item.getRemainingSessions() + 1);
+                item.setRemainingSessions(item.getRemainingSessions() + sessionCost);
                 orderItemMapper.updateById(item);
             }
         }
@@ -706,7 +704,6 @@ public class CourseServiceImpl implements CourseService {
             dto.setGender(coach.getGender());
             dto.setSpecialty(coach.getSpecialty());
 
-            // 将JSON字符串转换为List<String>
             if (coach.getCertifications() != null) {
                 String certStr = coach.getCertifications();
                 List<String> certs = List.of(certStr.replace("[", "").replace("]", "").replace("\"", "").split(","));

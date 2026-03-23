@@ -31,14 +31,11 @@ public class CourseFullDTO {
     @Schema(description = "绑定教练信息列表")
     private List<CoachBasicDTO> coaches;
 
-    @Schema(description = "最大容量")
-    private Integer maxCapacity;
-
     @Schema(description = "课时长（分钟）")
     private Integer duration;
 
-    @Schema(description = "价格")
-    private BigDecimal price;
+    @Schema(description = "预约消耗课时数")
+    private Integer sessionCost;
 
     @Schema(description = "状态：0-禁用，1-正常")
     private Integer status;

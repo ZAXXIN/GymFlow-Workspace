@@ -58,7 +58,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         BeanUtils.copyProperties(member, dto);
         dto.setUsername(member.getPhone());
 
-        // 获取会员卡信息（会籍卡 + 课程包）
+        // 获取会员卡信息
         List<MiniMemberCardDTO> cards = getMemberCards(memberId);
         dto.setMemberCards(cards);
 
@@ -66,7 +66,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         List<HealthRecordDTO> healthRecords = getHealthRecords(memberId);
         dto.setHealthRecords(healthRecords);
 
-        // 获取课程包列表（单独返回，便于前端使用）
+        // 获取课程包列表
         List<MyCourseDTO> courses = getMyCourses(memberId);
         dto.setCourses(courses);
 
@@ -74,15 +74,14 @@ public class MiniMemberServiceImpl implements MiniMemberService {
     }
 
     /**
-     * 获取会员卡列表（会籍卡 + 课程包）
+     * 获取会员卡列表
      */
     private List<MiniMemberCardDTO> getMemberCards(Long memberId) {
         List<MiniMemberCardDTO> cardList = new ArrayList<>();
 
-        // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1) // 已支付
+                .eq(Order::getPaymentStatus, 1)
                 .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
@@ -92,10 +91,10 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
 
-        // 查询订单项（会籍卡、私教课、团课）
+        // 查询订单项
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
         itemQuery.in(OrderItem::getOrderId, orderIds)
-                .in(OrderItem::getProductType, 0, 1, 2) // 0-会籍卡，1-私教课，2-团课
+                .in(OrderItem::getProductType, 0, 1, 2)
                 .orderByDesc(OrderItem::getCreateTime);
 
         List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);
@@ -132,12 +131,11 @@ public class MiniMemberServiceImpl implements MiniMemberService {
     }
 
     /**
-     * 获取课程包列表（私教课、团课）
+     * 获取课程包列表
      */
     private List<MyCourseDTO> getMyCourses(Long memberId) {
         List<MyCourseDTO> courseList = new ArrayList<>();
 
-        // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
                 .eq(Order::getPaymentStatus, 1)
@@ -150,15 +148,15 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
 
-        // 查询课程类订单项（私教课、团课）
+        // 查询课程类订单项
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
         itemQuery.in(OrderItem::getOrderId, orderIds)
-                .in(OrderItem::getProductType, 1, 2) // 1-私教课，2-团课
-                .gt(OrderItem::getRemainingSessions, 0) // 剩余课时大于0
+                .in(OrderItem::getProductType, 1, 2)
+                .gt(OrderItem::getRemainingSessions, 0)
                 .and(wrapper -> wrapper
                         .isNull(OrderItem::getValidityEndDate)
                         .or()
-                        .ge(OrderItem::getValidityEndDate, LocalDate.now())) // 未过期或没有有效期
+                        .ge(OrderItem::getValidityEndDate, LocalDate.now()))
                 .orderByDesc(OrderItem::getCreateTime);
 
         List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);

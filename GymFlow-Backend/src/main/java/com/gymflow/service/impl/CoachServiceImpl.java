@@ -486,7 +486,6 @@ public class CoachServiceImpl implements CoachService {
             dto.setStartTime(schedule.getStartTime());
             dto.setEndTime(schedule.getEndTime());
             dto.setDuration(course.getDuration());
-            dto.setPrice(course.getPrice());
             dto.setMaxCapacity(schedule.getMaxCapacity());
             dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
 

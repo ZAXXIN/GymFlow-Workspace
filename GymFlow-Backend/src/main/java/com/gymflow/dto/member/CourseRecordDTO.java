@@ -36,9 +36,8 @@ public class CourseRecordDTO {
     @Schema(description = "课程结束时间", example = "2026-01-28T15:30:00", required = true)
     private LocalDateTime endTime;
 
-    @Size(max = 200, message = "上课地点长度不能超过200")
-    @Schema(description = "上课地点", example = "健身房2楼瑜伽室")
-    private String location;
+    @Schema(description = "消耗课时数", example = "1")
+    private Integer sessionCost;
 
     @NotNull(message = "预约状态不能为空")
     @Min(value = 0, message = "预约状态值只能是0-3")

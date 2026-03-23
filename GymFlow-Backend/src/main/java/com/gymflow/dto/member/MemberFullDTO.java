@@ -44,7 +44,7 @@ public class MemberFullDTO {
     @Schema(description = "性别：0-女，1-男", example = "1", required = true)
     private Integer gender;
 
-    @Schema(description = "出生日期")
+    @Schema(description = "出生日期", example = "1990-01-01")
     private LocalDate birthday;
 
     @Schema(description = "年龄")
@@ -94,5 +94,37 @@ public class MemberFullDTO {
 
     public String getUsername() {
         return this.phone;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public void setHealthRecords(List<HealthRecordDTO> healthRecords) {
+        this.healthRecords = healthRecords;
+    }
+
+    public void setMemberCards(List<MiniMemberCardDTO> memberCards) {
+        this.memberCards = memberCards;
+    }
+
+    public void setCourses(List<MyCourseDTO> courses) {
+        this.courses = courses;
+    }
+
+    public void setCourseRecords(List<CourseRecordDTO> courseRecords) {
+        this.courseRecords = courseRecords;
+    }
+
+    public void setCheckinRecords(List<CheckInRecordDTO> checkinRecords) {
+        this.checkinRecords = checkinRecords;
     }
 }

@@ -216,88 +216,6 @@ public class MiniCoachServiceImpl implements MiniCoachService {
     }
 
     @Override
-    public MiniFinanceStatsDTO getFinanceStats(Long coachId, String period) {
-        MiniFinanceStatsDTO stats = new MiniFinanceStatsDTO();
-        stats.setPeriod(period);
-
-        Coach coach = coachMapper.selectById(coachId);
-        if (coach == null) {
-            return stats;
-        }
-
-        LocalDate now = LocalDate.now();
-        LocalDate startDate, endDate;
-
-        switch (period) {
-            case "day":
-                startDate = now;
-                endDate = now;
-                break;
-            case "month":
-                startDate = now.withDayOfMonth(1);
-                endDate = now;
-                break;
-            case "year":
-                startDate = now.withDayOfYear(1);
-                endDate = now;
-                break;
-            default:
-                startDate = now.withDayOfMonth(1);
-                endDate = now;
-        }
-
-        // 查询该时间范围内的排课
-        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
-        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId)
-                .between(CourseSchedule::getScheduleDate, startDate, endDate)
-                .eq(CourseSchedule::getStatus, 1);
-
-        List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
-
-        // 计算本月课时数
-        int monthCourseHours = 0;
-        for (CourseSchedule schedule : schedules) {
-            Course course = courseMapper.selectById(schedule.getCourseId());
-            if (course != null && course.getDuration() != null) {
-                monthCourseHours += course.getDuration();
-            }
-        }
-        monthCourseHours = monthCourseHours / 60; // 转换为小时
-
-        // 本月服务会员数（去重）
-        List<Long> memberIds = new ArrayList<>();
-        for (CourseSchedule schedule : schedules) {
-            LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
-                    .in(CourseBooking::getBookingStatus, 1, 2); // 已签到或已完成
-            List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
-            memberIds.addAll(bookings.stream().map(CourseBooking::getMemberId).collect(Collectors.toList()));
-        }
-        long monthMemberCount = memberIds.stream().distinct().count();
-
-        // 本月收入
-        BigDecimal monthIncome = coach.getHourlyRate() != null ?
-                BigDecimal.valueOf(monthCourseHours).multiply(coach.getHourlyRate()) :
-                BigDecimal.ZERO;
-
-        stats.setMonthCourseHours(monthCourseHours);
-        stats.setMonthMemberCount((int) monthMemberCount);
-        stats.setMonthIncome(monthIncome);
-
-        // 总数据
-        stats.setTotalCourseHours(coach.getTotalCourses() != null ? coach.getTotalCourses() : 0);
-        stats.setTotalMemberCount(coach.getTotalStudents() != null ? coach.getTotalStudents() : 0);
-        stats.setTotalIncome(coach.getTotalIncome() != null ? coach.getTotalIncome() : BigDecimal.ZERO);
-
-        // 生成趋势数据（示例，实际需要按日期分组统计）
-        stats.setCourseTrend(generateTrendData(startDate, endDate, "course"));
-        stats.setIncomeTrend(generateTrendData(startDate, endDate, "income"));
-        stats.setMemberTrend(generateTrendData(startDate, endDate, "member"));
-
-        return stats;
-    }
-
-    @Override
     public MiniReminderDTO getCurrentReminder(Long coachId) {
         MiniReminderDTO reminder = new MiniReminderDTO();
         reminder.setHasReminder(false);
@@ -395,23 +313,123 @@ public class MiniCoachServiceImpl implements MiniCoachService {
     }
 
     /**
-     * 获取会员剩余课时
+     * 获取会员剩余课时（修改为按课时类型查询）
      */
     private Integer getMemberRemainingSessions(Long memberId, Integer courseType) {
+        // courseType: 0-私教课, 1-团课
+        Integer targetProductType = courseType == 0 ? 1 : 2;
+
         LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(OrderItem::getProductType, courseType == 0 ? 1 : 2) // 私教课对应product_type=1，团课对应2
+        queryWrapper.eq(OrderItem::getProductType, targetProductType)
                 .eq(OrderItem::getStatus, "ACTIVE")
-                .gt(OrderItem::getRemainingSessions, 0);
+                .gt(OrderItem::getRemainingSessions, 0)
+                .ge(OrderItem::getValidityEndDate, LocalDate.now());
 
         List<OrderItem> items = orderItemMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(items)) {
             return 0;
         }
 
-        // 返回总剩余课时（可能有多个课程包）
+        // 返回总剩余课时
         return items.stream()
                 .mapToInt(OrderItem::getRemainingSessions)
                 .sum();
+    }
+
+    @Override
+    public MiniFinanceStatsDTO getFinanceStats(Long coachId, String period) {
+        MiniFinanceStatsDTO stats = new MiniFinanceStatsDTO();
+        stats.setPeriod(period);
+
+        Coach coach = coachMapper.selectById(coachId);
+        if (coach == null) {
+            return stats;
+        }
+
+        LocalDate now = LocalDate.now();
+        LocalDate startDate, endDate;
+
+        switch (period) {
+            case "day":
+                startDate = now;
+                endDate = now;
+                break;
+            case "month":
+                startDate = now.withDayOfMonth(1);
+                endDate = now;
+                break;
+            case "year":
+                startDate = now.withDayOfYear(1);
+                endDate = now;
+                break;
+            default:
+                startDate = now.withDayOfMonth(1);
+                endDate = now;
+        }
+
+        // 查询该时间范围内的排课
+        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
+        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId)
+                .between(CourseSchedule::getScheduleDate, startDate, endDate)
+                .eq(CourseSchedule::getStatus, 1);
+
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
+
+        // 计算本月课时数
+        int monthCourseHours = 0;
+        for (CourseSchedule schedule : schedules) {
+            Course course = courseMapper.selectById(schedule.getCourseId());
+            if (course != null && course.getDuration() != null) {
+                monthCourseHours += course.getDuration();
+            }
+        }
+        monthCourseHours = monthCourseHours / 60; // 转换为小时
+
+        // 本月服务会员数（去重）
+        List<Long> memberIds = new ArrayList<>();
+        for (CourseSchedule schedule : schedules) {
+            LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
+            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+                    .in(CourseBooking::getBookingStatus, 1, 2); // 已签到或已完成
+            List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
+            memberIds.addAll(bookings.stream().map(CourseBooking::getMemberId).collect(Collectors.toList()));
+        }
+        long monthMemberCount = memberIds.stream().distinct().count();
+
+        // 本月收入（根据课时消耗计算）
+        BigDecimal monthIncome = BigDecimal.ZERO;
+        for (CourseSchedule schedule : schedules) {
+            LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
+            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+                    .in(CourseBooking::getBookingStatus, 1, 2);
+            List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
+
+            Course course = courseMapper.selectById(schedule.getCourseId());
+            if (course != null && course.getSessionCost() != null) {
+                // 收入 = 课时消耗 × 课时单价
+                // 课时单价需要从教练的课程包价格计算，这里简化为使用教练的时薪
+                BigDecimal sessionIncome = coach.getHourlyRate() != null ?
+                        coach.getHourlyRate().multiply(BigDecimal.valueOf(course.getSessionCost())) :
+                        BigDecimal.ZERO;
+                monthIncome = monthIncome.add(sessionIncome.multiply(BigDecimal.valueOf(bookings.size())));
+            }
+        }
+
+        stats.setMonthCourseHours(monthCourseHours);
+        stats.setMonthMemberCount((int) monthMemberCount);
+        stats.setMonthIncome(monthIncome);
+
+        // 总数据
+        stats.setTotalCourseHours(coach.getTotalCourses() != null ? coach.getTotalCourses() : 0);
+        stats.setTotalMemberCount(coach.getTotalStudents() != null ? coach.getTotalStudents() : 0);
+        stats.setTotalIncome(coach.getTotalIncome() != null ? coach.getTotalIncome() : BigDecimal.ZERO);
+
+        // 生成趋势数据
+        stats.setCourseTrend(generateTrendData(startDate, endDate, "course"));
+        stats.setIncomeTrend(generateTrendData(startDate, endDate, "income"));
+        stats.setMemberTrend(generateTrendData(startDate, endDate, "member"));
+
+        return stats;
     }
 
     /**
@@ -430,4 +448,5 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         }
         return trend;
     }
+
 }

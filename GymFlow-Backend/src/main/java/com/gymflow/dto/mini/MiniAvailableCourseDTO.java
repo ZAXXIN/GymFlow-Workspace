@@ -40,15 +40,6 @@ public class MiniAvailableCourseDTO {
     @Schema(description = "结束时间")
     private LocalTime endTime;
 
-    @Schema(description = "价格")
-    private BigDecimal price;
-
-    @Schema(description = "原价")
-    private BigDecimal originalPrice;
-
-    @Schema(description = "折扣")
-    private BigDecimal discount;
-
     @Schema(description = "最大容量")
     private Integer maxCapacity;
 
@@ -58,11 +49,11 @@ public class MiniAvailableCourseDTO {
     @Schema(description = "剩余名额")
     private Integer remainingSlots;
 
+    @Schema(description = "消耗课时数")
+    private Integer sessionCost;
+
     @Schema(description = "课程描述")
     private String description;
-
-    @Schema(description = "课程图片")
-    private String imageUrl;
 
     @Schema(description = "是否可预约")
     private Boolean canBook;

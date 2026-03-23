@@ -40,10 +40,10 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
     @Override
     public List<MiniAvailableCourseDTO> getAvailableCourses(Long memberId, Integer courseType, String keyword) {
-        // 查询所有可预约的排课（团课）
+        // 查询所有可预约的排课
         LambdaQueryWrapper<CourseSchedule> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(CourseSchedule::getScheduleDate, LocalDate.now())
-                .eq(CourseSchedule::getStatus, 1) // 正常状态
+                .eq(CourseSchedule::getStatus, 1)
                 .orderByAsc(CourseSchedule::getScheduleDate)
                 .orderByAsc(CourseSchedule::getStartTime);
 
@@ -75,29 +75,23 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                     dto.setCourseId(course.getId());
                     dto.setCourseName(course.getCourseName());
                     dto.setCourseType(course.getCourseType());
-                    if (course.getCourseType() == 0) {
-                        dto.setCourseTypeDesc("私教课");
-                    } else {
-                        dto.setCourseTypeDesc("团课");
-                    }
+                    dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
                     dto.setCoachId(coach.getId());
                     dto.setCoachName(coach.getRealName());
                     dto.setCourseDate(schedule.getScheduleDate());
                     dto.setStartTime(schedule.getStartTime());
                     dto.setEndTime(schedule.getEndTime());
-                    dto.setPrice(course.getPrice());
-                    dto.setOriginalPrice(course.getPrice());
-                    dto.setDiscount(BigDecimal.valueOf(100));
                     dto.setMaxCapacity(schedule.getMaxCapacity());
                     dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
                     dto.setRemainingSlots(schedule.getMaxCapacity() - schedule.getCurrentEnrollment());
                     dto.setDescription(course.getDescription());
+                    dto.setSessionCost(course.getSessionCost());
 
                     // 检查会员是否已预约
                     LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
                     bookingWrapper.eq(CourseBooking::getMemberId, memberId)
                             .eq(CourseBooking::getScheduleId, schedule.getId())
-                            .ne(CourseBooking::getBookingStatus, 3); // 排除已取消
+                            .ne(CourseBooking::getBookingStatus, 3);
 
                     boolean alreadyBooked = courseBookingMapper.selectCount(bookingWrapper) > 0;
                     dto.setCanBook(!alreadyBooked);
@@ -124,15 +118,11 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         CourseFullDTO dto = new CourseFullDTO();
         dto.setId(course.getId());
         dto.setCourseType(course.getCourseType());
-        if (course.getCourseType() == 0) {
-            dto.setCourseTypeDesc("私教课");
-        } else {
-            dto.setCourseTypeDesc("团课");
-        }
+        dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
         dto.setCourseName(course.getCourseName());
         dto.setDescription(course.getDescription());
         dto.setDuration(course.getDuration());
-        dto.setPrice(course.getPrice());
+        dto.setSessionCost(course.getSessionCost());
         dto.setStatus(course.getStatus());
         dto.setNotice(course.getNotice());
         dto.setCreateTime(course.getCreateTime());
@@ -155,7 +145,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
         List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
 
-        // 转换为排课VO（简化版，只返回基本信息）
         List<com.gymflow.vo.CourseScheduleVO> scheduleVOs = schedules.stream()
                 .filter(s -> s.getCurrentEnrollment() < s.getMaxCapacity())
                 .map(schedule -> {
@@ -205,7 +194,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         LambdaQueryWrapper<CourseBooking> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CourseBooking::getMemberId, memberId)
                 .eq(CourseBooking::getScheduleId, createDTO.getScheduleId())
-                .ne(CourseBooking::getBookingStatus, 3); // 排除已取消
+                .ne(CourseBooking::getBookingStatus, 3);
 
         if (courseBookingMapper.selectCount(wrapper) > 0) {
             throw new MiniBusinessException("您已预约过该课程");
@@ -219,42 +208,53 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
         // 获取课程信息
         Course course = courseMapper.selectById(schedule.getCourseId());
-
-        // 检查会员是否有可用课时（如果是私教课）
-        if (course.getCourseType() == 0) { // 私教课
-            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-            itemWrapper.eq(OrderItem::getProductType, 1) // 私教课
-                    .eq(OrderItem::getStatus, "ACTIVE")
-                    .gt(OrderItem::getRemainingSessions, 0)
-                    .orderByDesc(OrderItem::getValidityEndDate);
-
-            List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
-            if (availableItems.isEmpty()) {
-                throw new MiniBusinessException("您没有可用的私教课时");
-            }
-
-            // 使用最早过期的课时
-            OrderItem item = availableItems.get(0);
-            item.setRemainingSessions(item.getRemainingSessions() - 1);
-            orderItemMapper.updateById(item);
+        if (course == null) {
+            throw new MiniBusinessException("课程不存在");
         }
+
+        // 根据课程类型确定需要查询的课时类型
+        Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
+        Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
+
+        // 查询可用的课时
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getProductType, targetProductType)
+                .eq(OrderItem::getStatus, "ACTIVE")
+                .gt(OrderItem::getRemainingSessions, 0)
+                .orderByDesc(OrderItem::getValidityEndDate);
+
+        List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
+        if (availableItems.isEmpty()) {
+            throw new MiniBusinessException("您没有可用的课时");
+        }
+
+        // 使用最早过期的课时
+        OrderItem item = availableItems.get(0);
+        if (item.getRemainingSessions() < sessionCost) {
+            throw new MiniBusinessException(String.format("课时不足，本课程需要 %d 课时，您只有 %d 课时",
+                    sessionCost, item.getRemainingSessions()));
+        }
+
+        // 扣减课时
+        item.setRemainingSessions(item.getRemainingSessions() - sessionCost);
+        orderItemMapper.updateById(item);
 
         // 创建预约
         CourseBooking booking = new CourseBooking();
         booking.setMemberId(memberId);
         booking.setScheduleId(createDTO.getScheduleId());
         booking.setCourseId(schedule.getCourseId());
-        booking.setBookingStatus(0); // 待上课
+        booking.setBookingStatus(0);
         booking.setBookingTime(LocalDateTime.now());
 
         // 生成6位随机签到码
         String signCode = generateSignCode();
         booking.setSignCode(signCode);
 
-        // 设置签到码过期时间（课前30分钟到课后15分钟）
+        // 设置签到码过期时间
         booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
 
-        // 设置自动完成时间（课程结束后1小时）
+        // 设置自动完成时间
         LocalDateTime courseEndTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
         booking.setAutoCompleteTime(courseEndTime.plusHours(configValidator.getAutoCompleteHours()));
 
@@ -267,9 +267,10 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         // 发送预约成功消息
         Member member = memberMapper.selectById(memberId);
         Coach coach = coachMapper.selectById(schedule.getCoachId());
-        String messageContent = String.format("您已成功预约 %s - %s，教练：%s",
+        String messageContent = String.format("您已成功预约 %s - %s，消耗 %d 课时，教练：%s",
                 course.getCourseName(),
                 schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")),
+                sessionCost,
                 coach != null ? coach.getRealName() : "");
 
         miniMessageService.sendMessage(
@@ -290,7 +291,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         if (status != null) {
             wrapper.eq(CourseBooking::getBookingStatus, status);
         } else {
-            // 默认不显示已取消的
             wrapper.ne(CourseBooking::getBookingStatus, 3);
         }
 
@@ -320,6 +320,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                     dto.setBookingTime(booking.getBookingTime());
                     dto.setBookingStatus(booking.getBookingStatus());
                     dto.setCheckinTime(booking.getCheckinTime());
+                    dto.setSessionCost(course.getSessionCost());
 
                     // 判断是否可取消
                     if (booking.getBookingStatus() == 0) {
@@ -350,7 +351,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             throw new MiniBusinessException("预约记录不存在");
         }
 
-        // 验证权限（只能查看自己的预约）
         if (!booking.getMemberId().equals(userId)) {
             throw new MiniBusinessException("无权查看此预约");
         }
@@ -370,11 +370,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         dto.setCourseId(course.getId());
         dto.setCourseName(course.getCourseName());
         dto.setCourseType(course.getCourseType());
-        if (course.getCourseType() == 0) {
-            dto.setCourseTypeDesc("私教课");
-        } else {
-            dto.setCourseTypeDesc("团课");
-        }
+        dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
         dto.setCourseDescription(course.getDescription());
         dto.setCoachId(coach.getId());
         dto.setCoachName(coach.getRealName());
@@ -382,24 +378,16 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         dto.setCourseDate(schedule.getScheduleDate().toString());
         dto.setStartTime(schedule.getStartTime().toString());
         dto.setEndTime(schedule.getEndTime().toString());
-        dto.setPrice(course.getPrice());
         dto.setBookingTime(booking.getBookingTime());
         dto.setBookingStatus(booking.getBookingStatus());
-        if (booking.getBookingStatus() == 0) {
-            dto.setBookingStatusDesc("待上课");
-        } else if (booking.getBookingStatus() == 1) {
-            dto.setBookingStatusDesc("已签到");
-        } else if (booking.getBookingStatus() == 2) {
-            dto.setBookingStatusDesc("已完成");
-        } else if (booking.getBookingStatus() == 3) {
-            dto.setBookingStatusDesc("已取消");
-        }
+        dto.setBookingStatusDesc(getBookingStatusDesc(booking.getBookingStatus()));
         dto.setCheckinTime(booking.getCheckinTime());
         dto.setCancellationReason(booking.getCancellationReason());
         dto.setCancellationTime(booking.getCancellationTime());
         dto.setMemberName(member.getRealName());
         dto.setMemberPhone(member.getPhone());
         dto.setMemberNo(member.getMemberNo());
+        dto.setSessionCost(course.getSessionCost());
 
         // 获取签到码信息
         if (booking.getBookingStatus() == 0) {
@@ -431,7 +419,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             throw new MiniBusinessException("预约记录不存在");
         }
 
-        // 验证权限
         if (!booking.getMemberId().equals(memberId)) {
             throw new MiniBusinessException("无权取消此预约");
         }
@@ -440,7 +427,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             throw new MiniBusinessException("只有待上课的预约可以取消");
         }
 
-        // 验证取消时间
         CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
         if (schedule == null) {
             throw new MiniBusinessException("排课信息不存在");
@@ -450,7 +436,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         configValidator.validateCourseCancellation(courseDateTime);
 
         // 更新预约状态
-        booking.setBookingStatus(3); // 已取消
+        booking.setBookingStatus(3);
         booking.setCancellationReason(reason);
         booking.setCancellationTime(LocalDateTime.now());
         courseBookingMapper.updateById(booking);
@@ -459,18 +445,21 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() - 1);
         courseScheduleMapper.updateById(schedule);
 
-        // 如果是私教课，需要恢复课时
+        // 恢复课时
         Course course = courseMapper.selectById(booking.getCourseId());
-        if (course.getCourseType() == 0) { // 私教课
+        if (course != null) {
+            Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
+            Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
+
             LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-            itemWrapper.eq(OrderItem::getProductType, 1)
+            itemWrapper.eq(OrderItem::getProductType, targetProductType)
                     .eq(OrderItem::getStatus, "ACTIVE")
                     .orderByDesc(OrderItem::getCreateTime)
                     .last("LIMIT 1");
 
             OrderItem item = orderItemMapper.selectOne(itemWrapper);
             if (item != null) {
-                item.setRemainingSessions(item.getRemainingSessions() + 1);
+                item.setRemainingSessions(item.getRemainingSessions() + sessionCost);
                 orderItemMapper.updateById(item);
             }
         }
@@ -485,16 +474,21 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         );
     }
 
-    /**
-     * 生成6位随机签到码
-     */
     private String generateSignCode() {
         return String.format("%06d", (int)(Math.random() * 1000000));
     }
 
-    /**
-     * 转换为教练基础DTO
-     */
+    private String getBookingStatusDesc(Integer status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case 0: return "待上课";
+            case 1: return "已签到";
+            case 2: return "已完成";
+            case 3: return "已取消";
+            default: return "未知";
+        }
+    }
+
     private List<CoachBasicDTO> convertToCoachBasicDTO(List<Coach> coaches) {
         return coaches.stream().map(coach -> {
             CoachBasicDTO dto = new CoachBasicDTO();
@@ -504,7 +498,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             dto.setGender(coach.getGender());
             dto.setSpecialty(coach.getSpecialty());
 
-            // 将JSON字符串转换为List<String>
             if (coach.getCertifications() != null) {
                 String certStr = coach.getCertifications();
                 List<String> certs = List.of(certStr.replace("[", "").replace("]", "").replace("\"", "").split(","));

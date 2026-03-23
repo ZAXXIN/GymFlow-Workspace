@@ -47,34 +47,4 @@ public interface ProductService {
      * 更新库存
      */
     void updateProductStock(Long productId, Integer quantity);
-
-    /**
-     * 获取所有商品分类（树形结构）
-     */
-    List<ProductCategoryDTO> getAllCategories();
-
-    /**
-     * 获取分类详情
-     */
-    ProductCategoryDTO getCategoryDetail(Long categoryId);
-
-    /**
-     * 新增分类
-     */
-    Long addCategory(ProductCategoryDTO categoryDTO);
-
-    /**
-     * 编辑分类
-     */
-    void updateCategory(Long categoryId, ProductCategoryDTO categoryDTO);
-
-    /**
-     * 删除分类
-     */
-    void deleteCategory(Long categoryId);
-
-    /**
-     * 更新分类状态
-     */
-    void updateCategoryStatus(Long categoryId, Integer status);
 }

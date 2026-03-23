@@ -48,9 +48,6 @@ public class MiniBookingDetailDTO {
     @Schema(description = "结束时间")
     private String endTime;
 
-    @Schema(description = "价格")
-    private BigDecimal price;
-
     @Schema(description = "预约时间")
     private LocalDateTime bookingTime;
 
@@ -62,6 +59,9 @@ public class MiniBookingDetailDTO {
 
     @Schema(description = "签到时间")
     private LocalDateTime checkinTime;
+
+    @Schema(description = "消耗课时数")
+    private Integer sessionCost;
 
     @Schema(description = "签到码信息")
     private MiniCheckinCodeDTO checkinCode;

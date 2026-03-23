@@ -18,12 +18,9 @@ public class Product {
     @TableField("product_type")
     private Integer productType;
 
-    @TableField("category_id")
-    private Long categoryId;
-
     private String description;
 
-    private String images; // JSON格式存储
+    private String images;
 
     @TableField("original_price")
     private BigDecimal originalPrice;
@@ -31,23 +28,33 @@ public class Product {
     @TableField("current_price")
     private BigDecimal currentPrice;
 
-    @TableField("cost_price")
-    private BigDecimal costPrice;
-
     @TableField("stock_quantity")
     private Integer stockQuantity;
 
     @TableField("sales_volume")
     private Integer salesVolume;
 
-    private String unit;
+    private String specifications;
+
+    private Integer status;
 
     @TableField("validity_days")
     private Integer validityDays;
 
-    private String specifications; // JSON格式存储
+    @TableField("total_sessions")
+    private Integer totalSessions;
 
-    private Integer status;
+    @TableField("membership_benefits")
+    private String membershipBenefits;  // JSON格式
+
+    @TableField("max_purchase_quantity")
+    private Integer maxPurchaseQuantity;
+
+    @TableField("refund_policy")
+    private String refundPolicy;
+
+    @TableField("usage_rules")
+    private String usageRules;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

@@ -2,7 +2,6 @@ package com.gymflow.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,11 +21,11 @@ public class Course {
 
     private Integer duration;
 
-    private BigDecimal price;
+    @TableField("session_cost")
+    private Integer sessionCost;  // 预约消耗课时数
 
     private Integer status;
 
-    @TableField("notice")  // 新增：课程须知
     private String notice;
 
     @TableField(fill = FieldFill.INSERT)

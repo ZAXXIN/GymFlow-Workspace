@@ -15,7 +15,7 @@ public class CourseListVO {
     private List<String> coachNames;  // 绑定教练姓名列表
 //    private Integer maxCapacity;
     private Integer duration;
-    private BigDecimal price;
+    private Integer sessionCost;  // 预约消耗课时数
     private Integer status;
     private String statusDesc;
 

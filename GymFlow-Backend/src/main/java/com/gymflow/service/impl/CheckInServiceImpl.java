@@ -185,6 +185,7 @@ public class CheckInServiceImpl implements CheckInService {
                             vo.setCourseId(course.getId());
                             vo.setCourseName(course.getCourseName());
                             vo.setCourseType(course.getCourseType());
+                            vo.setSessionCost(course.getSessionCost());
                         }
 
                         // 查询教练信息

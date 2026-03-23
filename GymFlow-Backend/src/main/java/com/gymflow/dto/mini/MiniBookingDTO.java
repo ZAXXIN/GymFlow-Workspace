@@ -47,6 +47,9 @@ public class MiniBookingDTO {
     @Schema(description = "签到时间")
     private LocalDateTime checkinTime;
 
+    @Schema(description = "消耗课时数")
+    private Integer sessionCost;
+
     @Schema(description = "是否可取消")
     private Boolean canCancel;
 

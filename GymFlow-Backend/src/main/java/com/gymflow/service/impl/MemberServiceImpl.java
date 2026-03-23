@@ -46,7 +46,6 @@ public class MemberServiceImpl implements MemberService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ProductMapper productMapper;
-    private final ProductDetailMapper productDetailMapper;
 
     private final BCryptUtil bCryptUtil;
     private final SystemConfigValidator configValidator;
@@ -304,20 +303,18 @@ public class MemberServiceImpl implements MemberService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = null;
 
-        // 根据商品ID获取商品信息
         Product product = productMapper.selectById(cardDTO.getProductId());
         if (product == null) {
             throw new BusinessException("商品不存在");
         }
 
-        // 根据商品的有效期天数计算结束日期
-        if (product.getValidityDays() != null && product.getValidityDays() > 0) {
+        // 会籍卡：使用商品的有效期天数
+        if (product.getProductType() == 0 && product.getValidityDays() != null) {
             endDate = today.plusDays(product.getValidityDays());
-            log.info("商品有效期天数：{}，结束日期：{}", product.getValidityDays(), endDate);
+            log.info("会籍卡有效期天数：{}，结束日期：{}", product.getValidityDays(), endDate);
         } else {
-            // 如果没有有效期天数，默认30天
+            // 默认30天
             endDate = today.plusDays(30);
-            log.warn("商品未设置有效期天数，使用默认30天");
         }
 
         OrderItem orderItem = new OrderItem();
@@ -332,11 +329,9 @@ public class MemberServiceImpl implements MemberService {
         orderItem.setValidityEndDate(endDate);
 
         // 设置课时数（用于课程卡）
-        if (cardDTO.getCardType() == 1 || cardDTO.getCardType() == 2) {
-            orderItem.setTotalSessions(cardDTO.getTotalSessions() != null ?
-                    cardDTO.getTotalSessions() : 10);
-            orderItem.setRemainingSessions(cardDTO.getTotalSessions() != null ?
-                    cardDTO.getTotalSessions() : 10);
+        if (product.getProductType() == 1 || product.getProductType() == 2) {
+            orderItem.setTotalSessions(product.getTotalSessions());
+            orderItem.setRemainingSessions(product.getTotalSessions());
         }
 
         orderItem.setStatus("ACTIVE");
@@ -463,15 +458,15 @@ public class MemberServiceImpl implements MemberService {
         }
 
         // 根据商品的有效期天数计算结束日期
-        if (product.getValidityDays() != null && product.getValidityDays() > 0) {
-            member.setMembershipEndDate(today.plusDays(product.getValidityDays()));
-        } else {
-            member.setMembershipEndDate(today.plusDays(30));
-        }
-
-        log.info("计算会籍有效期，开始日期：{}，结束日期：{}，有效期天数：{}",
-                member.getMembershipStartDate(), member.getMembershipEndDate(),
-                product.getValidityDays());
+//        if (product.getValidityDays() != null && product.getValidityDays() > 0) {
+//            member.setMembershipEndDate(today.plusDays(product.getValidityDays()));
+//        } else {
+//            member.setMembershipEndDate(today.plusDays(30));
+//        }
+//
+//        log.info("计算会籍有效期，开始日期：{}，结束日期：{}，有效期天数：{}",
+//                member.getMembershipStartDate(), member.getMembershipEndDate(),
+//                product.getValidityDays());
     }
 
     @Override
@@ -802,6 +797,7 @@ public class MemberServiceImpl implements MemberService {
                 CourseRecordDTO recordDTO = new CourseRecordDTO();
                 recordDTO.setCourseId(booking.getCourseId());
                 recordDTO.setCourseName(course.getCourseName());
+                recordDTO.setSessionCost(course.getSessionCost());
 
                 // 获取教练信息
                 Coach coach = coachMapper.selectById(schedule.getCoachId());

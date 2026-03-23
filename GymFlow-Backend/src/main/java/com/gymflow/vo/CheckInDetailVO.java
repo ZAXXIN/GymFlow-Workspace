@@ -83,6 +83,9 @@ public class CheckInDetailVO {
     @Schema(description = "结束时间")
     private LocalTime endTime;
 
+    @Schema(description = "消耗课时数")
+    private Integer sessionCost;
+
     @Schema(description = "教练姓名")
     private String coachName;
 

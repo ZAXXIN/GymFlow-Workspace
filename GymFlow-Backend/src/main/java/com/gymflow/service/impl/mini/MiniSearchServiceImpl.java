@@ -38,17 +38,13 @@ public class MiniSearchServiceImpl implements MiniSearchService {
 
         // 构建查询条件
         LambdaQueryWrapper<Product> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Product::getStatus, 1); // 只搜索在售商品
+        queryWrapper.eq(Product::getStatus, 1);
 
         if (StringUtils.hasText(keyword)) {
             queryWrapper.and(wrapper -> wrapper
                     .like(Product::getProductName, keyword)
                     .or()
                     .like(Product::getDescription, keyword));
-        }
-
-        if (categoryId != null) {
-            queryWrapper.eq(Product::getCategoryId, categoryId);
         }
 
         // 按创建时间倒序排列
@@ -73,7 +69,7 @@ public class MiniSearchServiceImpl implements MiniSearchService {
 
         // 先查询符合条件的课程模板
         LambdaQueryWrapper<Course> courseWrapper = new LambdaQueryWrapper<>();
-        courseWrapper.eq(Course::getStatus, 1); // 正常状态
+        courseWrapper.eq(Course::getStatus, 1);
 
         if (courseType != null) {
             courseWrapper.eq(Course::getCourseType, courseType);
@@ -177,10 +173,8 @@ public class MiniSearchServiceImpl implements MiniSearchService {
         dto.setCourseName(course.getCourseName());
         dto.setCourseType(course.getCourseType());
         dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
-        dto.setPrice(course.getPrice());
-        dto.setOriginalPrice(course.getPrice());
-        dto.setDiscount(BigDecimal.valueOf(10));
         dto.setDescription(course.getDescription());
+        dto.setSessionCost(course.getSessionCost());
 
         // 获取教练信息
         Coach coach = coachMapper.selectById(schedule.getCoachId());
