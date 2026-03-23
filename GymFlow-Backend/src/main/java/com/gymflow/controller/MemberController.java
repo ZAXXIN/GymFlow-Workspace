@@ -93,16 +93,27 @@ public class MemberController {
         return Result.success("批量删除成功");
     }
 
-    @PostMapping("/renew-card/{memberId}")
-    @Operation(summary = "续费会员卡")
-    @PreAuthorize("member:card:renew")  // 续费权限（老板和前台都有）
-    public Result<Void> renewMemberCard(
+    @PostMapping("/add-card/{memberId}")
+    @Operation(summary = "为会员添加新卡")
+    @PreAuthorize("member:card:renew")
+    public Result<Void> addMemberCard(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
             @Valid @RequestBody MemberCardDTO cardDTO) {
-        memberService.renewMemberCard(memberId, cardDTO);
-        return Result.success("续费成功");
+        memberService.addMemberCard(memberId, cardDTO);
+        return Result.success("添加成功");
     }
+
+//    @PostMapping("/renew-card/{memberId}")
+//    @Operation(summary = "续费会员卡")
+//    @PreAuthorize("member:card:renew")  // 续费权限（老板和前台都有）
+//    public Result<Void> renewMemberCard(
+//            @Parameter(description = "会员ID", required = true)
+//            @PathVariable @NotNull Long memberId,
+//            @Valid @RequestBody MemberCardDTO cardDTO) {
+//        memberService.renewMemberCard(memberId, cardDTO);
+//        return Result.success("续费成功");
+//    }
 
     @GetMapping("/health-records/{memberId}")
     @Operation(summary = "获取健康档案列表")

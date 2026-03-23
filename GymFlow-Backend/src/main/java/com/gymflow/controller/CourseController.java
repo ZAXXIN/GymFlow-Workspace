@@ -85,6 +85,14 @@ public class CourseController {
         return Result.success("排课成功");
     }
 
+    @Operation(summary = "删除排课")
+    @DeleteMapping("/schedule/{scheduleId}")
+    @PreAuthorize("course:schedule:set")
+    public Result<Void> deleteCourseSchedule(@PathVariable Long scheduleId) {
+        courseService.deleteCourseSchedule(scheduleId);
+        return Result.success("删除排课成功");
+    }
+
     @Operation(summary = "获取课程排课列表（包含预约信息）")
     @GetMapping("/schedules/{courseId}")
     @PreAuthorize("course:schedule:view")

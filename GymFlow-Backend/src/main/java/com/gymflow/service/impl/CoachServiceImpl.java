@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 public class CoachServiceImpl implements CoachService {
 
     private final CoachMapper coachMapper;
-    private final CoachScheduleMapper coachScheduleMapper;
     private final CourseMapper courseMapper;
     private final CourseScheduleMapper courseScheduleMapper;
     private final CourseBookingMapper courseBookingMapper;
@@ -125,7 +124,7 @@ public class CoachServiceImpl implements CoachService {
             }
         }
 
-        // 获取教练排班列表
+        // 获取教练排班列表（从 course_schedule 查询）
         fullDTO.setSchedules(getCoachSchedules(coachId));
 
         // 获取教练关联课程列表
@@ -277,14 +276,12 @@ public class CoachServiceImpl implements CoachService {
             throw new BusinessException("教练不存在");
         }
 
-        // 2. 检查教练是否有未完成的课程
+        // 2. 检查教练是否有未完成的课程排班
         checkUnfinishedCourses(coachId);
 
-        // 3. 检查教练是否有会员关联
-        checkMemberAssociations(coachId);
-
-        // 4. 软删除：更新状态为离职（不删除记录）
-        coach.setStatus(0); // 离职状态
+        // 3. 软删除：更新状态为离职（不删除记录）
+        coach.setStatus(0);
+        coach.setUpdateTime(LocalDateTime.now());
 
         int result = coachMapper.updateById(coach);
         if (result <= 0) {
@@ -338,6 +335,7 @@ public class CoachServiceImpl implements CoachService {
 
         // 更新状态
         coach.setStatus(status);
+        coach.setUpdateTime(LocalDateTime.now());
 
         int result = coachMapper.updateById(coach);
         if (result <= 0) {
@@ -351,116 +349,60 @@ public class CoachServiceImpl implements CoachService {
     public List<CoachScheduleDTO> getCoachSchedules(Long coachId) {
         log.info("获取教练排班列表，教练ID：{}", coachId);
 
-        // 查询教练排班
-        LambdaQueryWrapper<CoachSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CoachSchedule::getCoachId, coachId);
-        queryWrapper.ge(CoachSchedule::getScheduleDate, LocalDate.now()); // 只查询未来排班
-        queryWrapper.orderByAsc(CoachSchedule::getScheduleDate)
-                .orderByAsc(CoachSchedule::getStartTime);
+        // 从 course_schedule 表查询该教练的排课
+        LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCoachId, coachId)
+                .ge(CourseSchedule::getScheduleDate, LocalDate.now())
+                .orderByAsc(CourseSchedule::getScheduleDate)
+                .orderByAsc(CourseSchedule::getStartTime);
 
-        List<CoachSchedule> schedules = coachScheduleMapper.selectList(queryWrapper);
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(queryWrapper);
 
-        return schedules.stream()
-                .map(this::convertToCoachScheduleDTO)
-                .collect(Collectors.toList());
+        // 转换为 CoachScheduleDTO
+        return schedules.stream().map(schedule -> {
+            Course course = courseMapper.selectById(schedule.getCourseId());
+
+            CoachScheduleDTO dto = new CoachScheduleDTO();
+            dto.setId(schedule.getId());
+            dto.setCoachId(schedule.getCoachId());
+            dto.setScheduleDate(schedule.getScheduleDate());
+            dto.setStartTime(schedule.getStartTime());
+            dto.setEndTime(schedule.getEndTime());
+            dto.setMaxCapacity(schedule.getMaxCapacity());
+            dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
+            dto.setStatus(schedule.getStatus() == 1 ? "SCHEDULED" : "CANCELLED");
+
+            if (course != null) {
+                dto.setCourseId(course.getId());
+                dto.setCourseName(course.getCourseName());
+                dto.setScheduleType(course.getCourseType());
+                dto.setScheduleTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addCoachSchedule(Long coachId, CoachScheduleDTO scheduleDTO) {
-        log.info("开始添加教练排班，教练ID：{}", coachId);
-
-        // 1. 检查教练是否存在
-        Coach coach = coachMapper.selectById(coachId);
-        if (coach == null) {
-            throw new BusinessException("教练不存在");
-        }
-
-        // 验证排班时间是否在营业时间内
-        configValidator.validateBusinessHours(
-                scheduleDTO.getStartTime(),
-                scheduleDTO.getEndTime()
-        );
-
-        // 2. 检查排班时间冲突
-        checkScheduleConflict(coachId, scheduleDTO);
-
-        // 3. 创建排班记录
-        CoachSchedule schedule = new CoachSchedule();
-        schedule.setCoachId(coachId);
-        schedule.setScheduleDate(scheduleDTO.getScheduleDate());
-        schedule.setStartTime(scheduleDTO.getStartTime());
-        schedule.setEndTime(scheduleDTO.getEndTime());
-        schedule.setScheduleType(scheduleDTO.getScheduleType());
-        schedule.setStatus("SCHEDULED");
-        schedule.setNotes(scheduleDTO.getNotes());
-
-        // 4. 保存排班
-        int result = coachScheduleMapper.insert(schedule);
-        if (result <= 0) {
-            throw new BusinessException("添加教练排班失败");
-        }
-
-        log.info("添加教练排班成功，排班ID：{}", schedule.getId());
+        // 教练排班通过课程排课实现，不需要单独的排班表
+        // 如果需要添加排班，应该创建课程排课
+        throw new BusinessException("教练排班请通过课程排课功能添加");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCoachSchedule(Long scheduleId, CoachScheduleDTO scheduleDTO) {
-        log.info("开始更新教练排班，排班ID：{}", scheduleId);
-
-        // 1. 检查排班是否存在
-        CoachSchedule schedule = coachScheduleMapper.selectById(scheduleId);
-        if (schedule == null) {
-            throw new BusinessException("排班不存在");
-        }
-
-        // 验证排班时间是否在营业时间内
-        configValidator.validateBusinessHours(
-                scheduleDTO.getStartTime(),
-                scheduleDTO.getEndTime()
-        );
-
-        // 2. 检查排班时间冲突（排除自身）
-        checkScheduleConflict(schedule.getCoachId(), scheduleDTO, scheduleId);
-
-        // 3. 更新排班信息
-        schedule.setScheduleDate(scheduleDTO.getScheduleDate());
-        schedule.setStartTime(scheduleDTO.getStartTime());
-        schedule.setEndTime(scheduleDTO.getEndTime());
-        schedule.setScheduleType(scheduleDTO.getScheduleType());
-        schedule.setNotes(scheduleDTO.getNotes());
-
-        // 4. 保存更新
-        int result = coachScheduleMapper.updateById(schedule);
-        if (result <= 0) {
-            throw new BusinessException("更新教练排班失败");
-        }
-
-        log.info("更新教练排班成功，排班ID：{}", scheduleId);
+        // 教练排班通过课程排课实现，不需要单独的排班表
+        throw new BusinessException("教练排班请通过课程排课功能更新");
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCoachSchedule(Long scheduleId) {
-        log.info("开始删除教练排班，排班ID：{}", scheduleId);
-
-        // 1. 检查排班是否存在
-        CoachSchedule schedule = coachScheduleMapper.selectById(scheduleId);
-        if (schedule == null) {
-            throw new BusinessException("排班不存在");
-        }
-
-        // 2. 检查是否已经有课程关联
-        checkCourseAssociations(scheduleId);
-
-        // 3. 删除排班
-        int result = coachScheduleMapper.deleteById(scheduleId);
-        if (result <= 0) {
-            throw new BusinessException("删除教练排班失败");
-        }
-
-        log.info("删除教练排班成功，排班ID：{}", scheduleId);
+        // 教练排班通过课程排课实现，不需要单独的排班表
+        throw new BusinessException("教练排班请通过课程排课功能删除");
     }
 
     @Override
@@ -541,58 +483,7 @@ public class CoachServiceImpl implements CoachService {
     }
 
     /**
-     * 将CoachSchedule实体转换为CoachScheduleDTO
-     */
-    private CoachScheduleDTO convertToCoachScheduleDTO(CoachSchedule schedule) {
-        CoachScheduleDTO dto = new CoachScheduleDTO();
-        BeanUtils.copyProperties(schedule, dto);
-        dto.setScheduleTypeDesc(schedule.getScheduleType() == 0 ? "私教课" : "团课");
-        return dto;
-    }
-
-    /**
-     * 检查排班时间冲突
-     */
-    private void checkScheduleConflict(Long coachId, CoachScheduleDTO scheduleDTO) {
-        checkScheduleConflict(coachId, scheduleDTO, null);
-    }
-
-    /**
-     * 检查排班时间冲突（排除指定排班ID）
-     */
-    private void checkScheduleConflict(Long coachId, CoachScheduleDTO scheduleDTO, Long excludeScheduleId) {
-        LambdaQueryWrapper<CoachSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CoachSchedule::getCoachId, coachId);
-        queryWrapper.eq(CoachSchedule::getScheduleDate, scheduleDTO.getScheduleDate());
-        queryWrapper.ne(CoachSchedule::getStatus, "CANCELLED");  // 排除已取消的排班
-
-        if (excludeScheduleId != null) {
-            queryWrapper.ne(CoachSchedule::getId, excludeScheduleId);
-        }
-
-        List<CoachSchedule> existingSchedules = coachScheduleMapper.selectList(queryWrapper);
-
-        for (CoachSchedule existing : existingSchedules) {
-            // 检查时间是否重叠
-            if (isTimeOverlap(
-                    existing.getStartTime(), existing.getEndTime(),
-                    scheduleDTO.getStartTime(), scheduleDTO.getEndTime()
-            )) {
-                throw new BusinessException("排班时间与已有排班冲突：" +
-                        existing.getStartTime() + "-" + existing.getEndTime());
-            }
-        }
-    }
-
-    /**
-     * 检查时间是否重叠
-     */
-    private boolean isTimeOverlap(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
-        return (start1.isBefore(end2) && end1.isAfter(start2));
-    }
-
-    /**
-     * 检查教练是否有未完成的课程
+     * 检查教练是否有未完成的课程排班
      */
     private void checkUnfinishedCourses(Long coachId) {
         // 查询该教练未来的排课
@@ -604,37 +495,6 @@ public class CoachServiceImpl implements CoachService {
         Long count = courseScheduleMapper.selectCount(queryWrapper);
         if (count > 0) {
             throw new BusinessException("教练有未完成的课程排班，不能删除");
-        }
-    }
-
-    /**
-     * 检查教练是否有会员关联
-     */
-    private void checkMemberAssociations(Long coachId) {
-        // 根据数据库表结构，检查是否有会员选择该教练作为专属教练
-        // 如果member表有personal_coach_id字段，可以添加检查逻辑
-        // 示例代码（如果member表有personal_coach_id字段）：
-        /*
-        LambdaQueryWrapper<Member> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Member::getPersonalCoachId, coachId);
-        Long count = memberMapper.selectCount(queryWrapper);
-        if (count > 0) {
-            throw new BusinessException("该教练还有关联的会员，不能删除");
-        }
-        */
-    }
-
-    /**
-     * 检查排班是否有关联课程
-     */
-    private void checkCourseAssociations(Long scheduleId) {
-        // 查询是否有排课使用此教练排班
-        // 实际上这里应该是检查教练排班是否已被课程排班使用
-        LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(CourseSchedule::getCoachId, scheduleId); // 这里可能需要调整逻辑
-        Long count = courseScheduleMapper.selectCount(queryWrapper);
-        if (count > 0) {
-            throw new BusinessException("该教练排班已被课程使用，不能删除");
         }
     }
 }

@@ -40,9 +40,14 @@ public interface MemberService {
     void batchDeleteMember(List<Long> memberIds);
 
     /**
+     * 为会员添加新卡
+     */
+    void addMemberCard(Long memberId, MemberCardDTO cardDTO);
+
+    /**
      * 续费会员卡
      */
-    void renewMemberCard(Long memberId, MemberCardDTO cardDTO);
+//    void renewMemberCard(Long memberId, MemberCardDTO cardDTO);
 
     /**
      * 获取会员健康档案列表

@@ -213,11 +213,15 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("该手机号已注册为会员");
         }
 
+        // 【新增】验证会员卡不能为空
+        if (cardDTO == null || cardDTO.getProductId() == null) {
+            throw new BusinessException("请选择会员卡或课程包");
+        }
+
         // 创建会员记录
         Member member = new Member();
-        member.setMemberNo(generateMemberNo()); // 后端自动生成会员编号
+        member.setMemberNo(generateMemberNo());
         member.setPhone(basicDTO.getPhone());
-        //密码默认123456
         member.setPassword(bCryptUtil.encodePassword("123456"));
         member.setRealName(basicDTO.getRealName());
         member.setGender(basicDTO.getGender());
@@ -226,18 +230,12 @@ public class MemberServiceImpl implements MemberService {
         // 初始总消费为0
         member.setTotalSpent(BigDecimal.ZERO);
 
-        // 会员卡购买时才设置会籍时间，否则为空
-        if (cardDTO != null) {
-            // 根据会员卡类型计算会籍时间
-            calculateMembershipDates(member, cardDTO);
+        // 根据会员卡类型计算会籍时间
+        calculateMembershipDates(member, cardDTO);
 
-            // 累加会员卡金额到总消费
-            if (cardDTO.getAmount() != null) {
-                member.setTotalSpent(member.getTotalSpent().add(cardDTO.getAmount()));
-            }
-        } else {
-            member.setMembershipStartDate(null);
-            member.setMembershipEndDate(null);
+        // 累加会员卡金额到总消费
+        if (cardDTO.getAmount() != null) {
+            member.setTotalSpent(member.getTotalSpent().add(cardDTO.getAmount()));
         }
 
         member.setTotalCheckins(0);
@@ -259,10 +257,8 @@ public class MemberServiceImpl implements MemberService {
             addHealthRecord(member.getId(), healthRecordDTO);
         }
 
-        // 如果有会员卡，创建订单
-        if (cardDTO != null) {
-            createOrderForNewMember(member.getId(), cardDTO);
-        }
+        // 创建订单
+        createOrderForNewMember(member.getId(), cardDTO);
 
         return member.getId();
     }
@@ -517,81 +513,159 @@ public class MemberServiceImpl implements MemberService {
         log.info("批量删除完成，成功：{}，失败：{}", successCount, failCount);
     }
 
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public void renewMemberCard(Long memberId, MemberCardDTO cardDTO) {
+//        log.info("开始续费会员卡，会员ID：{}", memberId);
+//
+//        Member member = memberMapper.selectById(memberId);
+//        if (member == null) {
+//            throw new BusinessException("会员不存在");
+//        }
+//
+//        // 获取会员当前有效的会员卡
+//        List<MemberCardDTO> currentCards = getMemberCards(memberId);
+//
+//        // 检查续费类型一致性
+//        if (!CollectionUtils.isEmpty(currentCards)) {
+//            // 获取最近一张有效卡
+//            MemberCardDTO latestCard = currentCards.stream()
+//                    .filter(card -> "ACTIVE".equals(card.getStatus()))
+//                    .findFirst()
+//                    .orElse(null);
+//
+//            if (latestCard != null) {
+//                // 续费类型必须和当前有效卡一致
+//                if (!latestCard.getCardType().equals(cardDTO.getCardType())) {
+//                    throw new BusinessException("续费类型必须与当前会员卡类型一致");
+//                }
+//            }
+//        }
+//
+//        // 创建订单
+//        createOrderForNewMember(memberId, cardDTO);
+//
+//        // 累加金额到总消费
+//        if (cardDTO.getAmount() != null) {
+//            BigDecimal currentTotal = member.getTotalSpent() != null ?
+//                    member.getTotalSpent() : BigDecimal.ZERO;
+//            member.setTotalSpent(currentTotal.add(cardDTO.getAmount()));
+//        }
+//
+//        // 更新会籍时间（如果是时间卡）
+//        if (cardDTO.getCardType() == 0 || cardDTO.getCardType() == 2 ||
+//                cardDTO.getCardType() == 3 || cardDTO.getCardType() == 4) {
+//
+//            LocalDate today = LocalDate.now();
+//            LocalDate newEndDate = null;
+//
+//            switch (cardDTO.getCardType()) {
+//                case 0: // 会籍卡 - 年卡
+//                case 3: // 年卡
+//                    newEndDate = today.plusYears(1);
+//                    break;
+//                case 2: // 月卡
+//                    newEndDate = today.plusMonths(1);
+//                    break;
+//                case 4: // 周卡
+//                    newEndDate = today.plusWeeks(1);
+//                    break;
+//            }
+//
+//            if (member.getMembershipEndDate() != null &&
+//                    member.getMembershipEndDate().isAfter(today)) {
+//                // 如果会员卡未过期，在原有效期上增加天数
+//                long daysToAdd = Period.between(today, newEndDate).getDays();
+//                member.setMembershipEndDate(member.getMembershipEndDate().plusDays(daysToAdd));
+//            } else {
+//                // 如果已过期，直接设置为新日期
+//                member.setMembershipStartDate(today);
+//                member.setMembershipEndDate(newEndDate);
+//            }
+//        }
+//
+//        member.setUpdateTime(LocalDateTime.now());
+//        memberMapper.updateById(member);
+//
+//        log.info("续费会员卡成功，会员ID：{}，新总消费：{}", memberId, member.getTotalSpent());
+//    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void renewMemberCard(Long memberId, MemberCardDTO cardDTO) {
-        log.info("开始续费会员卡，会员ID：{}", memberId);
+    public void addMemberCard(Long memberId, MemberCardDTO cardDTO) {
+        log.info("为会员添加新卡，会员ID：{}", memberId);
 
+        // 1. 检查会员是否存在
         Member member = memberMapper.selectById(memberId);
         if (member == null) {
             throw new BusinessException("会员不存在");
         }
 
-        // 获取会员当前有效的会员卡
-        List<MemberCardDTO> currentCards = getMemberCards(memberId);
+        // 2. 验证会员卡不能为空
+        if (cardDTO == null || cardDTO.getProductId() == null) {
+            throw new BusinessException("请选择会员卡或课程包");
+        }
 
-        // 检查续费类型一致性
-        if (!CollectionUtils.isEmpty(currentCards)) {
-            // 获取最近一张有效卡
-            MemberCardDTO latestCard = currentCards.stream()
-                    .filter(card -> "ACTIVE".equals(card.getStatus()))
+        // 3. 验证会籍卡是否可以添加（未过期不能添加）
+        if (cardDTO.getCardType() == 0) {
+            List<MemberCardDTO> currentCards = getMemberCards(memberId);
+            MemberCardDTO activeMembershipCard = currentCards.stream()
+                    .filter(card -> card.getCardType() == 0 && "ACTIVE".equals(card.getStatus()))
                     .findFirst()
                     .orElse(null);
 
-            if (latestCard != null) {
-                // 续费类型必须和当前有效卡一致
-                if (!latestCard.getCardType().equals(cardDTO.getCardType())) {
-                    throw new BusinessException("续费类型必须与当前会员卡类型一致");
-                }
+            if (activeMembershipCard != null && activeMembershipCard.getEndDate() != null &&
+                    activeMembershipCard.getEndDate().isAfter(LocalDate.now())) {
+                throw new BusinessException("当前有未过期的会籍卡（有效期至：" +
+                        activeMembershipCard.getEndDate() + "），不能添加新的会籍卡");
             }
         }
 
-        // 创建订单
-        createOrderForNewMember(memberId, cardDTO);
+        // 4. 创建订单
+        Order order = new Order();
+        order.setOrderNo(generateOrderNo());
+        order.setMemberId(memberId);
+        order.setOrderType(cardDTO.getCardType() <= 1 ? 1 : 0);
+        order.setTotalAmount(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        order.setActualAmount(cardDTO.getAmount() != null ? cardDTO.getAmount() : BigDecimal.ZERO);
+        order.setPaymentStatus(1);
+        order.setPaymentTime(LocalDateTime.now());
+        order.setOrderStatus("COMPLETED");
+        order.setRemark("添加新卡");
+        order.setCreateTime(LocalDateTime.now());
+        order.setUpdateTime(LocalDateTime.now());
 
-        // 累加金额到总消费
+        orderMapper.insert(order);
+        log.info("订单创建成功，订单ID：{}", order.getId());
+
+        // 5. 创建订单项
+        createOrderItem(order.getId(), cardDTO);
+
+        // 6. 累加金额到总消费
         if (cardDTO.getAmount() != null) {
-            BigDecimal currentTotal = member.getTotalSpent() != null ?
-                    member.getTotalSpent() : BigDecimal.ZERO;
-            member.setTotalSpent(currentTotal.add(cardDTO.getAmount()));
+            member.setTotalSpent(member.getTotalSpent().add(cardDTO.getAmount()));
+            memberMapper.updateById(member);
         }
 
-        // 更新会籍时间（如果是时间卡）
-        if (cardDTO.getCardType() == 0 || cardDTO.getCardType() == 2 ||
-                cardDTO.getCardType() == 3 || cardDTO.getCardType() == 4) {
-
-            LocalDate today = LocalDate.now();
-            LocalDate newEndDate = null;
-
-            switch (cardDTO.getCardType()) {
-                case 0: // 会籍卡 - 年卡
-                case 3: // 年卡
-                    newEndDate = today.plusYears(1);
-                    break;
-                case 2: // 月卡
-                    newEndDate = today.plusMonths(1);
-                    break;
-                case 4: // 周卡
-                    newEndDate = today.plusWeeks(1);
-                    break;
-            }
-
-            if (member.getMembershipEndDate() != null &&
-                    member.getMembershipEndDate().isAfter(today)) {
-                // 如果会员卡未过期，在原有效期上增加天数
-                long daysToAdd = Period.between(today, newEndDate).getDays();
-                member.setMembershipEndDate(member.getMembershipEndDate().plusDays(daysToAdd));
-            } else {
-                // 如果已过期，直接设置为新日期
-                member.setMembershipStartDate(today);
-                member.setMembershipEndDate(newEndDate);
+        // 7. 如果是会籍卡，更新会员会籍时间
+        if (cardDTO.getCardType() == 0) {
+            Product product = productMapper.selectById(cardDTO.getProductId());
+            if (product != null && product.getValidityDays() != null) {
+                LocalDate newEndDate = LocalDate.now().plusDays(product.getValidityDays());
+                if (member.getMembershipEndDate() != null &&
+                        member.getMembershipEndDate().isAfter(LocalDate.now())) {
+                    // 未过期，在原有效期上增加
+                    member.setMembershipEndDate(member.getMembershipEndDate().plusDays(product.getValidityDays()));
+                } else {
+                    // 已过期或首次，设置新日期
+                    member.setMembershipStartDate(LocalDate.now());
+                    member.setMembershipEndDate(newEndDate);
+                }
+                memberMapper.updateById(member);
             }
         }
 
-        member.setUpdateTime(LocalDateTime.now());
-        memberMapper.updateById(member);
-
-        log.info("续费会员卡成功，会员ID：{}，新总消费：{}", memberId, member.getTotalSpent());
+        log.info("为会员添加新卡成功，会员ID：{}", memberId);
     }
 
     @Override

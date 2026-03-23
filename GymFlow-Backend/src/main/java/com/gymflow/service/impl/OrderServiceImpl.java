@@ -174,6 +174,11 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("订单项不能为空");
         }
 
+        // 根据订单项的商品类型确定订单类型
+        // 如果所有订单项都是同一类型，则使用该类型；否则设置为3（相关产品）或混合类型
+        Integer orderType = determineOrderType(orderDTO.getOrderItems());
+        log.info("根据订单项确定订单类型：{}", orderType);
+
         // 计算总金额
         BigDecimal totalAmount = orderDTO.getOrderItems().stream()
                 .map(item -> {
@@ -204,7 +209,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = new Order();
         order.setOrderNo(orderNo);
         order.setMemberId(orderDTO.getMemberId());
-        order.setOrderType(orderDTO.getOrderType());
+        order.setOrderType(orderType);  // 使用计算出的订单类型
         order.setTotalAmount(totalAmount);
         order.setActualAmount(orderDTO.getActualAmount() != null ?
                 orderDTO.getActualAmount() : totalAmount);
@@ -226,14 +231,38 @@ public class OrderServiceImpl implements OrderService {
         createOrderItems(orderId, orderDTO.getOrderItems());
 
         // 如果是会籍卡、私教课、团课，设置有效期
-        if (orderDTO.getOrderType() == 0 || orderDTO.getOrderType() == 1 || orderDTO.getOrderType() == 2) {
-            setOrderItemsValidity(orderId, orderDTO.getOrderType());
+        if (orderType == 0 || orderType == 1 || orderType == 2) {
+            setOrderItemsValidity(orderId, orderType);
         }
 
         // 发送订单创建通知
         sendOrderCreatedNotification(orderId, member);
 
         return orderId;
+    }
+
+    /**
+     * 根据订单项的商品类型确定订单类型
+     */
+    private Integer determineOrderType(List<OrderItemDTO> orderItems) {
+        if (CollectionUtils.isEmpty(orderItems)) {
+            return 3; // 默认相关产品
+        }
+
+        // 获取第一个订单项的商品类型
+        Integer firstProductType = orderItems.get(0).getProductType();
+
+        // 检查所有订单项是否都是同一类型
+        boolean allSameType = orderItems.stream()
+                .allMatch(item -> item.getProductType().equals(firstProductType));
+
+        if (allSameType) {
+            // 所有订单项类型相同，直接使用该类型
+            return firstProductType;
+        } else {
+            // 混合类型，设为相关产品
+            return 3;
+        }
     }
 
     @Override
@@ -680,8 +709,13 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setUnitPrice(itemDTO.getUnitPrice());
             orderItem.setTotalPrice(itemDTO.getUnitPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
 
-            // 如果是会籍卡、私教课、团课，设置默认课时数
-            if (itemDTO.getProductType() == 0 || itemDTO.getProductType() == 1 || itemDTO.getProductType() == 2) {
+            // 从商品表获取课时数
+            Product product = productMapper.selectById(itemDTO.getProductId());
+            if (product != null && product.getTotalSessions() != null) {
+                orderItem.setTotalSessions(product.getTotalSessions());
+                orderItem.setRemainingSessions(product.getTotalSessions());
+            } else {
+                // 如果没有设置，使用默认值
                 setDefaultSessions(orderItem, itemDTO.getProductType());
             }
 

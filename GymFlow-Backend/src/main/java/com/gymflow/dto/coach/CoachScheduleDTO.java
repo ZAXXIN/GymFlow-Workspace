@@ -3,9 +3,6 @@ package com.gymflow.dto.coach;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -13,30 +10,58 @@ import java.time.LocalTime;
 @Schema(description = "教练排班DTO")
 public class CoachScheduleDTO {
 
-    @NotNull(message = "排班日期不能为空")
-    @Schema(description = "排班日期", example = "2026-01-30", required = true)
+    @Schema(description = "排班ID（对应课程排课ID）")
+    private Long id;
+
+    @Schema(description = "教练ID")
+    private Long coachId;
+
+    @Schema(description = "排班日期")
     private LocalDate scheduleDate;
 
-    @NotNull(message = "开始时间不能为空")
-    @Schema(description = "开始时间", example = "09:00:00", required = true)
+    @Schema(description = "开始时间")
     private LocalTime startTime;
 
-    @NotNull(message = "结束时间不能为空")
-    @Schema(description = "结束时间", example = "12:00:00", required = true)
+    @Schema(description = "结束时间")
     private LocalTime endTime;
 
-    @NotNull(message = "排班类型不能为空")
-    @Schema(description = "排班类型：0-私教课，1-团课", example = "1", required = true)
+    @Schema(description = "排班类型：0-私教课，1-团课")
     private Integer scheduleType;
 
-    @Size(max = 200, message = "备注长度不能超过200")
-    @Schema(description = "备注", example = "瑜伽入门团课")
-    private String notes;
-
-    // 仅用于响应
     @Schema(description = "排班类型描述")
     private String scheduleTypeDesc;
 
+    @Schema(description = "课程名称")
+    private String courseName;
+
+    @Schema(description = "课程ID")
+    private Long courseId;
+
+    @Schema(description = "上课地点")
+    private String location;
+
+    @Schema(description = "最大人数")
+    private Integer maxCapacity;
+
+    @Schema(description = "当前报名人数")
+    private Integer currentEnrollment;
+
     @Schema(description = "状态")
     private String status;
+
+    @Schema(description = "备注")
+    private String notes;
+
+    /**
+     * 获取状态描述
+     */
+    public String getStatusDesc() {
+        if (status == null) return "未知";
+        switch (status) {
+            case "SCHEDULED": return "已排班";
+            case "CANCELLED": return "已取消";
+            case "COMPLETED": return "已完成";
+            default: return status;
+        }
+    }
 }

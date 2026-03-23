@@ -346,7 +346,6 @@ public class ProductServiceImpl implements ProductService {
         vo.setCurrentPrice(product.getCurrentPrice());
         vo.setStockQuantity(product.getStockQuantity());
         vo.setSalesVolume(product.getSalesVolume());
-        vo.setUnit(product.getUnit());
         vo.setSpecifications(product.getSpecifications());
         vo.setStatus(product.getStatus());
         vo.setStatusDesc(product.getStatus() == 1 ? "在售" : "下架");
