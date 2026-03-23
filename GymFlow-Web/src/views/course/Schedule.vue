@@ -34,11 +34,12 @@
             </el-icon>
             时长：{{ duration }}分钟
           </span>
+          <!-- 移除价格部分 -->
           <span class="meta-item">
             <el-icon>
               <PriceTag />
             </el-icon>
-            价格：¥{{ price }}
+            课时消耗：{{ sessionCost }}课时
           </span>
         </div>
       </div>
@@ -247,7 +248,7 @@ const courseId = computed(() => Number(route.params.id))
 const courseName = ref('')
 const courseType = ref(1)
 const duration = ref(60)
-const price = ref(0)
+const sessionCost = ref(0)
 const isGroupCourse = computed(() => courseType.value === 1)
 
 // 排课数据
@@ -341,7 +342,7 @@ const loadData = async () => {
       courseName.value = courseResponse.courseName
       courseType.value = courseResponse.courseType
       duration.value = courseResponse.duration
-      price.value = courseResponse.price
+      sessionCost.value = courseResponse.sessionCost
 
       // 加载教练列表（从课程绑定的教练中获取）
       coachOptions.value = courseResponse.coaches.map((item) => ({

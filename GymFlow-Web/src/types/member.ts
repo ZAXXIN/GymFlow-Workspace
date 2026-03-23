@@ -1,4 +1,5 @@
 // 会员相关类型定义
+// cardType 0-会籍卡，1-私教课，2-团课
 
 // 分页查询参数
 export interface MemberQueryDTO {
@@ -28,7 +29,7 @@ export interface MemberListVO {
   realName: string
   gender: number
   age?: number
-  birthday?:string
+  birthday?: string
   membershipStartDate?: string
   membershipEndDate?: string
   totalCheckins: number
@@ -45,7 +46,7 @@ export interface MemberListVO {
   remainingSessions?: number
 }
 
-// 小程序端会员卡DTO（后端返回的格式）
+// 小程序端会员卡DTO
 export interface MiniMemberCardDTO {
   productId: number
   productName: string
@@ -60,7 +61,7 @@ export interface MiniMemberCardDTO {
   statusDesc: string
 }
 
-// 健康档案（从 health_record 表）
+// 健康档案
 export interface HealthRecordDTO {
   id?: number
   recordDate: string
@@ -77,7 +78,7 @@ export interface HealthRecordDTO {
   notes?: string
 }
 
-// 课程记录
+// 课程记录（添加 sessionCost）
 export interface CourseRecordDTO {
   courseId: number
   courseName?: string
@@ -85,7 +86,7 @@ export interface CourseRecordDTO {
   courseDate?: string
   startTime?: string
   endTime?: string
-  location?: string
+  sessionCost?: number  // 新增：消耗课时数
   bookingStatus: number
   checkinTime?: string
 }
@@ -99,7 +100,7 @@ export interface CheckinRecordDTO {
   notes?: string
 }
 
-// 完整会员信息（与后端 MemberFullDTO 对应）
+// 完整会员信息
 export interface MemberFullDTO {
   id: number
   memberNo: string
@@ -107,7 +108,8 @@ export interface MemberFullDTO {
   phone: string
   realName: string
   gender: number
-  birthday?: string  // 添加 birthday
+  birthday?: string
+  age?: number  // 新增
   createTime: string
   membershipStartDate?: string
   membershipEndDate?: string
@@ -118,7 +120,23 @@ export interface MemberFullDTO {
   memberCards: MiniMemberCardDTO[]
   courses: MyCourseDTO[]
   courseRecords: CourseRecordDTO[]
-  checkinRecords: CheckInRecordDTO[]
+  checkinRecords: CheckinRecordDTO[]
+}
+
+// 我的课程包
+export interface MyCourseDTO {
+  orderItemId: number
+  productId: number
+  productName: string
+  productType: number
+  productTypeDesc: string
+  totalSessions: number
+  remainingSessions: number
+  usedSessions: number
+  validityStartDate?: string
+  validityEndDate?: string
+  status: string
+  statusDesc: string
 }
 
 // 添加会员请求
@@ -135,7 +153,7 @@ export interface MemberUpdateRequest {
   cardDTO?: MemberCardDTO
 }
 
-// 会员基本信息（用于新增/编辑表单）
+// 会员基本信息
 export interface MemberBasicDTO {
   phone: string
   password?: string
@@ -144,11 +162,11 @@ export interface MemberBasicDTO {
   birthday?: string
 }
 
-// 会员卡信息（用于新增/编辑表单）
+// 会员卡信息
 export interface MemberCardDTO {
   productId?: number
   productName?: string
-  cardType: number  // 0-私教课,1-团课,2-月卡,3-年卡,4-周卡,5-其他
+  cardType: number
   startDate?: string
   endDate?: string
   totalSessions?: number

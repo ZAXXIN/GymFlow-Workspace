@@ -76,7 +76,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="productName" label="商品名称" min-width="180">
+        <el-table-column prop="productName" label="商品名称" width="150">
           <template #default="{ row }">
             <div class="product-name">
               <span class="name">{{ row.productName }}</span>
@@ -85,7 +85,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="currentPrice" label="价格" width="120" align="center">
+        <el-table-column prop="currentPrice" label="价格" width="130" align="center">
           <template #default="{ row }">
             <div class="price">
               <div class="current">{{ row.priceFormatted }}</div>
@@ -94,7 +94,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="stockQuantity" label="库存/销量" width="120" align="center">
+        <el-table-column prop="stockQuantity" label="库存/销量" width="130" align="center">
           <template #default="{ row }">
             <div>
               <div :class="row.stockStatusClass">{{ row.stockQuantity }}</div>
@@ -111,9 +111,21 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="createTime" label="创建时间" width="140" align="center">
+        <el-table-column prop="specifications" label="规格信息" width="240" align="center">
           <template #default="{ row }">
-            {{ row.createTimeFormatted }}
+            {{ row.specifications }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="usageRules" label="使用规则" width="240" align="center">
+          <template #default="{ row }">
+            {{ row.usageRules }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="refundPolicy" label="退款政策" width="240" align="center">
+          <template #default="{ row }">
+            {{ row.refundPolicy }}
           </template>
         </el-table-column>
 
@@ -165,11 +177,11 @@ const store = useProductStore()
 
 // 查询参数
 const queryParams = ref<ProductQueryDTO>({
-  // pageNum: 1,
-  // pageSize: 10,
+  pageNum: 1,
+  pageSize: 10,
   ProductName: '',
   ProductType: '',
-  cardStatus: '',
+  status: '',
 })
 
 // 格式化后的列表

@@ -26,8 +26,8 @@
         <el-descriptions :column="3" border>
           <el-descriptions-item label="课程名称">{{ courseDetail?.courseName }}</el-descriptions-item>
           <el-descriptions-item label="课程类型">{{ courseDetail?.courseTypeDesc}}</el-descriptions-item>
-          <el-descriptions-item label="价格">
-            <span class="amount">¥{{ formatAmount(courseDetail?.price) }}</span>
+          <el-descriptions-item label="课时消耗">
+            <span>{{ courseDetail?.sessionCost || 1 }}课时</span>
           </el-descriptions-item>
           <el-descriptions-item label="课时长">{{ courseDetail?.duration || 0 }}分钟</el-descriptions-item>
           <el-descriptions-item label="创建时间">{{ formatDateTime(courseDetail?.createTime) }}</el-descriptions-item>
@@ -228,11 +228,6 @@ const formatDate = (date: string | null | undefined) => {
 const formatDateTime = (datetime: string | null | undefined) => {
   if (!datetime) return '-'
   return datetime.replace('T', ' ')
-}
-
-const formatAmount = (amount: number | null | undefined) => {
-  if (!amount) return '0.00'
-  return amount.toFixed(2)
 }
 
 const getRemainingSlotsType = (slots: number) => {

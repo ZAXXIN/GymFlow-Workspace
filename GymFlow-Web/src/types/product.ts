@@ -21,7 +21,6 @@ export interface ProductQueryDTO {
   pageSize?: number
   productType?: number
   productName?: string
-  categoryId?: number
   status?: number
   includeZeroStock?: boolean
 }
@@ -30,46 +29,19 @@ export interface ProductQueryDTO {
 export interface ProductBasicDTO {
   productName: string
   productType: number
-  categoryId?: number
   description?: string
   images?: string[]
   originalPrice: number
   currentPrice: number
-  costPrice?: number
   stockQuantity: number
-  unit?: string
   specifications?: string
   status: number
-  detailDTO?: ProductDetailDTO
-}
-
-// 商品详情DTO
-export interface ProductDetailDTO {
-  membershipType?: number
-  coachId?: number
-  courseDuration?: number
-  totalSessions?: number
-  availableSessions?: number
-  courseLevel?: string
-  membershipBenefits?: string[]
-  validityDays?: number
-  defaultTotalSessions?: number
-  maxPurchaseQuantity?: number
-  refundPolicy?: string
-  usageRules?: string
-  coachIds?: number[]
-}
-
-// 商品分类DTO
-export interface ProductCategoryDTO {
-  id?: number
-  categoryName: string
-  parentId?: number
-  status: number
-  statusDesc?: string
-  createTime?: string
-  updateTime?: string
-  children?: ProductCategoryDTO[]
+  validityDays?: number          // 有效期天数（仅会籍卡）
+  totalSessions?: number          // 总课时数（仅私教课/团课）
+  membershipBenefits?: string[]   // 会籍权益（仅会籍卡）
+  maxPurchaseQuantity?: number    // 最大购买数量
+  refundPolicy?: string           // 退款政策
+  usageRules?: string             // 使用规则
 }
 
 // 商品完整信息DTO
@@ -78,23 +50,23 @@ export interface ProductFullDTO {
   productName: string
   productType: number
   productTypeDesc: string
-  categoryId?: number
-  categoryName?: string
   description?: string
   images: string[]
   originalPrice: number
   currentPrice: number
-  costPrice?: number
   stockQuantity: number
   salesVolume: number
-  unit?: string
-  validityDays?: number
   specifications?: string
   status: number
   statusDesc: string
+  validityDays?: number
+  totalSessions?: number
+  membershipBenefits?: string[]
+  maxPurchaseQuantity?: number
+  refundPolicy?: string
+  usageRules?: string
   createTime: string
   updateTime?: string
-  detailDTO?: ProductDetailDTO
 }
 
 // 商品列表VO
@@ -108,6 +80,8 @@ export interface ProductListVO {
   discount?: number
   stockQuantity: number
   salesVolume: number
+  totalSessions?: number
+  validityDays?: number
   status: number
   statusDesc: string
   images: string[]
@@ -116,20 +90,14 @@ export interface ProductListVO {
 
 // 商品类型枚举
 export enum ProductType {
-  MEMBERSHIP = 0,    // 会籍卡
-  PRIVATE_COURSE = 1, // 私教课
-  GROUP_COURSE = 2,   // 团课
-  RELATED_PRODUCT = 3 // 相关产品
+  MEMBERSHIP = 0,      // 会籍卡
+  PRIVATE_COURSE = 1,  // 私教课
+  GROUP_COURSE = 2,    // 团课
+  RELATED_PRODUCT = 3  // 相关产品
 }
 
 // 商品状态枚举
 export enum ProductStatus {
-  OFF_SHELF = 0, // 下架
-  ON_SALE = 1    // 在售
-}
-
-// 分类状态枚举
-export enum CategoryStatus {
-  DISABLED = 0, // 禁用
-  ENABLED = 1   // 启用
+  OFF_SHELF = 0,  // 下架
+  ON_SALE = 1     // 在售
 }

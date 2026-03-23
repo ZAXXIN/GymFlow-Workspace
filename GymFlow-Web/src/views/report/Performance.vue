@@ -690,51 +690,51 @@ const handleSearch = async () => {
     
     // 更新绩效奖励
     performanceRewards.value = [
-      {
-        coachId: 1,
-        coachName: '张教练',
-        rank: 1,
-        performanceScore: 96.5,
-        rewardLevel: 'S',
-        rewardAmount: 5000,
-        commissionAmount: 25120
-      },
-      {
-        coachId: 2,
-        coachName: '李教练',
-        rank: 2,
-        performanceScore: 92.8,
-        rewardLevel: 'A',
-        rewardAmount: 3000,
-        commissionAmount: 23780
-      },
-      {
-        coachId: 3,
-        coachName: '王教练',
-        rank: 3,
-        performanceScore: 89.3,
-        rewardLevel: 'B',
-        rewardAmount: 2000,
-        commissionAmount: 21960
-      },
-      {
-        coachId: 4,
-        coachName: '刘教练',
-        rank: 4,
-        performanceScore: 85.6,
-        rewardLevel: 'B',
-        rewardAmount: 1500,
-        commissionAmount: 19720
-      },
-      {
-        coachId: 5,
-        coachName: '陈教练',
-        rank: 5,
-        performanceScore: 83.2,
-        rewardLevel: 'C',
-        rewardAmount: 1000,
-        commissionAmount: 18500
-      }
+      // {
+      //   coachId: 1,
+      //   coachName: '张教练',
+      //   rank: 1,
+      //   performanceScore: 96.5,
+      //   rewardLevel: 'S',
+      //   rewardAmount: 5000,
+      //   commissionAmount: 25120
+      // },
+      // {
+      //   coachId: 2,
+      //   coachName: '李教练',
+      //   rank: 2,
+      //   performanceScore: 92.8,
+      //   rewardLevel: 'A',
+      //   rewardAmount: 3000,
+      //   commissionAmount: 23780
+      // },
+      // {
+      //   coachId: 3,
+      //   coachName: '王教练',
+      //   rank: 3,
+      //   performanceScore: 89.3,
+      //   rewardLevel: 'B',
+      //   rewardAmount: 2000,
+      //   commissionAmount: 21960
+      // },
+      // {
+      //   coachId: 4,
+      //   coachName: '刘教练',
+      //   rank: 4,
+      //   performanceScore: 85.6,
+      //   rewardLevel: 'B',
+      //   rewardAmount: 1500,
+      //   commissionAmount: 19720
+      // },
+      // {
+      //   coachId: 5,
+      //   coachName: '陈教练',
+      //   rank: 5,
+      //   performanceScore: 83.2,
+      //   rewardLevel: 'C',
+      //   rewardAmount: 1000,
+      //   commissionAmount: 18500
+      // }
     ]
     
     // 初始化图表

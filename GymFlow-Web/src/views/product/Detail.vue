@@ -28,20 +28,16 @@
           <el-descriptions :column="3" border>
             <el-descriptions-item label="商品名称">{{ productDetail?.productName }}</el-descriptions-item>
             <el-descriptions-item label="商品类型">{{ productDetail?.productTypeDesc }}</el-descriptions-item>
-            <!-- <el-descriptions-item label="原价">
+            <el-descriptions-item label="销量">{{ productDetail?.salesVolume || 0 }}</el-descriptions-item>
+            <el-descriptions-item label="原价">
               <span class="amount">¥{{ formatAmount(productDetail?.originalPrice) }}</span>
-            </el-descriptions-item> -->
+            </el-descriptions-item>
             <el-descriptions-item label="现价">
               <span class="amount current">¥{{ formatAmount(productDetail?.currentPrice) }}</span>
             </el-descriptions-item>
-            <!-- <el-descriptions-item label="成本价">
-              <span>¥{{ formatAmount(productDetail?.costPrice) }}</span>
-            </el-descriptions-item> -->
             <el-descriptions-item label="库存数量">{{ productDetail?.stockQuantity || 0 }}</el-descriptions-item>
-            <el-descriptions-item label="销量">{{ productDetail?.salesVolume || 0 }}</el-descriptions-item>
-            <!-- <el-descriptions-item label="单位">{{ productDetail?.unit || '-' }}</el-descriptions-item> -->
-            <el-descriptions-item label="商品分类">{{ productDetail?.categoryName || '-' }}</el-descriptions-item>
-            <el-descriptions-item v-if="productDetail.productType == 0" label="有效期">{{ productDetail?.validityDays || '-' }}天</el-descriptions-item>
+            <el-descriptions-item label="最大购买数量">{{ productDetail?.maxPurchaseQuantity || 0 }}</el-descriptions-item>
+            <el-descriptions-item v-if="productDetail?.productType == 1 || productDetail?.productType == 2" label="总节数">{{ productDetail?.totalSessions }}节</el-descriptions-item>
             <!-- <el-descriptions-item label="创建时间">{{ formatDateTime(productDetail?.createTime) }}</el-descriptions-item>
             <el-descriptions-item label="更新时间">{{ formatDateTime(productDetail?.updateTime) }}</el-descriptions-item> -->
           </el-descriptions>
@@ -82,202 +78,84 @@
           {{ productDetail.specifications }}
         </div>
       </div>
-    </el-card>
 
-    <!-- 标签页 -->
-    <el-tabs v-model="activeTab" class="detail-tabs">
-      <!-- 商品详情 -->
-      <el-tab-pane label="商品详情" name="details">
-        <el-card shadow="never" class="tab-content">
-          <template #header>
-            <div class="tab-header">
-              <span class="tab-title">商品详情</span>
-            </div>
-          </template>
+      <!-- 会籍卡详情 -->
+      <!-- 会籍权益 -->
+      <!--  -->
+      <div class="spec-section" v-if="productDetail?.membershipBenefits && productDetail?.membershipBenefits.length > 0">
+        <h3 class="section-title">会籍权益</h3>
+        <div class="spec-content" v-for="(benefit, index) in productDetail.membershipBenefits" :key="index">
+          {{ benefit }}</div>
+      </div>
 
-          <div v-if="productDetail?.detailDTO" class="detail-content">
-            <!-- 会籍卡详情 -->
-            <template v-if="productDetail.productType === 0">
-              <div class="info-section">
-                <div class="info-title">会籍类型</div>
-                <div class="info-value">{{ getMembershipTypeDesc(productDetail.detailDTO.membershipType) }}</div>
-              </div>
+      <div class="spec-section" v-if="productDetail?.usageRules">
+        <h3 class="section-title">使用规则</h3>
+        <div class="spec-content">
+          {{ productDetail.usageRules }}
+        </div>
+      </div>
 
-              <div v-if="productDetail.detailDTO.validityDays" class="info-section">
-                <div class="info-title">有效期</div>
-                <div class="info-value">{{ productDetail.detailDTO.validityDays }}天</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.maxPurchaseQuantity" class="info-section">
-                <div class="info-title">最大购买数量</div>
-                <div class="info-value">{{ productDetail.detailDTO.maxPurchaseQuantity }}</div>
-              </div>
-
-              <!-- 会籍权益 -->
-              <div v-if="productDetail.detailDTO.membershipBenefits && productDetail.detailDTO.membershipBenefits.length > 0" class="info-section full-width">
-                <div class="info-title">会籍权益</div>
-                <div class="benefits-list">
-                  <div v-for="(benefit, index) in productDetail.detailDTO.membershipBenefits" :key="index" class="benefit-item">
-                    <el-icon>
-                      <Check />
-                    </el-icon>
-                    <span>{{ benefit }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- 私教课详情 -->
-            <template v-if="productDetail.productType === 1">
-              <div v-if="productDetail.detailDTO.courseDuration" class="info-section">
-                <div class="info-title">课时长</div>
-                <div class="info-value">{{ productDetail.detailDTO.courseDuration }}分钟</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.totalSessions" class="info-section">
-                <div class="info-title">总节数</div>
-                <div class="info-value">{{ productDetail.detailDTO.totalSessions }}节</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.availableSessions" class="info-section">
-                <div class="info-title">可用节数</div>
-                <div class="info-value">{{ productDetail.detailDTO.availableSessions }}节</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.courseLevel" class="info-section">
-                <div class="info-title">课程级别</div>
-                <div class="info-value">{{ productDetail.detailDTO.courseLevel }}</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.validityDays" class="info-section">
-                <div class="info-title">有效期</div>
-                <div class="info-value">{{ productDetail.detailDTO.validityDays }}天</div>
-              </div>
-
-              <!-- 适用教练 -->
-              <div v-if="productDetail.detailDTO.coachIds && productDetail.detailDTO.coachIds.length > 0" class="info-section full-width">
-                <div class="info-title">适用教练</div>
-                <div class="coach-tags">
-                  <el-tag v-for="coachId in productDetail.detailDTO.coachIds" :key="coachId" type="info" size="small">
-                    教练 {{ coachId }}
-                  </el-tag>
-                </div>
-              </div>
-            </template>
-
-            <!-- 团课详情 -->
-            <template v-if="productDetail.productType === 2">
-              <div v-if="productDetail.detailDTO.courseDuration" class="info-section">
-                <div class="info-title">课时长</div>
-                <div class="info-value">{{ productDetail.detailDTO.courseDuration }}分钟</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.totalSessions" class="info-section">
-                <div class="info-title">总节数</div>
-                <div class="info-value">{{ productDetail.detailDTO.totalSessions }}节</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.courseLevel" class="info-section">
-                <div class="info-title">课程级别</div>
-                <div class="info-value">{{ productDetail.detailDTO.courseLevel }}</div>
-              </div>
-
-              <div v-if="productDetail.detailDTO.validityDays" class="info-section">
-                <div class="info-title">有效期</div>
-                <div class="info-value">{{ productDetail.detailDTO.validityDays }}天</div>
-              </div>
-            </template>
-
-            <!-- 所有类型通用 -->
-            <div v-if="productDetail.detailDTO.maxPurchaseQuantity" class="info-section">
-              <div class="info-title">最大购买数量</div>
-              <div class="info-value">{{ productDetail.detailDTO.maxPurchaseQuantity }}</div>
-            </div>
-
-            <!-- 使用规则 -->
-            <div v-if="productDetail.detailDTO.usageRules" class="info-section full-width">
-              <div class="info-title">使用规则</div>
-              <div class="rules-content">{{ productDetail.detailDTO.usageRules }}</div>
-            </div>
-
-            <!-- 退款政策 -->
-            <div v-if="productDetail.detailDTO.refundPolicy" class="info-section full-width">
-              <div class="info-title">退款政策</div>
-              <div class="refund-content">{{ productDetail.detailDTO.refundPolicy }}</div>
-            </div>
-          </div>
-
-          <div v-else class="empty-data">
-            <el-empty description="暂无商品详情信息" />
-          </div>
-        </el-card>
-      </el-tab-pane>
+      <div class="spec-section" v-if="productDetail?.refundPolicy">
+        <h3 class="section-title">退款政策</h3>
+        <div class="spec-content">
+          {{ productDetail.refundPolicy }}
+        </div>
+      </div>
 
       <!-- 销售记录 -->
-      <el-tab-pane label="销售记录" name="sales">
-        <el-card shadow="never" class="tab-content">
-          <template #header>
-            <div class="tab-header">
-              <span class="tab-title">销售记录</span>
-              <div class="tab-actions">
-                <el-date-picker v-model="salesFilter.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" style="width: 240px;" @change="handleDateRangeChange" />
-              </div>
-            </div>
-          </template>
+      <div class="spec-section" v-if="productDetail?.refundPolicy">
+        <h3 class="section-title">销售记录</h3>
+        <div v-if="salesRecords.length > 0">
+          <el-table :data="salesRecords" style="width: 100%">
+            <el-table-column prop="orderNo" label="订单号" width="180" />
+            <el-table-column prop="memberName" label="购买会员" width="120" />
+            <el-table-column prop="quantity" label="购买数量" width="100" align="center" />
+            <el-table-column prop="unitPrice" label="单价" width="100" align="right">
+              <template #default="{ row }">
+                ¥{{ row.unitPrice?.toFixed(2) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="totalAmount" label="总金额" width="100" align="right">
+              <template #default="{ row }">
+                ¥{{ row.totalAmount?.toFixed(2) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="paymentMethod" label="支付方式" width="120">
+              <template #default="{ row }">
+                {{ getPaymentMethodDesc(row.paymentMethod) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="paymentStatus" label="支付状态" width="100">
+              <template #default="{ row }">
+                <el-tag :type="getPaymentStatusType(row.paymentStatus)" size="small">
+                  {{ getPaymentStatusDesc(row.paymentStatus) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="购买时间" width="160">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button type="text" size="small" @click="handleViewOrderDetail(row.orderId)">
+                  查看订单
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
 
-          <div v-if="salesRecords.length > 0">
-            <el-table :data="salesRecords" style="width: 100%">
-              <el-table-column prop="orderNo" label="订单号" width="180" />
-              <el-table-column prop="memberName" label="购买会员" width="120" />
-              <el-table-column prop="quantity" label="购买数量" width="100" align="center" />
-              <el-table-column prop="unitPrice" label="单价" width="100" align="right">
-                <template #default="{ row }">
-                  ¥{{ row.unitPrice?.toFixed(2) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="totalAmount" label="总金额" width="100" align="right">
-                <template #default="{ row }">
-                  ¥{{ row.totalAmount?.toFixed(2) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="paymentMethod" label="支付方式" width="120">
-                <template #default="{ row }">
-                  {{ getPaymentMethodDesc(row.paymentMethod) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="paymentStatus" label="支付状态" width="100">
-                <template #default="{ row }">
-                  <el-tag :type="getPaymentStatusType(row.paymentStatus)" size="small">
-                    {{ getPaymentStatusDesc(row.paymentStatus) }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="createTime" label="购买时间" width="160">
-                <template #default="{ row }">
-                  {{ formatDateTime(row.createTime) }}
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="100" fixed="right">
-                <template #default="{ row }">
-                  <el-button type="text" size="small" @click="handleViewOrderDetail(row.orderId)">
-                    查看订单
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-
-            <!-- 分页 -->
-            <div class="pagination-container">
-              <el-pagination v-model:current-page="salesPagination.pageNum" v-model:page-size="salesPagination.pageSize" :total="salesPagination.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSalesSizeChange" @current-change="handleSalesPageChange" />
-            </div>
+          <!-- 分页 -->
+          <div class="pagination-container">
+            <el-pagination v-model:current-page="salesPagination.pageNum" v-model:page-size="salesPagination.pageSize" :total="salesPagination.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSalesSizeChange" @current-change="handleSalesPageChange" />
           </div>
-
-          <div v-else class="empty-data">
-            <el-empty description="暂无销售记录" />
-          </div>
-        </el-card>
-      </el-tab-pane>
-    </el-tabs>
+        </div>
+        <div v-else class="empty-data">
+          <el-empty description="暂无销售记录" />
+        </div>
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -326,13 +204,6 @@ const formatDateTime = (datetime: string | null | undefined) => {
 const formatAmount = (amount: number | null | undefined) => {
   if (!amount) return '0.00'
   return amount.toFixed(2)
-}
-
-// 获取会籍类型描述
-const getMembershipTypeDesc = (type?: number) => {
-  if (type === undefined) return '-'
-  const types = ['私教课', '团课', '月卡', '年卡', '其他']
-  return types[type] || '-'
 }
 
 // 获取支付方式描述

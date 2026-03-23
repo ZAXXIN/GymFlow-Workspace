@@ -7,9 +7,8 @@ export interface CourseBasicDTO {
   description?: string
   coachIds: number[]
   duration: number
-  price: number
+  sessionCost: number  // 改为 sessionCost，移除 price
   notice?: string
-  // 移除 maxCapacity 和 location
 }
 
 // 课程查询DTO
@@ -20,17 +19,16 @@ export interface CourseQueryParams {
   courseName?: string
   coachId?: number
   status?: number
-  // 移除 startDate 和 endDate
 }
 
 // 课程排课DTO
 export interface CourseScheduleDTO {
   courseId: number
   coachId: number
-  scheduleDate: string      // 改名，从 courseDate 改为 scheduleDate
+  scheduleDate: string
   startTime: string
   endTime: string
-  maxCapacity?: number      // 改名，从 maxParticipants 改为 maxCapacity
+  maxCapacity?: number
   notes?: string
 }
 
@@ -43,13 +41,12 @@ export interface CourseListVO {
   description?: string
   coachNames: string[]
   duration: number
-  price: number
+  sessionCost: number  // 新增
   status: number
   statusDesc: string
   // 统计信息
   totalSchedules: number    // 总排课数
   totalBookings: number     // 总预约数
-  // 移除 maxCapacity, currentEnrollment, enrollmentRate, courseDate, startTime, endTime, location, createTime, updateTime
 }
 
 // 课程详情
@@ -61,14 +58,13 @@ export interface CourseDetail {
   description?: string
   coaches: CoachBasicDTO[]
   duration: number
-  price: number
+  sessionCost: number  // 新增
   status: number
   statusDesc: string
   notice?: string
   createTime?: string
   updateTime?: string
-  schedules: CourseScheduleVO[]  // 改为 schedules，包含排课信息
-  // 移除 maxCapacity, currentEnrollment, courseDate, startTime, endTime, location, bookings
+  schedules: CourseScheduleVO[]
 }
 
 // 课程预约DTO
@@ -81,8 +77,8 @@ export interface CourseBookingDTO {
   bookingStatus: number
   bookingStatusDesc: string
   checkinTime?: string
-  signCode?: string          // 签到码
-  signCodeExpireTime?: string // 签到码过期时间
+  signCode?: string
+  signCodeExpireTime?: string
   cancellationReason?: string
   cancellationTime?: string
 }
@@ -105,7 +101,7 @@ export interface CourseScheduleVO {
   status: number
   statusDesc: string
   notes?: string
-  bookings: CourseBookingVO[]    // 该排课的预约列表
+  bookings: CourseBookingVO[]
 }
 
 // 课程预约VO（用于排课详情）

@@ -300,7 +300,7 @@ export const useCourseStore = defineStore('course', () => {
   const formattedCourseList = () => {
     return courseList.value.map(course => ({
       ...course,
-      priceFormatted: course.price ? `¥${course.price.toFixed(2)}` : '-',
+      sessionCostFormatted: course.sessionCost ? `${course.sessionCost}课时` : '-',
       durationFormatted: course.duration ? `${course.duration}分钟` : '-',
       statusDesc: course.status === 1 ? '正常' : '禁用'
     }))

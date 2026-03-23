@@ -91,11 +91,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="durationFormatted" label="课时长" width="100" align="center" />
-        <el-table-column prop="priceFormatted" label="价格" width="100" align="right">
-          <template #default="{ row }">
-            <span class="amount">{{ row.priceFormatted }}</span>
-          </template>
-        </el-table-column>
+        <el-table-column prop="sessionCostFormatted" label="课时消耗" width="100" align="center" />
         <el-table-column prop="totalSchedules" label="总排课" width="80" align="center" />
         <el-table-column prop="totalBookings" label="总预约" width="80" align="center" />
         <el-table-column prop="statusDesc" label="状态" width="80" align="center">
