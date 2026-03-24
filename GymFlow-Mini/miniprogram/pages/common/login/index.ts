@@ -8,7 +8,7 @@ import { isValidPhone } from '../../../utils/validator'
 
 Page({
   data: {
-    phone: '17700000001',
+    phone: '18800000003',
     password: '123456',
     loading: false,
     showPassword: false,

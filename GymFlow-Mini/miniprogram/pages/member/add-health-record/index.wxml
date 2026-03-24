@@ -79,10 +79,11 @@
         <input 
           class="add-health-record-form-input"
           type="digit"
-          placeholder="自动计算或手动输入"
+          placeholder="自动计算"
           value="{{form.bmi}}"
           bindinput="onInput"
           data-field="bmi"
+          disabled="true"
         />
       </view>
     </view>

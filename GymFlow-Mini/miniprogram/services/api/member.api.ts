@@ -31,11 +31,11 @@ export const getMyMemberInfo = () => {
 
 /**
  * 获取健康档案列表
- * GET /member/health-records/{memberId}接口废弃
+ * GET /member/health-records/{memberId}
  */
-// export const getHealthRecords = (memberId) => {
-//   return wxRequest.get<HealthRecord[]>(`/member/health-records/${memberId}`)
-// }
+export const getHealthRecords = (memberId) => {
+  return wxRequest.get<HealthRecord[]>(`/member/health-records/${memberId}`)
+}
 
 /**
  * 添加健康档案
@@ -58,19 +58,6 @@ export const getMyCards = () => {
 }
 
 /**
- * 获取我的订单列表
- * POST /order/member/{memberId}
- */
-export const getMyOrders = (params) => {
-  var memberId = userStore.memberId
-  if (!memberId) {
-    console.error('获取订单失败: memberId不存在')
-    return Promise.reject(new Error('用户未登录'))
-  }
-  return wxRequest.post<PageResult<Order>>(`/order/member/${memberId}`, params)
-}
-
-/**
  * 获取我的预约列表
  * GET /mini/member/my-bookings
  */
@@ -90,6 +77,6 @@ export const getMyCourses = () => {
  * 续费会员卡
  * POST /member/renew-card/{memberId}
  */
-export const renewMemberCard = (memberId, data) => {
-  return wxRequest.post(`/member/renew-card/${memberId}`, data)
-}
+// export const renewMemberCard = (memberId, data) => {
+//   return wxRequest.post(`/member/renew-card/${memberId}`, data)
+// }

@@ -73,10 +73,6 @@
             
             <view class="coach-home-course-detail">
               <view class="coach-home-course-detail-item">
-                <image class="coach-home-course-detail-icon" src="/assets/icons/location.png" mode="aspectFit"></image>
-                <text>{{course.location || '未指定'}}</text>
-              </view>
-              <view class="coach-home-course-detail-item">
                 <image class="coach-home-course-detail-icon" src="/assets/icons/student.png" mode="aspectFit"></image>
                 <text>{{course.currentEnrollment}}/{{course.maxCapacity}}人</text>
               </view>

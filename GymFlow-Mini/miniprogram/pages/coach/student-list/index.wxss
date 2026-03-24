@@ -51,8 +51,7 @@
   border-radius: 20rpx;
 }
 
-.student-list-course-time,
-.student-list-course-location {
+.student-list-course-time,{
   display: flex;
   align-items: center;
   margin-bottom: 8rpx;

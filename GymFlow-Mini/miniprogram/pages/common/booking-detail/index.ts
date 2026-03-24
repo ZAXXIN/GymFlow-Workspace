@@ -22,7 +22,6 @@ Page({
       courseDate: '',
       startTime: '',
       endTime: '',
-      location: '',
       bookingTime: '',
       bookingStatus: 0,
       bookingStatusDesc: '',
@@ -236,6 +235,7 @@ Page({
       2: 'completed',
       3: 'cancelled'
     }
+    console.log(map[status])
     return map[status] || 'pending'
   },
 
@@ -257,6 +257,7 @@ Page({
    * 格式化日期时间
    */
   formatDateTime: function(time) {
+    console.log(time)
     return formatDateTime(time)
   }
 })

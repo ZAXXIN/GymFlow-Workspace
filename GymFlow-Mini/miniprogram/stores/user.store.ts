@@ -1,4 +1,6 @@
+// stores/user.store.ts
 // 用户状态管理
+
 import { logout as logoutApi } from '../services/api/auth.api'
 
 class UserStore {
@@ -26,13 +28,13 @@ class UserStore {
   }
 
   /**
-   * 设置用户信息
+   * 设置用户信息（登录时使用）
    */
   setUserInfo(userInfo: any) {
     // 处理角色转换 - 根据后端返回的 userType
     // userType: 0-会员, 1-教练
     const role = userInfo.userType === 0 ? 'MEMBER' : userInfo.userType === 1 ? 'COACH' : null
-    
+
     // 构造统一的数据结构
     const processedUserInfo = {
       ...userInfo,
@@ -42,7 +44,7 @@ class UserStore {
       memberNo: userInfo.memberNo,
       // 教练字段
       coachId: userInfo.userType === 1 ? userInfo.userId : undefined,
-      
+
       // 其他会员信息
       membershipStartDate: undefined,
       membershipEndDate: undefined,
@@ -54,28 +56,28 @@ class UserStore {
       weight: undefined,
       cards: []
     }
-    
+
     this._userInfo = processedUserInfo
     this._isLogin = true
-    
+
     // 保存到存储
     wx.setStorageSync('userInfo', processedUserInfo)
   }
 
   /**
-   * 更新用户信息（从 /mini/member/my-info 接口获取后更新）
+   * 更新用户信息（会员或教练通用）
+   * 用于在页面中刷新用户信息时调用
    */
-  updateMemberInfo(memberInfo: any) {
-    if (this._userInfo) {
-      this._userInfo = {
-        ...this._userInfo,
-        ...memberInfo,
-        // 保留原有的 memberId 和 memberNo
-        memberId: this._userInfo.memberId,
-        memberNo: this._userInfo.memberNo
-      }
-      wx.setStorageSync('userInfo', this._userInfo)
+  updateUserInfo(data: any) {
+    if (!this._userInfo) return
+
+    // 合并数据
+    this._userInfo = {
+      ...this._userInfo,
+      ...data
     }
+
+    wx.setStorageSync('userInfo', this._userInfo)
   }
 
   /**
@@ -89,10 +91,10 @@ class UserStore {
     } finally {
       this._userInfo = null
       this._isLogin = false
-      
+
       wx.removeStorageSync('userInfo')
       wx.removeStorageSync('token')
-      
+
       // 重置 TabBar 为默认会员配置
       const app = getApp() as any
       if (app && app.setMemberTabBar) {
@@ -101,7 +103,8 @@ class UserStore {
     }
   }
 
-  // Getters
+  // ========== Getters ==========
+
   get userInfo() {
     return this._userInfo
   }

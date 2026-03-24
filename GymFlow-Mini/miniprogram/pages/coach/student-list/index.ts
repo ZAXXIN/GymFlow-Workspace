@@ -94,7 +94,6 @@ Page({
             courseDate: result[0].courseDate,
             startTime: result[0].startTime,
             endTime: result[0].endTime,
-            location: result[0].location,
             currentEnrollment: result.length
           }
         })

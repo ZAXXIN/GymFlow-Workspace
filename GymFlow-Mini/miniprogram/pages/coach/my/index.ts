@@ -23,7 +23,7 @@ Page({
       certifications: [] as string[],
       introduction: ''
     },
-    
+
     // 未读消息数
     unreadCount: 0
   },
@@ -65,8 +65,9 @@ Page({
   async loadCoachInfo() {
     try {
       const coachInfo = await getMyCoachInfo()
-      userStore.setCoachInfo(coachInfo)
-      
+      // 更新 store
+      userStore.updateUserInfo(coachInfo)
+      console.log(coachInfo)
       this.setData({ coachInfo })
     } catch (error) {
       console.error('加载教练信息失败:', error)
@@ -87,7 +88,7 @@ Page({
    */
   onMenuTap(e: any) {
     const { url } = e.currentTarget.dataset
-    
+
     if (url) {
       wx.navigateTo({
         url
@@ -112,9 +113,9 @@ Page({
       title: '提示',
       content: '确定要退出登录吗？'
     })
-    
+
     if (!confirm) return
-    
+
     try {
       const { logout } = await import('../../../hooks/useUser')
       await logout()

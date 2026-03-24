@@ -8,11 +8,10 @@
     <view class="product-card-tag product-card-tag-{{product.productType}}">
       {{product.productTypeDesc}}
     </view>
-
-    <!-- 折扣标签 - 修复：不能在{{}}中调用方法，移到js中处理 -->
-    <view class="product-card-discount" wx:if="{{product.originalPrice > product.currentPrice}}">
+    
+    <!-- <view class="product-card-discount" wx:if="{{product.originalPrice > product.currentPrice}}">
       {{discountText}}% OFF
-    </view>
+    </view> -->
   </view>
 
   <!-- 信息区域 -->

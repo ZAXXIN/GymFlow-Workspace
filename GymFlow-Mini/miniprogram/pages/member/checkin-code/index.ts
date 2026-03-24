@@ -18,7 +18,6 @@ Page({
       courseDate: '',
       startTime: '',
       endTime: '',
-      location: ''
     },
     
     // 签到码信息
@@ -89,7 +88,6 @@ Page({
         'courseInfo.courseDate': detail.courseDate || '',
         'courseInfo.startTime': detail.startTime || '',
         'courseInfo.endTime': detail.endTime || '',
-        'courseInfo.location': detail.location || ''
       })
       
       // 保存到store

@@ -11,10 +11,6 @@
         <image class="checkin-code-time-icon" src="/assets/icons/time-white.png" mode="aspectFit"></image>
         <text>{{courseInfo.courseDate}} {{formatTime(courseInfo.startTime)}}-{{formatTime(courseInfo.endTime)}}</text>
       </view>
-      <view class="checkin-code-location" wx:if="{{courseInfo.location}}">
-        <image class="checkin-code-location-icon" src="/assets/icons/location-white.png" mode="aspectFit"></image>
-        <text>{{courseInfo.location}}</text>
-      </view>
     </view>
   </view>
   

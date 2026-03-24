@@ -4,11 +4,41 @@
     <view class="order-detail-header-bg"></view>
     <view class="order-detail-header-content">
       <view class="order-detail-status-icon">
-        <image src="/assets/icons/{{getStatusIcon(order.orderStatus, order.paymentStatus)}}.png" mode="aspectFit"></image>
+      <image wx:if="{{order.orderStatus == 'PROCESSING'}}" src="/assets/icons/processing.png" mode="aspectFit"></image>
+      <image wx:if="{{order.orderStatus == 'COMPLETED'}}" src="/assets/icons/completed.png" mode="aspectFit"></image>
+      <image wx:if="{{order.orderStatus == 'CANCELLED'}}" src="/assets/icons/cancelled.png" mode="aspectFit"></image>
+      <image wx:if="{{order.orderStatus == 'REFUNDED'}}" src="/assets/icons/refunded.png" mode="aspectFit"></image>
       </view>
       <view class="order-detail-status-info">
         <text class="order-detail-status-text">{{order.orderStatusDesc}}</text>
         <text class="order-detail-status-sub">{{order.paymentStatusDesc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="order-detail-card">
+    <view class="order-detail-card-header">
+      <text class="order-detail-card-title">商品信息</text>
+    </view>
+    <view class="order-detail-product-list">
+      <view class="order-detail-product-item" wx:for="{{order.orderItems}}" wx:key="id" wx:for-item="item">
+        <view class="order-detail-product-image">
+          <image src="{{item.productImage || '/assets/icons/product-default.jpg'}}" mode="aspectFill"></image>
+        </view>
+        <view class="order-detail-product-info">
+          <view class="order-detail-product-header">
+            <text class="order-detail-product-name">{{item.productName}}</text>
+            <text class="order-detail-product-price">¥{{item.unitPrice}}</text>
+          </view>
+          <view class="order-detail-product-meta">
+            <text class="order-detail-product-quantity">x{{item.quantity}}</text>
+          </view>
+          <view class="order-detail-product-total">
+            <text class="order-detail-product-total-label">小计</text>
+            <text class="order-detail-product-total-price">¥{{item.totalPrice}}</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>
@@ -22,74 +52,38 @@
     
     <view class="order-detail-info-list">
       <view class="order-detail-info-item">
-        <image class="order-detail-info-icon" src="/assets/icons/order-type.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">订单类型</text>
         <text class="order-detail-info-value">{{order.orderTypeDesc}}</text>
       </view>
       
       <view class="order-detail-info-item">
-        <image class="order-detail-info-icon" src="/assets/icons/amount.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">订单金额</text>
         <text class="order-detail-info-value">¥{{order.totalAmount}}</text>
       </view>
       
       <view class="order-detail-info-item">
-        <image class="order-detail-info-icon" src="/assets/icons/payment.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">实付金额</text>
         <text class="order-detail-info-value order-detail-price">¥{{order.actualAmount}}</text>
       </view>
       
       <view class="order-detail-info-item" wx:if="{{order.paymentMethod}}">
-        <image class="order-detail-info-icon" src="/assets/icons/payment-method.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">支付方式</text>
         <text class="order-detail-info-value">{{order.paymentMethod}}</text>
       </view>
       
       <view class="order-detail-info-item" wx:if="{{order.paymentTime}}">
-        <image class="order-detail-info-icon" src="/assets/icons/payment-time.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">支付时间</text>
-        <text class="order-detail-info-value">{{formatDateTime(order.paymentTime)}}</text>
+        <text class="order-detail-info-value">{{formatDateTimeIn(order.paymentTime)}}</text>
       </view>
       
       <view class="order-detail-info-item">
-        <image class="order-detail-info-icon" src="/assets/icons/create-time.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">创建时间</text>
-        <text class="order-detail-info-value">{{formatDateTime(order.createTime)}}</text>
+        <text class="order-detail-info-value">{{formatDateTimeIn(order.createTime)}}</text>
       </view>
       
       <view class="order-detail-info-item" wx:if="{{order.remark}}">
-        <image class="order-detail-info-icon" src="/assets/icons/remark.png" mode="aspectFit"></image>
         <text class="order-detail-info-label">备注</text>
         <text class="order-detail-info-value">{{order.remark}}</text>
-      </view>
-    </view>
-  </view>
-  
-  <!-- 商品列表 -->
-  <view class="order-detail-card">
-    <view class="order-detail-card-header">
-      <text class="order-detail-card-title">商品信息</text>
-    </view>
-    
-    <view class="order-detail-product-list">
-      <view class="order-detail-product-item" wx:for="{{order.items}}" wx:key="id" wx:for-item="item">
-        <view class="order-detail-product-image">
-          <image src="{{item.productImage || '/assets/icons/product-default.jpg'}}" mode="aspectFill"></image>
-        </view>
-        <view class="order-detail-product-info">
-          <view class="order-detail-product-header">
-            <text class="order-detail-product-name">{{item.productName}}</text>
-            <text class="order-detail-product-price">¥{{item.unitPrice}}</text>
-          </view>
-          <view class="order-detail-product-meta">
-            <text class="order-detail-product-type">{{getProductTypeText(item.productType)}}</text>
-            <text class="order-detail-product-quantity">x{{item.quantity}}</text>
-          </view>
-          <view class="order-detail-product-total">
-            <text class="order-detail-product-total-label">小计</text>
-            <text class="order-detail-product-total-price">¥{{item.totalPrice}}</text>
-          </view>
-        </view>
       </view>
     </view>
   </view>
@@ -107,17 +101,6 @@
       wx:if="{{order.paymentStatus === 0}}"
       bindtap="onCancelOrder"
     >取消订单</button>
-    
-    <button 
-      class="order-detail-btn order-detail-btn-confirm" 
-      wx:if="{{order.orderStatus === 'PROCESSING' && order.orderType !== 0}}"
-      bindtap="onConfirmReceive"
-    >确认收货</button>
-    
-    <button 
-      class="order-detail-btn order-detail-btn-back" 
-      bindtap="onBack"
-    >返回</button>
   </view>
   
   <!-- 加载中 -->

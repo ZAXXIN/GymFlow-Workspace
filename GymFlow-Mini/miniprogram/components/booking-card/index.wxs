@@ -1,0 +1,61 @@
+// components/booking-card/index.wxs
+
+/**
+ * 格式化时间
+ * 输入: "2024-03-24T12:30:00" 或 "2024-03-24 12:30:00"
+ * 输出: "12:30"
+ */
+var formatTime = function(time) {
+  if (!time) return ''
+  
+  // 处理 ISO 格式 "2024-03-24T12:30:00"
+  if (time.indexOf('T') > -1) {
+    var parts = time.split('T')
+    if (parts.length > 1) {
+      var timePart = parts[1]
+      return timePart.substring(0, 5)
+    }
+  }
+  
+  // 处理标准格式 "2024-03-24 12:30:00"
+  if (time.indexOf(' ') > -1) {
+    var parts = time.split(' ')
+    if (parts.length > 1) {
+      return parts[1].substring(0, 5)
+    }
+  }
+  
+  // 尝试用 Date 对象解析
+  var date = getDate(time)
+  if (date) {
+    var hour = date.getHours()
+    var minute = date.getMinutes()
+    return (hour < 10 ? '0' + hour : hour) + ':' + (minute < 10 ? '0' + minute : minute)
+  }
+  
+  return time
+}
+
+/**
+ * 格式化日期时间
+ */
+var formatDateTime = function(time) {
+  if (!time) return ''
+  
+  // 处理 ISO 格式
+  if (time.indexOf('T') > -1) {
+    return time.replace('T', ' ').substring(0, 16)
+  }
+  
+  // 处理标准格式
+  if (time.length > 16) {
+    return time.substring(0, 16)
+  }
+  
+  return time
+}
+
+module.exports = {
+  formatTime: formatTime,
+  formatDateTime: formatDateTime
+}

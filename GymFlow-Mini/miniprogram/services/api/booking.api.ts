@@ -1,98 +1,71 @@
-// 预约相关API
+// services/api/booking.api.ts
+// 预约相关API - 只负责接口调用
 
 import { wxRequest } from '../../utils/request'
-import { 
-  CourseSchedule,
-  CourseBooking,
-  AvailableCourseParams,
-  MyBookingParams,
-  CreateBookingParams,
-  CancelBookingParams,
-  PageResult
-} from '../types/booking.types'
 
 /**
- * 获取可预约课程列表
- * GET /mini/booking/available-courses
+ * 获取课程表（所有排课，包含团课和私教课）
+ * GET /course/timetable
+ * 用于获取可预约课程列表
  */
-export const getAvailableCourses = (params: AvailableCourseParams) => {
-  return wxRequest.get<PageResult<CourseSchedule>>('/mini/booking/available-courses', params, {
-    showLoading: false
-  })
+export const getCourseTimetable = (params?: { startDate?: string; endDate?: string }) => {
+  return wxRequest.get('/course/timetable', params)
 }
 
 /**
- * 获取我的预约列表
- * GET /mini/booking/my-bookings
+ * 获取单个排课详情
+ * GET /course/schedule/{scheduleId}
+ * 用于预约确认页面获取详细信息
  */
-export const getMyBookings = (params: MyBookingParams) => {
-  return wxRequest.get<PageResult<CourseBooking>>('/mini/booking/my-bookings', params, {
-    showLoading: false
-  })
+export const getCourseScheduleDetail = (scheduleId: number) => {
+  return wxRequest.get(`/course/schedule/${scheduleId}`)
 }
 
 /**
- * 获取预约详情
- * GET /mini/booking/detail/{bookingId}
+ * 预约团课
+ * POST /course/book/group
+ * 后端使用 @RequestParam，所以用 params 传递
  */
-export const getBookingDetail = (bookingId: number) => {
-  return wxRequest.get<CourseBooking>(`/mini/booking/detail/${bookingId}`, null, {
-    showLoading: true
-  })
-}
-
-/**
- * 创建预约
- * POST /mini/booking/create
- */
-export const createBooking = (params: CreateBookingParams) => {
-  return wxRequest.post('/mini/booking/create', params, {
-    showLoading: true,
-    loadingText: '预约中...'
-  })
-}
-
-/**
- * 取消预约
- * POST /course/cancel/{bookingId}
- */
-export const cancelBooking = ({ bookingId, reason }: CancelBookingParams) => {
-  return wxRequest.post(`/course/cancel/${bookingId}`, null, {
-    params: { reason },
-    showLoading: true
-  })
-}
-
-/**
- * 获取可预约时间段
- * GET /mini/booking/available-times/{courseId}
- */
-export const getAvailableTimes = (courseId: number, date: string) => {
-  return wxRequest.get<string[]>(`/mini/booking/available-times/${courseId}`, {
-    date
+export const bookGroupCourse = (memberId: number, scheduleId: number) => {
+  return wxRequest.post('/course/book/group', null, {
+    params: { memberId, scheduleId }
   })
 }
 
 /**
  * 预约私教课
  * POST /course/book/private
+ * 后端使用 @RequestParam，所以用 params 传递
  */
-export const bookPrivateCourse = (params: {
-  memberId: number
-  coachId: number
-  courseDate: string
+export const bookPrivateCourse = (
+  memberId: number,
+  coachId: number,
+  courseDate: string,
   startTime: string
-}) => {
-  return wxRequest.post('/course/book/private', null, { params })
+) => {
+  return wxRequest.post('/course/book/private', null, {
+    params: { memberId, coachId, courseDate, startTime }
+  })
 }
 
 /**
- * 预约团课
- * POST /course/book/group
+ * 取消预约
+ * POST /course/cancel/{bookingId}
+ * 后端使用 @RequestParam，所以用 params 传递
  */
-export const bookGroupCourse = (params: {
-  memberId: number
-  scheduleId: number
-}) => {
-  return wxRequest.post('/course/book/group', null, { params })
+export const cancelBooking = (bookingId: number, reason?: string) => {
+  return wxRequest.post(`/course/cancel/${bookingId}`, null, {
+    params: { reason }
+  })
+}
+
+/**
+ * 获取会员的预约列表
+ * GET /course/booking/member/{memberId}
+ */
+export const getMemberBookings = (
+  memberId: number,
+  params?: Record<string, any>
+) => {
+  return wxRequest.get(`/course/booking/member/${memberId}`, params)
 }

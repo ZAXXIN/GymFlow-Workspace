@@ -1,3 +1,5 @@
+<wxs module="utils" src="./index.wxs"></wxs>
+
 <view class="booking-card" bindtap="onTap">
   <!-- 头部 -->
   <view class="booking-card-header">
@@ -14,23 +16,17 @@
       </view>
       <view class="booking-card-info-item">
         <text class="booking-card-info-label">时间</text>
-        <text class="booking-card-info-value">
-          {{booking.courseDate}} {{formatTime(booking.startTime)}}-{{formatTime(booking.endTime)}}
+        <text class="booking-card-info-value">{{booking.scheduleDate}} {{booking.startTime}}-{{booking.endTime}}
         </text>
       </view>
       <view class="booking-card-info-item">
-        <text class="booking-card-info-label">地点</text>
-        <text class="booking-card-info-value">{{booking.location || '未指定'}}</text>
-      </view>
-      <view class="booking-card-info-item">
         <text class="booking-card-info-label">预约时间</text>
-        <text class="booking-card-info-value">{{booking.bookingTime}}</text>
+        <text class="booking-card-info-value">{{utils.formatTime(booking.bookingTime)}}</text>
       </view>
     </view>
   </view>
   
-  <!-- 操作按钮 -->
-  <view class="booking-card-actions" wx:if="{{showActions}}" catchtap>
+  <view class="booking-card-actions" wx:if="{{showActions}}">
     <button 
       class="booking-card-action booking-card-action-cancel" 
       wx:if="{{booking.bookingStatus === 0}}"

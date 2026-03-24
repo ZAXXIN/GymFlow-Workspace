@@ -81,6 +81,7 @@ Page({
     var orderId = this.data.orderId
     
     getOrderDetail(orderId).then(function(detail) {
+      console.log(detail)
       if (!detail) {
         that.setData({
           loading: false,
@@ -96,6 +97,7 @@ Page({
         loading: false,
         isEmpty: false
       })
+      console.log(that.data.order)
       
     }).catch(function(error) {
       console.error('加载订单详情失败:', error)
@@ -220,61 +222,10 @@ Page({
   },
 
   /**
-   * 确认收货
-   */
-  onConfirmReceive: function() {
-    var that = this
-    var order = this.data.order
-    
-    showModal({
-      title: '提示',
-      content: '确认已收到商品/完成服务？'
-    }).then(function(confirm) {
-      if (!confirm) return
-      
-      showLoading('提交中...')
-      
-      completeOrder(order.id).then(function() {
-        hideLoading()
-        showToast('操作成功', 'success')
-        
-        // 更新订单状态
-        orderStore.updateOrderStatus(order.id, 'COMPLETED')
-        
-        // 刷新页面
-        setTimeout(function() {
-          that.loadOrderDetail()
-        }, 1500)
-        
-      }).catch(function(error) {
-        hideLoading()
-        showToast(error.message || '操作失败', 'none')
-      })
-    })
-  },
-
-  /**
    * 返回
    */
   onBack: function() {
     wx.navigateBack()
-  },
-
-  /**
-   * 获取状态图标
-   */
-  getStatusIcon: function(orderStatus, paymentStatus) {
-    if (paymentStatus === 0) {
-      return 'pending'
-    }
-    
-    var map = {
-      'PROCESSING': 'processing',
-      'COMPLETED': 'completed',
-      'CANCELLED': 'cancelled',
-      'REFUNDED': 'refunded'
-    }
-    return map[orderStatus] || 'pending'
   },
 
   /**
@@ -294,6 +245,7 @@ Page({
    * 格式化日期时间
    */
   formatDateTime: function(time) {
+    console.log(time)
     return formatDateTime(time)
   }
 })

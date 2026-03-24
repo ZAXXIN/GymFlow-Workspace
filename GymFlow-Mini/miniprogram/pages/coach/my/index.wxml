@@ -1,112 +1,111 @@
-<view class="coach-my">
-  <!-- 用户信息头部 -->
-  <view class="coach-my-header">
-    <view class="coach-my-header-bg"></view>
-    <view class="coach-my-header-content">
-      <view class="coach-my-avatar">
-        <image src="/assets/icons/coach-avatar.png" mode="aspectFill"></image>
-      </view>
-      <view class="coach-my-info">
-        <view class="coach-my-name">{{coachInfo.realName || '教练'}}</view>
-        <view class="coach-my-phone">{{coachInfo.phone || '未绑定手机'}}</view>
-        <view class="coach-my-specialty">{{coachInfo.specialty || '健身教练'}}</view>
-      </view>
-      <view class="coach-my-message" bindtap="goToMessage">
-        <image class="coach-my-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
-        <message-badge count="{{unreadCount}}" dot="{{false}}"></message-badge>
-      </view>
-    </view>
-  </view>
-  
-  <!-- 统计数据 -->
-  <view class="coach-my-stats">
-    <view class="coach-my-stats-item">
-      <text class="coach-my-stats-value">{{coachInfo.totalStudents || 0}}</text>
-      <text class="coach-my-stats-label">累计学员</text>
-    </view>
-    <view class="coach-my-stats-item">
-      <text class="coach-my-stats-value">{{coachInfo.totalCourses || 0}}</text>
-      <text class="coach-my-stats-label">累计课程</text>
-    </view>
-    <view class="coach-my-stats-item">
-      <text class="coach-my-stats-value">¥{{coachInfo.totalIncome || 0}}</text>
-      <text class="coach-my-stats-label">累计收入</text>
-    </view>
-    <view class="coach-my-stats-item">
-      <text class="coach-my-stats-value">{{coachInfo.rating || 5.0}}</text>
-      <text class="coach-my-stats-label">评分</text>
-    </view>
-  </view>
-  
-  <!-- 个人信息卡片 -->
-  <view class="coach-my-section">
-    <view class="coach-my-section-title">个人信息</view>
-    <view class="coach-my-info-list">
-      <view class="coach-my-info-item">
-        <text class="coach-my-info-label">从业年限</text>
-        <text class="coach-my-info-value">{{coachInfo.yearsOfExperience || 0}}年</text>
-      </view>
-      <view class="coach-my-info-item">
-        <text class="coach-my-info-label">课时费</text>
-        <text class="coach-my-info-value">¥{{coachInfo.hourlyRate || 0}}/节</text>
-      </view>
-      <view class="coach-my-info-item">
-        <text class="coach-my-info-label">提成比例</text>
-        <text class="coach-my-info-value">{{coachInfo.commissionRate || 0}}%</text>
+<page-layout>
+  <view class="coach-my">
+    <!-- 用户信息头部 -->
+    <view class="coach-my-header">
+      <view class="coach-my-header-bg"></view>
+      <view class="coach-my-header-content">
+        <view class="coach-my-info">
+          <view class="coach-my-name">{{coachInfo.realName || '教练'}}</view>
+          <view class="coach-my-phone">{{coachInfo.phone || '未绑定手机'}}</view>
+          <view class="coach-my-specialty">{{coachInfo.specialty || '健身教练'}}</view>
+        </view>
+        <view class="coach-my-message" bindtap="goToMessage">
+          <image class="coach-my-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
+          <message-badge count="{{unreadCount}}" dot="{{false}}"></message-badge>
+        </view>
       </view>
     </view>
-  </view>
-  
-  <!-- 资格证书 -->
-  <view class="coach-my-section" wx:if="{{coachInfo.certifications && coachInfo.certifications.length > 0}}">
-    <view class="coach-my-section-title">资格证书</view>
-    <view class="coach-my-cert-list">
-      <view class="coach-my-cert-item" wx:for="{{coachInfo.certifications}}" wx:key="index" wx:for-item="cert">
-        <image class="coach-my-cert-icon" src="/assets/icons/cert.png" mode="aspectFit"></image>
-        <text class="coach-my-cert-name">{{cert}}</text>
-      </view>
-    </view>
-  </view>
-  
-  <!-- 个人简介 -->
-  <view class="coach-my-section" wx:if="{{coachInfo.introduction}}">
-    <view class="coach-my-section-title">个人简介</view>
-    <view class="coach-my-intro">
-      <text>{{coachInfo.introduction}}</text>
-    </view>
-  </view>
-  
-  <!-- 菜单列表 -->
-  <view class="coach-my-menu">
-    <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/coach/schedule/index">
-      <image class="coach-my-menu-icon" src="/assets/icons/schedule.png" mode="aspectFit"></image>
-      <text class="coach-my-menu-title">我的排班</text>
-      <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-    </view>
-    
-    <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/modify-password/index">
-      <image class="coach-my-menu-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
-      <text class="coach-my-menu-title">修改密码</text>
-      <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-    </view>
-    
-    <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/about/index">
-      <image class="coach-my-menu-icon" src="/assets/icons/about.png" mode="aspectFit"></image>
-      <text class="coach-my-menu-title">关于我们</text>
-      <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-    </view>
-  </view>
-  
-  <!-- 退出登录按钮 -->
-  <view class="coach-my-logout" bindtap="onLogout">
-    <text>退出登录</text>
-  </view>
-  
-  <!-- 底部版权 -->
-  <view class="coach-my-footer">
-    <text class="coach-my-footer-text">© 2026 GymFlow 健身管理系统</text>
-  </view>
 
-  <!-- 自定义 TabBar -->
-  <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
-</view>
+    <!-- 统计数据 -->
+    <view class="coach-my-stats">
+      <view class="coach-my-stats-item">
+        <text class="coach-my-stats-value">{{coachInfo.totalStudents || 0}}</text>
+        <text class="coach-my-stats-label">累计学员</text>
+      </view>
+      <view class="coach-my-stats-item">
+        <text class="coach-my-stats-value">{{coachInfo.totalCourses || 0}}</text>
+        <text class="coach-my-stats-label">累计课程</text>
+      </view>
+      <view class="coach-my-stats-item">
+        <text class="coach-my-stats-value">¥{{coachInfo.totalIncome || 0}}</text>
+        <text class="coach-my-stats-label">累计收入</text>
+      </view>
+      <view class="coach-my-stats-item">
+        <text class="coach-my-stats-value">{{coachInfo.rating || 5.0}}</text>
+        <text class="coach-my-stats-label">评分</text>
+      </view>
+    </view>
+
+    <!-- 个人信息卡片 -->
+    <view class="coach-my-section">
+      <view class="coach-my-section-title">个人信息</view>
+      <view class="coach-my-info-list">
+        <view class="coach-my-info-item">
+          <text class="coach-my-info-label">从业年限</text>
+          <text class="coach-my-info-value">{{coachInfo.yearsOfExperience || 0}}年</text>
+        </view>
+        <view class="coach-my-info-item">
+          <text class="coach-my-info-label">课时费</text>
+          <text class="coach-my-info-value">¥{{coachInfo.hourlyRate || 0}}/节</text>
+        </view>
+        <view class="coach-my-info-item">
+          <text class="coach-my-info-label">提成比例</text>
+          <text class="coach-my-info-value">{{coachInfo.commissionRate || 0}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 资格证书 -->
+    <view class="coach-my-section" wx:if="{{coachInfo.certifications && coachInfo.certifications.length > 0}}">
+      <view class="coach-my-section-title">资格证书</view>
+      <view class="coach-my-cert-list">
+        <view class="coach-my-cert-item" wx:for="{{coachInfo.certifications}}" wx:key="index" wx:for-item="cert">
+          <image class="coach-my-cert-icon" src="/assets/icons/cert.png" mode="aspectFit"></image>
+          <text class="coach-my-cert-name">{{cert}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 个人简介 -->
+    <view class="coach-my-section" wx:if="{{coachInfo.introduction}}">
+      <view class="coach-my-section-title">个人简介</view>
+      <view class="coach-my-intro">
+        <text>{{coachInfo.introduction}}</text>
+      </view>
+    </view>
+
+    <!-- 菜单列表 -->
+    <view class="coach-my-menu">
+      <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/coach/schedule/index">
+        <image class="coach-my-menu-icon" src="/assets/icons/schedule.png" mode="aspectFit"></image>
+        <text class="coach-my-menu-title">我的排班</text>
+        <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+      </view>
+
+      <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/modify-password/index">
+        <image class="coach-my-menu-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>
+        <text class="coach-my-menu-title">修改密码</text>
+        <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+      </view>
+
+      <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/about/index">
+        <image class="coach-my-menu-icon" src="/assets/icons/about.png" mode="aspectFit"></image>
+        <text class="coach-my-menu-title">关于我们</text>
+        <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
+      </view>
+    </view>
+
+    <!-- 退出登录按钮 -->
+    <view class="coach-my-logout" bindtap="onLogout">
+      <text>退出登录</text>
+    </view>
+
+    <!-- 底部版权 -->
+    <view class="coach-my-footer">
+      <text class="coach-my-footer-text">© 2026 GymFlow 健身管理系统</text>
+    </view>
+
+    <!-- 自定义 TabBar -->
+    <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />
+  </view>
+</page-layout>

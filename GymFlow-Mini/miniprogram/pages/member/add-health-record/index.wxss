@@ -1,15 +1,15 @@
-/* pages/member/add-health-record/index.wxss */.add-health-record-page {
+/* pages/member/add-health-record/index.wxss */
+.add-health-record-page {
   min-height: 100vh;
-  background: #f5f5f5;
   padding: 24rpx;
+  background: #fff;
 }
 
 /* 表单 */
 .add-health-record-form {
-  background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  /* box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08); */
 }
 
 .add-health-record-form-item {
@@ -37,9 +37,9 @@
 .add-health-record-form-control {
   display: flex;
   align-items: center;
-  background: #f5f5f5;
   border-radius: 12rpx;
   padding: 20rpx 24rpx;
+  background: #f5f5f5;
 }
 
 .add-health-record-form-input {
@@ -67,6 +67,9 @@
   flex: 1;
   font-size: 28rpx;
   color: #333;
+  display: block;
+  height:50rpx;
+  line-height: 20rpx;
 }
 
 .add-health-record-form-value.placeholder {

@@ -1,57 +1,290 @@
-// 预约状态管理
+// stores/booking.store.ts
+// 预约状态管理 - 包含业务逻辑
 
-import { 
-  getMyBookings, 
-  getAvailableCourses,
-  cancelBooking 
+import {
+  getCourseTimetable,
+  getCourseScheduleDetail,
+  bookGroupCourse,
+  bookPrivateCourse,
+  cancelBooking
 } from '../services/api/booking.api'
-import { 
-  CourseBooking, 
-  CourseSchedule,
-  BookingStatus 
-} from '../services/types/booking.types'
+import { getMyMemberInfo } from '../services/api/member.api'
+import { getMemberBookings } from '../services/api/booking.api'
+import { userStore } from './user.store'
+
+// 课程类型常量
+export const COURSE_TYPE = {
+  PRIVATE: 0,  // 私教课
+  GROUP: 1     // 团课
+}
+
+// 会员拥有的课程类型
+export const MEMBER_COURSE_TYPE = {
+  PRIVATE_ONLY: 'PRIVATE_ONLY',   // 只有私教课
+  GROUP_ONLY: 'GROUP_ONLY',       // 只有团课
+  BOTH: 'BOTH',                   // 两者都有
+  NONE: 'NONE'                    // 都没有
+}
 
 class BookingStore {
-  private _myBookings: CourseBooking[] = []
-  private _availableCourses: CourseSchedule[] = []
-  private _currentBooking: CourseBooking | null = null
+  private _myBookings: any[] = []
+  private _availablePrivateCourses: any[] = []
+  private _availableGroupCourses: any[] = []
+  private _currentCourseType: string = MEMBER_COURSE_TYPE.NONE
+  private _currentBooking: any = null
   private _loading: boolean = false
   private _hasMore: boolean = true
   private _currentPage: number = 1
   private _pageSize: number = 10
 
+  // Getters
+  get myBookings() { return this._myBookings }
+  get availablePrivateCourses() { return this._availablePrivateCourses }
+  get availableGroupCourses() { return this._availableGroupCourses }
+  get currentCourseType() { return this._currentCourseType }
+  get currentBooking() { return this._currentBooking }
+  get loading() { return this._loading }
+  get hasMore() { return this._hasMore }
+
   /**
-   * 加载我的预约
+   * 初始化：同步会员卡信息，获取会员拥有的课程类型
    */
-  async loadMyBookings(status?: BookingStatus, refresh: boolean = false) {
+  async initMemberCourseType() {
+    try {
+      const memberId = userStore.memberId
+      if (!memberId) {
+        this._currentCourseType = MEMBER_COURSE_TYPE.NONE
+        return MEMBER_COURSE_TYPE.NONE
+      }
+
+      const memberInfo = await getMyMemberInfo()
+      userStore.updateUserInfo(memberInfo)
+
+      const cards = memberInfo.memberCards || []
+      let hasPrivate = false
+      let hasGroup = false
+
+      for (const card of cards) {
+        if (card.productType === 1 && card.status === 'ACTIVE' && (card.remainingSessions || 0) > 0) {
+          hasPrivate = true
+        }
+        if (card.productType === 2 && card.status === 'ACTIVE' && (card.remainingSessions || 0) > 0) {
+          hasGroup = true
+        }
+      }
+
+      if (hasPrivate && hasGroup) {
+        this._currentCourseType = MEMBER_COURSE_TYPE.BOTH
+      } else if (hasPrivate) {
+        this._currentCourseType = MEMBER_COURSE_TYPE.PRIVATE_ONLY
+      } else if (hasGroup) {
+        this._currentCourseType = MEMBER_COURSE_TYPE.GROUP_ONLY
+      } else {
+        this._currentCourseType = MEMBER_COURSE_TYPE.NONE
+      }
+
+      return this._currentCourseType
+    } catch (error) {
+      console.error('同步会员卡信息失败:', error)
+      this._currentCourseType = MEMBER_COURSE_TYPE.NONE
+      return MEMBER_COURSE_TYPE.NONE
+    }
+  }
+
+  /**
+   * 加载可预约课程
+   */
+  async loadAvailableCourses(params?: { date?: string; courseType?: number }) {
     if (this._loading) return
-    
+
+    this._loading = true
+
+    try {
+      let startDate = params?.date
+      let endDate = params?.date
+
+      if (!startDate) {
+        const today = new Date().toISOString().split('T')[0]
+        startDate = today
+        endDate = today
+      }
+
+      console.log('请求课程表，日期:', startDate)
+
+      const schedules = await getCourseTimetable({ startDate, endDate })
+
+      console.log('课程表返回数据:', schedules)
+
+      let privateList: any[] = []
+      let groupList: any[] = []
+
+      const scheduleList = Array.isArray(schedules) ? schedules : (schedules?.list || [])
+
+      for (const schedule of scheduleList) {
+        const processed = {
+          ...schedule,
+          scheduleId: schedule.id || schedule.scheduleId,
+          remainingSlots: (schedule.maxCapacity || 0) - (schedule.currentEnrollment || 0),
+          canBook: (schedule.currentEnrollment || 0) < (schedule.maxCapacity || 0),
+          scheduleDateDisplay: this.formatDate(schedule.scheduleDate),
+          timeRange: `${schedule.startTime?.substring(0, 5)}-${schedule.endTime?.substring(0, 5)}`,
+          courseType: schedule.courseType,
+          courseTypeDesc: schedule.courseType === 0 ? '私教课' : '团课',
+          sessionCost: schedule.sessionCost || 1
+        }
+
+        if (processed.courseType === COURSE_TYPE.PRIVATE) {
+          privateList.push(processed)
+        } else {
+          groupList.push(processed)
+        }
+      }
+
+      if (params?.courseType !== undefined) {
+        if (params.courseType === COURSE_TYPE.PRIVATE) {
+          groupList = []
+        } else {
+          privateList = []
+        }
+      }
+
+      this._availablePrivateCourses = privateList
+      this._availableGroupCourses = groupList
+
+      console.log('私教课数量:', privateList.length, '团课数量:', groupList.length)
+
+      return {
+        privateCourses: privateList,
+        groupCourses: groupList,
+        total: privateList.length + groupList.length
+      }
+    } catch (error) {
+      console.error('加载可预约课程失败:', error)
+      throw error
+    } finally {
+      this._loading = false
+    }
+  }
+
+  /**
+   * 获取排课详情
+   */
+  async getScheduleDetail(scheduleId: number) {
+    try {
+      const detail = await getCourseScheduleDetail(scheduleId)
+      return {
+        ...detail,
+        remainingSlots: (detail.maxCapacity || 0) - (detail.currentEnrollment || 0),
+        scheduleDateDisplay: this.formatDate(detail.scheduleDate),
+        timeRange: `${detail.startTime?.substring(0, 5)}-${detail.endTime?.substring(0, 5)}`,
+        sessionCost: detail.sessionCost || 1
+      }
+    } catch (error) {
+      console.error('获取排课详情失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 预约团课 - 修正参数传递方式
+   */
+  async bookGroupCourse(memberId: number, scheduleId: number) {
+    try {
+      const result = await bookGroupCourse(memberId, scheduleId)  // 直接传两个独立参数
+      return result
+    } catch (error) {
+      console.error('预约团课失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 预约私教课 - 修正参数传递方式
+   */
+  async bookPrivateCourse(memberId: number, coachId: number, courseDate: string, startTime: string) {
+    try {
+      const result = await bookPrivateCourse(memberId, coachId, courseDate, startTime)  // 传四个独立参数
+      return result
+    } catch (error) {
+      console.error('预约私教课失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 统一预约接口
+   */
+  async createBooking(memberId: number, schedule: any) {
+    if (schedule.courseType === COURSE_TYPE.GROUP) {
+      return this.bookGroupCourse(memberId, schedule.scheduleId)
+    } else {
+      return this.bookPrivateCourse(memberId, schedule.coachId, schedule.scheduleDate, schedule.startTime)
+    }
+  }
+
+  /**
+   * 取消预约
+   */
+  async cancelBooking(bookingId: number, reason: string = '用户取消') {
+    try {
+      await cancelBooking(bookingId, reason)
+      return true
+    } catch (error) {
+      console.error('取消预约失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 加载我的预约列表
+   */
+  /**
+ * 加载我的预约列表
+ */
+  async loadMyBookings(refresh: boolean = false, status?: number | null) {
+    console.log('bookingStore.loadMyBookings, status:', status)
+    if (this._loading) return
+  
     if (refresh) {
       this._currentPage = 1
       this._hasMore = true
       this._myBookings = []
     }
-    
+  
     if (!this._hasMore) return
-    
+  
     this._loading = true
-    
+  
     try {
-      const result = await getMyBookings({
-        status,
+      const memberId = userStore.memberId
+      if (!memberId) {
+        throw new Error('用户未登录')
+      }
+  
+      // 构建参数对象，只添加有值的参数
+      const params: Record<string, any> = {
         pageNum: this._currentPage,
         pageSize: this._pageSize
-      })
-      
-      if (refresh) {
-        this._myBookings = result.list
-      } else {
-        this._myBookings = [...this._myBookings, ...result.list]
       }
       
-      this._hasMore = this._currentPage < result.pages
+      // 只有当 status 不为 null 且不为 undefined 时才添加参数
+      if (status !== null && status !== undefined) {
+        params.bookingStatus = status
+      }
+  
+      const result = await getMemberBookings(memberId, params)
+  
+      const list = result.list || []
+  
+      if (refresh) {
+        this._myBookings = list
+      } else {
+        this._myBookings = [...this._myBookings, ...list]
+      }
+  
+      this._hasMore = result.pageNum < result.pages
       this._currentPage++
-      
+  
       return result
     } catch (error) {
       console.error('加载我的预约失败:', error)
@@ -62,112 +295,75 @@ class BookingStore {
   }
 
   /**
-   * 加载可预约课程
+   * 格式化日期显示
    */
-  async loadAvailableCourses(params?: any, refresh: boolean = false) {
-    if (this._loading) return
-    
-    if (refresh) {
-      this._currentPage = 1
-      this._hasMore = true
-      this._availableCourses = []
+  private formatDate(dateStr: string): string {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    if (date.toDateString() === today.toDateString()) {
+      return '今天'
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return '明天'
     }
-    
-    if (!this._hasMore) return
-    
-    this._loading = true
-    
-    try {
-      const result = await getAvailableCourses({
-        pageNum: this._currentPage,
-        pageSize: this._pageSize,
-        ...params
-      })
-      
-      if (refresh) {
-        this._availableCourses = result.list
-      } else {
-        this._availableCourses = [...this._availableCourses, ...result.list]
-      }
-      
-      this._hasMore = this._currentPage < result.pages
-      this._currentPage++
-      
-      return result
-    } catch (error) {
-      console.error('加载可预约课程失败:', error)
-      throw error
-    } finally {
-      this._loading = false
-    }
+    return `${date.getMonth() + 1}月${date.getDate()}日`
   }
 
   /**
-   * 取消预约
+   * 将订单转换为预约格式
    */
-  async cancelBooking(bookingId: number, reason: string) {
-    try {
-      await cancelBooking({ bookingId, reason })
-      
-      // 更新本地数据
-      const index = this._myBookings.findIndex(b => b.id === bookingId)
-      if (index !== -1) {
-        this._myBookings[index].bookingStatus = 3
-        this._myBookings[index].bookingStatusDesc = '已取消'
-        this._myBookings[index].cancellationReason = reason
-        this._myBookings[index].cancellationTime = new Date().toISOString()
-      }
-      
-      return true
-    } catch (error) {
-      console.error('取消预约失败:', error)
-      throw error
+  private convertOrderToBooking(order: any): any {
+    const item = order.orderItems?.[0] || {}
+    const productType = item.productType
+
+    return {
+      id: order.id,
+      bookingId: order.id,
+      memberId: order.memberId,
+      scheduleId: item.id,
+      courseId: item.productId,
+      courseName: item.productName,
+      courseType: productType === 1 ? COURSE_TYPE.PRIVATE : COURSE_TYPE.GROUP,
+      courseTypeDesc: productType === 1 ? '私教课' : '团课',
+      coachId: order.coachId,
+      coachName: order.coachName,
+      scheduleDate: item.validityStartDate,
+      startTime: '',
+      endTime: '',
+      bookingTime: order.createTime,
+      bookingStatus: this.getBookingStatusFromOrder(order),
+      bookingStatusDesc: this.getBookingStatusText(order),
+      checkinTime: order.paymentTime,
+      sessionCost: item.totalSessions,
+      canCancel: order.orderStatus === 'PENDING' || order.orderStatus === 'PROCESSING',
+      canCheckin: false
     }
   }
 
-  /**
-   * 设置当前预约
-   */
-  setCurrentBooking(booking: CourseBooking) {
-    this._currentBooking = booking
+  private getBookingStatusFromOrder(order: any): number {
+    const statusMap: Record<string, number> = {
+      'PENDING': 0,
+      'PROCESSING': 0,
+      'COMPLETED': 2,
+      'CANCELLED': 3,
+      'REFUNDED': 3
+    }
+    return statusMap[order.orderStatus] ?? 0
   }
 
-  /**
-   * 更新预约状态
-   */
-  updateBookingStatus(bookingId: number, status: BookingStatus) {
-    const booking = this._myBookings.find(b => b.id === bookingId)
-    if (booking) {
-      booking.bookingStatus = status
-      booking.bookingStatusDesc = this.getStatusText(status)
-      
-      if (status === 1) {
-        booking.checkinTime = new Date().toISOString()
-      }
+  private getBookingStatusText(order: any): string {
+    const statusMap: Record<string, string> = {
+      'PENDING': '待上课',
+      'PROCESSING': '待上课',
+      'COMPLETED': '已完成',
+      'CANCELLED': '已取消',
+      'REFUNDED': '已取消',
+      'EXPIRED': '已过期'
     }
-  }
-
-  /**
-   * 获取状态文本
-   */
-  private getStatusText(status: BookingStatus): string {
-    const statusMap: Record<BookingStatus, string> = {
-      0: '待上课',
-      1: '已签到',
-      2: '已完成',
-      3: '已取消'
-    }
-    return statusMap[status] || '未知'
-  }
-
-  /**
-   * 按状态筛选预约
-   */
-  getBookingsByStatus(status?: BookingStatus): CourseBooking[] {
-    if (status === undefined) {
-      return this._myBookings
-    }
-    return this._myBookings.filter(b => b.bookingStatus === status)
+    return statusMap[order.orderStatus] ?? '待上课'
   }
 
   /**
@@ -175,34 +371,14 @@ class BookingStore {
    */
   reset() {
     this._myBookings = []
-    this._availableCourses = []
+    this._availablePrivateCourses = []
+    this._availableGroupCourses = []
+    this._currentCourseType = MEMBER_COURSE_TYPE.NONE
     this._currentBooking = null
     this._hasMore = true
     this._currentPage = 1
     this._loading = false
   }
-
-  // Getters
-  get myBookings() {
-    return this._myBookings
-  }
-
-  get availableCourses() {
-    return this._availableCourses
-  }
-
-  get currentBooking() {
-    return this._currentBooking
-  }
-
-  get loading() {
-    return this._loading
-  }
-
-  get hasMore() {
-    return this._hasMore
-  }
 }
 
-// 导出单例
 export const bookingStore = new BookingStore()

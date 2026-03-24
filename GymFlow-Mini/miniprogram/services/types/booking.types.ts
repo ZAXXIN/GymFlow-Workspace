@@ -3,6 +3,24 @@
 // 预约状态
 export type BookingStatus = 0 | 1 | 2 | 3 // 0-待上课 1-已签到 2-已完成 3-已取消
 
+// 前端类型定义
+export interface MiniAvailableCourseDTO {
+  scheduleId: number;           // 排课ID（新增）
+  courseId: number;             // 课程ID
+  courseName: string;           // 课程名称
+  courseType: number;           // 课程类型
+  coachId: number;              // 教练ID
+  coachName: string;            // 教练姓名
+  scheduleDate: string;         // 上课日期
+  startTime: string;            // 开始时间
+  endTime: string;              // 结束时间
+  location: string;             // 上课地点
+  maxCapacity: number;          // 最大容量
+  currentEnrollment: number;    // 当前报名人数
+  remainingSlots: number;       // 剩余名额
+  price: number;                // 价格
+}
+
 // 课程
 export interface Course {
   id: number

@@ -2,6 +2,7 @@
 import { userStore } from '../../../stores/user.store'
 import { formatDate } from '../../../utils/date'
 import { showToast } from '../../../utils/wx-util'
+import { getHealthRecords } from '../../../services/api/member.api'
 
 Page({
   data: {
@@ -30,7 +31,7 @@ Page({
   },
 
   /**
-   * 加载健康记录（从 userStore 获取）
+   * 加载健康记录（从接口获取）
    */
   loadRecords: function() {
     var that = this
@@ -42,24 +43,35 @@ Page({
       return
     }
     
-    // 从 userStore 获取健康记录
-    var userInfo = userStore.userInfo
-    var records = userInfo?.healthRecords || []
-    
-    console.log('健康记录从userInfo获取:', records)
-    
-    this.setData({ 
-      records: records,
-      loading: false
-    })
-    
-    this.calculateStats(records)
+    // 调用接口获取健康记录
+    getHealthRecords(memberId)
+      .then((response: any) => {
+        var records = response || []
+        console.log('健康记录从接口获取:', records)
+        
+        that.setData({ 
+          records: records,
+          loading: false
+        })
+        
+        that.calculateStats(records)
+      })
+      .catch((error: any) => {
+        console.error('获取健康记录失败:', error)
+        that.setData({ 
+          loading: false,
+          loadError: true,
+          errorMessage: error.message || '加载失败，请稍后重试'
+        })
+        showToast('加载失败', 'none')
+      })
   },
 
   /**
    * 计算统计信息
    */
   calculateStats: function(records) {
+    console.log(records)
     if (!records || records.length === 0) {
       this.setData({
         stats: {
@@ -85,6 +97,8 @@ Page({
     }
     
     this.setData({ stats: stats })
+
+    console.log(stats)
   },
 
   /**
@@ -120,15 +134,6 @@ Page({
    */
   formatDate: function(date) {
     return formatDate(date)
-  },
-
-  /**
-   * 格式化数值
-   */
-  formatNumber: function(num, decimals) {
-    if (decimals === undefined) decimals = 1
-    if (num === undefined || num === null) return '--'
-    return num.toFixed(decimals)
   },
 
   /**

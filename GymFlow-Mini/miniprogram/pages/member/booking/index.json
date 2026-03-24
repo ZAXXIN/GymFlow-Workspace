@@ -6,7 +6,8 @@
     "search-bar": "/components/search-bar/index",
     "loading": "/components/loading/index",
     "empty-state": "/components/empty-state/index",
-    "booking-card": "/components/booking-card/index"
+    "booking-card": "/components/booking-card/index",
+    "qr-code": "/components/qr-code/index"
   },
   "enablePullDownRefresh": true,
   "backgroundTextStyle": "dark"

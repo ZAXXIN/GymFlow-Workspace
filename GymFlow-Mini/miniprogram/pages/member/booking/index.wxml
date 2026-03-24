@@ -3,12 +3,31 @@
     <!-- 固定顶部区域 -->
     <view class="booking-fixed-header">
       <!-- Tab导航 -->
-      <tab-nav tabs="{{['可预约', '我的预约']}}" current="{{activeTab}}" bindchange="onTabChange"></tab-nav>
+      <tab-nav tabs="{{tabName}}" current="{{activeTab}}" bindchange="onMainTabChange"></tab-nav>
 
-      <!-- 可预约Tab的搜索栏（固定在顶部） -->
+      <!-- 可预约Tab的筛选栏（固定在顶部） -->
       <view class="booking-search" wx:if="{{activeTab === 0}}">
-        <search-bar placeholder="搜索课程、教练..." value="{{keyword}}" showCancel="{{false}}" bindinput="onSearchInput"
-          bindsearch="onSearch" bindclear="onSearchClear"></search-bar>
+        <!-- 课程类型筛选器（私教课/团课 select 框） -->
+        <view class="booking-course-type-select" wx:if="{{showCourseTypeSelect}}">
+          <picker mode="selector" range="{{courseTypeOptions}}" range-key="label" value="{{selectedCourseTypeIndex}}"
+            bindchange="onCourseTypeChange">
+            <view class="booking-course-type-picker">
+              <text>{{courseTypeOptions[selectedCourseTypeIndex].label}}</text>
+              <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 时间选择器 -->
+        <view class="booking-date-picker">
+          <picker mode="date" value="{{selectedDate}}" start="{{minDate}}" end="{{maxDate}}" bindchange="onDateChange">
+            <view class="booking-date-picker-inner">
+              <image class="booking-date-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
+              <text class="booking-date-text">{{selectedDateDisplay}}</text>
+              <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+            </view>
+          </picker>
+        </view>
       </view>
 
       <!-- 我的预约Tab的状态Tab（固定在顶部） -->
@@ -29,33 +48,35 @@
       <view class="booking-tab-content" wx:if="{{activeTab === 0}}">
         <!-- 课程列表 -->
         <view class="booking-course-list">
-          <block wx:for="{{availableCourses}}" wx:key="scheduleId" wx:for-item="course">
+          <block wx:for="{{displayCourses}}" wx:key="scheduleId" wx:for-item="course">
             <view class="booking-course-item" data-course="{{course}}" bindtap="onCourseTap">
               <view class="booking-course-header">
                 <view class="booking-course-title">{{course.courseName}}</view>
-                <view class="booking-course-tag">{{course.courseType}}</view>
+                <view class="booking-course-tag">{{course.courseTypeDesc}}</view>
               </view>
 
               <view class="booking-course-info">
                 <view class="booking-course-info-item">
-                  <image class="booking-course-info-icon" src="/assets/icons/coach.png" mode="aspectFit"></image>
+                  <image class="booking-course-info-icon" src="/assets/icons/coach/my.png" mode="aspectFit"></image>
                   <text>{{course.coachName}}教练</text>
                 </view>
                 <view class="booking-course-info-item">
-                  <image class="booking-course-info-icon" src="/assets/icons/time.png" mode="aspectFit"></image>
-                  <text>{{course.scheduleDate}} {{formatTime(course.startTime)}}-{{formatTime(course.endTime)}}</text>
+                  <image class="booking-course-info-icon" src="/assets/icons/validity.png" mode="aspectFit"></image>
+                  <text>{{course.scheduleDate}} {{course.startTime}}-{{course.endTime}}</text>
                 </view>
                 <view class="booking-course-info-item">
-                  <image class="booking-course-info-icon" src="/assets/icons/location.png" mode="aspectFit"></image>
-                  <text>{{course.location || '未指定'}}</text>
+                  <image class="booking-course-info-icon" src="/assets/icons/expend.png" mode="aspectFit"></image>
+                  <text>消耗课时 {{course.sessionCost}}</text>
                 </view>
               </view>
 
               <view class="booking-course-footer">
-                <view class="booking-course-price">¥{{course.price}}</view>
-                <view
-                  class="booking-course-capacity {{course.remainingSlots <= 5 ? 'booking-course-capacity-warning' : ''}}">
-                  {{getRemainingText(course.remainingSlots)}}
+                <view class="booking-course-capacity">
+                  <text>最大预约人数:{{course.maxCapacity}}</text>
+                  <text wx:if="{{course.remainingSlots > 5}}"
+                    class="capacity-text">剩余名额:{{course.remainingSlots}}</text>
+                  <text wx:else
+                    class="capacity-text booking-course-capacity-warning">剩余名额:{{course.remainingSlots}}</text>
                 </view>
               </view>
             </view>
@@ -66,13 +87,8 @@
             <loading type="circular" text="加载中..."></loading>
           </view>
 
-          <!-- 没有更多 -->
-          <view class="booking-nomore" wx:if="{{!availableHasMore && availableCourses.length > 0}}">
-            <text>没有更多了</text>
-          </view>
-
           <!-- 空状态 -->
-          <empty-state wx:if="{{!availableLoading && availableCourses.length === 0}}" show="{{true}}" text="暂无可预约课程">
+          <empty-state wx:if="{{!availableLoading && displayCourses.length === 0}}" show="{{true}}" text="暂无可预约课程">
           </empty-state>
         </view>
       </view>
@@ -82,8 +98,10 @@
         <!-- 预约列表 -->
         <view class="booking-list">
           <block wx:for="{{myBookings}}" wx:key="id">
-            <booking-card booking="{{item}}" showActions="{{item.bookingStatus === 0}}" bindtap="onBookingTap"
-              bindcancel="onCancelBooking" bindcheckin="onViewCheckinCode"></booking-card>
+            <!-- bind:cardtap="onBookingTap" -->
+            <booking-card booking="{{item}}" showActions="{{item.bookingStatus == 0}}" bind:cancel="onCancelBooking"
+              bind:checkin="onViewCheckinCode">
+            </booking-card>
           </block>
 
           <!-- 加载中 -->
@@ -91,13 +109,9 @@
             <loading type="circular" text="加载中..."></loading>
           </view>
 
-          <!-- 没有更多 -->
-          <view class="booking-nomore" wx:if="{{!myHasMore && myBookings.length > 0}}">
-            <text>没有更多了</text>
-          </view>
-
           <!-- 空状态 -->
-          <empty-state wx:if="{{!myLoading && myBookings.length === 0}}" show="{{true}}" text="暂无预约记录"></empty-state>
+          <empty-state wx:if="{{!myLoading && myBookings.length === 0}}" show="{{true}}" text="暂无预约记录">
+          </empty-state>
         </view>
       </view>
 
@@ -111,8 +125,6 @@
       <view class="booking-modal-content">
         <view class="booking-modal-header">
           <text class="booking-modal-title">确认预约</text>
-          <image class="booking-modal-close" src="/assets/icons/close.png" mode="aspectFit"
-            bindtap="onCloseBookingModal"></image>
         </view>
 
         <view class="booking-modal-body" wx:if="{{selectedCourse}}">
@@ -127,18 +139,9 @@
             </view>
             <view class="booking-modal-info-item">
               <text class="booking-modal-info-label">时间</text>
-              <text class="booking-modal-info-value">
-                {{selectedCourse.scheduleDate}}
-                {{formatTime(selectedCourse.startTime)}}-{{formatTime(selectedCourse.endTime)}}
+              <text class="booking-modal-info-value">{{selectedCourse.scheduleDate}}
+                {{selectedCourse.startTime}}-{{selectedCourse.endTime}}
               </text>
-            </view>
-            <view class="booking-modal-info-item">
-              <text class="booking-modal-info-label">地点</text>
-              <text class="booking-modal-info-value">{{selectedCourse.location || '未指定'}}</text>
-            </view>
-            <view class="booking-modal-info-item">
-              <text class="booking-modal-info-label">价格</text>
-              <text class="booking-modal-info-value booking-modal-price">¥{{selectedCourse.price}}</text>
             </view>
           </view>
         </view>
@@ -149,6 +152,58 @@
             disabled="{{bookingLoading}}">
             {{bookingLoading ? '预约中...' : '确认预约'}}
           </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 签到码弹窗 -->
+    <view class="booking-modal" wx:if="{{showCheckinModal}}">
+      <view class="booking-modal-mask" bindtap="onCloseCheckinModal"></view>
+      <view class="booking-modal-content checkin-modal-content">
+        <view class="booking-modal-header">
+          <text class="booking-modal-title">签到码</text>
+          <image class="booking-modal-close" src="/assets/icons/close.png" mode="aspectFit"
+            bindtap="onCloseCheckinModal">
+          </image>
+        </view>
+
+        <view class="booking-modal-body" wx:if="{{!checkinLoading}}">
+          <!-- 二维码区域 - 使用 bookingId 和 signCode 生成二维码 -->
+          <!-- <view class="checkin-code-qrcode">
+            <qr-code size="400"
+              text="gymflow://checkin?bookingId={{checkinBooking.bookingId}}&code={{checkinBooking.signCode}}"
+              wx:if="{{checkinBooking.signCode}}"></qr-code>
+            <view class="checkin-code-qrcode-placeholder" wx:else>
+              <loading type="circular" text="生成签到码中..."></loading>
+            </view>
+          </view> -->
+
+          <!-- 数字码区域 -->
+          <view class="checkin-code-number">
+            <view class="checkin-code-number-label">数字签到码</view>
+            <view class="checkin-code-number-value">{{checkinBooking.signCode || '------'}}</view>
+          </view>
+
+          <!-- 倒计时区域 -->
+          <!-- <view class="checkin-code-expire">
+            <image class="checkin-code-expire-icon" src="/assets/icons/clock.png" mode="aspectFit"></image>
+            <text class="checkin-code-expire-text">
+              签到码有效期至 {{checkinBooking.signCodeExpireTime}}
+            </text>
+            <text class="checkin-code-expire-text" wx:else>
+              签到码已生成，请在课程开始前30分钟内使用
+            </text>
+          </view> -->
+        </view>
+
+        <view class="booking-modal-body" wx:else>
+          <loading type="circular" text="加载签到码中..."></loading>
+        </view>
+
+        <view class="booking-modal-footer">
+          <button class="booking-modal-btn booking-modal-btn-cancel" bindtap="onCloseCheckinModal">关闭</button>
+          <button class="booking-modal-btn booking-modal-btn-warning" wx:if="{{showCancelBtn}}"
+            bindtap="onCheckinCancelBooking">取消预约</button>
         </view>
       </view>
     </view>

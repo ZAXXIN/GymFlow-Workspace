@@ -3,9 +3,6 @@
   <view class="coach-member-header">
     <view class="coach-member-header-bg"></view>
     <view class="coach-member-header-content">
-      <view class="coach-member-avatar">
-        <image src="/assets/icons/avatar-default.png" mode="aspectFill"></image>
-      </view>
       <view class="coach-member-info">
         <view class="coach-member-name">{{memberInfo.memberName || '--'}}</view>
         <view class="coach-member-phone">{{memberInfo.memberPhone || '--'}}</view>

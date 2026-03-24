@@ -11,10 +11,6 @@
         <image class="student-list-course-icon" src="/assets/icons/time-white.png" mode="aspectFit"></image>
         <text>{{courseInfo.courseDate}} {{formatTime(courseInfo.startTime)}}-{{formatTime(courseInfo.endTime)}}</text>
       </view>
-      <view class="student-list-course-location" wx:if="{{courseInfo.location}}">
-        <image class="student-list-course-icon" src="/assets/icons/location-white.png" mode="aspectFit"></image>
-        <text>{{courseInfo.location}}</text>
-      </view>
       <view class="student-list-course-stats">
         <text>已签到 {{checkedCount}}/{{courseInfo.currentEnrollment}}人</text>
       </view>

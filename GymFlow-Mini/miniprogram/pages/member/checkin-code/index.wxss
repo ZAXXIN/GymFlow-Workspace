@@ -51,8 +51,7 @@
   border-radius: 20rpx;
 }
 
-.checkin-code-time,
-.checkin-code-location {
+.checkin-code-time {
   display: flex;
   align-items: center;
   margin-bottom: 8rpx;
@@ -60,8 +59,7 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
-.checkin-code-time-icon,
-.checkin-code-location-icon {
+.checkin-code-time-icon {
   width: 32rpx;
   height: 32rpx;
   margin-right: 12rpx;

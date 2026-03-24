@@ -166,8 +166,7 @@ Page({
   loadUserInfo: function() {
     var that = this
     getMyMemberInfo().then(function(memberInfo) {
-      // 使用 updateMemberInfo 更新详细信息
-      userStore.updateMemberInfo(memberInfo)
+      userStore.updateUserInfo(memberInfo)
       that.setData({ userInfo: userStore.userInfo }, function() {
         that.updateStatsFromUserInfo()
         that.updateCardFromUserInfo()

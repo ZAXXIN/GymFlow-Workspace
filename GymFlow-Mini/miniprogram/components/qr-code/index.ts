@@ -1,16 +1,21 @@
-// 二维码组件逻辑
-import drawQrcode from '../../utils/qrcode' // 需要引入二维码生成库
+// components/qr-code/index.ts
+import drawQrcode from '../../utils/qrcode';
 
 Component({
   properties: {
     text: {
       type: String,
       value: '',
-      observer: 'draw'
+      observer(newVal) {
+        if (newVal) {
+          // 延迟绘制，确保 canvas 已创建
+          setTimeout(() => this.draw(), 100)
+        }
+      }
     },
     size: {
       type: Number,
-      value: 200
+      value: 400
     },
     color: {
       type: String,
@@ -23,39 +28,49 @@ Component({
   },
 
   data: {
-    canvasId: 'qrcode-' + Math.random().toString(36).substr(2, 9)
+    canvasId: ''
   },
 
   lifetimes: {
     attached() {
-      this.draw()
+      // 生成唯一 canvasId
+      const id = 'qrcode-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6)
+      this.setData({ canvasId: id })
+      
+      if (this.properties.text) {
+        setTimeout(() => this.draw(), 100)
+      }
     }
   },
 
   methods: {
     draw() {
       const { text, size, color, backgroundColor, canvasId } = this.properties
+      const canvasIdValue = this.data.canvasId || canvasId
       
-      if (!text) return
+      if (!text) {
+        console.warn('二维码内容为空')
+        return
+      }
       
-      const query = this.createSelectorQuery()
-      query.select('#' + canvasId).fields({ node: true, size: true })
+      // 使用 wx.createCanvasContext 旧版 API（兼容性更好）
+      const ctx = wx.createCanvasContext(canvasIdValue, this)
       
-      query.exec((res) => {
-        const canvas = res[0]?.node
-        if (!canvas) return
-        
-        // 使用二维码库绘制
-        drawQrcode({
-          canvas,
-          text,
-          width: size,
-          height: size,
-          colorDark: color,
-          colorLight: backgroundColor,
-          correctLevel: 1 // 纠错级别
-        })
+      drawQrcode({
+        ctx,
+        canvasId: canvasIdValue,
+        text,
+        width: size,
+        height: size,
+        colorDark: color,
+        colorLight: backgroundColor,
+        correctLevel: 1
       })
+      
+      // 延迟绘制完成
+      setTimeout(() => {
+        ctx.draw()
+      }, 50)
     }
   }
 })

@@ -124,7 +124,7 @@ Page({
   async loadCoachInfo() {
     try {
       const coachInfo = await getMyCoachInfo()
-      userStore.setCoachInfo(coachInfo)
+      userStore.setUserInfo(coachInfo)
       
       this.setData({ coachInfo })
     } catch (error) {
