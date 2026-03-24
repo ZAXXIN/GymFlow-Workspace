@@ -193,7 +193,6 @@ const loadCoachOptions = async () => {
 // 初始化表单数据（编辑模式）
 const initFormData = async () => {
   if (!isEditMode.value) return
-
   try {
     loading.value = true
     const courseId = Number(route.params.id)

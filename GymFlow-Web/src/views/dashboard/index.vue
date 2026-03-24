@@ -5,92 +5,110 @@
       <h1 class="page-title">仪表盘</h1>
       <div class="header-actions">
         <el-button type="primary" @click="refreshData" :loading="loading">
-          <el-icon><Refresh /></el-icon>
+          <el-icon>
+            <Refresh />
+          </el-icon>
           刷新数据
         </el-button>
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          size="small"
-          @change="handleDateChange"
-        />
+        <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" @change="handleDateChange" />
       </div>
     </div>
-    
+
     <!-- 统计卡片 -->
     <div class="stats-grid">
       <el-card class="stats-card">
         <template #header>
           <div class="stats-card-header">
-            <el-icon class="stats-icon member"><User /></el-icon>
+            <el-icon class="stats-icon member">
+              <User />
+            </el-icon>
             <span class="stats-title">总会员数</span>
           </div>
         </template>
         <div class="stats-content">
           <div class="stats-number">{{ stats?.totalMembers || 0 }}</div>
           <div class="stats-trend">
-            <el-icon v-if="memberTrend > 0" class="trend-up"><Top /></el-icon>
-            <el-icon v-else-if="memberTrend < 0" class="trend-down"><Bottom /></el-icon>
+            <el-icon v-if="memberTrend > 0" class="trend-up">
+              <Top />
+            </el-icon>
+            <el-icon v-else-if="memberTrend < 0" class="trend-down">
+              <Bottom />
+            </el-icon>
             <span class="trend-text">{{ Math.abs(memberTrend) }}% 较上月</span>
           </div>
         </div>
       </el-card>
-      
+
       <el-card class="stats-card">
         <template #header>
           <div class="stats-card-header">
-            <el-icon class="stats-icon coach"><UserFilled /></el-icon>
+            <el-icon class="stats-icon coach">
+              <UserFilled />
+            </el-icon>
             <span class="stats-title">教练数</span>
           </div>
         </template>
         <div class="stats-content">
           <div class="stats-number">{{ stats?.totalCoaches || 0 }}</div>
           <div class="stats-trend">
-            <el-icon v-if="coachTrend > 0" class="trend-up"><Top /></el-icon>
-            <el-icon v-else-if="coachTrend < 0" class="trend-down"><Bottom /></el-icon>
+            <el-icon v-if="coachTrend > 0" class="trend-up">
+              <Top />
+            </el-icon>
+            <el-icon v-else-if="coachTrend < 0" class="trend-down">
+              <Bottom />
+            </el-icon>
             <span class="trend-text">{{ Math.abs(coachTrend) }}% 较上月</span>
           </div>
         </div>
       </el-card>
-      
+
       <el-card class="stats-card">
         <template #header>
           <div class="stats-card-header">
-            <el-icon class="stats-icon revenue"><Money /></el-icon>
+            <el-icon class="stats-icon revenue">
+              <Money />
+            </el-icon>
             <span class="stats-title">今日营收</span>
           </div>
         </template>
         <div class="stats-content">
           <div class="stats-number">¥{{ formatRevenue(stats?.todayRevenue || 0) }}</div>
           <div class="stats-trend">
-            <el-icon v-if="revenueTrendValue > 0" class="trend-up"><Top /></el-icon>
-            <el-icon v-else-if="revenueTrendValue < 0" class="trend-down"><Bottom /></el-icon>
+            <el-icon v-if="revenueTrendValue > 0" class="trend-up">
+              <Top />
+            </el-icon>
+            <el-icon v-else-if="revenueTrendValue < 0" class="trend-down">
+              <Bottom />
+            </el-icon>
             <span class="trend-text">{{ Math.abs(revenueTrendValue) }}% 较昨日</span>
           </div>
         </div>
       </el-card>
-      
+
       <el-card class="stats-card">
         <template #header>
           <div class="stats-card-header">
-            <el-icon class="stats-icon attendance"><Check /></el-icon>
+            <el-icon class="stats-icon attendance">
+              <Check />
+            </el-icon>
             <span class="stats-title">今日签到</span>
           </div>
         </template>
         <div class="stats-content">
           <div class="stats-number">{{ stats?.todayCheckIns || 0 }}</div>
           <div class="stats-trend">
-            <el-icon v-if="attendanceTrend > 0" class="trend-up"><Top /></el-icon>
-            <el-icon v-else-if="attendanceTrend < 0" class="trend-down"><Bottom /></el-icon>
+            <el-icon v-if="attendanceTrend > 0" class="trend-up">
+              <Top />
+            </el-icon>
+            <el-icon v-else-if="attendanceTrend < 0" class="trend-down">
+              <Bottom />
+            </el-icon>
             <span class="trend-text">{{ Math.abs(attendanceTrend) }}% 较昨日</span>
           </div>
         </div>
       </el-card>
     </div>
-    
+
     <!-- 图表区域 -->
     <div class="charts-section">
       <el-row :gutter="20">
@@ -114,7 +132,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <!-- 课程分类分布 -->
         <el-col :xs="24" :sm="24" :md="8">
           <el-card class="chart-card">
@@ -130,7 +148,7 @@
         </el-col>
       </el-row>
     </div>
-    
+
     <!-- 今日课程 -->
     <div class="today-courses">
       <el-card>
@@ -145,18 +163,23 @@
         <el-table :data="todayCourses" style="width: 100%" v-loading="coursesLoading">
           <el-table-column prop="courseNo" label="课程编号" width="120" />
           <el-table-column prop="name" label="课程名称" />
-          <el-table-column prop="coachName" label="教练" width="100" />
-          <el-table-column prop="startTime" label="时间" width="120">
+          <el-table-column prop="coachName" label="教练" />
+          <el-table-column prop="startTime" label="开始时间" >
             <template #default="{ row }">
-              {{ formatTime(row.startTime) }} - {{ formatTime(row.endTime) }}
+              {{ formatTime(row.startTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="currentBookings" label="预约/容量" width="120">
+          <el-table-column prop="startTime" label="结束时间">
+            <template #default="{ row }">
+              {{ formatTime(row.endTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="currentBookings" label="预约/容量" >
             <template #default="{ row }">
               {{ row.currentBookings }}/{{ row.capacity }}
             </template>
           </el-table-column>
-          <el-table-column label="状态" width="100">
+          <el-table-column label="状态" >
             <template #default="{ row }">
               <el-tag :type="getStatusType(row.status)" size="small">
                 {{ getStatusText(row.status) }}
@@ -181,7 +204,17 @@ import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
-import { Refresh, Top, Bottom, User, UserFilled, Money, Check, Calendar, ShoppingCart } from '@element-plus/icons-vue'
+import {
+  Refresh,
+  Top,
+  Bottom,
+  User,
+  UserFilled,
+  Money,
+  Check,
+  Calendar,
+  ShoppingCart,
+} from '@element-plus/icons-vue'
 import { useDashboardStore } from '@/stores/dashboard'
 
 const router = useRouter()
@@ -196,7 +229,7 @@ let courseChart: echarts.ECharts | null = null
 // 日期范围
 const dateRange = ref<[Date, Date]>([
   new Date(new Date().setDate(new Date().getDate() - 6)),
-  new Date()
+  new Date(),
 ])
 
 // 状态
@@ -230,9 +263,9 @@ const initData = async () => {
       dashboardStore.fetchRevenueTrend(revenuePeriod.value),
       dashboardStore.fetchCourseCategoryStats(),
       dashboardStore.fetchTodayCourses(),
-      dashboardStore.fetchQuickStats()
+      dashboardStore.fetchQuickStats(),
     ])
-    
+
     // 等待 DOM 更新后再初始化图表
     await nextTick()
     initRevenueChart()
@@ -255,51 +288,48 @@ const handleDateChange = (dates: [Date, Date]) => {
   if (dates && dates.length === 2) {
     const startDate = dates[0].toISOString().split('T')[0]
     const endDate = dates[1].toISOString().split('T')[0]
-    dashboardStore.fetchRevenueTrend(revenuePeriod.value, startDate, endDate)
-      .then(() => {
-        updateRevenueChart()
-      })
+    dashboardStore.fetchRevenueTrend(revenuePeriod.value, startDate, endDate).then(() => {
+      updateRevenueChart()
+    })
   }
 }
 
 // 周期变化
 const handlePeriodChange = (period: string) => {
   revenuePeriod.value = period
-  dashboardStore.fetchRevenueTrend(period)
-    .then(() => {
-      updateRevenueChart()
-    })
+  dashboardStore.fetchRevenueTrend(period).then(() => {
+    updateRevenueChart()
+  })
 }
 
 // 初始化营收图表
 const initRevenueChart = () => {
   if (!revenueChartRef.value || !revenueTrend.value) return
-  
+
   revenueChart = echarts.init(revenueChartRef.value)
-  
+
   // 检查是否所有值都是0
-  const allZero = revenueTrend.value.values.every(v => v === 0)
-  
+  const allZero = revenueTrend.value.values.every((v) => v === 0)
+
   const option = {
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'shadow'
+        type: 'shadow',
       },
       formatter: (params: any) => {
         const data = params[0]
         const value = typeof data.value === 'number' ? data.value : 0
-        const formattedValue = value >= 10000 
-          ? `${(value / 10000).toFixed(1)}万` 
-          : `¥${value.toFixed(2)}`
+        const formattedValue =
+          value >= 10000 ? `${(value / 10000).toFixed(1)}万` : `¥${value.toFixed(2)}`
         return `${data.name}<br/>营收：${formattedValue}`
-      }
+      },
     },
     grid: {
       left: '3%',
       right: '4%',
       bottom: '10%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -307,8 +337,8 @@ const initRevenueChart = () => {
       axisLabel: {
         rotate: revenuePeriod.value === 'year' ? 0 : 30,
         fontSize: 12,
-        margin: 8
-      }
+        margin: 8,
+      },
     },
     yAxis: {
       type: 'value',
@@ -319,21 +349,23 @@ const initRevenueChart = () => {
             return (value / 10000).toFixed(1) + '万'
           }
           return value === 0 ? '0' : value
-        }
+        },
       },
       scale: true,
       min: 'dataMin',
-      max: 'dataMax'
+      max: 'dataMax',
     },
-    title: allZero ? {
-      text: '暂无营收数据',
-      left: 'center',
-      top: '50%',
-      textStyle: {
-        fontSize: 14,
-        color: '#999'
-      }
-    } : null,
+    title: allZero
+      ? {
+          text: '暂无营收数据',
+          left: 'center',
+          top: '50%',
+          textStyle: {
+            fontSize: 14,
+            color: '#999',
+          },
+        }
+      : null,
     series: [
       {
         name: '营收',
@@ -341,7 +373,7 @@ const initRevenueChart = () => {
         data: revenueTrend.value?.values || [],
         itemStyle: {
           color: '#07c160',
-          borderRadius: [4, 4, 0, 0]
+          borderRadius: [4, 4, 0, 0],
         },
         barWidth: 30,
         label: {
@@ -350,24 +382,22 @@ const initRevenueChart = () => {
           formatter: (params: any) => {
             const value = typeof params.value === 'number' ? params.value : 0
             if (value === 0) return ''
-            return value >= 10000 
-              ? `¥${(value / 10000).toFixed(1)}万` 
-              : `¥${value.toFixed(0)}`
+            return value >= 10000 ? `¥${(value / 10000).toFixed(1)}万` : `¥${value.toFixed(0)}`
           },
           fontSize: 11,
-          color: '#666'
+          color: '#666',
         },
         emphasis: {
           itemStyle: {
-            color: '#07c160'
-          }
-        }
-      }
-    ]
+            color: '#07c160',
+          },
+        },
+      },
+    ],
   }
-  
+
   revenueChart.setOption(option)
-  
+
   // 监听窗口大小变化
   window.addEventListener('resize', () => {
     revenueChart?.resize()
@@ -377,47 +407,49 @@ const initRevenueChart = () => {
 // 更新营收图表
 const updateRevenueChart = () => {
   if (!revenueChart || !revenueTrend.value) return
-  
-  const allZero = revenueTrend.value.values.every(v => v === 0)
-  
+
+  const allZero = revenueTrend.value.values.every((v) => v === 0)
+
   revenueChart.setOption({
-    title: allZero ? {
-      text: '暂无营收数据',
-      left: 'center',
-      top: '50%',
-      textStyle: {
-        fontSize: 14,
-        color: '#999'
-      }
-    } : null,
+    title: allZero
+      ? {
+          text: '暂无营收数据',
+          left: 'center',
+          top: '50%',
+          textStyle: {
+            fontSize: 14,
+            color: '#999',
+          },
+        }
+      : null,
     xAxis: {
-      data: revenueTrend.value.categories || []
+      data: revenueTrend.value.categories || [],
     },
     yAxis: {
       scale: true,
       min: 'dataMin',
-      max: 'dataMax'
+      max: 'dataMax',
     },
     series: [
       {
-        data: revenueTrend.value.values || []
-      }
-    ]
+        data: revenueTrend.value.values || [],
+      },
+    ],
   })
 }
 
 // 初始化课程分类图表
 const initCourseChart = () => {
   if (!courseChartRef.value || !courseCategories.value?.length) return
-  
+
   courseChart = echarts.init(courseChartRef.value)
-  
+
   const option = {
     tooltip: {
       trigger: 'item',
       formatter: (params: any) => {
         return `${params.name}<br/>数量：${params.value} (${params.percent}%)`
-      }
+      },
     },
     legend: {
       orient: 'vertical',
@@ -426,9 +458,9 @@ const initCourseChart = () => {
       itemWidth: 10,
       itemHeight: 10,
       formatter: (name: string) => {
-        const item = courseCategories.value?.find(c => c.category === name)
+        const item = courseCategories.value?.find((c) => c.category === name)
         return `${name} ${item?.value || 0} (${item?.percentage?.toFixed(1) || 0}%)`
-      }
+      },
     },
     series: [
       {
@@ -439,31 +471,32 @@ const initCourseChart = () => {
         itemStyle: {
           borderRadius: 10,
           borderColor: '#fff',
-          borderWidth: 2
+          borderWidth: 2,
         },
         label: {
-          show: false
+          show: false,
         },
         emphasis: {
           label: {
             show: true,
             fontSize: 14,
-            fontWeight: 'bold'
-          }
+            fontWeight: 'bold',
+          },
         },
-        data: courseCategories.value?.map(item => ({
-          name: item.category,
-          value: item.value,
-          itemStyle: {
-            color: item.color
-          }
-        })) || []
-      }
-    ]
+        data:
+          courseCategories.value?.map((item) => ({
+            name: item.category,
+            value: item.value,
+            itemStyle: {
+              color: item.color,
+            },
+          })) || [],
+      },
+    ],
   }
-  
+
   courseChart.setOption(option)
-  
+
   window.addEventListener('resize', () => {
     courseChart?.resize()
   })
@@ -472,47 +505,57 @@ const initCourseChart = () => {
 // 更新课程分类图表
 const updateCourseChart = () => {
   if (!courseChart || !courseCategories.value?.length) return
-  
+
   courseChart.setOption({
     series: [
       {
-        data: courseCategories.value.map(item => ({
+        data: courseCategories.value.map((item) => ({
           name: item.category,
           value: item.value,
           itemStyle: {
-            color: item.color
-          }
-        }))
-      }
+            color: item.color,
+          },
+        })),
+      },
     ],
     legend: {
       formatter: (name: string) => {
-        const item = courseCategories.value?.find(c => c.category === name)
+        const item = courseCategories.value?.find((c) => c.category === name)
         return `${name} ${item?.value || 0} (${item?.percentage?.toFixed(1) || 0}%)`
-      }
-    }
+      },
+    },
   })
 }
 
 // 获取状态类型
 const getStatusType = (status: string) => {
   switch (status) {
-    case 'scheduled': return 'primary'
-    case 'in-progress': return 'warning'
-    case 'completed': return 'success'
-    case 'cancelled': return 'danger'
-    default: return 'info'
+    case 'scheduled':
+      return 'primary'
+    case 'in-progress':
+      return 'warning'
+    case 'completed':
+      return 'success'
+    case 'cancelled':
+      return 'danger'
+    default:
+      return 'info'
   }
 }
 
 // 获取状态文本
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'scheduled': return '待开始'
-    case 'in-progress': return '进行中'
-    case 'completed': return '已完成'
-    case 'cancelled': return '已取消'
-    default: return '未知'
+    case 'scheduled':
+      return '待开始'
+    case 'in-progress':
+      return '进行中'
+    case 'completed':
+      return '已完成'
+    case 'cancelled':
+      return '已取消'
+    default:
+      return '未知'
   }
 }
 
@@ -547,17 +590,25 @@ const viewCourseDetail = (id: number) => {
 }
 
 // 监听数据变化
-watch(courseCategories, () => {
-  nextTick(() => {
-    updateCourseChart()
-  })
-}, { deep: true })
+watch(
+  courseCategories,
+  () => {
+    nextTick(() => {
+      updateCourseChart()
+    })
+  },
+  { deep: true }
+)
 
-watch(revenueTrend, () => {
-  nextTick(() => {
-    updateRevenueChart()
-  })
-}, { deep: true })
+watch(
+  revenueTrend,
+  () => {
+    nextTick(() => {
+      updateRevenueChart()
+    })
+  },
+  { deep: true }
+)
 
 // 生命周期
 onMounted(() => {
@@ -568,53 +619,53 @@ onMounted(() => {
 <style lang="scss" scoped>
 .dashboard-container {
   padding: 20px;
-  
+
   .dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
-    
+
     .page-title {
       font-size: 24px;
       font-weight: 600;
       color: var(--gymflow-text-primary);
       margin: 0;
     }
-    
+
     .header-actions {
       display: flex;
       gap: 12px;
       align-items: center;
     }
   }
-  
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
     margin-bottom: 24px;
-    
+
     .stats-card {
       border-radius: 12px;
       border: 1px solid var(--gymflow-border);
       transition: transform 0.3s, box-shadow 0.3s;
-      
+
       &:hover {
         transform: translateY(-4px);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
-      
+
       :deep(.el-card__header) {
         padding: 16px 20px;
         border-bottom: 1px solid var(--gymflow-border);
       }
-      
+
       .stats-card-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .stats-icon {
           display: flex;
           align-items: center;
@@ -623,38 +674,38 @@ onMounted(() => {
           height: 40px;
           border-radius: 10px;
           font-size: 20px;
-          
+
           &.member {
             background: rgba(102, 126, 234, 0.1);
             color: #667eea;
           }
-          
+
           &.coach {
             background: rgba(52, 152, 219, 0.1);
             color: #3498db;
           }
-          
+
           &.revenue {
             background: rgba(46, 204, 113, 0.1);
             color: #2ecc71;
           }
-          
+
           &.attendance {
             background: rgba(155, 89, 182, 0.1);
             color: #9b59b6;
           }
         }
-        
+
         .stats-title {
           font-size: 14px;
           color: var(--gymflow-text-secondary);
           font-weight: 500;
         }
       }
-      
+
       .stats-content {
         padding: 16px 0;
-        
+
         .stats-number {
           font-size: 32px;
           font-weight: 700;
@@ -662,21 +713,21 @@ onMounted(() => {
           margin-bottom: 8px;
           line-height: 1;
         }
-        
+
         .stats-trend {
           display: flex;
           align-items: center;
           gap: 6px;
           font-size: 12px;
-          
+
           .trend-up {
             color: #2ecc71;
           }
-          
+
           .trend-down {
             color: #e74c3c;
           }
-          
+
           .trend-text {
             color: var(--gymflow-text-secondary);
           }
@@ -684,24 +735,24 @@ onMounted(() => {
       }
     }
   }
-  
+
   .charts-section {
     margin-bottom: 24px;
-    
+
     .chart-card {
       border-radius: 12px;
       height: 100%;
-      
+
       :deep(.el-card__header) {
         padding: 16px 20px;
         border-bottom: 1px solid var(--gymflow-border);
       }
-      
+
       .chart-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         .chart-title {
           font-size: 16px;
           font-weight: 600;
@@ -709,7 +760,7 @@ onMounted(() => {
           margin: 0;
         }
       }
-      
+
       .chart-container {
         .chart {
           width: 100%;
@@ -717,18 +768,18 @@ onMounted(() => {
       }
     }
   }
-  
+
   .today-courses {
     :deep(.el-card__header) {
       padding: 16px 20px;
       border-bottom: 1px solid var(--gymflow-border);
     }
-    
+
     .courses-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       h3 {
         margin: 0;
         font-size: 16px;
@@ -743,13 +794,13 @@ onMounted(() => {
 @media (max-width: 768px) {
   .dashboard-container {
     padding: 16px;
-    
+
     .dashboard-header {
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
     }
-    
+
     .stats-grid {
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }

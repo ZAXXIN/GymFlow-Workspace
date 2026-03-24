@@ -47,9 +47,31 @@
               </div>
             </el-form-item>
 
-            <el-form-item label="真实姓名" prop="realName" class="form-item">
-              <el-input v-model="formData.realName" placeholder="请输入真实姓名" maxlength="50" clearable />
-            </el-form-item>
+            <!-- 新增模式：密码字段 -->
+            <template v-if="!isEditMode">
+              <div class="form-row">
+                <el-form-item label="密码" prop="password" class="form-item">
+                  <el-input v-model="formData.password" type="password" placeholder="请输入密码" maxlength="255" clearable show-password autocomplete="new-password" />
+                </el-form-item>
+              </div>
+            </template>
+
+            <!-- 编辑模式：修改密码选项 -->
+            <template v-else>
+              <div class="form-row">
+                <el-form-item label="修改密码" prop="changePassword" class="form-item">
+                  <el-checkbox v-model="formData.changePassword" label="修改密码" />
+                </el-form-item>
+              </div>
+
+              <template v-if="formData.changePassword">
+                <div class="form-row">
+                  <el-form-item label="新密码" prop="newPassword" class="form-item">
+                    <el-input v-model="formData.newPassword" type="password" placeholder="请输入新密码" maxlength="255" clearable show-password autocomplete="new-password" />
+                  </el-form-item>
+                </div>
+              </template>
+            </template>
           </div>
 
           <div class="form-row">
@@ -66,50 +88,6 @@
               </el-radio-group>
             </el-form-item>
           </div>
-
-          <!-- 新增模式：密码字段 -->
-          <template v-if="!isEditMode">
-            <div class="form-row">
-              <el-form-item label="密码" prop="password" class="form-item">
-                <el-input v-model="formData.password" type="password" placeholder="请输入密码" maxlength="255" clearable show-password autocomplete="new-password" />
-              </el-form-item>
-
-              <el-form-item label="确认密码" prop="confirmPassword" class="form-item">
-                <el-input v-model="confirmPassword" type="password" placeholder="请确认密码" maxlength="255" clearable show-password autocomplete="new-password" />
-              </el-form-item>
-            </div>
-            <div class="form-row hint-row">
-              <el-alert type="info" :closable="false" show-icon>
-                <span class="hint-text">密码将使用BCrypt加密存储，长度至少6位</span>
-              </el-alert>
-            </div>
-          </template>
-
-          <!-- 编辑模式：修改密码选项 -->
-          <template v-else>
-            <div class="form-row">
-              <el-form-item label="修改密码" prop="changePassword" class="form-item">
-                <el-checkbox v-model="formData.changePassword" label="修改密码" />
-              </el-form-item>
-            </div>
-
-            <template v-if="formData.changePassword">
-              <div class="form-row">
-                <el-form-item label="新密码" prop="newPassword" class="form-item">
-                  <el-input v-model="formData.newPassword" type="password" placeholder="请输入新密码" maxlength="255" clearable show-password autocomplete="new-password" />
-                </el-form-item>
-
-                <el-form-item label="确认新密码" prop="confirmNewPassword" class="form-item">
-                  <el-input v-model="confirmNewPassword" type="password" placeholder="请确认新密码" maxlength="255" clearable show-password autocomplete="new-password" />
-                </el-form-item>
-              </div>
-              <div class="form-row hint-row">
-                <el-alert type="warning" :closable="false" show-icon>
-                  <span class="hint-text">新密码将使用BCrypt加密存储，长度至少6位</span>
-                </el-alert>
-              </div>
-            </template>
-          </template>
         </el-card>
       </el-form>
     </div>
@@ -134,7 +112,6 @@ const isEditMode = computed(() => !!route.params.id)
 // 表单数据
 interface WebUserForm {
   username: string
-  realName: string
   password?: string
   role: number
   status: number
@@ -144,16 +121,12 @@ interface WebUserForm {
 
 const formData = reactive<WebUserForm>({
   username: '',
-  realName: '',
   password: '',
   role: 1, // 默认选择前台
   status: 1,
   changePassword: false,
   newPassword: '',
 })
-
-const confirmPassword = ref('')
-const confirmNewPassword = ref('')
 
 // 用户名检查
 const usernameChecking = ref(false)
@@ -195,24 +168,6 @@ const formRules: FormRules = {
       trigger: 'blur',
     },
   ],
-  confirmPassword: [
-    {
-      validator: (rule: any, value: string, callback: any) => {
-        if (!isEditMode.value) {
-          if (!value) {
-            callback(new Error('请确认密码'))
-          } else if (value !== formData.password) {
-            callback(new Error('两次输入的密码不一致'))
-          } else {
-            callback()
-          }
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
   newPassword: [
     {
       validator: (rule: any, value: string | undefined, callback: any) => {
@@ -221,24 +176,6 @@ const formRules: FormRules = {
             callback(new Error('请输入新密码'))
           } else if (value.length < 6) {
             callback(new Error('密码长度至少6个字符'))
-          } else {
-            callback()
-          }
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur',
-    },
-  ],
-  confirmNewPassword: [
-    {
-      validator: (rule: any, value: string, callback: any) => {
-        if (isEditMode.value && formData.changePassword) {
-          if (!value) {
-            callback(new Error('请确认新密码'))
-          } else if (value !== formData.newPassword) {
-            callback(new Error('两次输入的密码不一致'))
           } else {
             callback()
           }
@@ -304,7 +241,6 @@ const handleSubmit = async () => {
     // 准备提交数据
     const submitData: any = {
       username: formData.username,
-      realName: formData.realName,
       role: formData.role,
       status: formData.status,
     }
@@ -337,15 +273,7 @@ const handleSubmit = async () => {
 
 // 取消
 const handleCancel = () => {
-  ElMessageBox.confirm('确定要取消吗？未保存的内容将丢失。', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning',
-  })
-    .then(() => {
-      router.push('/settings/webUser')
-    })
-    .catch(() => {})
+  router.push('/settings/webUser')
 }
 
 // 初始化表单数据（编辑模式）
@@ -359,12 +287,10 @@ const initFormData = async () => {
     const user = await webUserStore.fetchUserDetail(userId)
 
     formData.username = user.username
-    formData.realName = user.realName
     formData.role = user.role
     formData.status = user.status
     formData.changePassword = false
     formData.newPassword = ''
-    confirmNewPassword.value = ''
   } catch (error: any) {
     console.error('加载用户详情失败:', error)
     ElMessage.error(error.message || '加载用户信息失败')
@@ -381,7 +307,6 @@ watch(
   (newVal) => {
     if (!newVal) {
       formData.newPassword = ''
-      confirmNewPassword.value = ''
     }
   }
 )

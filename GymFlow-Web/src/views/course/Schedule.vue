@@ -34,7 +34,6 @@
             </el-icon>
             时长：{{ duration }}分钟
           </span>
-          <!-- 移除价格部分 -->
           <span class="meta-item">
             <el-icon>
               <PriceTag />
@@ -136,13 +135,12 @@
         <el-form-item label="课程日期" prop="scheduleDate">
           <el-date-picker v-model="scheduleForm.scheduleDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" />
         </el-form-item>
-
         <el-form-item label="开始时间" prop="startTime">
-          <el-time-select v-model="scheduleForm.startTime" :max-time="scheduleForm.endTime" placeholder="选择开始时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
+          <el-time-select v-model="scheduleForm.startTime" placeholder="选择开始时间" :start="businessStartTime" :end="maxStartTime" step="00:30" style="width: 100%" @change="handleStartTimeChange" />
         </el-form-item>
 
         <el-form-item label="结束时间" prop="endTime">
-          <el-time-select v-model="scheduleForm.endTime" :min-time="scheduleForm.startTime" placeholder="选择结束时间" start="06:00" step="00:30" end="22:00" style="width: 100%" />
+          <el-time-select v-model="scheduleForm.endTime" :min-time="scheduleForm.startTime" :max-time="businessEndTime" placeholder="选择结束时间" :start="businessStartTime" :end="businessEndTime" step="00:30" style="width: 100%" :disabled="true" />
         </el-form-item>
 
         <el-form-item label="教练" prop="coachId">
@@ -235,14 +233,44 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useCourseStore } from '@/stores/course'
+import { useSystemConfigStore } from '@/stores/settings/systemConfig'
 import type { CourseScheduleDTO, CourseScheduleVO } from '@/types/course'
 
 const router = useRouter()
 const route = useRoute()
 const courseStore = useCourseStore()
+const systemConfigStore = useSystemConfigStore()
 
 const loading = ref(false)
 const courseId = computed(() => Number(route.params.id))
+
+// 营业时间
+const businessStartTime = ref('06:00')
+const businessEndTime = ref('22:00')
+
+// 最大可选开始时间（营业结束时间 - 课程时长）
+const maxStartTime = computed(() => {
+  if (!businessEndTime.value || !duration.value) return businessEndTime.value
+
+  // 计算结束时间减去时长后的时间
+  const [endHour, endMinute] = businessEndTime.value.split(':').map(Number)
+  const durationHours = Math.floor(duration.value / 60)
+  const durationMinutes = duration.value % 60
+
+  let maxHour = endHour - durationHours
+  let maxMinute = endMinute - durationMinutes
+
+  if (maxMinute < 0) {
+    maxMinute += 60
+    maxHour -= 1
+  }
+
+  if (maxHour < 0) {
+    maxHour = 0
+  }
+
+  return `${String(maxHour).padStart(2, '0')}:${String(maxMinute).padStart(2, '0')}`
+})
 
 // 课程信息
 const courseName = ref('')
@@ -331,6 +359,58 @@ const getBookingStatusType = (status: number) => {
   }
 }
 
+// 计算结束时间
+const calculateEndTime = (startTime: string): string => {
+  if (!startTime || !duration.value) return ''
+
+  const [hours, minutes] = startTime.split(':').map(Number)
+  const durationHours = Math.floor(duration.value / 60)
+  const durationMinutes = duration.value % 60
+
+  let endHour = hours + durationHours
+  let endMinute = minutes + durationMinutes
+
+  if (endMinute >= 60) {
+    endMinute -= 60
+    endHour += 1
+  }
+
+  // 确保不超过营业结束时间
+  const [maxHour, maxMinute] = businessEndTime.value.split(':').map(Number)
+  if (endHour > maxHour || (endHour === maxHour && endMinute > maxMinute)) {
+    endHour = maxHour
+    endMinute = maxMinute
+  }
+
+  return `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`
+}
+
+// 开始时间变化时自动计算结束时间
+const handleStartTimeChange = (value: string) => {
+  if (value) {
+    scheduleForm.endTime = calculateEndTime(value)
+  } else {
+    scheduleForm.endTime = ''
+  }
+}
+
+// 加载系统配置
+const loadSystemConfig = async () => {
+  try {
+    await systemConfigStore.fetchConfig()
+    const business = systemConfigStore.getBusinessConfig()
+    if (business) {
+      businessStartTime.value = business.businessStartTime.substring(0, 5)
+      businessEndTime.value = business.businessEndTime.substring(0, 5)
+    }
+  } catch (error) {
+    console.error('加载系统配置失败:', error)
+    // 使用默认值
+    businessStartTime.value = '08:00'
+    businessEndTime.value = '22:00'
+  }
+}
+
 // 加载数据
 const loadData = async () => {
   try {
@@ -345,10 +425,12 @@ const loadData = async () => {
       sessionCost.value = courseResponse.sessionCost
 
       // 加载教练列表（从课程绑定的教练中获取）
-      coachOptions.value = courseResponse.coaches.map((item) => ({
-        id: item.id,
-        realName: item.realName,
-      }))
+      coachOptions.value = courseResponse.coaches
+        .filter((item) => item.status == 1) // 只保留在职教练
+        .map((item) => ({
+          id: item.id,
+          realName: item.realName,
+        }))
     }
 
     // 加载排课列表
@@ -409,11 +491,16 @@ const handleAddSchedule = () => {
     courseId: courseId.value,
     coachId: undefined,
     scheduleDate: '',
-    startTime: '09:00',
-    endTime: '10:00',
+    startTime: businessStartTime.value,
+    endTime: '',
     maxCapacity: 20,
     notes: '',
   })
+
+  // 计算结束时间
+  if (businessStartTime.value) {
+    scheduleForm.endTime = calculateEndTime(businessStartTime.value)
+  }
 }
 
 // 编辑排课
@@ -448,7 +535,7 @@ const handleDeleteSchedule = async (schedule: CourseScheduleVO) => {
       ElMessage.warning('该排课已有会员预约，无法删除')
       return
     }
-    
+
     await ElMessageBox.confirm(
       `确定要删除 ${schedule.scheduleDate} ${schedule.startTime?.slice(0, 5)} 的排课吗？`,
       '删除确认',
@@ -458,7 +545,7 @@ const handleDeleteSchedule = async (schedule: CourseScheduleVO) => {
         type: 'warning',
       }
     )
-    
+
     await courseStore.deleteCourseSchedule(schedule.scheduleId)
     ElMessage.success('删除成功')
     // 刷新排课列表
@@ -518,12 +605,14 @@ const goBack = () => {
   router.push('/course/list')
 }
 
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  await loadSystemConfig()
+  await loadData()
 })
 </script>
 
 <style scoped>
+/* 样式保持不变，与原文件相同 */
 .course-schedule-container {
   padding: 20px;
   background-color: #f5f7fa;

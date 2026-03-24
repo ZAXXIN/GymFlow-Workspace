@@ -255,8 +255,8 @@
                     编辑
                   </el-button> -->
                   <el-button type="text" size="small" @click="handleDeleteHealthRecord(row)" style="color: #f56c6c;">
-      删除
-    </el-button>
+                    删除
+                  </el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -279,37 +279,31 @@
 
           <div v-if="memberDetail?.courseRecords && memberDetail.courseRecords.length > 0">
             <el-table :data="memberDetail.courseRecords" style="width: 100%">
-              <el-table-column prop="courseId" label="课程ID" width="100" />
-              <el-table-column prop="courseName" label="课程名称" min-width="150">
+              <el-table-column prop="courseName" label="课程名称" >
                 <template #default="{ row }">
                   <span class="course-name">{{ row.courseName || '未命名课程' }}</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="coachName" label="教练" width="120">
+              <el-table-column prop="coachName" label="教练" >
                 <template #default="{ row }">
                   {{ row.coachName || '未分配教练' }}
                 </template>
               </el-table-column>
-              <el-table-column prop="courseDate" label="上课日期" width="120">
+              <el-table-column prop="courseDate" label="上课日期" >
                 <template #default="{ row }">
                   {{ formatDate(row.courseDate) }}
                 </template>
               </el-table-column>
-              <el-table-column prop="startTime" label="开始时间" width="100" />
-              <el-table-column prop="endTime" label="结束时间" width="100" />
-              <el-table-column prop="location" label="上课地点" width="150">
-                <template #default="{ row }">
-                  {{ row.location || '默认场地' }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="bookingStatus" label="状态" width="100">
+              <el-table-column prop="startTime" label="开始时间" />
+              <el-table-column prop="endTime" label="结束时间" />
+              <el-table-column prop="bookingStatus" label="状态" >
                 <template #default="{ row }">
                   <el-tag :type="getBookingStatusType(row.bookingStatus)" size="small">
                     {{ getBookingStatusText(row.bookingStatus) }}
                   </el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="checkinTime" label="签到时间" width="160">
+              <el-table-column prop="checkinTime" label="签到时间" >
                 <template #default="{ row }">
                   {{ formatDateTime(row.checkinTime) || '-' }}
                 </template>
@@ -494,6 +488,8 @@ const getBookingStatusText = (status: number | undefined) => {
       return '已完成'
     case 3:
       return '已取消'
+    case 4:
+      return '已过期'
     default:
       return '未知'
   }
@@ -654,7 +650,7 @@ onMounted(() => {
   border-radius: 4px;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  min-height: 90px;  /* 添加最小高度，统一所有卡片高度 */
+  min-height: 90px; /* 添加最小高度，统一所有卡片高度 */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -673,7 +669,7 @@ onMounted(() => {
   margin-bottom: 4px;
 }
 
-.stat-value-alone{
+.stat-value-alone {
   min-height: 55px;
   line-height: 55px;
 }
@@ -685,7 +681,7 @@ onMounted(() => {
 .stat-unit {
   font-size: 12px;
   color: #909399;
-  min-height: 18px;  /* 统一单位区域高度，即使没有单位也占位 */
+  min-height: 18px; /* 统一单位区域高度，即使没有单位也占位 */
   line-height: 18px;
 }
 

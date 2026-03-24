@@ -13,18 +13,18 @@ const settingsRoutes: RouteRecordRaw[] = [
       permissions: ['settings:user:view'] as PermissionCode[]  // 查看用户列表需要的权限
     }
   },
-  {
-    path: '/settings/webUser/detail/:id',
-    name: 'webUserDetail',
-    component: () => import('@/views/settings/webUser/Detail.vue'),
-    meta: {
-      title: '用户详情',
-      requiresAuth: true,
-      showInMenu: false,
-      parent: 'webUserList',
-      permissions: ['settings:user:view'] as PermissionCode[]  // 查看详情需要的权限
-    }
-  },
+  // {
+  //   path: '/settings/webUser/detail/:id',
+  //   name: 'webUserDetail',
+  //   component: () => import('@/views/settings/webUser/Detail.vue'),
+  //   meta: {
+  //     title: '用户详情',
+  //     requiresAuth: true,
+  //     showInMenu: false,
+  //     parent: 'webUserList',
+  //     permissions: ['settings:user:view'] as PermissionCode[]  // 查看详情需要的权限
+  //   }
+  // },
   {
     path: '/settings/webUser/add',
     name: 'addWebUser',

@@ -21,14 +21,6 @@
         <el-form-item label="用户名">
           <el-input v-model="filterForm.username" placeholder="请输入用户名" clearable style="width: 180px;" />
         </el-form-item>
-        <!-- <el-form-item label="真实姓名">
-          <el-input
-            v-model="filterForm.realName"
-            placeholder="请输入真实姓名"
-            clearable
-            style="width: 180px;"
-          />
-        </el-form-item> -->
         <el-form-item label="角色">
           <el-select v-model="filterForm.role" placeholder="请选择角色" clearable style="width: 180px;">
             <el-option label="老板" :value="1" />
@@ -41,17 +33,6 @@
             <el-option label="禁用" :value="0" />
           </el-select>
         </el-form-item>
-        <!-- <el-form-item label="创建时间">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="daterange"
-            value-format="YYYY-MM-DD"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            style="width: 240px;"
-          />
-        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" @click="handleSearch" :loading="loading">
             <el-icon>
@@ -87,10 +68,9 @@
 
       <el-table :data="formattedUsers" style="width: 100%" row-key="id" v-loading="loading" stripe border>
         <el-table-column prop="username" label="用户名" width="150" />
-        <el-table-column prop="realName" label="真实姓名" width="150" />
         <el-table-column prop="roleDesc" label="角色" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.role === 0 ? 'danger' : 'primary'" size="small">
+            <el-tag :type="row.role === 1 ? 'danger' : 'primary'" size="small">
               {{ row.roleDesc }}
             </el-tag>
           </template>
@@ -106,9 +86,6 @@
         <el-table-column prop="updateTimeFormatted" label="更新时间" width="180" />
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
-              详情
-            </el-button>
             <el-button v-permission="'settings:user:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
@@ -122,20 +99,76 @@
         </el-table-column>
       </el-table>
 
-      <!-- 批量操作 -->
-      <!-- <div class="batch-actions" v-if="selectedRows.length > 0">
-        <el-button type="danger" size="small" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
-          批量删除
-        </el-button>
-        <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
-      </div> -->
-
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
+
+    <!-- 新增/编辑用户弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px" destroy-on-close @close="handleDialogClose">
+      <el-form ref="dialogFormRef" :model="dialogFormData" :rules="dialogFormRules" label-width="100px" status-icon>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="dialogFormData.username" placeholder="请输入用户名" maxlength="50" clearable @blur="checkUsernameAvailability" :disabled="isEditMode" />
+          <div v-if="usernameChecking" class="checking-text">
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon> 检查中...
+          </div>
+          <div v-if="usernameAvailable !== null && !isEditMode" :class="['check-result', usernameAvailable ? 'success' : 'error']">
+            <el-icon v-if="usernameAvailable">
+              <SuccessFilled />
+            </el-icon>
+            <el-icon v-else>
+              <WarningFilled />
+            </el-icon>
+            {{ usernameAvailable ? '用户名可用' : '用户名已存在' }}
+          </div>
+        </el-form-item>
+
+        <!-- 新增模式：密码字段 -->
+        <template v-if="!isEditMode">
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="dialogFormData.password" type="password" placeholder="请输入密码" maxlength="255" clearable show-password autocomplete="new-password" />
+          </el-form-item>
+        </template>
+
+        <!-- 编辑模式：修改密码选项 -->
+        <template v-else>
+          <el-form-item label="修改密码" prop="changePassword">
+            <el-checkbox v-model="dialogFormData.changePassword" label="修改密码" />
+          </el-form-item>
+
+          <template v-if="dialogFormData.changePassword">
+            <el-form-item label="新密码" prop="newPassword">
+              <el-input v-model="dialogFormData.newPassword" type="password" placeholder="请输入新密码" maxlength="255" clearable show-password autocomplete="new-password" />
+            </el-form-item>
+          </template>
+        </template>
+
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="dialogFormData.role" placeholder="请选择角色" style="width: 100%">
+            <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="dialogFormData.status">
+            <el-radio :value="1">正常</el-radio>
+            <el-radio :value="0">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleDialogSubmit" :loading="dialogLoading">
+            {{ isEditMode ? '更新' : '创建' }}
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -169,11 +202,225 @@ const { userList, total, loading, pageInfo, formattedUserList } = userStore
 // 格式化后的用户列表
 const formattedUsers = computed(() => formattedUserList())
 
-// 选择变化
-// const handleSelectionChange = (val: any[]) => {
-//   selectedRows.value = val
-// }
+// ========== 弹窗相关 ==========
+const dialogVisible = ref(false)
+const dialogLoading = ref(false)
+const dialogFormRef = ref<any>()
+const isEditMode = ref(false)
+const editingUserId = ref<number | null>(null)
 
+// 弹窗表单数据
+interface DialogFormData {
+  username: string
+  password?: string
+  role: number
+  status: number
+  changePassword?: boolean
+  newPassword?: string
+}
+
+const dialogFormData = reactive<DialogFormData>({
+  username: '',
+  password: '',
+  role: 1,
+  status: 1,
+  changePassword: false,
+  newPassword: '',
+})
+
+// 用户名检查
+const usernameChecking = ref(false)
+const usernameAvailable = ref<boolean | null>(null)
+
+// 角色选项
+const roleOptions = [
+  { value: 1, label: '老板' },
+  { value: 2, label: '前台' },
+]
+
+// 弹窗标题
+const dialogTitle = computed(() => isEditMode.value ? '编辑用户' : '新增用户')
+
+// 弹窗表单验证规则
+const dialogFormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 50, message: '用户名长度在3-50个字符', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线', trigger: 'blur' },
+  ],
+  password: [
+    {
+      validator: (rule: any, value: string | undefined, callback: any) => {
+        if (!isEditMode.value) {
+          if (!value) {
+            callback(new Error('请输入密码'))
+          } else if (value.length < 6) {
+            callback(new Error('密码长度至少6个字符'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  newPassword: [
+    {
+      validator: (rule: any, value: string | undefined, callback: any) => {
+        if (isEditMode.value && dialogFormData.changePassword) {
+          if (!value) {
+            callback(new Error('请输入新密码'))
+          } else if (value.length < 6) {
+            callback(new Error('密码长度至少6个字符'))
+          } else {
+            callback()
+          }
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
+}
+
+// 检查用户名是否可用
+const checkUsernameAvailability = async () => {
+  const username = dialogFormData.username
+  if (!username || username.length < 3) {
+    usernameAvailable.value = null
+    return
+  }
+
+  usernameChecking.value = true
+  try {
+    const exists = await userStore.checkUsernameExists(
+      username,
+      isEditMode.value ? editingUserId.value : undefined
+    )
+    usernameAvailable.value = !exists
+  } catch (error) {
+    console.error('检查用户名失败:', error)
+    usernameAvailable.value = null
+    ElMessage.error('检查用户名失败')
+  } finally {
+    usernameChecking.value = false
+  }
+}
+
+// 重置弹窗表单
+const resetDialogForm = () => {
+  dialogFormData.username = ''
+  dialogFormData.password = ''
+  dialogFormData.role = 1
+  dialogFormData.status = 1
+  dialogFormData.changePassword = false
+  dialogFormData.newPassword = ''
+  usernameAvailable.value = null
+  usernameChecking.value = false
+  editingUserId.value = null
+  if (dialogFormRef.value) {
+    dialogFormRef.value.clearValidate()
+  }
+}
+
+// 打开新增用户弹窗
+const handleCreateUser = () => {
+  isEditMode.value = false
+  editingUserId.value = null
+  resetDialogForm()
+  dialogVisible.value = true
+}
+
+// 打开编辑用户弹窗
+const handleEdit = async (id: number) => {
+  isEditMode.value = true
+  editingUserId.value = id
+  dialogVisible.value = true
+  dialogLoading.value = true
+
+  try {
+    const user = await userStore.fetchUserDetail(id)
+    dialogFormData.username = user.username
+    dialogFormData.role = user.role
+    dialogFormData.status = user.status
+    dialogFormData.changePassword = false
+    dialogFormData.newPassword = ''
+  } catch (error: any) {
+    console.error('加载用户详情失败:', error)
+    ElMessage.error(error.message || '加载用户信息失败')
+    dialogVisible.value = false
+  } finally {
+    dialogLoading.value = false
+  }
+}
+
+// 提交弹窗表单
+const handleDialogSubmit = async () => {
+  if (!dialogFormRef.value) return
+
+  try {
+    await dialogFormRef.value.validate()
+
+    // 新增模式检查用户名可用性
+    if (!isEditMode.value) {
+      if (usernameAvailable.value === false) {
+        ElMessage.warning('用户名已存在，请更换用户名')
+        return
+      }
+      if (usernameAvailable.value === null) {
+        await checkUsernameAvailability()
+        if (usernameAvailable.value === false) {
+          ElMessage.warning('用户名已存在，请更换用户名')
+          return
+        }
+      }
+    }
+
+    dialogLoading.value = true
+
+    const submitData: any = {
+      username: dialogFormData.username,
+      role: dialogFormData.role,
+      status: dialogFormData.status,
+    }
+
+    if (isEditMode.value) {
+      // 编辑模式
+      if (dialogFormData.changePassword) {
+        submitData.changePassword = true
+        submitData.newPassword = dialogFormData.newPassword
+      } else {
+        submitData.changePassword = false
+      }
+      await userStore.updateUser(editingUserId.value!, submitData)
+      ElMessage.success('用户信息更新成功')
+    } else {
+      // 新增模式
+      submitData.password = dialogFormData.password
+      await userStore.addUser(submitData)
+      ElMessage.success('用户创建成功')
+    }
+
+    dialogVisible.value = false
+    loadData() // 刷新列表
+  } catch (error: any) {
+    console.error('保存失败:', error)
+    ElMessage.error(error.message || '保存失败，请检查表单')
+  } finally {
+    dialogLoading.value = false
+  }
+}
+
+// 弹窗关闭时重置
+const handleDialogClose = () => {
+  resetDialogForm()
+}
+
+// ========== 列表相关方法 ==========
 // 加载数据
 const loadData = async () => {
   const params: WebUserQueryParams = {
@@ -184,12 +431,6 @@ const loadData = async () => {
     role: filterForm.role,
     status: filterForm.status,
   }
-
-  // 处理日期范围（如果需要）
-  // if (filterForm.dateRange?.length === 2) {
-  //   params.startDate = filterForm.dateRange[0]
-  //   params.endDate = filterForm.dateRange[1]
-  // }
 
   await userStore.fetchUserList(params)
 }
@@ -209,21 +450,6 @@ const handleReset = () => {
   filterForm.dateRange = []
   pageInfo.pageNum = 1
   loadData()
-}
-
-// 创建用户
-const handleCreateUser = () => {
-  router.push('/settings/webUser/add')
-}
-
-// 查看详情
-const handleViewDetail = (id: number) => {
-  router.push(`/settings/webUser/detail/${id}`)
-}
-
-// 编辑用户
-const handleEdit = (id: number) => {
-  router.push(`/settings/webUser/edit/${id}`)
 }
 
 // 启用用户
@@ -250,55 +476,6 @@ const handleDisable = async (id: number) => {
 
     await userStore.updateUserStatus(id, 0)
     ElMessage.success('禁用成功')
-    loadData()
-  } catch (error) {
-    // 用户取消
-  }
-}
-
-// 重置密码
-// const handleResetPassword = async (id: number) => {
-//   try {
-//     await userStore.resetPassword(id)
-//     ElMessage.success('密码已重置为123456')
-//   } catch (error) {
-//     console.error('重置密码失败:', error)
-//     ElMessage.error('重置密码失败')
-//   }
-// }
-
-// 删除用户
-const handleDelete = async (id: number) => {
-  try {
-    await userStore.deleteUser(id)
-    ElMessage.success('删除成功')
-    loadData()
-  } catch (error) {
-    console.error('删除失败:', error)
-    ElMessage.error('删除失败')
-  }
-}
-
-// 批量删除
-const handleBatchDelete = async () => {
-  if (selectedRows.value.length === 0) {
-    ElMessage.warning('请选择要删除的用户')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个用户吗？`, '警告', {
-      type: 'warning',
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-    })
-
-    // 批量删除接口暂未实现，这里逐个删除
-    for (const row of selectedRows.value) {
-      await userStore.deleteUser(row.id)
-    }
-    ElMessage.success('批量删除成功')
-    selectedRows.value = []
     loadData()
   } catch (error) {
     // 用户取消
@@ -392,6 +569,31 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
+.checking-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.check-result {
+  font-size: 12px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.check-result.success {
+  color: #67c23a;
+}
+
+.check-result.error {
+  color: #f56c6c;
+}
+
 :deep(.el-card__header) {
   padding: 16px 20px;
 }
@@ -402,5 +604,12 @@ onMounted(() => {
 
 :deep(.el-table__row:hover) {
   background-color: #f5f7fa;
+}
+
+:deep(.el-radio-group) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 32px;
 }
 </style>

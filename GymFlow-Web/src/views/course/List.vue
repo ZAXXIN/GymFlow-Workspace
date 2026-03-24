@@ -101,6 +101,7 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column prop="description" label="课程描述" align="center" />
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-permission="'course:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">

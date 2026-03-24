@@ -108,7 +108,7 @@ const allMenus = [
     path: '/dashboard',
     title: '仪表盘',
     icon: DataLine,
-    permissions: [], // 所有角色可见
+    permissions: [],
   },
 
   // 会员管理
@@ -116,7 +116,7 @@ const allMenus = [
     path: '/member/list',
     title: '会员管理',
     icon: User,
-    permissions: ['member:view'], // 需要会员查看权限
+    permissions: ['member:view'],
   },
 
   // 教练管理
@@ -124,7 +124,7 @@ const allMenus = [
     path: '/coach/list',
     title: '教练管理',
     icon: Avatar,
-    permissions: ['coach:view'], // 需要教练查看权限
+    permissions: ['coach:view'],
   },
 
   // 课程管理
@@ -132,7 +132,7 @@ const allMenus = [
     path: '/course/list',
     title: '课程管理',
     icon: Calendar,
-    permissions: ['course:view'], // 需要课程查看权限
+    permissions: ['course:view'],
   },
 
   // 商品管理
@@ -140,7 +140,7 @@ const allMenus = [
     path: '/product/list',
     title: '商品管理',
     icon: Goods,
-    permissions: ['product:view'], // 需要商品查看权限
+    permissions: ['product:view'],
   },
 
   // 订单管理
@@ -148,7 +148,7 @@ const allMenus = [
     path: '/order/list',
     title: '订单管理',
     icon: Document,
-    permissions: ['order:view'], // 需要订单查看权限
+    permissions: ['order:view'],
   },
 
   // 签到管理
@@ -156,30 +156,32 @@ const allMenus = [
     path: '/checkIn/list',
     title: '签到管理',
     icon: Check,
-    permissions: ['checkIn:view'], // 需要签到查看权限
+    permissions: ['checkIn:view'],
   },
 
-  // 系统设置（只有老板有权限）
+  // 系统设置
   {
     path: '/settings',
     title: '系统设置',
     icon: Setting,
-    permissions: ['settings:user:view', 'settings:config:view'], // 需要任一系统设置权限
+    permissions: ['settings:user:view', 'settings:config:view'],
     children: [
       {
         path: '/settings/webUser',
         title: '用户管理',
-        permissions: ['settings:user:view'], // 需要用户管理权限
+        icon: User,  // 添加 icon
+        permissions: ['settings:user:view'],
       },
       {
         path: '/settings/systemConfig',
         title: '系统配置',
-        permissions: ['settings:config:view'], // 需要系统配置权限
+        icon: Setting,  // 添加 icon
+        permissions: ['settings:config:view'],
       },
       {
         path: '/settings/role',
-
         title: '角色权限',
+        icon: UserFilled,  // 添加 icon
         permissions: ['settings:role:view'],
       },
     ],
@@ -190,32 +192,36 @@ const allMenus = [
     path: '/reports',
     title: '报表统计',
     icon: PieChart,
-    permissions: ['member:view', 'order:view', 'checkIn:view'], // 需要任一报表相关权限
+    permissions: ['member:view', 'order:view', 'checkIn:view'],
     children: [
       {
         path: '/reports/member',
         title: '会员统计',
+        icon: User,  // 添加 icon
         permissions: ['member:view'],
       },
       {
         path: '/reports/finance',
         title: '财务统计',
+        icon: Document,  // 添加 icon
         permissions: ['order:view'],
       },
       {
         path: '/reports/course',
         title: '课程统计',
+        icon: Calendar,  // 添加 icon
         permissions: ['course:view'],
       },
     ],
   },
 ]
 
-// 根据用户权限过滤菜单
+// 根据用户权限过滤菜单（保留 icon 对象，不使用 JSON 序列化）
 const filteredMenus = computed(() => {
   // 递归过滤菜单
-  const filterMenu = (menus: any[]) => {
-    return menus.filter((menu) => {
+  const filterMenu = (menus: any[]): any[] => {
+    const result: any[] = []
+    for (const menu of menus) {
       // 检查当前菜单是否有权限
       const hasMenuPermission =
         !menu.permissions ||
@@ -224,21 +230,90 @@ const filteredMenus = computed(() => {
 
       // 如果有子菜单，递归过滤子菜单
       if (menu.children && menu.children.length > 0) {
-        menu.children = filterMenu(menu.children)
-        // 如果子菜单过滤后还有内容，或者当前菜单本身就有权限，则保留
-        return menu.children.length > 0 || hasMenuPermission
+        const filteredChildren = filterMenu(menu.children)
+        // 如果子菜单过滤后有内容，或者当前菜单本身有权限，则保留
+        if (filteredChildren.length > 0 || hasMenuPermission) {
+          result.push({
+            ...menu,
+            children: filteredChildren
+          })
+        }
+      } else if (hasMenuPermission) {
+        // 没有子菜单且有权��，直接保留
+        result.push(menu)
       }
-
-      return hasMenuPermission
-    })
+    }
+    return result
   }
 
   return filterMenu(allMenus)
 })
 
-// 当前激活的菜单
+// 当前激活的菜单 - 修复子页面高亮父菜单
 const activeMenu = computed(() => {
-  return route.path
+  const { meta, path, name } = route
+  
+  // 1. 优先使用 meta.activeMenu 指定的菜单
+  if (meta?.activeMenu) {
+    return meta.activeMenu as string
+  }
+  
+  // 2. 如果有 parent 字段，返回父菜单路径
+  if (meta?.parent) {
+    const parentRoute = router.getRoutes().find(r => r.name === meta.parent)
+    if (parentRoute) {
+      return parentRoute.path
+    }
+  }
+  
+  // 3. 根据路由名称映射（子页面到父页面的映射）
+  const routeName = name as string
+  const parentNameMap: Record<string, string> = {
+    // 教练管理子页面
+    'CoachCreate': '/coach/list',
+    'CoachEdit': '/coach/list',
+    'CoachDetail': '/coach/list',
+    'CoachSchedule': '/coach/list',
+    // 课程管理子页面
+    'CourseCreate': '/course/list',
+    'CourseEdit': '/course/list',
+    'CourseDetail': '/course/list',
+    'CourseSchedule': '/course/list',
+    // 会员管理子页面
+    'MemberAdd': '/member/list',
+    'MemberEdit': '/member/list',
+    'MemberDetail': '/member/list',
+    // 商品管理子页面
+    'ProductAdd': '/product/list',
+    'ProductEdit': '/product/list',
+    'ProductDetail': '/product/list',
+    // 订单管理子页面
+    'OrderDetail': '/order/list',
+    // 签到管理子页面
+    'CheckInDetail': '/checkIn/list',
+    // 系统设置子页面
+    'addWebUser': '/settings/webUser',
+    'editWebUser': '/settings/webUser',
+    'systemConfig': '/settings/systemConfig',
+    'rolePermission': '/settings/role'
+  }
+  
+  if (routeName && parentNameMap[routeName]) {
+    return parentNameMap[routeName]
+  }
+  
+  // 4. 根据路径匹配：/coach/edit/1 -> /coach/list
+  const pathSegments = path.split('/')
+  if (pathSegments.length >= 3) {
+    const parentPath = '/' + pathSegments[1] + '/' + pathSegments[2]
+    // 检查是否有菜单路由匹配
+    const hasParentMenu = allMenus.some(r => r.path === parentPath)
+    if (hasParentMenu) {
+      return parentPath
+    }
+  }
+  
+  return path
 })
 
 // 处理菜单选择

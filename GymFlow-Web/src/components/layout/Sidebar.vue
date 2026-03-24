@@ -23,26 +23,56 @@ const menuRoutes = computed(() => {
 
 // 当前激活的菜单 - 修复：子页面应高亮父菜单
 const activeMenu = computed(() => {
-  const { meta, path } = route
+  const { meta, path , name } = route
+  console.log('当前路由:', { name, path, meta })
+  console.log('路由列表:', router.getRoutes().map(r => ({ name: r.name, path: r.path })))
   
-  // 优先使用 meta.activeMenu 指定的菜单
+  // 1. 优先使用 meta.activeMenu 指定的菜单
   if (meta?.activeMenu) {
     return meta.activeMenu as string
   }
   
-  // 如果有 parent 字段，返回父菜单路径
+  // 2. 如果有 parent 字段，返回父菜单路径
   if (meta?.parent) {
-    // 查找父菜单路由的完整路径
+    // 查找父菜单路由的路径
     const parentRoute = router.getRoutes().find(r => r.name === meta.parent)
     if (parentRoute) {
       return parentRoute.path
     }
   }
   
-  // 检查是否为子路由（如 /member/detail/:id 应该匹配 /member/list）
+  // 3. 根据路由名称匹配父菜单
+  const routeName = route.name as string
+  const parentNameMap: Record<string, string> = {
+    'CoachCreate': '/coach/list',
+    'CoachEdit': '/coach/list',
+    'CoachDetail': '/coach/list',
+    'CoachSchedule': '/coach/list',
+    'CourseCreate': '/course/list',
+    'CourseEdit': '/course/list',
+    'CourseDetail': '/course/list',
+    'CourseSchedule': '/course/list',
+    'MemberAdd': '/member/list',
+    'MemberEdit': '/member/list',
+    'MemberDetail': '/member/list',
+    'ProductAdd': '/product/list',
+    'ProductEdit': '/product/list',
+    'ProductDetail': '/product/list',
+    'OrderDetail': '/order/list',
+    'CheckInDetail': '/checkIn/list',
+    'addWebUser': '/settings/webUser',
+    'editWebUser': '/settings/webUser',
+    'systemConfig': '/settings/systemConfig',
+    'rolePermission': '/settings/role'
+  }
+  
+  if (routeName && parentNameMap[routeName]) {
+    return parentNameMap[routeName]
+  }
+  
+  // 4. 根据路径匹配：/coach/edit/1 -> /coach/list
   const pathSegments = path.split('/')
   if (pathSegments.length >= 3) {
-    // 尝试匹配父级路径：如 /member/list 或 /member
     const parentPath = '/' + pathSegments[1] + '/' + pathSegments[2]
     // 检查是否有菜单路由匹配
     const hasParentMenu = menuRoutes.value.some(r => r.path === parentPath)

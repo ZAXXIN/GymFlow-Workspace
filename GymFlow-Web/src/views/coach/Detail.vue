@@ -31,21 +31,18 @@
         <div class="coach-section">
           <div class="coach-name">{{ coachDetail?.realName }}</div>
           <div class="coach-rating">
-            <el-rate :model-value="coachDetail.rating" disabled show-score text-color="#ff9900" score-template="{value}分" :max="5" :allow-half="true" />
+            <el-rate :model-value="coachDetail?.rating" disabled show-score text-color="#ff9900" score-template="{value}分" :max="5" :allow-half="true" />
           </div>
         </div>
 
         <div class="info-details">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="教练ID">{{ coachDetail?.id || '-' }}</el-descriptions-item>
+
             <el-descriptions-item label="手机号">{{ coachDetail?.phone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="性别">
-              {{coachDetail.gender == 0 ? '女' : coachDetail.gender == 1 ? '男' : '未知'}}
+              {{coachDetail?.gender == 0 ? '女' : coachDetail?.gender == 1 ? '男' : '未知'}}
             </el-descriptions-item>
             <el-descriptions-item label="专长领域">{{ coachDetail?.specialty || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="性别">
-              {{ coachDetail.gender == 0 ? '女' : coachDetail.gender == 1 ? '男' : '未知' }}
-            </el-descriptions-item>
             <el-descriptions-item label="经验年限">{{ coachDetail?.yearsOfExperience || 0 }}年</el-descriptions-item>
             <el-descriptions-item label="时薪">
               <span class="amount">¥{{ formatAmount(coachDetail?.hourlyRate) }}</span>
@@ -135,8 +132,8 @@
             </div>
           </template>
 
-          <div v-if="coachDetail?.schedules && coachDetail.schedules.length > 0">
-            <el-table :data="coachDetail.schedules" style="width: 100%">
+          <div v-if="coachDetail?.schedules && coachDetail?.schedules.length > 0">
+            <el-table :data="coachDetail?.schedules" style="width: 100%">
               <el-table-column prop="scheduleDate" label="排班日期" width="120" sortable>
                 <template #default="{ row }">
                   {{ formatDate(row.scheduleDate) }}
@@ -199,8 +196,8 @@
             </div>
           </template>
 
-          <div v-if="coachDetail?.courses && coachDetail.courses.length > 0">
-            <el-table :data="coachDetail.courses" style="width: 100%">
+          <div v-if="coachDetail?.courses && coachDetail?.courses.length > 0">
+            <el-table :data="coachDetail?.courses" style="width: 100%">
               <el-table-column prop="courseName" label="课程名称" min-width="150" />
               <el-table-column prop="courseType" label="课程类型" width="100">
                 <template #default="{ row }">

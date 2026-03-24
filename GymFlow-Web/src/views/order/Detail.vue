@@ -6,59 +6,6 @@
         <div class="header-content">
           <span class="page-title">订单详情</span>
           <div class="header-actions">
-            <el-button-group>
-              <el-button type="primary" v-if="currentOrder?.orderStatus === 'PENDING'" @click="goEdit">
-                <el-icon>
-                  <Edit />
-                </el-icon>
-                编辑
-              </el-button>
-              <el-button type="success" v-if="currentOrder?.paymentStatus === 0 && currentOrder?.orderStatus === 'PENDING'" @click="handlePay">
-                <el-icon>
-                  <Money />
-                </el-icon>
-                支付
-              </el-button>
-              <el-button type="warning" v-if="currentOrder?.orderStatus === 'PROCESSING'" @click="handleComplete">
-                <el-icon>
-                  <Check />
-                </el-icon>
-                完成
-              </el-button>
-              <el-button type="danger" v-if="currentOrder?.orderStatus === 'PENDING' || currentOrder?.orderStatus === 'PROCESSING'" @click="handleCancel">
-                <el-icon>
-                  <Close />
-                </el-icon>
-                取消
-              </el-button>
-              <el-dropdown @command="handleMoreAction">
-                <el-button>
-                  更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="refund" v-if="currentOrder?.paymentStatus === 1 && (currentOrder?.orderStatus === 'COMPLETED' || currentOrder?.orderStatus === 'PROCESSING')">
-                      <el-icon>
-                        <RefreshLeft />
-                      </el-icon>
-                      退款
-                    </el-dropdown-item>
-                    <el-dropdown-item command="print" divided>
-                      <el-icon>
-                        <Printer />
-                      </el-icon>
-                      打印订单
-                    </el-dropdown-item>
-                    <el-dropdown-item command="delete" v-if="currentOrder?.orderStatus === 'CANCELLED' || currentOrder?.orderStatus === 'COMPLETED'">
-                      <el-icon>
-                        <Delete />
-                      </el-icon>
-                      删除订单
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </el-button-group>
           </div>
         </div>
       </template>
