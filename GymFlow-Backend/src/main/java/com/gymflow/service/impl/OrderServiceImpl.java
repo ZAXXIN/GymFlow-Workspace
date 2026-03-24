@@ -755,15 +755,23 @@ public class OrderServiceImpl implements OrderService {
 
         for (OrderItem orderItem : orderItems) {
             if (orderType == 0) { // 会籍卡
-                orderItem.setValidityStartDate(LocalDate.now());
-                orderItem.setValidityEndDate(LocalDate.now().plusDays(30)); // 默认30天
-            } else if (orderType == 1 || orderType == 2) { // 私教课、团课
-                orderItem.setValidityStartDate(LocalDate.now());
+                // 从商品表中获取有效期天数
+                Product product = productMapper.selectById(orderItem.getProductId());
+                Integer validityDays = product != null ? product.getValidityDays() : 30;
 
-                // 使用 Validator 获取续约天数
-                int renewalDays = configValidator.getCourseRenewalDays();
-                int validityDays = renewalDays * 30; // 续约天数转换为月
+                orderItem.setValidityStartDate(LocalDate.now());
                 orderItem.setValidityEndDate(LocalDate.now().plusDays(validityDays));
+
+                log.debug("会籍卡有效期设置，商品ID：{}，有效期天数：{}，结束日期：{}",
+                        orderItem.getProductId(), validityDays, orderItem.getValidityEndDate());
+
+            } else if (orderType == 1 || orderType == 2) { // 私教课、团课
+                // 课程包默认365天有效期
+                orderItem.setValidityStartDate(LocalDate.now());
+                orderItem.setValidityEndDate(LocalDate.now().plusDays(365));
+
+                log.debug("课程包有效期设置，订单项ID：{}，商品类型：{}，结束日期：{}",
+                        orderItem.getId(), orderType, orderItem.getValidityEndDate());
             }
 
             orderItemMapper.updateById(orderItem);

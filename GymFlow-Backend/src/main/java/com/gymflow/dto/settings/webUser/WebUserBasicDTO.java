@@ -20,11 +20,6 @@ public class WebUserBasicDTO {
     @Schema(description = "密码（新增时必填，编辑时如果changePassword为true则必填）")
     private String password;
 
-    @NotBlank(message = "真实姓名不能为空")
-    @Size(max = 50, message = "真实姓名长度不能超过50")
-    @Schema(description = "真实姓名", required = true)
-    private String realName;
-
     @NotNull(message = "角色不能为空")
     @Schema(description = "角色：0-老板，1-前台", required = true)
     private Integer role;

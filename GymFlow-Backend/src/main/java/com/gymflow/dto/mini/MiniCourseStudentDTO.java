@@ -23,7 +23,7 @@ public class MiniCourseStudentDTO {
     @Schema(description = "预约ID")
     private Long bookingId;
 
-    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消")
+    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消，4-已过期")
     private Integer bookingStatus;
 
     @Schema(description = "预约状态描述")
@@ -48,6 +48,7 @@ public class MiniCourseStudentDTO {
             case 1: return "已签到";
             case 2: return "已完成";
             case 3: return "已取消";
+            case 4: return "已过期";
             default: return "未知";
         }
     }

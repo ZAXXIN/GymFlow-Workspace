@@ -1,6 +1,7 @@
 package com.gymflow.service;
 
 import com.gymflow.dto.course.*;
+import com.gymflow.vo.CourseBookingVO;
 import com.gymflow.vo.CourseListVO;
 import com.gymflow.vo.CourseScheduleVO;
 import com.gymflow.vo.PageResultVO;
@@ -75,6 +76,11 @@ public interface CourseService {
      * 会员预约团课
      */
     void bookGroupCourse(Long memberId, Long scheduleId);
+
+    /**
+     * 获取会员预约列表
+     */
+    PageResultVO<CourseBookingVO> getMemberBookings(Long memberId, Integer pageNum, Integer pageSize, Integer bookingStatus);
 
     /**
      * 核销课程预约

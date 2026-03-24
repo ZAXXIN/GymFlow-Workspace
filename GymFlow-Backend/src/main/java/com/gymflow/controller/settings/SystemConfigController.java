@@ -53,7 +53,7 @@ public class SystemConfigController {
         BusinessConfigDTO defaultBusiness = new BusinessConfigDTO();
         defaultBusiness.setBusinessStartTime(LocalTime.of(8, 0));
         defaultBusiness.setBusinessEndTime(LocalTime.of(22, 0));
-        defaultBusiness.setCourseRenewalDays(7);
+        defaultBusiness.setCourseAdvanceBookingHours(2);
         defaultBusiness.setCourseCancelHours(2);
         defaultBusiness.setMinClassSize(5);
         defaultBusiness.setMaxClassCapacity(30);

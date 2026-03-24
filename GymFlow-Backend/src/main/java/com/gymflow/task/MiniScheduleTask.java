@@ -2,8 +2,10 @@ package com.gymflow.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gymflow.entity.CourseBooking;
+import com.gymflow.entity.CourseSchedule;
 import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.mapper.CourseBookingMapper;
+import com.gymflow.mapper.CourseScheduleMapper;
 import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import java.util.List;
  * 小程序定时任务
  * 1. 自动完成课程（课程结束后自动将状态从已签到改为已完成）
  * 2. 过期签到码处理
+ * 3. 未签到过期课程处理
  */
 @Slf4j
 @Component
@@ -25,6 +28,7 @@ import java.util.List;
 public class MiniScheduleTask {
 
     private final CourseBookingMapper courseBookingMapper;
+    private final CourseScheduleMapper courseScheduleMapper;
     private final MiniCheckinCodeMapper miniCheckinCodeMapper;
 
     /**
@@ -76,5 +80,45 @@ public class MiniScheduleTask {
         }
 
         log.info("过期签到码处理完成，共处理 {} 条记录", count);
+    }
+
+    /**
+     * 每小时执行一次，将未签到的已结束课程标记为已过期
+     */
+    @Scheduled(cron = "0 0 * * * ?")
+    @Transactional(rollbackFor = Exception.class)
+    public void expireMissedCourses() {
+        log.info("定时任务：开始处理未签到的过期课程");
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 查询所有待上课的预约
+        List<CourseBooking> pendingBookings = courseBookingMapper.selectList(
+                new LambdaQueryWrapper<CourseBooking>()
+                        .eq(CourseBooking::getBookingStatus, 0) // 待上课
+        );
+
+        int expiredCount = 0;
+
+        for (CourseBooking booking : pendingBookings) {
+            CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+            if (schedule == null) continue;
+
+            LocalDateTime courseEnd = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
+
+            // 课程已结束，但未签到
+            if (now.isAfter(courseEnd)) {
+                booking.setBookingStatus(4); // 已过期
+                booking.setCancellationReason("课程已结束，未签到");
+                booking.setCancellationTime(now);
+                courseBookingMapper.updateById(booking);
+                expiredCount++;
+
+                log.debug("预约已过期，预约ID：{}，课程ID：{}，课程结束时间：{}",
+                        booking.getId(), schedule.getCourseId(), courseEnd);
+            }
+        }
+
+        log.info("未签到过期课程处理完成，共处理 {} 条记录", expiredCount);
     }
 }

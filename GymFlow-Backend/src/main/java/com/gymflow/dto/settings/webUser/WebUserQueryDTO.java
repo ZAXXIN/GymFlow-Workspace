@@ -22,9 +22,6 @@ public class WebUserQueryDTO {
     @Schema(description = "用户名（模糊查询）")
     private String username;
 
-    @Schema(description = "真实姓名（模糊查询）")
-    private String realName;
-
     @Schema(description = "角色：0-老板，1-前台")
     private Integer role;
 

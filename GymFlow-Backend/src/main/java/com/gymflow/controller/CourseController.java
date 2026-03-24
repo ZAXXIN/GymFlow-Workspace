@@ -4,6 +4,7 @@ import com.gymflow.common.Result;
 import com.gymflow.common.annotation.PreAuthorize;
 import com.gymflow.dto.course.*;
 import com.gymflow.service.CourseService;
+import com.gymflow.vo.CourseBookingVO;
 import com.gymflow.vo.CourseScheduleVO;
 import com.gymflow.vo.PageResultVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -129,6 +130,22 @@ public class CourseController {
                                         @RequestParam Long scheduleId) {
         courseService.bookGroupCourse(memberId, scheduleId);
         return Result.success("预约成功");
+    }
+
+    /**
+     * 获取会员的预约列表
+     * GET /course/booking/member/{memberId}
+     */
+    @GetMapping("/booking/member/{memberId}")
+    @PreAuthorize("course:view")
+    public Result<PageResultVO<CourseBookingVO>> getMemberBookings(
+            @PathVariable Long memberId,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Integer bookingStatus) {
+
+        PageResultVO<CourseBookingVO> result = courseService.getMemberBookings(memberId, pageNum, pageSize, bookingStatus);
+        return Result.success("查询成功", result);
     }
 
     @Operation(summary = "核销课程预约")

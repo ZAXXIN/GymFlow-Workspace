@@ -50,7 +50,7 @@ public class MiniConfigServiceImpl implements MiniConfigService {
         BusinessConfigDTO businessConfig = new BusinessConfigDTO();
         businessConfig.setBusinessStartTime(config.getBusinessStartTime());
         businessConfig.setBusinessEndTime(config.getBusinessEndTime());
-        businessConfig.setCourseRenewalDays(config.getCourseRenewalDays());
+        businessConfig.setCourseAdvanceBookingHours(config.getCourseAdvanceBookingHours());
         businessConfig.setCourseCancelHours(config.getCourseCancelHours());
         businessConfig.setMinClassSize(config.getMinClassSize());
         businessConfig.setMaxClassCapacity(config.getMaxClassCapacity());

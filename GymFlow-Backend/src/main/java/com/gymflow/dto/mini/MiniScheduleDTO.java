@@ -31,9 +31,6 @@ public class MiniScheduleDTO {
     @Schema(description = "结束时间")
     private LocalTime endTime;
 
-    @Schema(description = "上课地点")
-    private String location;
-
     @Schema(description = "最大容量")
     private Integer maxCapacity;
 

@@ -3,6 +3,7 @@ package com.gymflow.dto.coach;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,6 +21,9 @@ public class CoachCourseDTO {
     @Schema(description = "课程类型：0-私教课，1-团课")
     private Integer courseType;
 
+    @Schema(description = "课程须知")
+    private String notice;
+
     @Schema(description = "课程描述")
     private String description;
 
@@ -34,12 +38,6 @@ public class CoachCourseDTO {
 
     @Schema(description = "时长（分钟）")
     private Integer duration;
-
-    @Schema(description = "价格")
-    private BigDecimal price;
-
-    @Schema(description = "上课地点")
-    private String location;
 
     @Schema(description = "最大容量")
     private Integer maxCapacity;

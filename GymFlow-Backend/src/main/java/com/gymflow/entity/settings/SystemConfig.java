@@ -41,10 +41,10 @@ public class SystemConfig {
     private LocalTime businessEndTime;
 
     /**
-     * 课程提前续约时间（天）
+     * 课程提前预约时间(小时）
+     * 课程开始前多少小时内不可预约
      */
-    @TableField("course_renewal_days")
-    private Integer courseRenewalDays;
+    private Integer courseAdvanceBookingHours;
 
     /**
      * 课程取消时间限制（小时）

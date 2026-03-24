@@ -22,6 +22,10 @@ public class CourseBasicDTO {
     @Schema(description = "课程名称", required = true)
     private String courseName;
 
+    @Size(max = 1000, message = "课程须知长度不能超过1000")
+    @Schema(description = "课程须知")
+    private String notice;
+
     @Size(max = 500, message = "课程描述长度不能超过500")
     @Schema(description = "课程描述")
     private String description;
@@ -39,8 +43,4 @@ public class CourseBasicDTO {
     @Min(value = 1, message = "课时消耗不能小于1")
     @Schema(description = "预约消耗课时数", required = true)
     private Integer sessionCost;
-
-    @Size(max = 1000, message = "课程须知长度不能超过1000")
-    @Schema(description = "课程须知")
-    private String notice;
 }

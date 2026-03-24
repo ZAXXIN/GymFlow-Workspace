@@ -42,10 +42,12 @@ public class SystemConfigValidator {
     }
 
     /**
-     * 获取课程续约天数
+     * 获取课程提前预约时间（小时）
+     * 课程开始前多少小时内不可预约
      */
-    public int getCourseRenewalDays() {
-        return getBusinessConfig().getCourseRenewalDays();
+    public int getAdvanceBookingHours() {
+        BusinessConfigDTO config = getBusinessConfig();
+        return config.getCourseAdvanceBookingHours() != null ? config.getCourseAdvanceBookingHours() : 2;
     }
 
     /**
@@ -154,6 +156,28 @@ public class SystemConfigValidator {
     }
 
     /**
+     * 验证课程是否可以预约
+     * @param courseDateTime 课程开始时间
+     * @return true-可以预约，false-已过预约截止时间
+     */
+    public boolean canBookCourse(LocalDateTime courseDateTime) {
+        int advanceHours = getAdvanceBookingHours();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime latestBookingTime = courseDateTime.minusHours(advanceHours);
+        return now.isBefore(latestBookingTime);
+    }
+
+    /**
+     * 验证课程预约时间限制（如果不能预约则抛出异常）
+     */
+    public void validateCourseBooking(LocalDateTime courseDateTime) {
+        if (!canBookCourse(courseDateTime)) {
+            int advanceHours = getAdvanceBookingHours();
+            throw new BusinessException("已超过预约时间，课程开始前" + advanceHours + "小时内不可预约");
+        }
+    }
+
+    /**
      * 验证课程是否可以取消
      * @param courseDateTime 课程开始时间
      * @return true-可以取消，false-已过取消时限
@@ -174,30 +198,6 @@ public class SystemConfigValidator {
         if (!canCancelCourse(courseDateTime)) {
             int cancelHours = getCourseCancelHours();
             throw new BusinessException("课程开始前" + cancelHours + "小时内不能取消");
-        }
-    }
-
-    /**
-     * 验证是否可以续约课程
-     * @param courseEndDate 课程结束日期
-     * @return true-可以续约，false-未到续约时间
-     */
-    public boolean canRenewCourse(LocalDate courseEndDate) {
-        int renewalDays = getCourseRenewalDays();
-
-        LocalDate now = LocalDate.now();
-        long daysUntilEnd = java.time.Duration.between(now.atStartOfDay(), courseEndDate.atStartOfDay()).toDays();
-
-        return daysUntilEnd <= renewalDays;
-    }
-
-    /**
-     * 验证课程续约时间限制
-     */
-    public void validateCourseRenewal(LocalDate courseEndDate) {
-        if (!canRenewCourse(courseEndDate)) {
-            int renewalDays = getCourseRenewalDays();
-            throw new BusinessException("课程只能在结束前" + renewalDays + "天内续约");
         }
     }
 

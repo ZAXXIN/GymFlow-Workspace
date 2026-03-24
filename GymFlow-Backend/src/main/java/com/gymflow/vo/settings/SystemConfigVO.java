@@ -24,8 +24,8 @@ public class SystemConfigVO {
     @Schema(description = "营业结束时间", example = "22:00")
     private LocalTime businessEndTime;
 
-    @Schema(description = "课程提前续约时间（天）", example = "7")
-    private Integer courseRenewalDays;
+    @Schema(description = "课程提前预约时间（小时）", example = "7")
+    private Integer courseAdvanceBookingHours;
 
     @Schema(description = "课程取消时间限制（小时）", example = "2")
     private Integer courseCancelHours;

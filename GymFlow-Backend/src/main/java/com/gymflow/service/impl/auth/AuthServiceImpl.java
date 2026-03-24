@@ -69,7 +69,6 @@ public class AuthServiceImpl implements AuthService {
         LoginResultDTO result = new LoginResultDTO();
         result.setUserId(user.getId());
         result.setUsername(user.getUsername());
-        result.setRealName(user.getRealName());
         result.setRole(roleValue);
         result.setToken(token);
         result.setLoginTime(LocalDateTime.now());

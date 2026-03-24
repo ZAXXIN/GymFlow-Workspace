@@ -24,7 +24,7 @@ public class CourseBookingDTO {
     @Schema(description = "预约时间")
     private LocalDateTime bookingTime;
 
-    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消")
+    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消，4-已过期")
     private Integer bookingStatus;
 
     @Schema(description = "预约状态描述")

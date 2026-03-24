@@ -21,6 +21,7 @@ public class CourseBooking {
     @TableField("booking_time")
     private LocalDateTime bookingTime;
 
+//    0-待上课，1-已签到，2-已完成，3-已取消，4-已过期
     @TableField("booking_status")
     private Integer bookingStatus;
 

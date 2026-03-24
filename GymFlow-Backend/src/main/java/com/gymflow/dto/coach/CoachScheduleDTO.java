@@ -37,9 +37,6 @@ public class CoachScheduleDTO {
     @Schema(description = "课程ID")
     private Long courseId;
 
-    @Schema(description = "上课地点")
-    private String location;
-
     @Schema(description = "最大人数")
     private Integer maxCapacity;
 

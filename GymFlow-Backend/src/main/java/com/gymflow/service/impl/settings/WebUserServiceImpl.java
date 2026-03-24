@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gymflow.dto.settings.webUser.WebUserQueryDTO;
 import com.gymflow.dto.settings.webUser.WebUserBasicDTO;
 import com.gymflow.dto.settings.webUser.WebUserDetailDTO;
+import com.gymflow.entity.auth.Role;
 import com.gymflow.entity.settings.WebUser;
 import com.gymflow.exception.BusinessException;
+import com.gymflow.mapper.auth.RoleMapper;
 import com.gymflow.mapper.settings.WebUserMapper;
 import com.gymflow.service.settings.WebUserService;
 import com.gymflow.utils.BCryptUtil;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +32,7 @@ import java.util.stream.Collectors;
 public class WebUserServiceImpl implements WebUserService {
 
     private final WebUserMapper webUserMapper;
+    private final RoleMapper roleMapper; // 注入 RoleMapper
     private final BCryptUtil bCryptUtil;
 
     // 默认密码
@@ -48,11 +52,6 @@ public class WebUserServiceImpl implements WebUserService {
             queryWrapper.like(WebUser::getUsername, queryDTO.getUsername());
         }
 
-        if (StringUtils.hasText(queryDTO.getRealName())) {
-            queryWrapper.like(WebUser::getRealName, queryDTO.getRealName());
-        }
-
-        // 修改：使用 roleId 查询，需要将 Integer 的 role 转换为 Long
         if (queryDTO.getRole() != null) {
             queryWrapper.eq(WebUser::getRoleId, queryDTO.getRole().longValue());
         }
@@ -61,15 +60,18 @@ public class WebUserServiceImpl implements WebUserService {
             queryWrapper.eq(WebUser::getStatus, queryDTO.getStatus());
         }
 
-        // 按创建时间倒序排列
         queryWrapper.orderByDesc(WebUser::getCreateTime);
 
         // 执行分页查询
         IPage<WebUser> userPage = webUserMapper.selectPage(page, queryWrapper);
 
+        // 获取所有角色信息（用于转换）
+        List<Role> roles = roleMapper.selectList(null);
+        Map<Long, Role> roleMap = roles.stream().collect(Collectors.toMap(Role::getId, r -> r));
+
         // 转换为VO列表
         List<WebUserListVO> voList = userPage.getRecords().stream()
-                .map(this::convertToWebUserListVO)
+                .map(user -> convertToWebUserListVO(user, roleMap))
                 .collect(Collectors.toList());
 
         return new PageResultVO<>(voList, userPage.getTotal(),
@@ -85,7 +87,13 @@ public class WebUserServiceImpl implements WebUserService {
             throw new BusinessException("用户不存在");
         }
 
-        return convertToWebUserDetailDTO(user);
+        // 获取角色信息
+        Role role = null;
+        if (user.getRoleId() != null) {
+            role = roleMapper.selectById(user.getRoleId());
+        }
+
+        return convertToWebUserDetailDTO(user, role);
     }
 
     @Override
@@ -103,14 +111,19 @@ public class WebUserServiceImpl implements WebUserService {
             throw new BusinessException("密码不能为空");
         }
 
+        // 验证角色是否存在
+        if (userDTO.getRole() != null) {
+            Role role = roleMapper.selectById(userDTO.getRole().longValue());
+            if (role == null) {
+                throw new BusinessException("角色不存在");
+            }
+        }
+
         // 创建用户记录
         WebUser user = new WebUser();
-        BeanUtils.copyProperties(userDTO, user);
-
-        // 设置 roleId（将 Integer 的 role 转换为 Long）
-        if (userDTO.getRole() != null) {
-            user.setRoleId(userDTO.getRole().longValue());
-        }
+        user.setUsername(userDTO.getUsername());
+        user.setRoleId(userDTO.getRole() != null ? userDTO.getRole().longValue() : null);
+        user.setStatus(userDTO.getStatus());
 
         // 使用BCrypt加密密码
         String password = StringUtils.hasText(userDTO.getPassword()) ?
@@ -144,20 +157,26 @@ public class WebUserServiceImpl implements WebUserService {
             throw new BusinessException("用户名已被其他用户使用");
         }
 
-        // 更新用户信息
-        BeanUtils.copyProperties(userDTO, user, "id", "password", "createTime");
+        // 验证角色是否存在
+        if (userDTO.getRole() != null) {
+            Role role = roleMapper.selectById(userDTO.getRole().longValue());
+            if (role == null) {
+                throw new BusinessException("角色不存在");
+            }
+        }
 
-        // 更新 roleId
+        // 更新用户信息
+        user.setUsername(userDTO.getUsername());
         if (userDTO.getRole() != null) {
             user.setRoleId(userDTO.getRole().longValue());
         }
+        user.setStatus(userDTO.getStatus());
 
         // 如果勾选了修改密码，则更新密码
         if (userDTO.getChangePassword() != null && userDTO.getChangePassword()) {
             if (!StringUtils.hasText(userDTO.getNewPassword())) {
                 throw new BusinessException("新密码不能为空");
             }
-            // 使用BCrypt加密新密码
             String encodedPassword = bCryptUtil.encodePassword(userDTO.getNewPassword());
             user.setPassword(encodedPassword);
             log.info("用户密码已更新，用户ID：{}", userId);
@@ -176,20 +195,22 @@ public class WebUserServiceImpl implements WebUserService {
     public void deleteUser(Long userId) {
         log.info("开始删除用户，用户ID：{}", userId);
 
-        // 检查用户是否存在
         WebUser user = webUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
 
-        // 检查是否是最后一个老板（roleId = 0 表示老板）
-        if (user.getRoleId() != null && user.getRoleId() == 0L) {
-            LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(WebUser::getRoleId, 0L);
-            Long adminCount = webUserMapper.selectCount(queryWrapper);
+        // 检查是否是最后一个老板
+        if (user.getRoleId() != null) {
+            Role role = roleMapper.selectById(user.getRoleId());
+            if (role != null && "BOSS".equals(role.getRoleCode())) {
+                LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(WebUser::getRoleId, user.getRoleId());
+                Long adminCount = webUserMapper.selectCount(queryWrapper);
 
-            if (adminCount <= 1) {
-                throw new BusinessException("至少保留一个老板账号");
+                if (adminCount <= 1) {
+                    throw new BusinessException("至少保留一个老板账号");
+                }
             }
         }
 
@@ -206,30 +227,30 @@ public class WebUserServiceImpl implements WebUserService {
     public void updateUserStatus(Long userId, Integer status) {
         log.info("更新用户状态，用户ID：{}，状态：{}", userId, status);
 
-        // 检查状态值
         if (status != 0 && status != 1) {
             throw new BusinessException("状态值只能是0（禁用）或1（正常）");
         }
 
-        // 检查用户是否存在
         WebUser user = webUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
 
         // 如果禁用老板账号，检查是否是最后一个
-        if (status == 0 && user.getRoleId() != null && user.getRoleId() == 0L) {
-            LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(WebUser::getRoleId, 0L);
-            queryWrapper.eq(WebUser::getStatus, 1);
-            Long activeAdminCount = webUserMapper.selectCount(queryWrapper);
+        if (status == 0 && user.getRoleId() != null) {
+            Role role = roleMapper.selectById(user.getRoleId());
+            if (role != null && "BOSS".equals(role.getRoleCode())) {
+                LambdaQueryWrapper<WebUser> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(WebUser::getRoleId, user.getRoleId());
+                queryWrapper.eq(WebUser::getStatus, 1);
+                Long activeAdminCount = webUserMapper.selectCount(queryWrapper);
 
-            if (activeAdminCount <= 1) {
-                throw new BusinessException("至少保留一个正常状态的老板账号");
+                if (activeAdminCount <= 1) {
+                    throw new BusinessException("至少保留一个正常状态的老板账号");
+                }
             }
         }
 
-        // 更新状态
         user.setStatus(status);
         int result = webUserMapper.updateById(user);
         if (result <= 0) {
@@ -244,15 +265,12 @@ public class WebUserServiceImpl implements WebUserService {
     public void resetPassword(Long userId, String newPassword) {
         log.info("重置用户密码，用户ID：{}", userId);
 
-        // 检查用户是否存在
         WebUser user = webUserMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
 
-        // 设置新密码（如果newPassword为null，则使用默认密码）
         String password = StringUtils.hasText(newPassword) ? newPassword : DEFAULT_PASSWORD;
-        // 使用BCrypt加密密码
         String encodedPassword = bCryptUtil.encodePassword(password);
         user.setPassword(encodedPassword);
 
@@ -278,52 +296,54 @@ public class WebUserServiceImpl implements WebUserService {
     }
 
     // ========== 私有辅助方法 ==========
-
-    private WebUserListVO convertToWebUserListVO(WebUser user) {
+    private WebUserListVO convertToWebUserListVO(WebUser user, Map<Long, Role> roleMap) {
         WebUserListVO vo = new WebUserListVO();
-        BeanUtils.copyProperties(user, vo);
+        vo.setId(user.getId());
+        vo.setUsername(user.getUsername());
 
-        // 设置角色ID（用于前端显示）
         if (user.getRoleId() != null) {
             vo.setRole(user.getRoleId().intValue());
+            Role role = roleMap.get(user.getRoleId());
+            if (role != null) {
+                vo.setRoleDesc(role.getRoleName());
+            } else {
+                vo.setRoleDesc("未知");
+            }
+        } else {
+            vo.setRole(null);
+            vo.setRoleDesc("未分配");
         }
 
-        // 设置角色描述
-        vo.setRoleDesc(getRoleDesc(user.getRoleId()));
-
-        // 设置状态描述
+        vo.setStatus(user.getStatus());
         vo.setStatusDesc(user.getStatus() == 1 ? "正常" : "禁用");
+        vo.setCreateTime(user.getCreateTime());
+        vo.setUpdateTime(user.getUpdateTime());
 
         return vo;
     }
 
-    private WebUserDetailDTO convertToWebUserDetailDTO(WebUser user) {
+    private WebUserDetailDTO convertToWebUserDetailDTO(WebUser user, Role role) {
         WebUserDetailDTO dto = new WebUserDetailDTO();
-        BeanUtils.copyProperties(user, dto);
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
 
-        // 设置角色ID（用于前端显示）
         if (user.getRoleId() != null) {
             dto.setRole(user.getRoleId().intValue());
+            if (role != null) {
+                dto.setRoleDesc(role.getRoleName());
+            } else {
+                dto.setRoleDesc("未知");
+            }
+        } else {
+            dto.setRole(null);
+            dto.setRoleDesc("未分配");
         }
 
-        // 设置角色描述
-        dto.setRoleDesc(getRoleDesc(user.getRoleId()));
-
-        // 设置状态描述
+        dto.setStatus(user.getStatus());
         dto.setStatusDesc(user.getStatus() == 1 ? "正常" : "禁用");
+        dto.setCreateTime(user.getCreateTime());
+        dto.setUpdateTime(user.getUpdateTime());
 
         return dto;
-    }
-
-    private String getRoleDesc(Long roleId) {
-        if (roleId == null) return "未知";
-        // 根据roleId获取角色描述，0-老板，1-前台
-        if (roleId == 0L) {
-            return "老板";
-        } else if (roleId == 1L) {
-            return "前台";
-        } else {
-            return "未知";
-        }
     }
 }

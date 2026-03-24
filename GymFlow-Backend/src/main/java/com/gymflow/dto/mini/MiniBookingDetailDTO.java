@@ -2,6 +2,8 @@ package com.gymflow.dto.mini;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -26,6 +28,9 @@ public class MiniBookingDetailDTO {
 
     @Schema(description = "课程类型描述")
     private String courseTypeDesc;
+
+    @Schema(description = "课程须知")
+    private String notice;
 
     @Schema(description = "课程描述")
     private String courseDescription;

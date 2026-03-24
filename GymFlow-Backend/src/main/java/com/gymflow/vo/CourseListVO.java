@@ -11,6 +11,7 @@ public class CourseListVO {
     private Integer courseType;
     private String courseTypeDesc;
     private String courseName;
+    private String notice;
     private String description;
     private List<String> coachNames;  // 绑定教练姓名列表
 //    private Integer maxCapacity;

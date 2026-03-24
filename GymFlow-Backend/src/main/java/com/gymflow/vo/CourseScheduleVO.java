@@ -18,13 +18,13 @@ public class CourseScheduleVO {
     private LocalDate scheduleDate;
     private LocalTime startTime;
     private LocalTime endTime;
-    // 移除 location 字段
     private Integer maxCapacity;
     private Integer currentEnrollment;
     private Integer remainingSlots;
     private Integer status;
     private String statusDesc;
     private String notes;
+    private Integer sessionCost;
 
     // 预约信息 - 返回完整的预约列表
     private List<CourseBookingVO> bookings;

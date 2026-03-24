@@ -21,11 +21,11 @@ public class BusinessConfigDTO {
     @Schema(description = "营业结束时间", example = "22:00:00", required = true)
     private LocalTime businessEndTime;
 
-    @NotNull(message = "课程提前续约时间不能为空")
-    @Min(value = 0, message = "提前续约时间不能小于0天")
-    @Max(value = 365, message = "提前续约时间不能超过365天")
-    @Schema(description = "课程提前续约时间（天）", example = "7", required = true)
-    private Integer courseRenewalDays;
+    @NotNull(message = "课程提前预约时间不能为空")
+    @Min(value = 0, message = "提前预约时间不能小于0小时")
+    @Max(value = 365, message = "提前预约时间不能超过48小时")
+    @Schema(description = "课程提前预约时间（小时）", example = "7", required = true)
+    private Integer courseAdvanceBookingHours;
 
     @NotNull(message = "课程取消时间限制不能为空")
     @Min(value = 0, message = "取消时间限制不能小于0小时")

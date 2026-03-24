@@ -5,6 +5,7 @@ import com.gymflow.vo.CourseScheduleVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,9 @@ public class CourseFullDTO {
     @Schema(description = "课程名称")
     private String courseName;
 
+    @Schema(description = "课程须知")
+    private String notice;
+
     @Schema(description = "课程描述")
     private String description;
 
@@ -39,9 +43,6 @@ public class CourseFullDTO {
 
     @Schema(description = "状态：0-禁用，1-正常")
     private Integer status;
-
-    @Schema(description = "课程须知")
-    private String notice;
 
     @Schema(description = "创建时间")
     private LocalDateTime createTime;

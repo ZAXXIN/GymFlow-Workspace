@@ -32,7 +32,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     private static final String DEFAULT_SYSTEM_LOGO = "/logo.png";
     private static final LocalTime DEFAULT_BUSINESS_START = LocalTime.of(8, 0);  // 08:00
     private static final LocalTime DEFAULT_BUSINESS_END = LocalTime.of(22, 0);   // 22:00
-    private static final int DEFAULT_RENEWAL_DAYS = 7;      // 提前7天续约
+    private static final int DEFAULT_ADVANCE_BOOKING_HOURS = 2;  // 默认提前2小时不可预约
     private static final int DEFAULT_CANCEL_HOURS = 2;      // 提前2小时可取消
     private static final int DEFAULT_MIN_CLASS_SIZE = 5;    // 最低5人开课
     private static final int DEFAULT_MAX_CAPACITY = 30;     // 最多30人
@@ -65,7 +65,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         BusinessConfigDTO businessConfig = new BusinessConfigDTO();
         businessConfig.setBusinessStartTime(config.getBusinessStartTime());
         businessConfig.setBusinessEndTime(config.getBusinessEndTime());
-        businessConfig.setCourseRenewalDays(config.getCourseRenewalDays());
+        businessConfig.setCourseAdvanceBookingHours(config.getCourseAdvanceBookingHours());
         businessConfig.setCourseCancelHours(config.getCourseCancelHours());
         businessConfig.setMinClassSize(config.getMinClassSize());
         businessConfig.setMaxClassCapacity(config.getMaxClassCapacity());
@@ -143,7 +143,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             // 设置业务设置
             config.setBusinessStartTime(businessConfig.getBusinessStartTime());
             config.setBusinessEndTime(businessConfig.getBusinessEndTime());
-            config.setCourseRenewalDays(businessConfig.getCourseRenewalDays());
+            config.setCourseAdvanceBookingHours(businessConfig.getCourseAdvanceBookingHours());
             config.setCourseCancelHours(businessConfig.getCourseCancelHours());
             config.setMinClassSize(businessConfig.getMinClassSize());
             config.setMaxClassCapacity(businessConfig.getMaxClassCapacity());
@@ -164,7 +164,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             // 更新业务设置
             config.setBusinessStartTime(businessConfig.getBusinessStartTime());
             config.setBusinessEndTime(businessConfig.getBusinessEndTime());
-            config.setCourseRenewalDays(businessConfig.getCourseRenewalDays());
+            config.setCourseAdvanceBookingHours(businessConfig.getCourseAdvanceBookingHours());
             config.setCourseCancelHours(businessConfig.getCourseCancelHours());
             config.setMinClassSize(businessConfig.getMinClassSize());
             config.setMaxClassCapacity(businessConfig.getMaxClassCapacity());
@@ -198,7 +198,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             // 设置默认业务设置
             config.setBusinessStartTime(DEFAULT_BUSINESS_START);
             config.setBusinessEndTime(DEFAULT_BUSINESS_END);
-            config.setCourseRenewalDays(DEFAULT_RENEWAL_DAYS);
+            config.setCourseAdvanceBookingHours(DEFAULT_ADVANCE_BOOKING_HOURS);
             config.setCourseCancelHours(DEFAULT_CANCEL_HOURS);
             config.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
             config.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);
@@ -286,7 +286,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         BusinessConfigDTO businessConfig = new BusinessConfigDTO();
         businessConfig.setBusinessStartTime(DEFAULT_BUSINESS_START);
         businessConfig.setBusinessEndTime(DEFAULT_BUSINESS_END);
-        businessConfig.setCourseRenewalDays(DEFAULT_RENEWAL_DAYS);
+        businessConfig.setCourseAdvanceBookingHours(DEFAULT_ADVANCE_BOOKING_HOURS);
         businessConfig.setCourseCancelHours(DEFAULT_CANCEL_HOURS);
         businessConfig.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
         businessConfig.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);
@@ -315,7 +315,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         // 默认业务设置
         vo.setBusinessStartTime(DEFAULT_BUSINESS_START);
         vo.setBusinessEndTime(DEFAULT_BUSINESS_END);
-        vo.setCourseRenewalDays(DEFAULT_RENEWAL_DAYS);
+        vo.setCourseAdvanceBookingHours(DEFAULT_ADVANCE_BOOKING_HOURS);
         vo.setCourseCancelHours(DEFAULT_CANCEL_HOURS);
         vo.setMinClassSize(DEFAULT_MIN_CLASS_SIZE);
         vo.setMaxClassCapacity(DEFAULT_MAX_CAPACITY);

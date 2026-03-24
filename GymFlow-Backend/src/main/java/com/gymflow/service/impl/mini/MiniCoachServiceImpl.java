@@ -84,7 +84,6 @@ public class MiniCoachServiceImpl implements MiniCoachService {
             dto.setCourseDate(schedule.getScheduleDate());
             dto.setStartTime(schedule.getStartTime());
             dto.setEndTime(schedule.getEndTime());
-            // 移除 location 字段
             dto.setMaxCapacity(schedule.getMaxCapacity());
             dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
             dto.setRemainingSlots(schedule.getMaxCapacity() - schedule.getCurrentEnrollment());

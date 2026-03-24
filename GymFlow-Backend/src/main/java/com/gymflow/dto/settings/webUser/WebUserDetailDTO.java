@@ -14,9 +14,6 @@ public class WebUserDetailDTO {
     @Schema(description = "用户名")
     private String username;
 
-    @Schema(description = "真实姓名")
-    private String realName;
-
     @Schema(description = "角色：0-老板，1-前台")
     private Integer role;
 

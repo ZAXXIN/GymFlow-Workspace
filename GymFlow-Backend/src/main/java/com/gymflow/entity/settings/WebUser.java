@@ -15,8 +15,6 @@ public class WebUser {
 
     private String password;
 
-    private String realName;
-
     @TableField("role_id")
     private Long roleId; // 角色ID，关联role表 0：老板 1：前台
 

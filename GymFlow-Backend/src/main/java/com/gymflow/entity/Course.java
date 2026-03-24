@@ -17,6 +17,8 @@ public class Course {
     @TableField("course_name")
     private String courseName;
 
+    private String notice;
+
     private String description;
 
     private Integer duration;
@@ -25,8 +27,6 @@ public class Course {
     private Integer sessionCost;  // 预约消耗课时数
 
     private Integer status;
-
-    private String notice;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

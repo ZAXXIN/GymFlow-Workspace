@@ -40,9 +40,9 @@ public class CourseRecordDTO {
     private Integer sessionCost;
 
     @NotNull(message = "预约状态不能为空")
-    @Min(value = 0, message = "预约状态值只能是0-3")
-    @Max(value = 3, message = "预约状态值只能是0-3")
-    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消", example = "1", required = true)
+    @Min(value = 0, message = "预约状态值只能是0-4")
+    @Max(value = 4, message = "预约状态值只能是0-4")
+    @Schema(description = "预约状态：0-待上课，1-已签到，2-已完成，3-已取消，4-已过期", example = "1", required = true)
     private Integer bookingStatus;
 
     @Schema(description = "课程签到时间（未签到则为null）", example = "2026-01-28T13:55:00")
