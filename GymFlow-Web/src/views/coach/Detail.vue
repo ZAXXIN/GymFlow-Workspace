@@ -28,28 +28,23 @@
       </template>
 
       <div class="basic-info">
-        <div class="coach-section">
+        <!-- <div class="coach-section">
           <div class="coach-name">{{ coachDetail?.realName }}</div>
           <div class="coach-rating">
             <el-rate :model-value="coachDetail?.rating" disabled show-score text-color="#ff9900" score-template="{value}分" :max="5" :allow-half="true" />
           </div>
-        </div>
+        </div> -->
 
         <div class="info-details">
           <el-descriptions :column="2" border>
-
+            <el-descriptions-item label="姓名">{{ coachDetail?.realName || '-' }}</el-descriptions-item>
             <el-descriptions-item label="手机号">{{ coachDetail?.phone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="性别">
               {{coachDetail?.gender == 0 ? '女' : coachDetail?.gender == 1 ? '男' : '未知'}}
             </el-descriptions-item>
             <el-descriptions-item label="专长领域">{{ coachDetail?.specialty || '-' }}</el-descriptions-item>
             <el-descriptions-item label="经验年限">{{ coachDetail?.yearsOfExperience || 0 }}年</el-descriptions-item>
-            <el-descriptions-item label="时薪">
-              <span class="amount">¥{{ formatAmount(coachDetail?.hourlyRate) }}</span>
-            </el-descriptions-item>
-            <el-descriptions-item label="提成比例">{{ coachDetail?.commissionRate || 0 }}%</el-descriptions-item>
             <el-descriptions-item label="入职时间">{{ formatDateTime(coachDetail?.createTime) }}</el-descriptions-item>
-            <el-descriptions-item label="最后更新">{{ formatDateTime(coachDetail?.updateTime) }}</el-descriptions-item>
           </el-descriptions>
         </div>
       </div>
@@ -77,16 +72,7 @@
     </el-card>
 
     <!-- 统计信息 -->
-    <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
-        <el-card class="stat-card">
-          <div class="stat-item">
-            <div class="stat-label">学员总数</div>
-            <div class="stat-value">{{ coachDetail?.totalStudents || 0 }}</div>
-            <div class="stat-unit">人</div>
-          </div>
-        </el-card>
-      </el-col>
+    <!-- <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-item">
@@ -96,15 +82,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card class="stat-card">
-          <div class="stat-item">
-            <div class="stat-label">总收入</div>
-            <div class="stat-value amount">¥{{ formatAmount(coachDetail?.totalIncome) }}</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
+       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-item">
             <div class="stat-label">平均评分</div>
@@ -112,8 +90,8 @@
             <div class="stat-unit">分</div>
           </div>
         </el-card>
-      </el-col>
-    </el-row>
+      </el-col> 
+    </el-row>-->
 
     <!-- 标签页 -->
     <el-tabs v-model="activeTab" class="detail-tabs">

@@ -10,13 +10,10 @@ export interface CoachListVO {
   specialty?: string
   certifications?: string[]
   yearsOfExperience?: number
-  hourlyRate?: number
   status?: number
   statusDesc?: string
-  totalStudents?: number
   totalCourses?: number
-  totalIncome?: number
-  rating?: number
+  // rating?: number
   createTime?: string
 }
 
@@ -30,8 +27,6 @@ export interface CoachBasicDTO {
   specialty?: string
   certificationList?: string[]
   yearsOfExperience?: number
-  hourlyRate?: number
-  commissionRate?: number
   introduction?: string
 }
 
@@ -45,14 +40,10 @@ export interface CoachDetail {
   specialty?: string
   certificationList?: string[]
   yearsOfExperience?: number
-  hourlyRate?: number
-  commissionRate?: number
   status?: number
   statusDesc?: string
-  totalStudents?: number
   totalCourses?: number
-  totalIncome?: number
-  rating?: number
+  // rating?: number
   introduction?: string
   createTime?: string
   updateTime?: string

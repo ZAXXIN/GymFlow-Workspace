@@ -19,13 +19,7 @@
 
     <!-- 主表单区域 -->
     <div class="form-content">
-      <el-form 
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-        class="coach-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" class="coach-form">
         <!-- 基本信息 -->
         <el-card shadow="never" class="form-section">
           <template #header>
@@ -33,17 +27,12 @@
               <span class="card-title">基本信息</span>
             </div>
           </template>
-          
+
           <div class="form-row">
             <el-form-item label="姓名" prop="realName" class="form-item">
-              <el-input 
-                v-model="formData.realName"
-                placeholder="请输入教练姓名"
-                maxlength="50"
-                clearable
-              />
+              <el-input v-model="formData.realName" placeholder="请输入教练姓名" maxlength="50" clearable />
             </el-form-item>
-            
+
             <el-form-item label="性别" prop="gender" class="form-item">
               <el-radio-group v-model="formData.gender">
                 <el-radio :label="0">女</el-radio>
@@ -51,119 +40,38 @@
               </el-radio-group>
             </el-form-item>
           </div>
-          
+
           <div class="form-row">
             <el-form-item label="手机号" prop="phone" class="form-item">
-              <el-input 
-                v-model="formData.phone"
-                placeholder="请输入手机号"
-                maxlength="11"
-                clearable
-                @blur="checkPhoneAvailability"
-                :disabled="isEditMode"
-              />
+              <el-input v-model="formData.phone" placeholder="请输入手机号" maxlength="11" clearable @blur="checkPhoneAvailability" :disabled="isEditMode" />
               <div v-if="phoneChecking" class="checking-text">检查中...</div>
-              <div v-if="phoneAvailable !== null && !isEditMode" 
-                   :class="['check-result', phoneAvailable ? 'success' : 'error']">
+              <div v-if="phoneAvailable !== null && !isEditMode" :class="['check-result', phoneAvailable ? 'success' : 'error']">
                 {{ phoneAvailable ? '手机号可用' : '手机号已存在' }}
               </div>
             </el-form-item>
-            
-            <el-form-item label="密码" prop="password" class="form-item" v-if="!isEditMode">
-              <el-input 
-                v-model="formData.password"
-                type="password"
-                placeholder="请输入密码（默认手机号后6位）"
-                maxlength="255"
-                clearable
-                show-password
-              />
-            </el-form-item>
           </div>
-          
+
           <div class="form-row">
             <el-form-item label="专长领域" prop="specialty" class="form-item">
-              <el-input 
-                v-model="formData.specialty"
-                placeholder="请输入教练专长，如：增肌、减脂、瑜伽等"
-                maxlength="100"
-                clearable
-              />
+              <el-input v-model="formData.specialty" placeholder="请输入教练专长，如：增肌、减脂、瑜伽等" maxlength="100" clearable />
             </el-form-item>
-            
+
             <el-form-item label="经验年限" prop="yearsOfExperience" class="form-item">
-              <el-input-number
-                v-model="formData.yearsOfExperience"
-                :min="0"
-                :max="50"
-                :step="1"
-                controls-position="right"
-                style="width: 100%"
-                placeholder="请输入经验年限"
-              />
+              <el-input-number v-model="formData.yearsOfExperience" :min="0" :max="50" :step="1" controls-position="right" style="width: 100%" placeholder="请输入经验年限" />
             </el-form-item>
           </div>
-          
-          <div class="form-row">
-            <el-form-item label="时薪" prop="hourlyRate" class="form-item">
-              <el-input-number
-                v-model="formData.hourlyRate"
-                :min="0"
-                :step="10"
-                :precision="2"
-                controls-position="right"
-                style="width: 100%"
-              >
-                <template #prepend>¥</template>
-              </el-input-number>
-            </el-form-item>
-            
-            <el-form-item label="提成比例" prop="commissionRate" class="form-item">
-              <el-input-number
-                v-model="formData.commissionRate"
-                :min="0"
-                :max="100"
-                :step="0.5"
-                controls-position="right"
-                style="width: 100%"
-                placeholder="请输入提成比例"
-              >
-                <template #append>%</template>
-              </el-input-number>
-            </el-form-item>
-          </div>
-          
+
           <div class="form-row">
             <el-form-item label="资格证书" prop="certificationList" class="full-width">
-              <el-select
-                v-model="formData.certificationList"
-                multiple
-                filterable
-                allow-create
-                default-first-option
-                placeholder="请选择或输入资格证书"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="cert in certificationOptions"
-                  :key="cert"
-                  :label="cert"
-                  :value="cert"
-                />
+              <el-select v-model="formData.certificationList" multiple filterable allow-create default-first-option placeholder="请选择或输入资格证书" style="width: 100%">
+                <el-option v-for="cert in certificationOptions" :key="cert" :label="cert" :value="cert" />
               </el-select>
             </el-form-item>
           </div>
-          
+
           <div class="form-row">
             <el-form-item label="个人简介" prop="introduction" class="full-width">
-              <el-input
-                v-model="formData.introduction"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入教练个人简介"
-                maxlength="500"
-                show-word-limit
-              />
+              <el-input v-model="formData.introduction" type="textarea" :rows="4" placeholder="请输入教练个人简介" maxlength="500" show-word-limit />
             </el-form-item>
           </div>
         </el-card>
@@ -197,9 +105,7 @@ const formData = reactive<CoachBasicDTO>({
   specialty: '',
   certificationList: [],
   yearsOfExperience: 0,
-  hourlyRate: 0,
-  commissionRate: 0,
-  introduction: ''
+  introduction: '',
 })
 
 // 手机号检查
@@ -215,48 +121,36 @@ const certificationOptions = ref([
   'AFAA',
   '瑜伽教练资格证',
   '普拉提教练证',
-  '营养师资格证'
+  '营养师资格证',
 ])
 
 // 表单验证规则
 const formRules: FormRules = {
   realName: [
     { required: true, message: '请输入教练姓名', trigger: 'blur' },
-    { min: 2, max: 50, message: '姓名长度在2-50个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '姓名长度在2-50个字符', trigger: 'blur' },
   ],
-  gender: [
-    { required: true, message: '请选择性别', trigger: 'change' }
-  ],
+  gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
   ],
   password: [
     { required: !isEditMode.value, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 255, message: '密码长度至少6个字符', trigger: 'blur' }
+    { min: 6, max: 255, message: '密码长度至少6个字符', trigger: 'blur' },
   ],
-  yearsOfExperience: [
-    { required: true, message: '请输入经验年限', trigger: 'blur' }
-  ],
-  hourlyRate: [
-    { required: true, message: '请输入时薪', trigger: 'blur' },
-    { type: 'number', min: 0, message: '时薪不能为负数', trigger: 'blur' }
-  ],
-  commissionRate: [
-    { required: true, message: '请输入提成比例', trigger: 'blur' },
-    { type: 'number', min: 0, max: 100, message: '提成比例在0-100之间', trigger: 'blur' }
-  ]
+  yearsOfExperience: [{ required: true, message: '请输入经验年限', trigger: 'blur' }],
 }
 
 // 检查手机号是否可用（模拟）
 const checkPhoneAvailability = async () => {
   const phone = formData.phone
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) return
-  
+
   phoneChecking.value = true
   try {
     // 模拟检查手机号是否已存在
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     // 这里应该调用API检查手机号是否存在
     phoneAvailable.value = Math.random() > 0.5 // 模拟50%概率可用
   } catch (error) {
@@ -270,19 +164,19 @@ const checkPhoneAvailability = async () => {
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     // 表单验证
     await formRef.value.validate()
-    
+
     // 检查手机号（新增时）
     if (!isEditMode.value && phoneAvailable.value === false) {
       ElMessage.warning('手机号已存在，请更换手机号')
       return
     }
-    
+
     loading.value = true
-    
+
     if (isEditMode.value) {
       // 更新教练
       await coachStore.updateCoach(Number(route.params.id), formData)
@@ -292,7 +186,7 @@ const handleSubmit = async () => {
       await coachStore.addCoach(formData)
       ElMessage.success('教练创建成功')
     }
-    
+
     router.push('/coach/list')
   } catch (error) {
     console.error('保存失败:', error)
@@ -310,12 +204,12 @@ const handleCancel = () => {
 // 初始化表单数据（编辑模式）
 const initFormData = async () => {
   if (!isEditMode.value) return
-  
+
   try {
     loading.value = true
     const coachId = Number(route.params.id)
     await coachStore.fetchCoachDetail(coachId)
-    
+
     if (coachStore.currentCoach) {
       const coach = coachStore.currentCoach
       formData.realName = coach.realName
@@ -325,8 +219,6 @@ const initFormData = async () => {
       formData.specialty = coach.specialty || ''
       formData.certificationList = coach.certificationList || []
       formData.yearsOfExperience = coach.yearsOfExperience || 0
-      formData.hourlyRate = coach.hourlyRate || 0
-      formData.commissionRate = coach.commissionRate || 0
       formData.introduction = coach.introduction || ''
     }
   } catch (error) {
@@ -338,12 +230,15 @@ const initFormData = async () => {
 }
 
 // 监听手机号变化
-watch(() => formData.phone, (newVal) => {
-  if (!isEditMode.value && newVal && newVal.length === 11) {
-    // 如果是新增模式，设置默认密码为手机号后6位
-    formData.password = newVal.slice(-6)
+watch(
+  () => formData.phone,
+  (newVal) => {
+    if (!isEditMode.value && newVal && newVal.length === 11) {
+      // 如果是新增模式，设置默认密码为手机号后6位
+      formData.password = newVal.slice(-6)
+    }
   }
-})
+)
 
 onMounted(() => {
   initFormData()
@@ -425,11 +320,11 @@ onMounted(() => {
 }
 
 .check-result.success {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .check-result.error {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 :deep(.el-card__header) {

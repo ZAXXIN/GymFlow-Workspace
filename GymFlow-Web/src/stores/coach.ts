@@ -366,9 +366,7 @@ export const useCoachStore = defineStore('coach', () => {
   const formattedCoachList = () => {
     return coachList.value.map(coach => ({
       ...coach,
-      hourlyRateFormatted: coach.hourlyRate ? `¥${coach.hourlyRate}/小时` : '-',
-      totalIncomeFormatted: coach.totalIncome ? `¥${coach.totalIncome}` : '-',
-      ratingFormatted: coach.rating ? `${coach.rating}分` : '-',
+      // ratingFormatted: coach.rating ? `${coach.rating}分` : '-',
       createTimeFormatted: coach.createTime ? new Date(coach.createTime).toLocaleDateString() : '-',
       statusDesc: coach.status === 1 ? '在职' : '离职'
     }))

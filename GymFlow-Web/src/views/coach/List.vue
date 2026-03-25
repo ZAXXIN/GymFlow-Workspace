@@ -97,22 +97,10 @@
             <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="hourlyRate" label="时薪" width="100" align="right">
-          <template #default="{ row }">
-            <span class="amount">¥{{ formatAmount(row.hourlyRate) }}</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="statusDesc" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
               {{ row.statusDesc || '未知' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="totalStudents" label="学员数" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag type="info" size="small">
-              {{ row.totalStudents || 0 }}
             </el-tag>
           </template>
         </el-table-column>
@@ -123,16 +111,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="totalIncome" label="总收入" width="120" align="center">
-          <template #default="{ row }">
-            <span class="amount">¥{{ formatAmount(row.totalIncome) }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="rating" label="评分" width="180" align="center">
+        <!-- <el-table-column prop="rating" label="评分" width="180" align="center">
           <template #default="{ row }">
             <el-rate v-model="row.rating" disabled show-score text-color="#ff9900" score-template="{value}" :max="5" :allow-half="true" />
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column prop="createTime" label="入职时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.createTime) }}
