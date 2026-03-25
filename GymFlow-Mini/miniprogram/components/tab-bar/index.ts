@@ -41,18 +41,18 @@ Component({
         iconPath: '/assets/icons/member/home.png',
         selectedIconPath: '/assets/icons/member/home-active.png'
       },
-      {
-        pagePath: '/pages/coach/student-list/index',
-        text: '学员',
-        iconPath: '/assets/icons/coach/student.png',
-        selectedIconPath: '/assets/icons/coach/student-active.png'
-      },
-      {
-        pagePath: '/pages/coach/finance/index',
-        text: '财务',
-        iconPath: '/assets/icons/coach/finance.png',
-        selectedIconPath: '/assets/icons/coach/finance-active.png'
-      },
+      // {
+      //   pagePath: '/pages/coach/student-list/index',
+      //   text: '学员',
+      //   iconPath: '/assets/icons/coach/student.png',
+      //   selectedIconPath: '/assets/icons/coach/student-active.png'
+      // },
+      // {
+      //   pagePath: '/pages/coach/finance/index',
+      //   text: '财务',
+      //   iconPath: '/assets/icons/coach/finance.png',
+      //   selectedIconPath: '/assets/icons/coach/finance-active.png'
+      // },
       {
         pagePath: '/pages/coach/my/index',
         text: '我的',

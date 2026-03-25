@@ -109,8 +109,12 @@ Page({
     
     miniLogin({ phone, password })
       .then(function(result) {
+        console.log('登录返回数据:', JSON.stringify(result))
+        
+        // 先设置用户信息
         userStore.setUserInfo(result)
         
+        // 加载配置和消息
         return Promise.all([
           configStore.loadConfig(true),
           messageStore.init()
@@ -121,7 +125,19 @@ Page({
           showToast('登录成功', 'success')
           
           setTimeout(function() {
-            that.redirectToHome()
+            // 根据 userType 直接跳转，避免依赖 store 的 role 未及时更新
+            // userType: 0-会员, 1-教练
+            if (result.userType === 1) {
+              // 教练
+              wx.reLaunch({
+                url: '/pages/coach/home/index'
+              })
+            } else {
+              // 会员（包括 userType === 0）
+              wx.reLaunch({
+                url: '/pages/member/home/index'
+              })
+            }
           }, 1500)
         })
       })

@@ -1,7 +1,7 @@
 // 教练端财务页面逻辑
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
-import { getFinanceStats } from '../../../services/api/coach.api'
+// import { getFinanceStats } from '../../../services/api/coach.api'
 import { showToast } from '../../../utils/wx-util'
 import { formatDate } from '../../../utils/date'
 
@@ -49,11 +49,11 @@ Page({
       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
     })
 
-    this.loadFinanceStats()
+    // this.loadFinanceStats()
   },
 
   onPullDownRefresh() {
-    this.loadFinanceStats(true)
+    // this.loadFinanceStats(true)
   },
 
   onTabChange(e: any) {
@@ -64,93 +64,93 @@ Page({
   /**
    * 加载财务统计
    */
-  async loadFinanceStats(showPullRefresh: boolean = false) {
-    if (!showPullRefresh) {
-      this.setData({ loading: true })
-    }
+  // async loadFinanceStats(showPullRefresh: boolean = false) {
+  //   if (!showPullRefresh) {
+  //     this.setData({ loading: true })
+  //   }
     
-    try {
-      const { activePeriod } = this.data
+  //   try {
+  //     const { activePeriod } = this.data
       
-      // 根据周期获取对应日期
-      const date = this.getDateByPeriod(activePeriod)
+  //     // 根据周期获取对应日期
+  //     const date = this.getDateByPeriod(activePeriod)
       
-      const result = await getFinanceStats({
-        period: this.getPeriodType(activePeriod),
-        date
-      })
+  //     const result = await getFinanceStats({
+  //       period: this.getPeriodType(activePeriod),
+  //       date
+  //     })
       
-      // 计算平均课时费
-      const avgHourlyRate = result.totalSessions > 0 
-        ? (result.totalRevenue / result.totalSessions).toFixed(2) 
-        : 0
+  //     // 计算平均课时费
+  //     const avgHourlyRate = result.totalSessions > 0 
+  //       ? (result.totalRevenue / result.totalSessions).toFixed(2) 
+  //       : 0
       
-      // 准备图表数据
-      const sessionsData: any[] = []
-      const revenueData: any[] = []
-      const membersData: any[] = []
+  //     // 准备图表数据
+  //     const sessionsData: any[] = []
+  //     const revenueData: any[] = []
+  //     const membersData: any[] = []
       
-      for (let i = 0; i < result.dataPoints.length; i++) {
-        const point = result.dataPoints[i]
-        sessionsData.push({
-          name: point.label,
-          value: point.sessions,
-          color: '#07c160'
-        })
-        revenueData.push({
-          name: point.label,
-          value: point.revenue,
-          color: '#f56c6c'
-        })
-        membersData.push({
-          name: point.label,
-          value: point.members,
-          color: '#409EFF'
-        })
-      }
+  //     for (let i = 0; i < result.dataPoints.length; i++) {
+  //       const point = result.dataPoints[i]
+  //       sessionsData.push({
+  //         name: point.label,
+  //         value: point.sessions,
+  //         color: '#07c160'
+  //       })
+  //       revenueData.push({
+  //         name: point.label,
+  //         value: point.revenue,
+  //         color: '#f56c6c'
+  //       })
+  //       membersData.push({
+  //         name: point.label,
+  //         value: point.members,
+  //         color: '#409EFF'
+  //       })
+  //     }
       
-      this.setData({
-        stats: {
-          totalSessions: result.totalSessions,
-          totalRevenue: result.totalRevenue,
-          totalMembers: result.totalMembers,
-          sessionsTrend: this.calculateTrend(result.dataPoints, 'sessions'),
-          revenueTrend: this.calculateTrend(result.dataPoints, 'revenue'),
-          membersTrend: this.calculateTrend(result.dataPoints, 'members')
-        },
-        avgHourlyRate,
-        dataPoints: result.dataPoints,
-        sessionsChartData: sessionsData,
-        revenueChartData: revenueData,
-        membersChartData: membersData,
-        startDate: result.startDate,
-        endDate: result.endDate,
-        loading: false
-      })
+  //     this.setData({
+  //       stats: {
+  //         totalSessions: result.totalSessions,
+  //         totalRevenue: result.totalRevenue,
+  //         totalMembers: result.totalMembers,
+  //         sessionsTrend: this.calculateTrend(result.dataPoints, 'sessions'),
+  //         revenueTrend: this.calculateTrend(result.dataPoints, 'revenue'),
+  //         membersTrend: this.calculateTrend(result.dataPoints, 'members')
+  //       },
+  //       avgHourlyRate,
+  //       dataPoints: result.dataPoints,
+  //       sessionsChartData: sessionsData,
+  //       revenueChartData: revenueData,
+  //       membersChartData: membersData,
+  //       startDate: result.startDate,
+  //       endDate: result.endDate,
+  //       loading: false
+  //     })
       
-      if (showPullRefresh) {
-        wx.stopPullDownRefresh()
-      }
+  //     if (showPullRefresh) {
+  //       wx.stopPullDownRefresh()
+  //     }
       
-    } catch (error: any) {
-      console.error('加载财务统计失败:', error)
-      this.setData({ loading: false })
-      if (showPullRefresh) {
-        wx.stopPullDownRefresh()
-      }
-      showToast(error.message || '加载失败', 'none')
-    }
-  },
+  //   } catch (error: any) {
+  //     console.error('加载财务统计失败:', error)
+  //     this.setData({ loading: false })
+  //     if (showPullRefresh) {
+  //       wx.stopPullDownRefresh()
+  //     }
+  //     showToast(error.message || '加载失败', 'none')
+  //   }
+  // },
 
   /**
    * 周期切换
    */
-  onPeriodChange(e: any) {
-    const { index } = e.detail
-    this.setData({ activePeriod: index }, () => {
-      this.loadFinanceStats()
-    })
-  },
+  // onPeriodChange(e: any) {
+  //   const { index } = e.detail
+  //   this.setData({ activePeriod: index }, () => {
+  //     this.loadFinanceStats()
+  //   })
+  // },
 
   /**
    * 获取周期类型

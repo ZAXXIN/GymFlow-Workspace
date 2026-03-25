@@ -7,8 +7,8 @@ import {
   CoachCourse,
   CourseStudent,
   CoachMemberDetail,
-  FinanceStatsResult,
-  FinanceStatsParams
+  // FinanceStatsResult,
+  // FinanceStatsParams
 } from '../types/coach.types'
 import { HealthRecord } from '../types/common.types'
 
@@ -78,11 +78,11 @@ export const getCoachCourses = (coachId: number) => {
  * 获取财务统计数据
  * GET /mini/coach/finance/stats
  */
-export const getFinanceStats = (params: FinanceStatsParams) => {
-  return wxRequest.get<FinanceStatsResult>('/mini/coach/finance/stats', params, {
-    showLoading: true
-  })
-}
+// export const getFinanceStats = (params: FinanceStatsParams) => {
+//   return wxRequest.get<FinanceStatsResult>('/mini/coach/finance/stats', params, {
+//     showLoading: true
+//   })
+// }
 
 /**
  * 教练添加会员健康档案

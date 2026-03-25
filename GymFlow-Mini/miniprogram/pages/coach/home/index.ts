@@ -1,4 +1,4 @@
-// 教练端首页逻辑
+// pages/coach/home/index.ts
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
@@ -14,7 +14,6 @@ Page({
     coachInfo: {
       realName: '',
       specialty: '',
-      totalStudents: 0,
       totalCourses: 0,
       yearsOfExperience: 0
     },
@@ -36,13 +35,13 @@ Page({
   },
 
   onLoad() {
-     // 获取当前页面在 TabBar 中的索引
-     const pages = getCurrentPages()
-     const currentPage = pages[pages.length - 1]
-     const pagePath = '/' + currentPage.route
-     this.setData({
-       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
-     })
+    // 获取当前页面在 TabBar 中的索引
+    const pages = getCurrentPages()
+    const currentPage = pages[pages.length - 1]
+    const pagePath = '/' + currentPage.route
+    this.setData({
+      selectedTab: TabBarHelper.getSelectedIndex(pagePath)
+    })
 
     // 设置默认日期为今天
     const today = new Date()
@@ -123,10 +122,11 @@ Page({
    */
   async loadCoachInfo() {
     try {
-      const coachInfo = await getMyCoachInfo()
-      userStore.setUserInfo(coachInfo)
-      
-      this.setData({ coachInfo })
+      const info = await getMyCoachInfo()
+      // 更新 store
+      userStore.updateUserInfo(info)
+     
+      this.setData({ coachInfo:info })
     } catch (error) {
       console.error('加载教练信息失败:', error)
     }
@@ -140,7 +140,23 @@ Page({
     
     try {
       const scheduleList = await getMySchedule(selectedDate)
-      this.setData({ scheduleList })
+      
+      // 预处理，为每个课程添加状态字段
+      const processedList = scheduleList.map((course: any) => {
+        const now = new Date()
+        const courseDate = new Date(`${course.scheduleDate} ${course.startTime}`)
+        const courseEnd = new Date(`${course.scheduleDate} ${course.endTime}`)
+        
+        if (now < courseDate) {
+          return { ...course, statusClass: 'upcoming', statusText: '待上课' }
+        } else if (now > courseEnd) {
+          return { ...course, statusClass: 'completed', statusText: '已结束' }
+        } else {
+          return { ...course, statusClass: 'ongoing', statusText: '进行中' }
+        }
+      })
+      
+      this.setData({ scheduleList: processedList })
     } catch (error) {
       console.error('加载课表失败:', error)
     }
@@ -212,7 +228,7 @@ Page({
     const { course } = e.currentTarget.dataset
     
     wx.navigateTo({
-      url: `/pages/coach/student-list/index?courseId=${course.id}&courseName=${course.courseName}`
+      url: `/pages/coach/student-list/index?courseId=${course.courseId}&courseName=${course.courseName}`
     })
   },
 
@@ -223,7 +239,7 @@ Page({
     const { course } = e.currentTarget.dataset
     
     wx.navigateTo({
-      url: `/pages/coach/student-list/index?courseId=${course.id}&courseName=${course.courseName}`
+      url: `/pages/coach/student-list/index?courseId=${course.courseId}&courseName=${course.courseName}`
     })
   },
 
@@ -248,40 +264,6 @@ Page({
       return '明日'
     } else {
       return formatDate(selectedDate)
-    }
-  },
-
-  /**
-   * 获取课程状态样式类
-   */
-  getCourseStatusClass(course: any): string {
-    const now = new Date()
-    const courseDate = new Date(`${course.courseDate} ${course.startTime}`)
-    const courseEnd = new Date(`${course.courseDate} ${course.endTime}`)
-    
-    if (now < courseDate) {
-      return 'upcoming'
-    } else if (now > courseEnd) {
-      return 'completed'
-    } else {
-      return 'ongoing'
-    }
-  },
-
-  /**
-   * 获取课程状态文本
-   */
-  getCourseStatusText(course: any): string {
-    const now = new Date()
-    const courseDate = new Date(`${course.courseDate} ${course.startTime}`)
-    const courseEnd = new Date(`${course.courseDate} ${course.endTime}`)
-    
-    if (now < courseDate) {
-      return '待上课'
-    } else if (now > courseEnd) {
-      return '已结束'
-    } else {
-      return '进行中'
     }
   },
 

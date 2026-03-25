@@ -5,11 +5,11 @@ import {
   getMySchedule,
   getCourseStudents,
   getCoachMemberDetail,
-  getFinanceStats,
+  // getFinanceStats,
   coachAddHealthRecord 
 } from '../services/api/coach.api'
 import { showError, showSuccess, showLoading, hideLoading, showModal } from '../utils/wx-util'
-import { FinanceStatsParams } from '../services/types/coach.types'
+// import { FinanceStatsParams } from '../services/types/coach.types'
 import { HealthRecord } from '../services/types/common.types'
 
 // 需要创建coach.store.ts，这里先定义接口
@@ -17,12 +17,12 @@ interface CoachStore {
   mySchedule: any[]
   currentCourseStudents: any[]
   currentMemberDetail: any
-  financeStats: any
+  // financeStats: any
   loading: boolean
   loadMySchedule: (date?: string) => Promise<any>
   loadCourseStudents: (courseId: number) => Promise<any>
   loadMemberDetail: (memberId: number) => Promise<any>
-  loadFinanceStats: (params: FinanceStatsParams) => Promise<any>
+  // loadFinanceStats: (params: FinanceStatsParams) => Promise<any>
 }
 
 export const useCoach = () => {
@@ -73,18 +73,18 @@ export const useCoach = () => {
   /**
    * 加载财务统计
    */
-  const loadFinanceStats = async (params: FinanceStatsParams) => {
-    try {
-      showLoading()
-      const stats = await getFinanceStats(params)
-      hideLoading()
-      return stats
-    } catch (error: any) {
-      hideLoading()
-      showError(error.message || '加载财务数据失败')
-      throw error
-    }
-  }
+  // const loadFinanceStats = async (params: FinanceStatsParams) => {
+  //   try {
+  //     showLoading()
+  //     const stats = await getFinanceStats(params)
+  //     hideLoading()
+  //     return stats
+  //   } catch (error: any) {
+  //     hideLoading()
+  //     showError(error.message || '加载财务数据失败')
+  //     throw error
+  //   }
+  // }
 
   /**
    * 教练添加健康档案
@@ -171,7 +171,7 @@ export const useCoach = () => {
     loadMySchedule,
     loadCourseStudents,
     loadMemberDetail,
-    loadFinanceStats,
+    // loadFinanceStats,
     addHealthRecord,
     scanCheckin,
     getTodayReminders

@@ -31,21 +31,22 @@ class UserStore {
    * 设置用户信息（登录时使用）
    */
   setUserInfo(userInfo: any) {
-    // 处理角色转换 - 根据后端返回的 userType
-    // userType: 0-会员, 1-教练
+    console.log('setUserInfo 收到的数据:', userInfo)
+    
+    // 根据 userType 确定角色
     const role = userInfo.userType === 0 ? 'MEMBER' : userInfo.userType === 1 ? 'COACH' : null
-
-    // 构造统一的数据结构
+    
+    console.log('解析后的角色:', role)
+  
     const processedUserInfo = {
       ...userInfo,
       role: role,
-      // 会员字段 - 从 userId 获取 memberId
-      memberId: userInfo.userType === 0 ? userInfo.userId : undefined,
+      // 会员字段
+      memberId: role === 'MEMBER' ? userInfo.userId : undefined,
       memberNo: userInfo.memberNo,
       // 教练字段
-      coachId: userInfo.userType === 1 ? userInfo.userId : undefined,
-
-      // 其他会员信息
+      coachId: role === 'COACH' ? userInfo.userId : undefined,
+      // 其他字段默认值
       membershipStartDate: undefined,
       membershipEndDate: undefined,
       totalCheckins: 0,
@@ -56,12 +57,13 @@ class UserStore {
       weight: undefined,
       cards: []
     }
-
+  
     this._userInfo = processedUserInfo
     this._isLogin = true
-
-    // 保存到存储
+  
     wx.setStorageSync('userInfo', processedUserInfo)
+    
+    console.log('存储后的用户信息:', processedUserInfo)
   }
 
   /**

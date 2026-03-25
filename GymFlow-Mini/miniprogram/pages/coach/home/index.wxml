@@ -73,7 +73,7 @@
             
             <view class="coach-home-course-detail">
               <view class="coach-home-course-detail-item">
-                <image class="coach-home-course-detail-icon" src="/assets/icons/student.png" mode="aspectFit"></image>
+                <image class="coach-home-course-detail-icon" src="/assets/icons/coach/my.png" mode="aspectFit"></image>
                 <text>{{course.currentEnrollment}}/{{course.maxCapacity}}人</text>
               </view>
             </view>
@@ -83,7 +83,7 @@
                 {{getCourseStatusText(course)}}
               </view>
               <view class="coach-home-course-students" bindtap="onViewStudents" data-course="{{course}}" catchtap>
-                <image class="coach-home-course-students-icon" src="/assets/icons/group.png" mode="aspectFit"></image>
+                <!-- <image class="coach-home-course-students-icon" src="/assets/icons/group.png" mode="aspectFit"></image> -->
                 <text>查看学员</text>
               </view>
             </view>

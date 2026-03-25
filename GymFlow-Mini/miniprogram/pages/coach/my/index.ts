@@ -14,12 +14,8 @@ Page({
       phone: '',
       specialty: '',
       yearsOfExperience: 0,
-      hourlyRate: 0,
-      commissionRate: 0,
-      totalStudents: 0,
-      totalCourses: 0,
-      totalIncome: 0,
-      rating: 5.0,
+      // totalCourses: 0,
+      // rating: 5.0,
       certifications: [] as string[],
       introduction: ''
     },
@@ -42,8 +38,8 @@ Page({
 
   onShow() {
     // 每次显示时刷新数据
-    this.loadCoachInfo()
-    this.updateUnreadCount()
+    // this.loadCoachInfo()
+    // this.updateUnreadCount()
   },
 
   onTabChange(e: any) {
@@ -64,11 +60,12 @@ Page({
    */
   async loadCoachInfo() {
     try {
-      const coachInfo = await getMyCoachInfo()
+      const info = await getMyCoachInfo()
+      console.log(info)
       // 更新 store
-      userStore.updateUserInfo(coachInfo)
-      console.log(coachInfo)
-      this.setData({ coachInfo })
+      userStore.updateUserInfo(info)
+     
+      this.setData({ coachInfo:info })
     } catch (error) {
       console.error('加载教练信息失败:', error)
     }

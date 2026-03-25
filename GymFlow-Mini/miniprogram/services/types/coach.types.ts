@@ -7,14 +7,10 @@ export interface CoachInfo {
   phone: string
   specialty?: string
   yearsOfExperience?: number
-  hourlyRate?: number
-  commissionRate?: number
   rating?: number
   introduction?: string
   certifications?: string[]
-  totalStudents?: number
   totalCourses?: number
-  totalIncome?: number
   status: 0 | 1
   createTime: string
   updateTime: string
@@ -86,27 +82,27 @@ export interface MemberCourseRecord {
 }
 
 // 财务统计参数
-export interface FinanceStatsParams {
-  period: 'day' | 'month' | 'year'
-  date?: string // 指定日期，默认当前
-}
+// export interface FinanceStatsParams {
+//   period: 'day' | 'month' | 'year'
+//   date?: string // 指定日期，默认当前
+// }
 
 // 财务统计数据点
-export interface FinanceDataPoint {
-  date: string
-  label: string
-  sessions: number
-  revenue: number
-  members: number
-}
+// export interface FinanceDataPoint {
+//   date: string
+//   label: string
+//   sessions: number
+//   revenue: number
+//   members: number
+// }
 
 // 财务统计响应
-export interface FinanceStatsResult {
-  period: 'day' | 'month' | 'year'
-  startDate: string
-  endDate: string
-  totalSessions: number
-  totalRevenue: number
-  totalMembers: number
-  dataPoints: FinanceDataPoint[]
-}
+// export interface FinanceStatsResult {
+//   period: 'day' | 'month' | 'year'
+//   startDate: string
+//   endDate: string
+//   totalSessions: number
+//   totalRevenue: number
+//   totalMembers: number
+//   dataPoints: FinanceDataPoint[]
+// }

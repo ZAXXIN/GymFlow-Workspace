@@ -10,12 +10,15 @@ export class TabBarHelper {
    */
   static getSelectedIndex(pagePath: string): number {
     const role = userStore.role
+
+    console.log('TabBarHelper - 当前角色:', role)
+    console.log('TabBarHelper - 当前页面路径:', pagePath)
     
     if (role === 'COACH') {
       const coachPaths = [
         '/pages/coach/home/index',
-        '/pages/coach/student-list/index',
-        '/pages/coach/finance/index',
+        // '/pages/coach/student-list/index',
+        // '/pages/coach/finance/index',
         '/pages/coach/my/index'
       ]
       const index = coachPaths.findIndex(path => pagePath.includes(path))

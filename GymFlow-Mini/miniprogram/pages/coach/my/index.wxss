@@ -30,6 +30,7 @@
   padding: 0 32rpx 32rpx;
   display: flex;
   align-items: center;
+  margin-top: -20rpx;
 }
 
 .coach-my-info {
