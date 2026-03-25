@@ -18,16 +18,16 @@ public class CoachFullDTO {
     private String specialty;
     private List<String> certificationList;
     private Integer yearsOfExperience;
-    private BigDecimal hourlyRate;
-    private BigDecimal commissionRate;
     private Integer status;
-    private Integer totalStudents;
     private Integer totalCourses;
-    private BigDecimal totalIncome;
     private BigDecimal rating;
     private String introduction;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+
+    // 用户类型（用于小程序端）
+    private Integer userType = 1;  // 1-教练
+    private String userTypeDesc = "教练";
 
     // 扩展信息
     private List<CoachScheduleDTO> schedules;

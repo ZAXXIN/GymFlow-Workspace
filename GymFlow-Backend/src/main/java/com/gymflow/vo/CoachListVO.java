@@ -17,12 +17,9 @@ public class CoachListVO {
     private String specialty;
     private List<String> certifications;
     private Integer yearsOfExperience;
-    private BigDecimal hourlyRate;
     private Integer status;
     private String statusDesc;
-    private Integer totalStudents;
     private Integer totalCourses;
-    private BigDecimal totalIncome;
     private BigDecimal rating;
     private LocalDateTime createTime;
 

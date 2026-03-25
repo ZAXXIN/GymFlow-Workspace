@@ -29,22 +29,10 @@ public class Coach {
     @TableField("years_of_experience")
     private Integer yearsOfExperience;
 
-    @TableField("hourly_rate")
-    private BigDecimal hourlyRate;
-
-    @TableField("commission_rate")
-    private BigDecimal commissionRate;
-
     private Integer status;
-
-    @TableField("total_students")
-    private Integer totalStudents;
 
     @TableField("total_courses")
     private Integer totalCourses;
-
-    @TableField("total_income")
-    private BigDecimal totalIncome;
 
     private BigDecimal rating;
 

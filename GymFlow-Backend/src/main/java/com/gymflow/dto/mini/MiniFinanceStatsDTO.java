@@ -24,12 +24,6 @@ public class MiniFinanceStatsDTO {
     @Schema(description = "总课时数")
     private Integer totalCourseHours;
 
-    @Schema(description = "总服务会员数")
-    private Integer totalMemberCount;
-
-    @Schema(description = "总收入")
-    private BigDecimal totalIncome;
-
     @Schema(description = "课时数趋势")
     private List<ChartDataDTO> courseTrend;
 

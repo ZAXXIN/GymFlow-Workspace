@@ -44,6 +44,7 @@ public class MiniCoachController {
     @Operation(summary = "获取当前教练信息")
     public Result<CoachFullDTO> getMyInfo(HttpServletRequest request) {
         Long coachId = getCurrentCoachId(request);
+        log.info("获取教练信息，当前登录用户ID：{}", coachId);
         CoachFullDTO coachInfo = miniCoachService.getMyInfo(coachId);
         return Result.success("获取成功", coachInfo);
     }

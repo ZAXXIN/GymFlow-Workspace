@@ -505,8 +505,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             }
 
             dto.setYearsOfExperience(coach.getYearsOfExperience());
-            dto.setHourlyRate(coach.getHourlyRate());
-            dto.setCommissionRate(coach.getCommissionRate());
             dto.setStatus(coach.getStatus());
             dto.setRating(coach.getRating());
             dto.setIntroduction(coach.getIntroduction());

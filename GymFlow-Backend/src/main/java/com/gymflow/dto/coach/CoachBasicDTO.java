@@ -46,15 +46,6 @@ public class CoachBasicDTO {
     @Schema(description = "经验年限")
     private Integer yearsOfExperience;
 
-    @DecimalMin(value = "0.00", message = "时薪不能小于0")
-    @Schema(description = "时薪")
-    private BigDecimal hourlyRate;
-
-    @DecimalMin(value = "0.00", message = "提成比例不能小于0")
-    @DecimalMax(value = "100.00", message = "提成比例不能大于100")
-    @Schema(description = "提成比例")
-    private BigDecimal commissionRate;
-
     @Schema(description = "状态：0-离职，1-在职")
     private Integer status;
 

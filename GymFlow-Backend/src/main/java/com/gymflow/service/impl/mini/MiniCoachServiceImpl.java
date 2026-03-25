@@ -1,6 +1,7 @@
 package com.gymflow.service.impl.mini;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gymflow.dto.coach.CoachFullDTO;
 import com.gymflow.dto.member.HealthRecordDTO;
 import com.gymflow.dto.member.MemberFullDTO;
@@ -8,6 +9,7 @@ import com.gymflow.dto.mini.*;
 import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.gymflow.service.mini.MiniCoachService;
 import com.gymflow.utils.BCryptUtil;
 import lombok.RequiredArgsConstructor;
@@ -45,13 +47,70 @@ public class MiniCoachServiceImpl implements MiniCoachService {
 
     @Override
     public CoachFullDTO getMyInfo(Long coachId) {
+        log.info("获取教练信息，教练ID：{}", coachId);
+
         Coach coach = coachMapper.selectById(coachId);
         if (coach == null) {
+            log.error("教练不存在，ID：{}", coachId);
             throw new BusinessException("教练不存在");
         }
 
+        log.info("查询到的教练信息：{}", coach);
+        log.info("证书原始数据：{}", coach.getCertifications());
+
         CoachFullDTO dto = new CoachFullDTO();
-        BeanUtils.copyProperties(coach, dto);
+
+        // 手动设置所有字段
+        dto.setId(coach.getId());
+        dto.setRealName(coach.getRealName());
+        dto.setPhone(coach.getPhone());
+        dto.setGender(coach.getGender());
+        dto.setSpecialty(coach.getSpecialty());
+        dto.setYearsOfExperience(coach.getYearsOfExperience());
+        dto.setStatus(coach.getStatus());
+        dto.setTotalCourses(coach.getTotalCourses());
+        dto.setRating(coach.getRating());
+        dto.setIntroduction(coach.getIntroduction());
+        dto.setCreateTime(coach.getCreateTime());
+        dto.setUpdateTime(coach.getUpdateTime());
+
+        // 解析证书列表
+        List<String> certList = new ArrayList<>();
+        if (StringUtils.hasText(coach.getCertifications())) {
+            try {
+                // 证书存储的是 JSON 数组，如 ["瑜伽教练资格证", "普拉提教练证"]
+                ObjectMapper objectMapper = new ObjectMapper();
+                certList = objectMapper.readValue(coach.getCertifications(),
+                        new TypeReference<List<String>>() {});
+                log.info("解析后的证书列表：{}", certList);
+            } catch (Exception e) {
+                log.error("解析证书列表失败", e);
+                // 尝试兼容旧格式（用逗号分隔的字符串）
+                String certStr = coach.getCertifications();
+                certStr = certStr.replace("[", "").replace("]", "").replace("\"", "");
+                String[] certs = certStr.split(",");
+                for (String cert : certs) {
+                    String trimmed = cert.trim();
+                    if (!trimmed.isEmpty()) {
+                        certList.add(trimmed);
+                    }
+                }
+                log.info("兼容解析后的证书列表：{}", certList);
+            }
+        }
+        dto.setCertificationList(certList);
+
+        // 设置用户类型（用于小程序端）
+        dto.setUserType(1);
+        dto.setUserTypeDesc("教练");
+
+        // 如果需要返回课程列表，可以在这里查询
+        // List<CoachCourseDTO> courses = getCoachCourses(coachId);
+        // dto.setCourses(courses);
+
+        log.info("返回的教练信息：id={}, realName={}, phone={}, certifications={}",
+                dto.getId(), dto.getRealName(), dto.getPhone(), dto.getCertificationList());
+
         return dto;
     }
 
@@ -404,14 +463,14 @@ public class MiniCoachServiceImpl implements MiniCoachService {
             List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
 
             Course course = courseMapper.selectById(schedule.getCourseId());
-            if (course != null && course.getSessionCost() != null) {
-                // 收入 = 课时消耗 × 课时单价
-                // 课时单价需要从教练的课程包价格计算，这里简化为使用教练的时薪
-                BigDecimal sessionIncome = coach.getHourlyRate() != null ?
-                        coach.getHourlyRate().multiply(BigDecimal.valueOf(course.getSessionCost())) :
-                        BigDecimal.ZERO;
-                monthIncome = monthIncome.add(sessionIncome.multiply(BigDecimal.valueOf(bookings.size())));
-            }
+//            if (course != null && course.getSessionCost() != null) {
+//                // 收入 = 课时消耗 × 课时单价
+//                // 课时单价需要从教练的课程包价格计算，这里简化为使用教练的时薪
+//                BigDecimal sessionIncome = coach.getHourlyRate() != null ?
+//                        coach.getHourlyRate().multiply(BigDecimal.valueOf(course.getSessionCost())) :
+//                        BigDecimal.ZERO;
+//                monthIncome = monthIncome.add(sessionIncome.multiply(BigDecimal.valueOf(bookings.size())));
+//            }
         }
 
         stats.setMonthCourseHours(monthCourseHours);
@@ -420,8 +479,6 @@ public class MiniCoachServiceImpl implements MiniCoachService {
 
         // 总数据
         stats.setTotalCourseHours(coach.getTotalCourses() != null ? coach.getTotalCourses() : 0);
-        stats.setTotalMemberCount(coach.getTotalStudents() != null ? coach.getTotalStudents() : 0);
-        stats.setTotalIncome(coach.getTotalIncome() != null ? coach.getTotalIncome() : BigDecimal.ZERO);
 
         // 生成趋势数据
         stats.setCourseTrend(generateTrendData(startDate, endDate, "course"));

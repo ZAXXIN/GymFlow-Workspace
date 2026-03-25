@@ -175,15 +175,11 @@ public class CoachServiceImpl implements CoachService {
         }
 
         coach.setYearsOfExperience(basicDTO.getYearsOfExperience());
-        coach.setHourlyRate(basicDTO.getHourlyRate());
-        coach.setCommissionRate(basicDTO.getCommissionRate());
         coach.setStatus(1); // 默认在职
         coach.setIntroduction(basicDTO.getIntroduction());
 
         // 初始化统计信息
-        coach.setTotalStudents(0);
         coach.setTotalCourses(0);
-        coach.setTotalIncome(BigDecimal.ZERO);
         coach.setRating(new BigDecimal("5.00")); // 默认评分5.0
 
         // 设置创建时间和更新时间
@@ -244,8 +240,6 @@ public class CoachServiceImpl implements CoachService {
         }
 
         coach.setYearsOfExperience(basicDTO.getYearsOfExperience());
-        coach.setHourlyRate(basicDTO.getHourlyRate());
-        coach.setCommissionRate(basicDTO.getCommissionRate());
         coach.setIntroduction(basicDTO.getIntroduction());
 
         // 只有密码不为空时才更新密码
@@ -457,12 +451,9 @@ public class CoachServiceImpl implements CoachService {
         vo.setGender(coach.getGender());
         vo.setSpecialty(coach.getSpecialty());
         vo.setYearsOfExperience(coach.getYearsOfExperience());
-        vo.setHourlyRate(coach.getHourlyRate());
         vo.setStatus(coach.getStatus());
         vo.setStatusDesc(coach.getStatus() == 1 ? "在职" : "离职");
-        vo.setTotalStudents(coach.getTotalStudents());
         vo.setTotalCourses(coach.getTotalCourses());
-        vo.setTotalIncome(coach.getTotalIncome());
         vo.setRating(coach.getRating());
         vo.setCreateTime(coach.getCreateTime());
 
