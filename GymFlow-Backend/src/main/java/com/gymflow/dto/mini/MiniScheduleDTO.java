@@ -10,6 +10,9 @@ import java.util.List;
 @Schema(description = "教练课表DTO")
 public class MiniScheduleDTO {
 
+    @Schema(description = "排课ID")
+    private Long scheduleId;
+
     @Schema(description = "课程ID")
     private Long courseId;
 
@@ -22,8 +25,8 @@ public class MiniScheduleDTO {
     @Schema(description = "课程类型描述")
     private String courseTypeDesc;
 
-    @Schema(description = "课程日期")
-    private LocalDate courseDate;
+    @Schema(description = "排课日期")
+    private LocalDate scheduleDate;
 
     @Schema(description = "开始时间")
     private LocalTime startTime;

@@ -26,7 +26,7 @@ public class CourseRecordDTO {
 
     @NotNull(message = "课程日期不能为空")
     @Schema(description = "课程日期", example = "2026-01-28T00:00:00", required = true)
-    private LocalDateTime courseDate;
+    private LocalDateTime scheduleDate;
 
     @NotNull(message = "课程开始时间不能为空")
     @Schema(description = "课程开始时间", example = "2026-01-28T14:00:00", required = true)

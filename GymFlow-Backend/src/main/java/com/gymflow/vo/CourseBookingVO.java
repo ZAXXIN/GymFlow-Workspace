@@ -56,9 +56,6 @@ public class CourseBookingVO {
     @Schema(description = "结束时间")
     private LocalTime endTime;
 
-    @Schema(description = "上课地点")
-    private String location;
-
     @Schema(description = "预约时间")
     private LocalDateTime bookingTime;
 

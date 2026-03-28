@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -119,36 +120,33 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         LocalDate queryDate = date != null ? date : LocalDate.now();
 
         // 查询教练的排课
-        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
-        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId)
+        LambdaQueryWrapper<CourseSchedule> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseSchedule::getCoachId, coachId)
                 .eq(CourseSchedule::getScheduleDate, queryDate)
-                .eq(CourseSchedule::getStatus, 1)
+                .eq(CourseSchedule::getStatus, 1) // 只查正常状态的排课
                 .orderByAsc(CourseSchedule::getStartTime);
 
-        List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
+        List<CourseSchedule> schedules = courseScheduleMapper.selectList(queryWrapper);
         List<MiniScheduleDTO> scheduleList = new ArrayList<>();
 
         for (CourseSchedule schedule : schedules) {
+            // 获取课程信息
             Course course = courseMapper.selectById(schedule.getCourseId());
+            if (course == null) continue;
 
             MiniScheduleDTO dto = new MiniScheduleDTO();
-            dto.setCourseId(course.getId());
+            dto.setScheduleId(schedule.getScheduleId());
+            dto.setCourseId(course.getCourseId());
             dto.setCourseName(course.getCourseName());
             dto.setCourseType(course.getCourseType());
-            if (course.getCourseType() == 0) {
-                dto.setCourseTypeDesc("私教课");
-            } else {
-                dto.setCourseTypeDesc("团课");
-            }
-            dto.setCourseDate(schedule.getScheduleDate());
+            dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
+            dto.setScheduleDate(schedule.getScheduleDate());
             dto.setStartTime(schedule.getStartTime());
             dto.setEndTime(schedule.getEndTime());
             dto.setMaxCapacity(schedule.getMaxCapacity());
             dto.setCurrentEnrollment(schedule.getCurrentEnrollment());
             dto.setRemainingSlots(schedule.getMaxCapacity() - schedule.getCurrentEnrollment());
 
-            // 获取该排课的学员列表
-            dto.setStudents(getCourseStudents(coachId, schedule.getId()));
             scheduleList.add(dto);
         }
 
@@ -199,6 +197,57 @@ public class MiniCoachServiceImpl implements MiniCoachService {
     }
 
     @Override
+    public List<MiniCourseStudentDTO> getCourseStudentsBySchedule(Long coachId, Long scheduleId) {
+        // 查询排课信息
+        CourseSchedule schedule = courseScheduleMapper.selectById(scheduleId);
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        // 验证教练是否有权限查看该排课的学员
+        if (!schedule.getCoachId().equals(coachId)) {
+            throw new BusinessException("无权查看该课程的学员");
+        }
+
+        // 获取课程信息（用于确定课程类型）
+        Course course = courseMapper.selectById(schedule.getCourseId());
+        if (course == null) {
+            throw new BusinessException("课程不存在");
+        }
+
+        // 查询该排课的所有预约
+        LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
+        bookingWrapper.eq(CourseBooking::getScheduleId, scheduleId)
+                .in(CourseBooking::getBookingStatus, Arrays.asList(0, 1, 2)) // 待上课、已签到、已完成
+                .orderByAsc(CourseBooking::getBookingTime);
+
+        List<CourseBooking> bookings = courseBookingMapper.selectList(bookingWrapper);
+
+        List<MiniCourseStudentDTO> result = new ArrayList<>();
+        for (CourseBooking booking : bookings) {
+            Member member = memberMapper.selectById(booking.getMemberId());
+            if (member == null) continue;
+
+            MiniCourseStudentDTO dto = new MiniCourseStudentDTO();
+            dto.setMemberId(member.getId());
+            dto.setMemberName(member.getRealName());
+            dto.setMemberPhone(member.getPhone());
+            dto.setMemberNo(member.getMemberNo());
+            dto.setBookingId(booking.getId());
+            dto.setBookingStatus(booking.getBookingStatus());
+            dto.setBookingTime(booking.getBookingTime());
+            dto.setCheckinTime(booking.getCheckinTime());
+
+            // 获取会员剩余课时
+            dto.setRemainingSessions(getMemberRemainingSessions(member.getId(), course.getCourseType()));
+
+            result.add(dto);
+        }
+
+        return result;
+    }
+
+    @Override
     public MemberFullDTO getMemberDetail(Long coachId, Long memberId) {
         // 验证教练是否有权查看该会员（通过排课关联）
         if (!canCoachViewMember(coachId, memberId)) {
@@ -220,7 +269,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
 
         if (!CollectionUtils.isEmpty(schedules)) {
-            List<Long> scheduleIds = schedules.stream().map(CourseSchedule::getId).collect(Collectors.toList());
+            List<Long> scheduleIds = schedules.stream().map(CourseSchedule::getScheduleId).collect(Collectors.toList());
 
             LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
             bookingWrapper.eq(CourseBooking::getMemberId, memberId)
@@ -301,7 +350,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
 
         // 查询该排课的预约学员
         LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-        bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+        bookingQuery.eq(CourseBooking::getScheduleId, schedule.getScheduleId())
                 .eq(CourseBooking::getBookingStatus, 0); // 待上课
 
         List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
@@ -360,7 +409,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
             return false;
         }
 
-        List<Long> scheduleIds = schedules.stream().map(CourseSchedule::getId).collect(Collectors.toList());
+        List<Long> scheduleIds = schedules.stream().map(CourseSchedule::getScheduleId).collect(Collectors.toList());
 
         LambdaQueryWrapper<CourseBooking> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(CourseBooking::getScheduleId, scheduleIds)
@@ -447,7 +496,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         List<Long> memberIds = new ArrayList<>();
         for (CourseSchedule schedule : schedules) {
             LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getScheduleId())
                     .in(CourseBooking::getBookingStatus, 1, 2); // 已签到或已完成
             List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
             memberIds.addAll(bookings.stream().map(CourseBooking::getMemberId).collect(Collectors.toList()));
@@ -458,7 +507,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         BigDecimal monthIncome = BigDecimal.ZERO;
         for (CourseSchedule schedule : schedules) {
             LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+            bookingQuery.eq(CourseBooking::getScheduleId, schedule.getScheduleId())
                     .in(CourseBooking::getBookingStatus, 1, 2);
             List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
 

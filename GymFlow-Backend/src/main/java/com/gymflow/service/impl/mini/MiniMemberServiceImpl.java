@@ -74,11 +74,12 @@ public class MiniMemberServiceImpl implements MiniMemberService {
     }
 
     /**
-     * 获取会员卡列表
+     * 获取会员卡列表（会籍卡 + 课程包）
      */
     private List<MiniMemberCardDTO> getMemberCards(Long memberId) {
         List<MiniMemberCardDTO> cardList = new ArrayList<>();
 
+        // 查询会员已支付的订单（COMPLETED状态）
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
                 .eq(Order::getPaymentStatus, 1)
@@ -91,7 +92,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
 
-        // 查询订单项
+        // 查询订单项（会籍卡、私教课、团课）
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
         itemQuery.in(OrderItem::getOrderId, orderIds)
                 .in(OrderItem::getProductType, 0, 1, 2)
@@ -125,17 +126,20 @@ public class MiniMemberServiceImpl implements MiniMemberService {
             }
 
             cardList.add(card);
+            log.info("小程序端获取会员卡: 产品名称={}, 状态={}, 剩余课时={}",
+                    card.getProductName(), card.getStatus(), card.getRemainingSessions());
         }
 
         return cardList;
     }
 
     /**
-     * 获取课程包列表
+     * 获取课程包列表（私教课、团课）
      */
     private List<MyCourseDTO> getMyCourses(Long memberId) {
         List<MyCourseDTO> courseList = new ArrayList<>();
 
+        // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
                 .eq(Order::getPaymentStatus, 1)
@@ -148,15 +152,15 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
 
-        // 查询课程类订单项
+        // 查询课程类订单项（私教课、团课）且剩余课时大于0
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
         itemQuery.in(OrderItem::getOrderId, orderIds)
-                .in(OrderItem::getProductType, 1, 2)
-                .gt(OrderItem::getRemainingSessions, 0)
+                .in(OrderItem::getProductType, 1, 2) // 1-私教课，2-团课
+                .gt(OrderItem::getRemainingSessions, 0) // 剩余课时大于0
                 .and(wrapper -> wrapper
                         .isNull(OrderItem::getValidityEndDate)
                         .or()
-                        .ge(OrderItem::getValidityEndDate, LocalDate.now()))
+                        .ge(OrderItem::getValidityEndDate, LocalDate.now())) // 未过期或没有有效期
                 .orderByDesc(OrderItem::getCreateTime);
 
         List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);

@@ -11,7 +11,7 @@ import java.time.LocalTime;
 public class CoachScheduleDTO {
 
     @Schema(description = "排班ID（对应课程排课ID）")
-    private Long id;
+    private Long scheduleId;
 
     @Schema(description = "教练ID")
     private Long coachId;

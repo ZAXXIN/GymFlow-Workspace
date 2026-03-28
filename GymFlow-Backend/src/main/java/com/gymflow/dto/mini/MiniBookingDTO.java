@@ -27,7 +27,7 @@ public class MiniBookingDTO {
     private String coachName;
 
     @Schema(description = "课程日期")
-    private String courseDate;
+    private String scheduleDate;
 
     @Schema(description = "开始时间")
     private String startTime;

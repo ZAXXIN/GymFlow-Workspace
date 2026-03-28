@@ -8,13 +8,13 @@ import lombok.Data;
 public class TodayCourseDTO {
 
     @Schema(description = "课程ID")
-    private Long id;
+    private Long scheduleId;
 
-    @Schema(description = "课程编号")
-    private String courseNo;
+    @Schema(description = "课程ID")
+    private Long courseId;
 
     @Schema(description = "课程名称")
-    private String name;
+    private String courseName;
 
     @Schema(description = "教练ID")
     private Long coachId;

@@ -132,9 +132,9 @@ public class ProductServiceImpl implements ProductService {
         Product product = new Product();
         BeanUtils.copyProperties(productDTO, product);
 
-        LocalDateTime now = LocalDateTime.now();
-        product.setCreateTime(now);
-        product.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        product.setCreateTime(now);
+//        product.setUpdateTime(now);
 
         // 处理图片列表
         if (!CollectionUtils.isEmpty(productDTO.getImages())) {

@@ -230,9 +230,9 @@ public class DashboardServiceImpl implements DashboardService {
             Coach coach = coachMapper.selectById(schedule.getCoachId());
 
             TodayCourseDTO dto = new TodayCourseDTO();
-            dto.setId(schedule.getId());  // 使用排课ID
-            dto.setCourseNo("C" + course.getId());
-            dto.setName(course.getCourseName());
+            dto.setScheduleId(schedule.getScheduleId());  // 使用排课ID
+            dto.setCourseId(course.getCourseId());
+            dto.setCourseName(course.getCourseName());
             dto.setCoachId(schedule.getCoachId());
             dto.setCoachName(coach != null ? coach.getRealName() : "");
             dto.setStartTime(schedule.getStartTime().toString());

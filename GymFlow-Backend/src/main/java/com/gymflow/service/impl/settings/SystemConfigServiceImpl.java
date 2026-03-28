@@ -234,28 +234,28 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     }
 
     @Override
-    public boolean canCheckIn(LocalDateTime courseDateTime) {
+    public boolean canCheckIn(LocalDateTime scheduleDateTime) {
         LocalDateTime now = LocalDateTime.now();
         int startMinutes = getCheckinStartMinutes();
         int endMinutes = getCheckinEndMinutes();
 
         // 签到开始时间 = 课程开始时间 - startMinutes
-        LocalDateTime checkinStartTime = courseDateTime.minusMinutes(startMinutes);
+        LocalDateTime checkinStartTime = scheduleDateTime.minusMinutes(startMinutes);
 
         // 签到截止时间 = 课程开始时间 + endMinutes
-        LocalDateTime checkinEndTime = courseDateTime.plusMinutes(endMinutes);
+        LocalDateTime checkinEndTime = scheduleDateTime.plusMinutes(endMinutes);
 
         // 如果endMinutes为0，表示课程开始后不可签到
         if (endMinutes == 0) {
-            return now.isAfter(checkinStartTime) && now.isBefore(courseDateTime);
+            return now.isAfter(checkinStartTime) && now.isBefore(scheduleDateTime);
         } else {
             return now.isAfter(checkinStartTime) && now.isBefore(checkinEndTime);
         }
     }
 
     @Override
-    public void validateCheckInTime(LocalDateTime courseDateTime) {
-        if (!canCheckIn(courseDateTime)) {
+    public void validateCheckInTime(LocalDateTime scheduleDateTime) {
+        if (!canCheckIn(scheduleDateTime)) {
             int startMinutes = getCheckinStartMinutes();
             int endMinutes = getCheckinEndMinutes();
 

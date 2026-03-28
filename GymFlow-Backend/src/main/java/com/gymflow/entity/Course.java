@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Course {
 
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Long courseId;
 
     @TableField("course_type")
     private Integer courseType;

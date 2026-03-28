@@ -15,6 +15,10 @@ public class CourseScheduleDTO {
     @Schema(description = "课程ID", required = true)
     private Long courseId;
 
+//    @NotNull(message = "课程名称不能为空")
+//    @Schema(description = "课程名称", required = true)
+//    private String courseName;
+
     @NotNull(message = "教练ID不能为空")
     @Schema(description = "教练ID", required = true)
     private Long coachId;

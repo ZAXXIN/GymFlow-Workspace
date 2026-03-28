@@ -358,6 +358,23 @@ public class OrderServiceImpl implements OrderService {
 
         // 更新订单状态
         order.setOrderStatus(statusDTO.getOrderStatus());
+
+        // ✅ 如果状态变为已完成，自动更新支付状态为已支付
+        if ("COMPLETED".equals(statusDTO.getOrderStatus())) {
+            order.setPaymentStatus(1);
+            order.setPaymentTime(LocalDateTime.now());
+            // 设置支付方式（如果没有则默认现金）
+            if (order.getPaymentMethod() == null) {
+                order.setPaymentMethod("在线支付");
+            }
+        }
+
+        // 如果状态变为已取消或已退款，保持支付状态不变
+        if ("CANCELLED".equals(statusDTO.getOrderStatus()) || "REFUNDED".equals(statusDTO.getOrderStatus())) {
+            // 支付状态保持不变，但可以记录退款信息
+            order.setRemark(statusDTO.getRemark());
+        }
+
         if (StringUtils.hasText(statusDTO.getRemark())) {
             order.setRemark(statusDTO.getRemark());
         }
@@ -365,6 +382,11 @@ public class OrderServiceImpl implements OrderService {
         int result = orderMapper.updateById(order);
         if (result <= 0) {
             throw new BusinessException("更新订单状态失败");
+        }
+
+        // ✅ 如果订单状态变为已完成，激活订单项（添加会籍卡/课程包）
+        if ("COMPLETED".equals(statusDTO.getOrderStatus())) {
+            activateOrderProducts(orderId);
         }
 
         // 记录状态变更日志
@@ -709,13 +731,22 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setUnitPrice(itemDTO.getUnitPrice());
             orderItem.setTotalPrice(itemDTO.getUnitPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
 
-            // 从商品表获取课时数
+            // 从商品表获取课时数和有效期天数
             Product product = productMapper.selectById(itemDTO.getProductId());
-            if (product != null && product.getTotalSessions() != null) {
-                orderItem.setTotalSessions(product.getTotalSessions());
-                orderItem.setRemainingSessions(product.getTotalSessions());
+            if (product != null) {
+                // 设置课时数
+                if (product.getTotalSessions() != null) {
+                    orderItem.setTotalSessions(product.getTotalSessions());
+                    orderItem.setRemainingSessions(product.getTotalSessions());
+                    log.debug("设置课时数：{}", product.getTotalSessions());
+                }
+
+                // 设置有效期天数（仅用于会籍卡，实际有效期在激活时设置）
+                if (product.getValidityDays() != null) {
+                    log.debug("商品有效期天数：{}", product.getValidityDays());
+                }
             } else {
-                // 如果没有设置，使用默认值
+                // 如果没有商品信息，使用默认值
                 setDefaultSessions(orderItem, itemDTO.getProductType());
             }
 
@@ -898,32 +929,152 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 激活订单产品
+     * 激活订单产品（会籍卡、课程包等）
      */
     private void activateOrderProducts(Long orderId) {
         LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(OrderItem::getOrderId, orderId);
 
         List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
+        log.info("激活订单产品，订单ID：{}，共 {} 个订单项", orderId, orderItems.size());
 
         for (OrderItem orderItem : orderItems) {
             // 更新订单项状态为已激活
             orderItem.setStatus("ACTIVE");
             orderItemMapper.updateById(orderItem);
+            log.info("订单项状态更新为 ACTIVE，订单项ID：{}", orderItem.getId());
 
-            // 如果是会籍卡，更新会员有效期
+            // 根据商品类型处理
             if (orderItem.getProductType() == 0) {
+                // 会籍卡：更新会员有效期
                 activateMembershipCard(orderItem);
+            } else if (orderItem.getProductType() == 1) {
+                // 私教课：激活私教课程包
+                activatePrivateCoursePackage(orderItem);
+            } else if (orderItem.getProductType() == 2) {
+                // 团课：激活团课课程包
+                activateGroupCoursePackage(orderItem);
             }
+            // 产品类（productType == 3）不需要激活
         }
     }
 
     /**
-     * 激活会籍卡
+     * 激活会籍卡 - 更新会员有效期
      */
     private void activateMembershipCard(OrderItem orderItem) {
-        // 这里实现会籍卡激活逻辑
-        log.info("激活会籍卡，订单项ID：{}", orderItem.getId());
+        log.info("激活会籍卡，订单项ID：{}，商品ID：{}", orderItem.getId(), orderItem.getProductId());
+
+        // 获取订单信息
+        Order order = orderMapper.selectById(orderItem.getOrderId());
+        if (order == null) {
+            log.error("订单不存在，订单ID：{}", orderItem.getOrderId());
+            return;
+        }
+
+        Member member = memberMapper.selectById(order.getMemberId());
+        if (member == null) {
+            log.error("会员不存在，会员ID：{}", order.getMemberId());
+            return;
+        }
+
+        // 获取商品信息（有效期天数）
+        Product product = productMapper.selectById(orderItem.getProductId());
+        if (product == null) {
+            log.error("商品不存在，商品ID：{}", orderItem.getProductId());
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        Integer validityDays = product.getValidityDays();
+        if (validityDays == null) {
+            validityDays = 30; // 默认30天
+        }
+
+        LocalDate newEndDate = today.plusDays(validityDays);
+        log.info("会籍卡有效期天数：{}，新结束日期：{}", validityDays, newEndDate);
+
+        // 更新会员会籍时间
+        if (member.getMembershipEndDate() != null && member.getMembershipEndDate().isAfter(today)) {
+            // 如果会员卡未过期，在原有效期上增加天数
+            member.setMembershipEndDate(member.getMembershipEndDate().plusDays(validityDays));
+            log.info("会员卡未过期，在原有效期上增加 {} 天，新结束日期：{}",
+                    validityDays, member.getMembershipEndDate());
+        } else {
+            // 如果已过期或首次，设置新日期
+            member.setMembershipStartDate(today);
+            member.setMembershipEndDate(newEndDate);
+            log.info("会员卡首次激活或已过期，设置有效期：{} - {}", today, newEndDate);
+        }
+
+        memberMapper.updateById(member);
+        log.info("会籍卡激活成功，会员ID：{}，新有效期至：{}", member.getId(), member.getMembershipEndDate());
+    }
+
+    /**
+     * 激活私教课程包
+     */
+    private void activatePrivateCoursePackage(OrderItem orderItem) {
+        log.info("激活私教课程包，订单项ID：{}，商品ID：{}", orderItem.getId(), orderItem.getProductId());
+
+        // 获取商品信息
+        Product product = productMapper.selectById(orderItem.getProductId());
+        if (product == null) {
+            log.error("商品不存在，商品ID：{}", orderItem.getProductId());
+            return;
+        }
+
+        Integer totalSessions = product.getTotalSessions();
+        if (totalSessions == null) {
+            throw new BusinessException("商品未配置课时数，商品ID：" + orderItem.getProductId());
+        }
+
+        // 设置订单项的课时数
+        orderItem.setTotalSessions(totalSessions);
+        orderItem.setRemainingSessions(totalSessions);
+
+        // 设置有效期（课程包默认365天）
+        LocalDate today = LocalDate.now();
+        orderItem.setValidityStartDate(today);
+        orderItem.setValidityEndDate(today.plusDays(365));
+
+        orderItemMapper.updateById(orderItem);
+
+        log.info("私教课程包激活成功，订单项ID：{}，总课时：{}，有效期至：{}",
+                orderItem.getId(), totalSessions, orderItem.getValidityEndDate());
+    }
+
+    /**
+     * 激活团课课程包
+     */
+    private void activateGroupCoursePackage(OrderItem orderItem) {
+        log.info("激活团课课程包，订单项ID：{}，商品ID：{}", orderItem.getId(), orderItem.getProductId());
+
+        // 获取商品信息
+        Product product = productMapper.selectById(orderItem.getProductId());
+        if (product == null) {
+            log.error("商品不存在，商品ID：{}", orderItem.getProductId());
+            return;
+        }
+
+        Integer totalSessions = product.getTotalSessions();
+        if (totalSessions == null) {
+            throw new BusinessException("商品未配置课时数，商品ID：" + orderItem.getProductId());
+        }
+
+        // 设置订单项的课时数
+        orderItem.setTotalSessions(totalSessions);
+        orderItem.setRemainingSessions(totalSessions);
+
+        // 设置有效期（课程包默认365天）
+        LocalDate today = LocalDate.now();
+        orderItem.setValidityStartDate(today);
+        orderItem.setValidityEndDate(today.plusDays(365));
+
+        orderItemMapper.updateById(orderItem);
+
+        log.info("团课课程包激活成功，订单项ID：{}，总课时：{}，有效期至：{}",
+                orderItem.getId(), totalSessions, orderItem.getValidityEndDate());
     }
 
     /**

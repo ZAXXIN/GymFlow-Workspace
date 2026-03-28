@@ -28,7 +28,7 @@ public class CoachCourseDTO {
     private String description;
 
     @Schema(description = "课程日期")
-    private LocalDate courseDate;
+    private LocalDate scheduleDate;
 
     @Schema(description = "开始时间")
     private LocalTime startTime;

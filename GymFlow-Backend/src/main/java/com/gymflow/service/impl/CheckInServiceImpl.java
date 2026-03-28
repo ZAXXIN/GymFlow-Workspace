@@ -174,15 +174,15 @@ public class CheckInServiceImpl implements CheckInService {
                 if (booking.getScheduleId() != null) {
                     CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
                     if (schedule != null) {
-                        vo.setScheduleId(schedule.getId());
-                        vo.setCourseDate(schedule.getScheduleDate());
+                        vo.setScheduleId(schedule.getScheduleId());
+                        vo.setScheduleDate(schedule.getScheduleDate());
                         vo.setStartTime(schedule.getStartTime());
                         vo.setEndTime(schedule.getEndTime());
 
                         // 查询课程信息
                         Course course = courseMapper.selectById(schedule.getCourseId());
                         if (course != null) {
-                            vo.setCourseId(course.getId());
+                            vo.setCourseId(course.getCourseId());
                             vo.setCourseName(course.getCourseName());
                             vo.setCourseType(course.getCourseType());
                             vo.setSessionCost(course.getSessionCost());
@@ -385,8 +385,8 @@ public class CheckInServiceImpl implements CheckInService {
             throw new BusinessException("排课不存在");
         }
 
-        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-        configValidator.validateCheckInTime(courseDateTime);
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        configValidator.validateCheckInTime(scheduleDateTime);
 
         // 检查是否已签到
         LambdaQueryWrapper<CheckinRecord> queryWrapper = new LambdaQueryWrapper<>();

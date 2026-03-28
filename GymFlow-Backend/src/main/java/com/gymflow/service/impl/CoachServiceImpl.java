@@ -183,9 +183,9 @@ public class CoachServiceImpl implements CoachService {
         coach.setRating(new BigDecimal("5.00")); // 默认评分5.0
 
         // 设置创建时间和更新时间
-        LocalDateTime now = LocalDateTime.now();
-        coach.setCreateTime(now);
-        coach.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        coach.setCreateTime(now);
+//        coach.setUpdateTime(now);
 
         // 3. 保存教练
         int result = coachMapper.insert(coach);
@@ -357,7 +357,7 @@ public class CoachServiceImpl implements CoachService {
             Course course = courseMapper.selectById(schedule.getCourseId());
 
             CoachScheduleDTO dto = new CoachScheduleDTO();
-            dto.setId(schedule.getId());
+            dto.setScheduleId(schedule.getScheduleId());
             dto.setCoachId(schedule.getCoachId());
             dto.setScheduleDate(schedule.getScheduleDate());
             dto.setStartTime(schedule.getStartTime());
@@ -367,7 +367,7 @@ public class CoachServiceImpl implements CoachService {
             dto.setStatus(schedule.getStatus() == 1 ? "SCHEDULED" : "CANCELLED");
 
             if (course != null) {
-                dto.setCourseId(course.getId());
+                dto.setCourseId(course.getCourseId());
                 dto.setCourseName(course.getCourseName());
                 dto.setScheduleType(course.getCourseType());
                 dto.setScheduleTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
@@ -414,11 +414,11 @@ public class CoachServiceImpl implements CoachService {
             Course course = courseMapper.selectById(schedule.getCourseId());
 
             CoachCourseDTO dto = new CoachCourseDTO();
-            dto.setId(course.getId());
+            dto.setId(course.getCourseId());
             dto.setCourseName(course.getCourseName());
             dto.setCourseType(course.getCourseType());
             dto.setDescription(course.getDescription());
-            dto.setCourseDate(schedule.getScheduleDate());
+            dto.setScheduleDate(schedule.getScheduleDate());
             dto.setStartTime(schedule.getStartTime());
             dto.setEndTime(schedule.getEndTime());
             dto.setDuration(course.getDuration());

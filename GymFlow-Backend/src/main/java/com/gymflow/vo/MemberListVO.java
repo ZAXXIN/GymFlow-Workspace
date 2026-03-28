@@ -14,7 +14,6 @@ public class MemberListVO {
     private Integer gender;
     private String genderDesc;
     private Integer age;
-    // 移除 personalCoachName
     private LocalDateTime createTime;
 
     // 会员卡信息

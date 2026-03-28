@@ -71,14 +71,14 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                     }
 
                     MiniAvailableCourseDTO dto = new MiniAvailableCourseDTO();
-                    dto.setScheduleId(schedule.getId());
-                    dto.setCourseId(course.getId());
+                    dto.setScheduleId(schedule.getScheduleId());
+                    dto.setCourseId(course.getCourseId());
                     dto.setCourseName(course.getCourseName());
                     dto.setCourseType(course.getCourseType());
                     dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
                     dto.setCoachId(coach.getId());
                     dto.setCoachName(coach.getRealName());
-                    dto.setCourseDate(schedule.getScheduleDate());
+                    dto.setScheduleDate(schedule.getScheduleDate());
                     dto.setStartTime(schedule.getStartTime());
                     dto.setEndTime(schedule.getEndTime());
                     dto.setMaxCapacity(schedule.getMaxCapacity());
@@ -90,7 +90,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                     // 检查会员是否已预约
                     LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
                     bookingWrapper.eq(CourseBooking::getMemberId, memberId)
-                            .eq(CourseBooking::getScheduleId, schedule.getId())
+                            .eq(CourseBooking::getScheduleId, schedule.getScheduleId())
                             .ne(CourseBooking::getBookingStatus, 3);
 
                     boolean alreadyBooked = courseBookingMapper.selectCount(bookingWrapper) > 0;
@@ -116,7 +116,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         }
 
         CourseFullDTO dto = new CourseFullDTO();
-        dto.setId(course.getId());
+        dto.setId(course.getCourseId());
         dto.setCourseType(course.getCourseType());
         dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
         dto.setCourseName(course.getCourseName());
@@ -149,7 +149,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                 .filter(s -> s.getCurrentEnrollment() < s.getMaxCapacity())
                 .map(schedule -> {
                     com.gymflow.vo.CourseScheduleVO vo = new com.gymflow.vo.CourseScheduleVO();
-                    vo.setScheduleId(schedule.getId());
+                    vo.setScheduleId(schedule.getScheduleId());
                     vo.setScheduleDate(schedule.getScheduleDate());
                     vo.setStartTime(schedule.getStartTime());
                     vo.setEndTime(schedule.getEndTime());
@@ -201,8 +201,8 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         }
 
         // 检查课程开始时间是否有效
-        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-        if (courseDateTime.isBefore(LocalDateTime.now())) {
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        if (scheduleDateTime.isBefore(LocalDateTime.now())) {
             throw new MiniBusinessException("不能预约已开始的课程");
         }
 
@@ -252,7 +252,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         booking.setSignCode(signCode);
 
         // 设置签到码过期时间
-        booking.setSignCodeExpireTime(courseDateTime.plusMinutes(15));
+        booking.setSignCodeExpireTime(scheduleDateTime.plusMinutes(15));
 
         // 设置自动完成时间
         LocalDateTime courseEndTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
@@ -309,12 +309,12 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
                     MiniBookingDTO dto = new MiniBookingDTO();
                     dto.setBookingId(booking.getId());
-                    dto.setScheduleId(schedule.getId());
-                    dto.setCourseId(course.getId());
+                    dto.setScheduleId(schedule.getScheduleId());
+                    dto.setCourseId(course.getCourseId());
                     dto.setCourseName(course.getCourseName());
                     dto.setCourseType(course.getCourseType());
                     dto.setCoachName(coach != null ? coach.getRealName() : "");
-                    dto.setCourseDate(schedule.getScheduleDate().toString());
+                    dto.setScheduleDate(schedule.getScheduleDate().toString());
                     dto.setStartTime(schedule.getStartTime().toString());
                     dto.setEndTime(schedule.getEndTime().toString());
                     dto.setBookingTime(booking.getBookingTime());
@@ -324,16 +324,16 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
                     // 判断是否可取消
                     if (booking.getBookingStatus() == 0) {
-                        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-                        dto.setCanCancel(configValidator.canCancelCourse(courseDateTime));
+                        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+                        dto.setCanCancel(configValidator.canCancelCourse(scheduleDateTime));
                     } else {
                         dto.setCanCancel(false);
                     }
 
                     // 判断是否可签到
                     if (booking.getBookingStatus() == 0) {
-                        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-                        dto.setCanCheckin(configValidator.canCheckIn(courseDateTime));
+                        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+                        dto.setCanCheckin(configValidator.canCheckIn(scheduleDateTime));
                     } else {
                         dto.setCanCheckin(false);
                     }
@@ -366,8 +366,8 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
         MiniBookingDetailDTO dto = new MiniBookingDetailDTO();
         dto.setBookingId(booking.getId());
-        dto.setScheduleId(schedule.getId());
-        dto.setCourseId(course.getId());
+        dto.setScheduleId(schedule.getScheduleId());
+        dto.setCourseId(course.getCourseId());
         dto.setCourseName(course.getCourseName());
         dto.setCourseType(course.getCourseType());
         dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
@@ -375,7 +375,7 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         dto.setCoachId(coach.getId());
         dto.setCoachName(coach.getRealName());
         dto.setCoachPhone(coach.getPhone());
-        dto.setCourseDate(schedule.getScheduleDate().toString());
+        dto.setScheduleDate(schedule.getScheduleDate().toString());
         dto.setStartTime(schedule.getStartTime().toString());
         dto.setEndTime(schedule.getEndTime().toString());
         dto.setBookingTime(booking.getBookingTime());
@@ -391,16 +391,16 @@ public class MiniBookingServiceImpl implements MiniBookingService {
 
         // 获取签到码信息
         if (booking.getBookingStatus() == 0) {
-            LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-            if (configValidator.canCheckIn(courseDateTime)) {
+            LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+            if (configValidator.canCheckIn(scheduleDateTime)) {
                 MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
                 codeDTO.setBookingId(booking.getId());
                 codeDTO.setDigitalCode(booking.getSignCode());
                 codeDTO.setStatus(0);
-                codeDTO.setValidStartTime(courseDateTime.minusMinutes(configValidator.getCheckinStartMinutes()));
+                codeDTO.setValidStartTime(scheduleDateTime.minusMinutes(configValidator.getCheckinStartMinutes()));
                 codeDTO.setValidEndTime(booking.getSignCodeExpireTime());
                 codeDTO.setCourseName(course.getCourseName());
-                codeDTO.setCourseStartTime(courseDateTime);
+                codeDTO.setCourseStartTime(scheduleDateTime);
                 codeDTO.setMemberName(member.getRealName());
                 codeDTO.setCoachName(coach.getRealName());
 
@@ -432,8 +432,8 @@ public class MiniBookingServiceImpl implements MiniBookingService {
             throw new MiniBusinessException("排课信息不存在");
         }
 
-        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-        configValidator.validateCourseCancellation(courseDateTime);
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        configValidator.validateCourseCancellation(scheduleDateTime);
 
         // 更新预约状态
         booking.setBookingStatus(3);

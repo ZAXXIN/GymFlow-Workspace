@@ -26,6 +26,11 @@ public interface MiniCoachService {
     List<MiniCourseStudentDTO> getCourseStudents(Long coachId, Long courseId);
 
     /**
+     * 获取课程学员列表（根据排课ID）
+     */
+    List<MiniCourseStudentDTO> getCourseStudentsBySchedule(Long coachId, Long scheduleId);
+
+    /**
      * 获取会员详情（教练视角）
      */
     MemberFullDTO getMemberDetail(Long coachId, Long memberId);

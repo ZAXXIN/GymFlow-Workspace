@@ -157,21 +157,21 @@ public class SystemConfigValidator {
 
     /**
      * 验证课程是否可以预约
-     * @param courseDateTime 课程开始时间
+     * @param scheduleDateTime 课程开始时间
      * @return true-可以预约，false-已过预约截止时间
      */
-    public boolean canBookCourse(LocalDateTime courseDateTime) {
+    public boolean canBookCourse(LocalDateTime scheduleDateTime) {
         int advanceHours = getAdvanceBookingHours();
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime latestBookingTime = courseDateTime.minusHours(advanceHours);
+        LocalDateTime latestBookingTime = scheduleDateTime.minusHours(advanceHours);
         return now.isBefore(latestBookingTime);
     }
 
     /**
      * 验证课程预约时间限制（如果不能预约则抛出异常）
      */
-    public void validateCourseBooking(LocalDateTime courseDateTime) {
-        if (!canBookCourse(courseDateTime)) {
+    public void validateCourseBooking(LocalDateTime scheduleDateTime) {
+        if (!canBookCourse(scheduleDateTime)) {
             int advanceHours = getAdvanceBookingHours();
             throw new BusinessException("已超过预约时间，课程开始前" + advanceHours + "小时内不可预约");
         }
@@ -179,14 +179,14 @@ public class SystemConfigValidator {
 
     /**
      * 验证课程是否可以取消
-     * @param courseDateTime 课程开始时间
+     * @param scheduleDateTime 课程开始时间
      * @return true-可以取消，false-已过取消时限
      */
-    public boolean canCancelCourse(LocalDateTime courseDateTime) {
+    public boolean canCancelCourse(LocalDateTime scheduleDateTime) {
         int cancelHours = getCourseCancelHours();
 
         LocalDateTime now = LocalDateTime.now();
-        long hoursUntilCourse = java.time.Duration.between(now, courseDateTime).toHours();
+        long hoursUntilCourse = java.time.Duration.between(now, scheduleDateTime).toHours();
 
         return hoursUntilCourse >= cancelHours;
     }
@@ -194,8 +194,8 @@ public class SystemConfigValidator {
     /**
      * 验证课程取消时间限制（如果不能取消则抛出异常）
      */
-    public void validateCourseCancellation(LocalDateTime courseDateTime) {
-        if (!canCancelCourse(courseDateTime)) {
+    public void validateCourseCancellation(LocalDateTime scheduleDateTime) {
+        if (!canCancelCourse(scheduleDateTime)) {
             int cancelHours = getCourseCancelHours();
             throw new BusinessException("课程开始前" + cancelHours + "小时内不能取消");
         }
@@ -205,20 +205,20 @@ public class SystemConfigValidator {
 
     /**
      * 验证签到时间是否有效
-     * @param courseDateTime 课程开始时间
+     * @param scheduleDateTime 课程开始时间
      * @return true-可以签到，false-不在签到时间范围内
      */
-    public boolean canCheckIn(LocalDateTime courseDateTime) {
+    public boolean canCheckIn(LocalDateTime scheduleDateTime) {
         LocalDateTime now = LocalDateTime.now();
         int startMinutes = getCheckinStartMinutes();
         int endMinutes = getCheckinEndMinutes();
 
         // 签到开始时间 = 课程开始时间 - startMinutes
-        LocalDateTime checkinStartTime = courseDateTime.minusMinutes(startMinutes);
+        LocalDateTime checkinStartTime = scheduleDateTime.minusMinutes(startMinutes);
 
         // 签到截止时间 = 课程开始时间 + endMinutes
         LocalDateTime checkinEndTime = endMinutes == 0 ?
-                courseDateTime : courseDateTime.plusMinutes(endMinutes);
+                scheduleDateTime : scheduleDateTime.plusMinutes(endMinutes);
 
         // 如果endMinutes为0，表示课程开始后不可签到
         return !now.isBefore(checkinStartTime) && !now.isAfter(checkinEndTime);
@@ -227,8 +227,8 @@ public class SystemConfigValidator {
     /**
      * 验证签到时间是否有效（带异常抛出）
      */
-    public void validateCheckInTime(LocalDateTime courseDateTime) {
-        if (!canCheckIn(courseDateTime)) {
+    public void validateCheckInTime(LocalDateTime scheduleDateTime) {
+        if (!canCheckIn(scheduleDateTime)) {
             int startMinutes = getCheckinStartMinutes();
             int endMinutes = getCheckinEndMinutes();
 

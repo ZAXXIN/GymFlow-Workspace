@@ -139,34 +139,35 @@ public class MemberServiceImpl implements MemberService {
         List<MemberCardDTO> cardList = new ArrayList<>();
         log.info("开始获取会员 {} 的会员卡列表", memberId);
 
-        // 查询会员已支付的订单
+        // 查询会员已支付的订单（COMPLETED状态）
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
                 .eq(Order::getPaymentStatus, 1)
                 .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
-        log.info("查询到 {} 个订单", orders.size());
+        log.info("查询到 {} 个已支付订单", orders.size());
 
         if (CollectionUtils.isEmpty(orders)) {
             return cardList;
         }
 
         List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
-        log.info("订单ID列表: {}", orderIds);
 
         // 查询订单项（会籍卡、私教课、团课）
         LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
         itemQuery.in(OrderItem::getOrderId, orderIds)
-                .in(OrderItem::getProductType, 0, 1, 2)
+                .in(OrderItem::getProductType, 0, 1, 2)  // 会籍卡、私教课、团课
                 .orderByDesc(OrderItem::getCreateTime);
 
         List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);
+        log.info("查询到 {} 个订单项", orderItems.size());
 
         for (OrderItem item : orderItems) {
-            log.info("订单项 ID: {}, 产品类型: {}, 有效期开始: {}, 有效期结束: {}, 金额: {}",
+            log.info("订单项 ID: {}, 产品类型: {}, 有效期开始: {}, 有效期结束: {}, 总课时: {}, 剩余课时: {}, 状态: {}",
                     item.getId(), item.getProductType(), item.getValidityStartDate(),
-                    item.getValidityEndDate(), item.getTotalPrice());
+                    item.getValidityEndDate(), item.getTotalSessions(),
+                    item.getRemainingSessions(), item.getStatus());
 
             MemberCardDTO card = new MemberCardDTO();
             card.setProductId(item.getProductId());
@@ -195,6 +196,8 @@ public class MemberServiceImpl implements MemberService {
             }
 
             cardList.add(card);
+            log.info("添加会员卡: 产品名称={}, 状态={}, 剩余课时={}",
+                    card.getProductName(), card.getStatus(), card.getRemainingSessions());
         }
 
         return cardList;
@@ -241,9 +244,9 @@ public class MemberServiceImpl implements MemberService {
         member.setTotalCheckins(0);
         member.setTotalCourseHours(0);
 
-        LocalDateTime now = LocalDateTime.now();
-        member.setCreateTime(now);
-        member.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        member.setCreateTime(now);
+//        member.setUpdateTime(now);
 
         int result = memberMapper.insert(member);
         if (result <= 0) {
@@ -281,9 +284,9 @@ public class MemberServiceImpl implements MemberService {
         order.setOrderStatus("COMPLETED");
         order.setRemark("新会员开卡");
 
-        LocalDateTime now = LocalDateTime.now();
-        order.setCreateTime(now);
-        order.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        order.setCreateTime(now);
+//        order.setUpdateTime(now);
 
         orderMapper.insert(order);
         log.info("订单创建成功，订单ID：{}，订单号：{}", order.getId(), order.getOrderNo());
@@ -332,9 +335,9 @@ public class MemberServiceImpl implements MemberService {
 
         orderItem.setStatus("ACTIVE");
 
-        LocalDateTime now = LocalDateTime.now();
-        orderItem.setCreateTime(now);
-        orderItem.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        orderItem.setCreateTime(now);
+//        orderItem.setUpdateTime(now);
 
         orderItemMapper.insert(orderItem);
         log.info("订单项创建成功，订单项ID：{}，有效期至：{}", orderItem.getId(), endDate);
@@ -415,8 +418,8 @@ public class MemberServiceImpl implements MemberService {
                 HealthRecord newRecord = new HealthRecord();
                 BeanUtils.copyProperties(healthRecordDTO, newRecord);
                 newRecord.setMemberId(memberId);
-                newRecord.setCreateTime(LocalDateTime.now());
-                newRecord.setUpdateTime(LocalDateTime.now());
+//                newRecord.setCreateTime(LocalDateTime.now());
+//                newRecord.setUpdateTime(LocalDateTime.now());
 
                 // 计算BMI
                 if (newRecord.getHeight() != null && newRecord.getWeight() != null) {
@@ -632,8 +635,8 @@ public class MemberServiceImpl implements MemberService {
         order.setPaymentTime(LocalDateTime.now());
         order.setOrderStatus("COMPLETED");
         order.setRemark("添加新卡");
-        order.setCreateTime(LocalDateTime.now());
-        order.setUpdateTime(LocalDateTime.now());
+//        order.setCreateTime(LocalDateTime.now());
+//        order.setUpdateTime(LocalDateTime.now());
 
         orderMapper.insert(order);
         log.info("订单创建成功，订单ID：{}", order.getId());
@@ -715,9 +718,9 @@ public class MemberServiceImpl implements MemberService {
             healthRecord.setBmi(bmi);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        healthRecord.setCreateTime(now);
-        healthRecord.setUpdateTime(now);
+//        LocalDateTime now = LocalDateTime.now();
+//        healthRecord.setCreateTime(now);
+//        healthRecord.setUpdateTime(now);
 
         int result = healthRecordMapper.insert(healthRecord);
         if (result <= 0) {
@@ -880,7 +883,7 @@ public class MemberServiceImpl implements MemberService {
                 }
 
                 // 从排课获取时间信息
-                recordDTO.setCourseDate(schedule.getScheduleDate().atStartOfDay());
+                recordDTO.setScheduleDate(schedule.getScheduleDate().atStartOfDay());
                 recordDTO.setStartTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()));
                 recordDTO.setEndTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime()));
                 recordDTO.setBookingStatus(booking.getBookingStatus());

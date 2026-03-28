@@ -46,13 +46,13 @@ public interface SystemConfigService {
 
     /**
      * 验证签到时间是否有效
-     * @param courseDateTime 课程开始时间
+     * @param scheduleDateTime 课程开始时间
      * @return true-可以签到，false-不在签到时间范围内
      */
-    boolean canCheckIn(LocalDateTime courseDateTime);
+    boolean canCheckIn(LocalDateTime scheduleDateTime);
 
     /**
      * 验证签到时间是否有效（带异常抛出）
      */
-    void validateCheckInTime(LocalDateTime courseDateTime);
+    void validateCheckInTime(LocalDateTime scheduleDateTime);
 }

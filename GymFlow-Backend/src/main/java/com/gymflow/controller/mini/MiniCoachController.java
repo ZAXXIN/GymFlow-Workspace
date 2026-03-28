@@ -59,13 +59,13 @@ public class MiniCoachController {
         return Result.success("获取成功", schedule);
     }
 
-    @GetMapping("/course-students/{courseId}")
+    @GetMapping("/course-students/{scheduleId}")
     @Operation(summary = "获取课程学员列表")
     public Result<List<MiniCourseStudentDTO>> getCourseStudents(
             HttpServletRequest request,
-            @PathVariable @NotNull Long courseId) {
+            @PathVariable @NotNull Long scheduleId) {
         Long coachId = getCurrentCoachId(request);
-        List<MiniCourseStudentDTO> students = miniCoachService.getCourseStudents(coachId, courseId);
+        List<MiniCourseStudentDTO> students = miniCoachService.getCourseStudents(coachId, scheduleId);
         return Result.success("获取成功", students);
     }
 

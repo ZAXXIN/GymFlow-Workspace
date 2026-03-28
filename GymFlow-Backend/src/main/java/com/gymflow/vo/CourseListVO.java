@@ -1,5 +1,6 @@
 package com.gymflow.vo;
 
+import com.gymflow.dto.coach.CoachBasicDTO;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.List;
@@ -13,8 +14,6 @@ public class CourseListVO {
     private String courseName;
     private String notice;
     private String description;
-    private List<String> coachNames;  // 绑定教练姓名列表
-//    private Integer maxCapacity;
     private Integer duration;
     private Integer sessionCost;  // 预约消耗课时数
     private Integer status;
@@ -23,6 +22,8 @@ public class CourseListVO {
     // 统计信息
     private Integer totalSchedules;  // 总排课数
     private Integer totalBookings;   // 总预约数
+    //获取教练列表
+    private List<CoachBasicDTO> coaches;
 
     /**
      * 获取课程类型描述

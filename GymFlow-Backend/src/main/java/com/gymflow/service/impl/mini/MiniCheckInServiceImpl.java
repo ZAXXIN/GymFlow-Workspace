@@ -208,8 +208,8 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             throw new BusinessException("排课不存在");
         }
 
-        LocalDateTime courseDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
-        configValidator.validateCheckInTime(courseDateTime);
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        configValidator.validateCheckInTime(scheduleDateTime);
 
         // 创建签到记录
         CheckinRecord checkinRecord = new CheckinRecord();
@@ -340,7 +340,7 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             for (CourseSchedule schedule : schedules) {
                 // 查询该排课的预约学员
                 LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
-                bookingQuery.eq(CourseBooking::getScheduleId, schedule.getId())
+                bookingQuery.eq(CourseBooking::getScheduleId, schedule.getScheduleId())
                         .eq(CourseBooking::getBookingStatus, 0);
 
                 List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);

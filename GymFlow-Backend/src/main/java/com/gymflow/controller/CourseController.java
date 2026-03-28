@@ -117,9 +117,9 @@ public class CourseController {
     @PreAuthorize("course:booking:add")
     public Result<Void> bookPrivateCourse(@RequestParam Long memberId,
                                           @RequestParam Long coachId,
-                                          @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate courseDate,
+                                          @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate scheduleDate,
                                           @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime startTime) {
-        courseService.bookPrivateCourse(memberId, coachId, courseDate, startTime);
+        courseService.bookPrivateCourse(memberId, coachId, scheduleDate, startTime);
         return Result.success("预约成功");
     }
 

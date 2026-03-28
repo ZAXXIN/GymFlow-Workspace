@@ -1,7 +1,10 @@
 package com.gymflow.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,10 +15,13 @@ import java.util.List;
 public class CourseSchedule {
 
     @TableId(type = IdType.AUTO)
-    private Long id;
+    private Long scheduleId;
 
     @TableField("course_id")
     private Long courseId;
+
+    @TableField("course_name")
+    private String courseName;
 
     @TableField("coach_id")
     private Long coachId;

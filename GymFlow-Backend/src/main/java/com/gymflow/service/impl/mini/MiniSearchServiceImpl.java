@@ -87,7 +87,7 @@ public class MiniSearchServiceImpl implements MiniSearchService {
             return new ArrayList<>();
         }
 
-        List<Long> courseIds = courses.stream().map(Course::getId).collect(Collectors.toList());
+        List<Long> courseIds = courses.stream().map(Course::getCourseId).collect(Collectors.toList());
 
         // 查询这些课程今天及以后的排课
         LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
@@ -106,7 +106,7 @@ public class MiniSearchServiceImpl implements MiniSearchService {
         for (CourseSchedule schedule : schedulePage.getRecords()) {
             if (schedule.getCurrentEnrollment() < schedule.getMaxCapacity()) {
                 Course course = courses.stream()
-                        .filter(c -> c.getId().equals(schedule.getCourseId()))
+                        .filter(c -> c.getCourseId().equals(schedule.getCourseId()))
                         .findFirst()
                         .orElse(null);
 
@@ -160,8 +160,8 @@ public class MiniSearchServiceImpl implements MiniSearchService {
         MiniAvailableCourseDTO dto = new MiniAvailableCourseDTO();
 
         // 排课信息
-        dto.setScheduleId(schedule.getId());
-        dto.setCourseDate(schedule.getScheduleDate());
+        dto.setScheduleId(schedule.getScheduleId());
+        dto.setScheduleDate(schedule.getScheduleDate());
         dto.setStartTime(schedule.getStartTime());
         dto.setEndTime(schedule.getEndTime());
         dto.setMaxCapacity(schedule.getMaxCapacity());
@@ -169,7 +169,7 @@ public class MiniSearchServiceImpl implements MiniSearchService {
         dto.setRemainingSlots(schedule.getMaxCapacity() - schedule.getCurrentEnrollment());
 
         // 课程信息
-        dto.setCourseId(course.getId());
+        dto.setCourseId(course.getCourseId());
         dto.setCourseName(course.getCourseName());
         dto.setCourseType(course.getCourseType());
         dto.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
