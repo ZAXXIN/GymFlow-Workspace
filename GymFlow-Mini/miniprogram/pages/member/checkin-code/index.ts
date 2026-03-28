@@ -15,7 +15,7 @@ Page({
     courseInfo: {
       courseName: '',
       courseTypeDesc: '',
-      courseDate: '',
+      scheduleDate: '',
       startTime: '',
       endTime: '',
     },
@@ -85,7 +85,7 @@ Page({
       this.setData({
         'courseInfo.courseName': detail.courseName || '',
         'courseInfo.courseTypeDesc': detail.bookingStatusDesc || '',
-        'courseInfo.courseDate': detail.courseDate || '',
+        'courseInfo.scheduleDate': detail.scheduleDate || '',
         'courseInfo.startTime': detail.startTime || '',
         'courseInfo.endTime': detail.endTime || '',
       })
@@ -128,9 +128,9 @@ Page({
    */
   checkCancelable() {
     const { courseInfo } = this.data
-    const { courseDate, startTime } = courseInfo
+    const { scheduleDate, startTime } = courseInfo
     
-    if (!courseDate || !startTime) {
+    if (!scheduleDate || !startTime) {
       this.setData({ showCancel: false })
       return
     }
@@ -139,7 +139,7 @@ Page({
     const cancelHours = configStore.courseCancelHours || 2
     
     const now = new Date()
-    const courseStart = new Date(`${courseDate} ${startTime}`)
+    const courseStart = new Date(`${scheduleDate} ${startTime}`)
     const hoursUntilCourse = (courseStart.getTime() - now.getTime()) / (1000 * 60 * 60)
     
     // 课程开始前 cancelHours 小时内不可取消

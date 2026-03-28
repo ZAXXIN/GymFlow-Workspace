@@ -19,7 +19,7 @@ Page({
       courseName: '',
       courseType: 0,
       coachName: '',
-      courseDate: '',
+      scheduleDate: '',
       startTime: '',
       endTime: '',
       bookingTime: '',
@@ -147,7 +147,7 @@ Page({
     }
     
     var canCheckin = configStore.canCheckin(
-      booking.courseDate,
+      booking.scheduleDate,
       booking.startTime
     )
     

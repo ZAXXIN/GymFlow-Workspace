@@ -7,8 +7,8 @@
 
       <!-- 可预约Tab的筛选栏（固定在顶部） -->
       <view class="booking-search" wx:if="{{activeTab === 0}}">
-        <!-- 课程类型筛选器（私教课/团课 select 框） -->
-        <view class="booking-course-type-select" wx:if="{{showCourseTypeSelect}}">
+        <!-- 课程类型切换器（私教课/团课）- 左侧 -->
+        <view class="booking-course-type-select">
           <picker mode="selector" range="{{courseTypeOptions}}" range-key="label" value="{{selectedCourseTypeIndex}}"
             bindchange="onCourseTypeChange">
             <view class="booking-course-type-picker">
@@ -18,15 +18,30 @@
           </picker>
         </view>
 
-        <!-- 时间选择器 -->
-        <view class="booking-date-picker">
-          <picker mode="date" value="{{selectedDate}}" start="{{minDate}}" end="{{maxDate}}" bindchange="onDateChange">
-            <view class="booking-date-picker-inner">
-              <image class="booking-date-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
-              <text class="booking-date-text">{{selectedDateDisplay}}</text>
-              <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
-            </view>
-          </picker>
+        <!-- 右侧：根据课程类型显示不同筛选器 -->
+        <view class="booking-filter-right">
+          <!-- 团课：显示日期选择器 -->
+          <view class="booking-date-picker" wx:if="{{selectedCourseTypeIndex == 1}}">
+            <picker mode="date" value="{{selectedDate}}" start="{{minDate}}" end="{{maxDate}}"
+              bindchange="onDateChange">
+              <view class="booking-date-picker-inner">
+                <image class="booking-date-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
+                <text class="booking-date-text">{{selectedDateDisplay}}</text>
+                <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+              </view>
+            </picker>
+          </view>
+
+          <!-- 私教课：显示教练选择器 -->
+          <view class="booking-coach-select" wx:if="{{selectedCourseTypeIndex == 0}}">
+            <picker mode="selector" range="{{privateCoachList}}" range-key="name" bindchange="onPrivateCoachChange">
+              <view class="booking-coach-picker">
+                <image class="booking-coach-icon" src="/assets/icons/coach/my.png" mode="aspectFit"></image>
+                <text>{{selectedCoachName || '选择教练'}}</text>
+                <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+              </view>
+            </picker>
+          </view>
         </view>
       </view>
 
@@ -60,13 +75,17 @@
                   <image class="booking-course-info-icon" src="/assets/icons/coach/my.png" mode="aspectFit"></image>
                   <text>{{course.coachName}}教练</text>
                 </view>
-                <view class="booking-course-info-item">
+                <view class="booking-course-info-item" wx:if="{{course.courseType == 0}}">
                   <image class="booking-course-info-icon" src="/assets/icons/validity.png" mode="aspectFit"></image>
+                  <text>课时长 {{course.duration}}分钟</text>
+                </view>
+                <view class="booking-course-info-item" wx:if="{{course.courseType == 1}}">
+                  <image class="booking-course-info-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
                   <text>{{course.scheduleDate}} {{course.startTime}}-{{course.endTime}}</text>
                 </view>
                 <view class="booking-course-info-item">
                   <image class="booking-course-info-icon" src="/assets/icons/expend.png" mode="aspectFit"></image>
-                  <text>消耗课时 {{course.sessionCost}}</text>
+                  <text>消耗课时 {{course.sessionCost}}课时</text>
                 </view>
               </view>
 
@@ -124,7 +143,7 @@
       <view class="booking-modal-mask" bindtap="onCloseBookingModal"></view>
       <view class="booking-modal-content">
         <view class="booking-modal-header">
-          <text class="booking-modal-title">确认预约</text>
+          <text class="booking-modal-title">预约团课</text>
         </view>
 
         <view class="booking-modal-body" wx:if="{{selectedCourse}}">
@@ -151,6 +170,57 @@
           <button class="booking-modal-btn booking-modal-btn-confirm" bindtap="onConfirmBooking"
             disabled="{{bookingLoading}}">
             {{bookingLoading ? '预约中...' : '确认预约'}}
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 私教课预约弹窗 -->
+    <view class="booking-modal" wx:if="{{showPrivateBookingModal}}">
+      <view class="booking-modal-mask" bindtap="onClosePrivateBookingModal"></view>
+      <view class="booking-modal-content">
+        <view class="booking-modal-header">
+          <text class="booking-modal-title">预约私教课</text>
+        </view>
+
+        <view class="booking-modal-body" wx:if="{{selectedCourse}}">
+          <view class="booking-modal-info">
+            <view class="booking-modal-info-item">
+              <text class="booking-modal-info-label">课程名称</text>
+              <text class="booking-modal-info-value">{{selectedCourse.courseName}}</text>
+            </view>
+
+            <!-- 日期选择 -->
+            <view class="booking-modal-info-item">
+              <text class="booking-modal-info-label">上课日期</text>
+              <picker mode="date" value="{{privateScheduleDate}}" start="{{privateMinDate}}" end="{{privateMaxDate}}"
+                bindchange="onPrivateDateChange">
+                <view class="booking-modal-picker">
+                  <text>{{privateScheduleDate || '请选择日期'}}</text>
+                  <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+                </view>
+              </picker>
+            </view>
+
+            <!-- 时间选择 -->
+            <view class="booking-modal-info-item">
+              <text class="booking-modal-info-label">上课时间</text>
+              <picker mode="time" value="{{privateStartTime}}" start="{{privateMinStartTime}}"
+                end="{{privateMaxStartTime}}" bindchange="onPrivateTimeChange">
+                <view class="booking-modal-picker">
+                  <text>{{privateStartTime || '请选择时间'}}</text>
+                  <image class="booking-picker-arrow" src="/assets/icons/arrow-down.png" mode="aspectFit"></image>
+                </view>
+              </picker>
+            </view>
+          </view>
+        </view>
+
+        <view class="booking-modal-footer">
+          <button class="booking-modal-btn booking-modal-btn-cancel" bindtap="onClosePrivateBookingModal">取消</button>
+          <button class="booking-modal-btn booking-modal-btn-confirm" bindtap="onConfirmPrivateBooking"
+            disabled="{{privateBookingLoading}}">
+            {{privateBookingLoading ? '预约中...' : '确认预约'}}
           </button>
         </view>
       </view>

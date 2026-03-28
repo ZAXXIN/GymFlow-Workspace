@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="coach-member-detail">
   <!-- 会员基本信息 -->
   <view class="coach-member-header">
@@ -51,8 +52,8 @@
       <block wx:for="{{displayCourses}}" wx:key="bookingId" wx:for-item="record">
         <view class="coach-member-course-item">
           <view class="coach-member-course-time">
-            <text class="coach-member-course-date">{{record.courseDate}}</text>
-            <text class="coach-member-course-time-range">{{formatTime(record.startTime)}}-{{formatTime(record.endTime)}}</text>
+            <text class="coach-member-course-date">{{record.scheduleDate}}</text>
+            <text class="coach-member-course-time-range">{{dateUtil.formatTime(record.startTime)}}-{{dateUtil.formatTime(record.endTime)}}</text>
           </view>
           <view class="coach-member-course-info">
             <view class="coach-member-course-header">

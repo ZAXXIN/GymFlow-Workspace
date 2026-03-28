@@ -1,48 +1,44 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="product-detail">
   <!-- 轮播图 -->
   <view class="product-detail-swiper">
-    <swiper
-      indicator-dots="{{true}}"
-      indicator-color="rgba(255,255,255,0.5)"
-      indicator-active-color="#07c160"
-      autoplay="{{true}}"
-      interval="{{5000}}"
-      circular="{{true}}"
-    >
+    <swiper indicator-dots="{{true}}" indicator-color="rgba(255,255,255,0.5)" indicator-active-color="#07c160"
+      autoplay="{{true}}" interval="{{5000}}" circular="{{true}}">
       <block wx:for="{{product.images}}" wx:key="index" wx:for-item="image">
         <swiper-item>
-          <image class="product-detail-swiper-image" src="{{image || '/assets/icons/product-default.jpg'}}" mode="aspectFill"></image>
+          <image class="product-detail-swiper-image" src="{{image || '/assets/icons/product-default.jpg'}}"
+            mode="aspectFill"></image>
         </swiper-item>
       </block>
-      
+
       <swiper-item wx:if="{{!product.images || product.images.length === 0}}">
         <image class="product-detail-swiper-image" src="/assets/icons/product-default.jpg" mode="aspectFill"></image>
       </swiper-item>
     </swiper>
-    
+
     <!-- 商品标签 -->
     <view class="product-detail-tag {{getProductTagClass(product.productType)}}">
       {{product.productTypeDesc}}
     </view>
   </view>
-  
+
   <!-- 商品信息 -->
   <view class="product-detail-info">
     <view class="product-detail-header">
       <text class="product-detail-name">{{product.productName}}</text>
       <view class="product-detail-sales">已售{{product.salesVolume || 0}}</view>
     </view>
-    
+
     <view class="product-detail-price">
       <text class="product-detail-price-current">¥{{product.currentPrice}}</text>
       <text class="product-detail-price-original" wx:if="{{product.originalPrice > product.currentPrice}}">
         ¥{{product.originalPrice}}
       </text>
-      <text class="product-detail-price-discount" wx:if="{{product.originalPrice > product.currentPrice}}">
-        {{calculateDiscount(product.originalPrice, product.currentPrice)}}折
-      </text>
+      <!-- <text class="product-detail-price-discount" wx:if="{{product.originalPrice > product.currentPrice}}">
+        {{dateUtil.calculateDiscount(product.originalPrice, product.currentPrice)}}折
+      </text> -->
     </view>
-    
+
     <view class="product-detail-meta">
       <view class="product-detail-meta-item">
         <image class="product-detail-meta-icon" src="/assets/icons/stock.png" mode="aspectFit"></image>
@@ -54,78 +50,78 @@
       </view>
     </view>
   </view>
-  
+
   <!-- 商品详情描述 -->
-  <view class="product-detail-section" wx:if="{{product.description}}">
-    <view class="product-detail-section-title">商品描述</view>
-    <view class="product-detail-desc">
-      <text>{{product.description}}</text>
+  <view class="product-detail-section">
+    <view wx:if="{{product.description}}">
+      <view class="product-detail-section-title">商品描述</view>
+      <view class="product-detail-desc">
+        <text>{{product.description}}</text>
+      </view>
+    </view>
+
+    <view class="product-detail-section-inner" wx:if="{{product.specifications}}">
+      <view class="product-detail-section-title">规格信息</view>
+      <view class="product-detail-desc">
+        <text>{{product.specifications}}</text>
+      </view>
     </view>
   </view>
-  
+
   <!-- 课程/会籍详情 -->
-  <view class="product-detail-section" wx:if="{{product.detail}}">
+  <view class="product-detail-section">
     <view class="product-detail-section-title">详细信息</view>
-    
+
     <!-- 私教课/团课信息 -->
-    <view class="product-detail-course" wx:if="{{product.productType === 1 || product.productType === 2}}">
-      <view class="product-detail-course-item" wx:if="{{product.detail.courseDuration}}">
-        <text class="product-detail-course-label">课时长</text>
-        <text class="product-detail-course-value">{{product.detail.courseDuration}}分钟</text>
-      </view>
-      <view class="product-detail-course-item" wx:if="{{product.detail.totalSessions}}">
-        <text class="product-detail-course-label">总节数</text>
-        <text class="product-detail-course-value">{{product.detail.totalSessions}}节</text>
-      </view>
-      <view class="product-detail-course-item" wx:if="{{product.detail.courseLevel}}">
-        <text class="product-detail-course-label">课程级别</text>
-        <text class="product-detail-course-value">{{product.detail.courseLevel}}</text>
-      </view>
-      <view class="product-detail-course-item" wx:if="{{product.detail.coachIds && product.detail.coachIds.length > 0}}">
-        <text class="product-detail-course-label">适用教练</text>
-        <text class="product-detail-course-value">{{getCoachNames(product.detail.coachIds)}}</text>
+    <view class="product-detail-course" wx:if="{{product.productType == 1 || product.productType == 2}}">
+      <view class="product-detail-course-item">
+        <text class="product-detail-course-label">总课时数</text>
+        <text class="product-detail-course-value">{{product.totalSessions}}节</text>
       </view>
     </view>
-    
-    <!-- 会籍权益 -->
-    <view class="product-detail-benefits" wx:if="{{product.detail.membershipBenefits && product.detail.membershipBenefits.length > 0}}">
-      <view class="product-detail-benefits-title">会籍权益</view>
-      <view class="product-detail-benefits-list">
-        <view class="product-detail-benefits-item" wx:for="{{product.detail.membershipBenefits}}" wx:key="index" wx:for-item="benefit">
-          <image class="product-detail-benefits-icon" src="/assets/icons/check-circle.png" mode="aspectFit"></image>
-          <text>{{benefit}}</text>
+
+    <!-- 有效期 会籍权益 -->
+    <view class="product-detail-course" wx:if="{{product.productType == 0}}">
+      <view class="product-detail-course-item">
+        <text class="product-detail-course-label">有效期</text>
+        <text class="product-detail-course-value">{{product.validityDays}}天</text>
+      </view>
+
+      <view class="product-benfit-item" wx:if="{{product.membershipBenefits}}">
+        <view class="product-benfit-label">会籍权益</view>
+        <view class="product-benfit-value-box">
+          <view class="product-benfit-value" wx:for="{{product.membershipBenefits}}" wx:key="index"
+            wx:for-item="benefit">{{benefit}}</view>
         </view>
       </view>
     </view>
   </view>
-  
-  <!-- 使用规则 -->
-  <view class="product-detail-section" wx:if="{{product.detail && product.detail.usageRules}}">
-    <view class="product-detail-section-title">使用规则</view>
-    <view class="product-detail-rules">
-      <text>{{product.detail.usageRules}}</text>
+
+  <!-- 使用规则 退款政策 -->
+  <view class="product-detail-section">
+    <view wx:if="{{product.usageRules}}">
+      <view class="product-detail-section-title">使用规则</view>
+      <view class="product-detail-desc">
+        <text>{{product.usageRules}}</text>
+      </view>
+    </view>
+
+    <view class="product-detail-section-inner" wx:if="{{product.refundPolicy}}">
+      <view class="product-detail-section-title">退款政策</view>
+      <view class="product-detail-desc">
+        <text>{{product.refundPolicy}}</text>
+      </view>
     </view>
   </view>
-  
-  <!-- 退款政策 -->
-  <view class="product-detail-section" wx:if="{{product.detail && product.detail.refundPolicy}}">
-    <view class="product-detail-section-title">退款政策</view>
-    <view class="product-detail-refund">
-      <text>{{product.detail.refundPolicy}}</text>
-    </view>
-  </view>
-  
+
   <!-- 底部操作栏 -->
   <view class="product-detail-footer">
     <view class="product-detail-footer-info">
       <text class="product-detail-footer-price">¥{{product.currentPrice}}</text>
-      <text class="product-detail-footer-original" wx:if="{{product.originalPrice > product.currentPrice}}">
-        ¥{{product.originalPrice}}
-      </text>
     </view>
     <button class="product-detail-footer-btn" bindtap="onBuyNow">立即购买</button>
   </view>
-  
+
   <!-- 加载中 -->
   <view class="product-detail-loading" wx:if="{{loading}}">
     <loading type="circular" text="加载中..."></loading>

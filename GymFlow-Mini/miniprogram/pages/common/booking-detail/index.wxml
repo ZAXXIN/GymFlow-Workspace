@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="booking-detail">
   <!-- 头部状态 -->
   <view class="booking-detail-header">
@@ -35,14 +36,14 @@
       <view class="booking-detail-info-item">
         <image class="booking-detail-info-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
         <text class="booking-detail-info-label">日期</text>
-        <text class="booking-detail-info-value">{{booking.courseDate || '--'}}</text>
+        <text class="booking-detail-info-value">{{booking.scheduleDate || '--'}}</text>
       </view>
       
       <view class="booking-detail-info-item">
         <image class="booking-detail-info-icon" src="/assets/icons/time.png" mode="aspectFit"></image>
         <text class="booking-detail-info-label">时间</text>
         <text class="booking-detail-info-value">
-          {{formatTime(booking.startTime)}}-{{formatTime(booking.endTime)}}
+          {{dateUtil.formatTime(booking.startTime)}}-{{dateUtil.formatTime(booking.endTime)}}
         </text>
       </view>
     </view>

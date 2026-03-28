@@ -2,7 +2,6 @@
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { getCourseStudents } from '../../../services/api/coach.api'
 import { scanCheckin } from '../../../services/api/checkin.api'
-import { formatTime, formatDateTime } from '../../../utils/date'
 import { showToast, showModal, showLoading, hideLoading } from '../../../utils/wx-util'
 import { configStore } from '../../../stores/config.store'
 
@@ -12,8 +11,16 @@ Page({
     // 课程ID
     courseId: 0,
     
-    // 课程信息
-    courseInfo: null as any,
+    // 课程信息（从上一页传入）
+    courseInfo: {
+      courseName: '',
+      courseType: 0,
+      scheduleDate: '',
+      startTime: '',
+      endTime: '',
+      location: '',
+      currentEnrollment: 0
+    },
     
     // 学员列表
     students: [] as any[],
@@ -37,7 +44,7 @@ Page({
       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
     })
 
-    const { courseId, courseName } = options
+    const { courseId, courseName, courseType, scheduleDate, startTime, endTime, location } = options
     
     if (!courseId) {
       showToast('参数错误', 'none')
@@ -47,17 +54,23 @@ Page({
       return
     }
     
+    // 从上一页传入的课程信息
     this.setData({ 
       courseId: parseInt(courseId),
-      'courseInfo.courseName': courseName || ''
+      courseInfo: {
+        courseName: decodeURIComponent(courseName || ''),
+        courseType: parseInt(courseType || '0'),
+        scheduleDate: scheduleDate || '',
+        startTime: startTime || '',
+        endTime: endTime || '',
+        location: location ? decodeURIComponent(location) : '',
+        currentEnrollment: 0
+      }
     })
+
+    console.log(this.data.courseInfo,'courseInfo')
     
     this.initData()
-  },
-
-  onTabChange(e: any) {
-    const { index } = e.detail
-    this.setData({ selectedTab: index })
   },
 
   /**
@@ -80,27 +93,17 @@ Page({
    * 加载学员列表
    */
   async loadStudents() {
-    const { courseId } = this.data
-    
+    const { courseId, courseInfo } = this.data
+    console.log(courseInfo,'courseInfo')
     try {
       const result = await getCourseStudents(courseId)
-      
-      // 提取课程信息
-      if (result.length > 0) {
-        this.setData({
-          courseInfo: {
-            courseName: result[0].courseName,
-            courseType: result[0].courseType,
-            courseDate: result[0].courseDate,
-            startTime: result[0].startTime,
-            endTime: result[0].endTime,
-            currentEnrollment: result.length
-          }
-        })
-      }
-      
-      this.setData({ students: result })
-      
+      console.log(result)
+      // 更新当前报名人数
+      this.setData({
+        'courseInfo.currentEnrollment': result.length,
+        students: result
+      })
+      console.log(this.data.students)
     } catch (error) {
       console.error('加载学员列表失败:', error)
       throw error
@@ -113,13 +116,13 @@ Page({
   checkCheckinStatus() {
     const { courseInfo } = this.data
     
-    if (!courseInfo || !courseInfo.courseDate || !courseInfo.startTime) {
+    if (!courseInfo.scheduleDate || !courseInfo.startTime) {
       this.setData({ canCheckin: false })
       return
     }
     
     const canCheckin = configStore.canCheckin(
-      courseInfo.courseDate,
+      courseInfo.scheduleDate,
       courseInfo.startTime
     )
     
@@ -130,6 +133,7 @@ Page({
    * Tab切换
    */
   onTabChange(e: any) {
+    console.log('tab')
     const { index } = e.currentTarget.dataset
     this.setData({ activeTab: parseInt(index) })
   },
@@ -164,7 +168,6 @@ Page({
       })
       
       // 解析二维码内容
-      // 格式: gymflow://checkin?bookingId=123&code=123456
       if (!result || !result.startsWith('gymflow://checkin')) {
         showToast('无效的签到码', 'none')
         return
@@ -178,9 +181,6 @@ Page({
         showToast('无效的签到码格式', 'none')
         return
       }
-      
-      const bookingId = parseInt(bookingIdMatch[1])
-      const code = codeMatch[1]
       
       showLoading('核销中...')
       
@@ -197,7 +197,6 @@ Page({
     } catch (error: any) {
       hideLoading()
       if (error.errMsg && error.errMsg.indexOf('cancel') > -1) {
-        // 用户取消扫码，不提示错误
         return
       }
       showToast(error.message || '核销失败', 'none')
@@ -205,33 +204,11 @@ Page({
   },
 
   /**
-   * 手动核销（预留）
-   */
-  async onManualCheckin(e: any) {
-    const { student } = e.currentTarget.dataset
-    
-    if (student.bookingStatus === 1) {
-      showToast('已签到', 'none')
-      return
-    }
-    
-    const confirm = await showModal({
-      title: '提示',
-      content: `确认将 ${student.memberName} 标记为已签到？`
-    })
-    
-    if (!confirm) return
-    
-    // 这里可以调用手动核销接口
-    showToast('功能开发中', 'none')
-  },
-
-  /**
    * 获取筛选后的学员列表
    */
   get filteredStudents(): any[] {
     const { students, activeTab } = this.data
-    
+    console.log(students,'filteredStudents')
     if (activeTab === 0) {
       return students
     } else if (activeTab === 1) {
@@ -249,6 +226,7 @@ Page({
           result.push(students[i])
         }
       }
+      console.log(result)
       return result
     }
   },
@@ -272,12 +250,14 @@ Page({
    */
   get checkedCount(): number {
     const { students } = this.data
+    console.log(students,'student')
     let count = 0
     for (let i = 0; i < students.length; i++) {
       if (students[i].bookingStatus === 1) {
         count++
       }
     }
+    console.log(count,'count')
     return count
   },
 
@@ -287,18 +267,4 @@ Page({
   get totalCount(): number {
     return this.data.students.length
   },
-
-  /**
-   * 格式化时间
-   */
-  formatTime(time: string): string {
-    return formatTime(time)
-  },
-
-  /**
-   * 格式化日期时间
-   */
-  formatDateTime(time: string): string {
-    return formatDateTime(time)
-  }
 })

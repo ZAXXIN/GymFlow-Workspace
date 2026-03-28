@@ -268,24 +268,24 @@ Page({
     })
   },
 
-  /**
-   * 续费会员卡（续费当前显示的卡片）
-   */
-  onRenewCard: function () {
-    var activeCards = this.data.activeCards
-    var currentIndex = this.data.currentCardIndex
-    var activeCard = activeCards.length > 0 ? activeCards[currentIndex] : null
+  // /**
+  //  * 续费会员卡（续费当前显示的卡片）
+  //  */
+  // onRenewCard: function () {
+  //   var activeCards = this.data.activeCards
+  //   var currentIndex = this.data.currentCardIndex
+  //   var activeCard = activeCards.length > 0 ? activeCards[currentIndex] : null
 
-    if (!activeCard) {
-      showToast('暂无有效会员卡', 'none')
-      return
-    }
+  //   if (!activeCard) {
+  //     showToast('暂无有效会员卡', 'none')
+  //     return
+  //   }
 
-    // 跳转到商品详情页进行续费
-    wx.navigateTo({
-      url: '/pages/common/product-detail/index?id=' + activeCard.productId + '&action=renew'
-    })
-  },
+  //   // 跳转到商品详情页进行续费
+  //   wx.navigateTo({
+  //     url: '/pages/common/product-detail/index?id=' + activeCard.productId + '&action=renew'
+  //   })
+  // },
 
   /**
    * 购买新卡

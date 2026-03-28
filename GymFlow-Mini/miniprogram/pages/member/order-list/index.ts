@@ -288,11 +288,11 @@ Page({
   /**
    * 去首页
    */
-  goToHome: function() {
-    wx.switchTab({
-      url: '/pages/member/home/index'
-    })
-  },
+  // goToHome: function() {
+  //   wx.switchTab({
+  //     url: '/pages/member/home/index'
+  //   })
+  // },
 
   /**
    * 下拉刷新

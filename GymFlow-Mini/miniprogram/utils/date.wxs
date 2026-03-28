@@ -1,0 +1,330 @@
+// utils/date.wxs
+
+/**
+ * 格式化时间（只取 HH:MM）
+ */
+function formatTime(time) {
+  if (!time) {
+    return ''
+  }
+  return time.substring(0, 5)
+}
+
+/**
+ * 格式化日期
+ */
+function formatDate(date) {
+  if (!date) {
+    return ''
+  }
+  return date
+}
+
+/**
+ * 格式化日期时间 YYYY-MM-DD HH:mm:ss
+ */
+function formatDateTime(datetime) {
+  if (!datetime) {
+    return ''
+  }
+  
+  // 处理 ISO 8601 格式 (2026-03-26T15:14:48)
+  // 将 T 替换为空格
+  var dateStr = datetime.replace('T', ' ')
+  
+  // 将 "YYYY-MM-DD HH:mm:ss" 转换为 "YYYY/MM/DD HH:mm:ss"
+  var arr = dateStr.split(' ')
+  var datePart = arr[0]
+  var timePart = arr[1] || ''
+  
+  // 替换日期部分的 - 为 /
+  var dateArr = datePart.split('-')
+  var iosCompatible = dateArr[0] + '/' + dateArr[1] + '/' + dateArr[2]
+  
+  // 组合成完整的日期字符串
+  var fullDateStr = iosCompatible + ' ' + timePart
+  
+  var date = getDate(fullDateStr)
+  
+  // 检查日期是否有效
+  if (isNaN(date.getTime())) {
+    // 如果解析失败，尝试直接返回原字符串
+    return datetime
+  }
+  
+  var year = date.getFullYear()
+  var month = date.getMonth() + 1
+  var day = date.getDate()
+  var hour = date.getHours()
+  var minute = date.getMinutes()
+  var second = date.getSeconds()
+  
+  // 补零
+  var monthStr = month < 10 ? '0' + month : '' + month
+  var dayStr = day < 10 ? '0' + day : '' + day
+  var hourStr = hour < 10 ? '0' + hour : '' + hour
+  var minuteStr = minute < 10 ? '0' + minute : '' + minute
+  var secondStr = second < 10 ? '0' + second : '' + second
+  
+  return year + '-' + monthStr + '-' + dayStr + ' ' + hourStr + ':' + minuteStr + ':' + secondStr
+}
+
+/**
+ * 判断是否为今天
+ */
+function isToday(dateStr) {
+  if (!dateStr) {
+    return false
+  }
+  var today = getDate()
+  var year = today.getFullYear()
+  var month = today.getMonth() + 1
+  var day = today.getDate()
+  var date = getDate(dateStr)
+  return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day
+}
+
+/**
+ * 判断是否为明天
+ */
+function isTomorrow(dateStr) {
+  if (!dateStr) {
+    return false
+  }
+  var today = getDate()
+  var tomorrow = getDate()
+  tomorrow.setDate(today.getDate() + 1)
+  var date = getDate(dateStr)
+  return date.getFullYear() === tomorrow.getFullYear() && 
+         date.getMonth() + 1 === tomorrow.getMonth() + 1 && 
+         date.getDate() === tomorrow.getDate()
+}
+
+/**
+ * 获取日期显示文本（今天/明天/MM月DD日）
+ */
+function getDateDisplay(dateStr) {
+  if (!dateStr) {
+    return ''
+  }
+  if (isToday(dateStr)) {
+    return '今天'
+  } else if (isTomorrow(dateStr)) {
+    return '明天'
+  } else {
+    var date = getDate(dateStr)
+    var month = date.getMonth() + 1
+    var day = date.getDate()
+    return month + '月' + day + '日'
+  }
+}
+
+/**
+ * 获取课程状态
+ */
+function getCourseStatus(course) {
+  if (!course || !course.scheduleDate || !course.startTime || !course.endTime) {
+    return {
+      class: '',
+      text: ''
+    }
+  }
+  
+  var now = getDate()
+  var scheduleDate = getDate(course.scheduleDate + ' ' + course.startTime)
+  var courseEnd = getDate(course.scheduleDate + ' ' + course.endTime)
+  
+  if (now < scheduleDate) {
+    return {
+      class: 'upcoming',
+      text: '待上课'
+    }
+  } else if (now > courseEnd) {
+    return {
+      class: 'completed',
+      text: '已结束'
+    }
+  } else {
+    return {
+      class: 'ongoing',
+      text: '进行中'
+    }
+  }
+}
+
+/**
+ * 获取课程状态样式类
+ */
+function getCourseStatusClass(course) {
+  if (!course || !course.scheduleDate || !course.startTime || !course.endTime) {
+    return ''
+  }
+  
+  var now = getDate()
+  var scheduleDate = getDate(course.scheduleDate + ' ' + course.startTime)
+  var courseEnd = getDate(course.scheduleDate + ' ' + course.endTime)
+  
+  // console.log(now,'now')
+  console.log(scheduleDate,'scheduleDate')
+  if (now < scheduleDate) {
+    return 'upcoming'
+  } else if (now > courseEnd) {
+    return 'completed'
+  } else {
+    return 'ongoing'
+  }
+}
+
+/**
+ * 获取课程状态文本
+ */
+function getCourseStatusText(course) {
+  if (!course || !course.scheduleDate || !course.startTime || !course.endTime) {
+    return ''
+  }
+  
+  var now = getDate()
+  var scheduleDate = getDate(course.scheduleDate + ' ' + course.startTime)
+  var courseEnd = getDate(course.scheduleDate + ' ' + course.endTime)
+  
+  if (now < scheduleDate) {
+    return '待上课'
+  } else if (now > courseEnd) {
+    return '已结束'
+  } else {
+    return '进行中'
+  }
+}
+
+/**
+ * 获取预约状态文本
+ */
+function getBookingStatusText(status) {
+  if (status === 0) {
+    return '待上课'
+  } else if (status === 1) {
+    return '已签到'
+  } else if (status === 2) {
+    return '已完成'
+  } else if (status === 3) {
+    return '已取消'
+  } else if (status === 4) {
+    return '已过期'
+  }
+  return '未知'
+}
+
+/**
+ * 获取预约状态样式类
+ */
+function getBookingStatusClass(status) {
+  if (status === 0) {
+    return 'pending'
+  } else if (status === 1) {
+    return 'checked'
+  } else if (status === 2) {
+    return 'completed'
+  } else if (status === 3) {
+    return 'cancelled'
+  } else if (status === 4) {
+    return 'expired'
+  }
+  return 'unknown'
+}
+
+/**
+ * 获取剩余名额显示文本
+ */
+function getRemainingText(remaining) {
+  if (remaining <= 0) {
+    return '已满'
+  }
+  if (remaining <= 5) {
+    return '仅剩' + remaining + '席'
+  }
+  return remaining + '席'
+}
+
+/**
+ * 获取剩余名额样式类
+ */
+function getRemainingClass(remaining) {
+  if (remaining <= 0) {
+    return 'full'
+  }
+  if (remaining <= 5) {
+    return 'low'
+  }
+  return 'normal'
+}
+
+/**
+ * 获取课程类型文本
+ */
+function getCourseTypeText(type) {
+  if (type === 0) {
+    return '私教'
+  } else {
+    return '团课'
+  }
+}
+
+/**
+ * 获取课程类型样式类
+ */
+function getCourseTypeClass(type) {
+  if (type === 0) {
+    return 'private'
+  } else {
+    return 'group'
+  }
+}
+
+/**
+ * 格式化金额
+ */
+function formatMoney(amount) {
+  if (!amount && amount !== 0) {
+    return '¥0.00'
+  }
+  return '¥' + amount.toFixed(2)
+}
+
+/**
+ * 获取性别文本
+ */
+function getGenderText(gender) {
+  if (gender === 0) {
+    return '女'
+  }
+  if (gender === 1) {
+    return '男'
+  }
+  return '未知'
+}
+
+function calculateDiscount(original, current){
+  if (original <= 0) return '0'
+  const discount = Math.round((current / original) * 10 * 10) / 10
+  return discount.toFixed(1)
+}
+
+module.exports = {
+  formatTime: formatTime,
+  formatDate: formatDate,
+  formatDateTime:formatDateTime,
+  isToday: isToday,
+  isTomorrow: isTomorrow,
+  getDateDisplay: getDateDisplay,
+  getCourseStatus: getCourseStatus,
+  getCourseStatusClass: getCourseStatusClass,
+  getCourseStatusText: getCourseStatusText,
+  getBookingStatusText: getBookingStatusText,
+  getBookingStatusClass: getBookingStatusClass,
+  getRemainingText: getRemainingText,
+  getRemainingClass: getRemainingClass,
+  getCourseTypeText: getCourseTypeText,
+  getCourseTypeClass: getCourseTypeClass,
+  formatMoney: formatMoney,
+  getGenderText: getGenderText
+}

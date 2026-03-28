@@ -122,12 +122,12 @@ export const isValidTimeRange = (startTime: string, endTime: string): boolean =>
  * 校验签到码是否在有效期内
  */
 export const isValidCheckinTime = (
-  courseDate: string,
+  scheduleDate: string,
   startTime: string,
   checkinStartMinutes: number
 ): boolean => {
   const now = new Date()
-  const courseStart = new Date(`${courseDate} ${startTime}`)
+  const courseStart = new Date(`${scheduleDate} ${startTime}`)
   const checkinStart = new Date(courseStart.getTime() - checkinStartMinutes * 60000)
   
   return now >= checkinStart && now <= courseStart

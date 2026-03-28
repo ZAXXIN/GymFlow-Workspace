@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="search-result">
   <!-- 搜索栏 -->
   <view class="search-result-header">
@@ -79,7 +80,7 @@
               </view>
               <view class="search-result-course-info-item">
                 <image class="search-result-course-info-icon" src="/assets/icons/time.png" mode="aspectFit"></image>
-                <text>{{course.scheduleDate}} {{formatTime(course.startTime)}}</text>
+                <text>{{course.scheduleDate}} {{dateUtil.formatTime(course.startTime)}}</text>
               </view>
             </view>
             

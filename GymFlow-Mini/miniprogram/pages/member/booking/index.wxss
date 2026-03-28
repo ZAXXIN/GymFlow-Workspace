@@ -17,58 +17,87 @@
 .booking-search {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 16rpx 24rpx;
-  border-bottom: 2rpx solid #f5f5f5;
+  justify-content: space-between;
+  padding: 12px 16px;
+  /* background-color: #fff; */
+  border-bottom: 1px solid #f0f0f0;
 }
 
-/* 课程类型选择器 */
+/* 课程类型选择器 - 左侧 */
 .booking-course-type-select {
   flex-shrink: 0;
+  margin-right: 12px;
 }
 
 .booking-course-type-picker {
   display: flex;
   align-items: center;
-  background: #f5f5f5;
-  border-radius: 40rpx;
-  padding: 12rpx 24rpx;
-  font-size: 26rpx;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
   color: #333;
 }
 
-/* 时间选择器 */
-.booking-date-picker {
+/* 右侧筛选器容器 */
+.booking-filter-right {
   flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 日期选择器 */
+.booking-date-picker {
+  width: auto;
 }
 
 .booking-date-picker-inner {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  background: rgba(255,255,255,0.3);
-  border-radius: 40rpx;
-  padding: 17rpx 24rpx;
-  gap: 8rpx;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
 }
 
 .booking-date-icon {
-  width: 32rpx;
-  height: 32rpx;
-  opacity: 0.6;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
 }
 
 .booking-date-text {
-  font-size: 26rpx;
-  color: #333;
-  flex: 1;
-  text-align: right;
+  margin-right: 6px;
 }
 
+/* 教练选择器 */
+.booking-coach-select {
+  width: auto;
+}
+
+.booking-coach-picker {
+  display: flex;
+  align-items: center;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.booking-coach-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+}
+
+/* 公共箭头样式 */
 .booking-picker-arrow {
-  width: 24rpx;
-  height: 24rpx;
-  opacity: 0.5;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
 }
 
 /* 状态Tab样式 - 固定在头部 */

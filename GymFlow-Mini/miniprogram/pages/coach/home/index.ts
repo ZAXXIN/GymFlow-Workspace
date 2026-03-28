@@ -144,10 +144,10 @@ Page({
       // 预处理，为每个课程添加状态字段
       const processedList = scheduleList.map((course: any) => {
         const now = new Date()
-        const courseDate = new Date(`${course.scheduleDate} ${course.startTime}`)
+        const scheduleDate = new Date(`${course.scheduleDate} ${course.startTime}`)
         const courseEnd = new Date(`${course.scheduleDate} ${course.endTime}`)
         
-        if (now < courseDate) {
+        if (now < scheduleDate) {
           return { ...course, statusClass: 'upcoming', statusText: '待上课' }
         } else if (now > courseEnd) {
           return { ...course, statusClass: 'completed', statusText: '已结束' }
@@ -221,27 +221,16 @@ Page({
     }
   },
 
-  /**
-   * 点击课程
-   */
-  onCourseTap(e: any) {
-    const { course } = e.currentTarget.dataset
-    
-    wx.navigateTo({
-      url: `/pages/coach/student-list/index?courseId=${course.courseId}&courseName=${course.courseName}`
-    })
-  },
-
-  /**
-   * 查看学员
-   */
-  onViewStudents(e: any) {
-    const { course } = e.currentTarget.dataset
-    
-    wx.navigateTo({
-      url: `/pages/coach/student-list/index?courseId=${course.courseId}&courseName=${course.courseName}`
-    })
-  },
+/**
+ * 查看学员
+ */
+onViewStudents(e: any) {
+  const { course } = e.currentTarget.dataset
+  
+  wx.navigateTo({
+    url: `/pages/coach/student-list/index?courseId=${course.scheduleId}&courseName=${encodeURIComponent(course.courseName)}&courseType=${course.courseType}&scheduleDate=${course.scheduleDate}&startTime=${course.startTime}&endTime=${course.endTime}&location=${encodeURIComponent(course.location || '')}`
+  })
+},
 
   /**
    * 跳转到消息列表

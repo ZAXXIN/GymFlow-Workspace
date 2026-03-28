@@ -53,25 +53,52 @@
   height: 48rpx;
 }
 
-/* 日期选择 */
+/* 日期选择区域 */
 .coach-home-date {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 16px;
+  padding: 0 4px;
 }
 
-.coach-home-date .date-picker {
+/* 日期选择器 */
+.coach-home-date-picker {
+  display: flex;
+  align-items: center;
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
   flex: 1;
 }
 
+.coach-home-date-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+}
+
+.coach-home-date-text {
+  flex: 1;
+  margin-right: 6px;
+  color: #333;
+}
+
+.coach-home-date-arrow {
+  width: 14px;
+  height: 14px;
+}
+
+/* 今天按钮 */
 .coach-home-today {
-  font-size: 28rpx;
-  color: #07c160;
-  font-weight: 600;
-  margin-left: 16rpx;
-  padding: 8rpx 16rpx;
-  background: rgba(7, 193, 96, 0.1);
-  border-radius: 16rpx;
+  background-color: #07c160;
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-size: 14px;
+  color: #fff;
+  margin-left: 12px;
 }
 
 /* 提醒卡片 */
@@ -170,7 +197,7 @@
 
 /* 课程列表项 */
 .coach-home-course-list {
-  background: #fff;
+  /* background: #fff; */
   border-radius: 24rpx;
   padding: 24rpx;
 }

@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="order-detail">
   <!-- 头部状态 -->
   <view class="order-detail-header">
@@ -70,15 +71,15 @@
         <text class="order-detail-info-label">支付方式</text>
         <text class="order-detail-info-value">{{order.paymentMethod}}</text>
       </view>
+
+      <view class="order-detail-info-item">
+        <text class="order-detail-info-label">创建时间</text>
+        <text class="order-detail-info-value">{{dateUtil.formatDateTime(order.createTime)}}</text>
+      </view>
       
       <view class="order-detail-info-item" wx:if="{{order.paymentTime}}">
         <text class="order-detail-info-label">支付时间</text>
-        <text class="order-detail-info-value">{{formatDateTimeIn(order.paymentTime)}}</text>
-      </view>
-      
-      <view class="order-detail-info-item">
-        <text class="order-detail-info-label">创建时间</text>
-        <text class="order-detail-info-value">{{formatDateTimeIn(order.createTime)}}</text>
+        <text class="order-detail-info-value">{{dateUtil.formatDateTime(order.paymentTime)}}</text>
       </view>
       
       <view class="order-detail-info-item" wx:if="{{order.remark}}">

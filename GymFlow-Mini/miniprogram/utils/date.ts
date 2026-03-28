@@ -1,193 +1,149 @@
-// 日期处理工具 - 原生实现
-
-/**
- * 格式化日期
- */
-export const formatDate = (date, format = 'YYYY-MM-DD') => {
-  if (!date) return ''
-  
-  const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hour = String(d.getHours()).padStart(2, '0')
-  const minute = String(d.getMinutes()).padStart(2, '0')
-  const second = String(d.getSeconds()).padStart(2, '0')
-  
-  return format
-    .replace('YYYY', year)
-    .replace('MM', month)
-    .replace('DD', day)
-    .replace('HH', hour)
-    .replace('mm', minute)
-    .replace('ss', second)
+// utils/date.wxs
+function formatTime(time) {
+  if (!time) return '';
+  return time.substring(0, 5);
 }
 
-/**
- * 格式化时间
- */
-export const formatTime = (date, format = 'HH:mm') => {
-  return formatDate(date, format)
+function formatDate(date) {
+  if (!date) return '';
+  return date;
 }
 
-/**
- * 格式化日期时间
- */
-export const formatDateTime = (date, format = 'YYYY-MM-DD HH:mm') => {
-  return formatDate(date, format)
+function isToday(dateStr) {
+  if (!dateStr) return false;
+  var today = getDate();
+  var year = today.getFullYear();
+  var month = today.getMonth() + 1;
+  var day = today.getDate();
+  var date = getDate(dateStr);
+  return date.getFullYear() === year && date.getMonth() + 1 === month && date.getDate() === day;
 }
 
-/**
- * 获取相对时间
- */
-export const getRelativeTime = (date) => {
-  if (!date) return ''
-  
-  const now = new Date()
-  const target = new Date(date)
-  const diffMs = now - target
-  const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
-  if (diffMinutes < 1) {
-    return '刚刚'
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes}分钟前`
-  } else if (diffHours < 24) {
-    return `${diffHours}小时前`
-  } else if (diffDays < 7) {
-    return `${diffDays}天前`
+function isTomorrow(dateStr) {
+  if (!dateStr) return false;
+  var today = getDate();
+  var tomorrow = getDate();
+  tomorrow.setDate(today.getDate() + 1);
+  var date = getDate(dateStr);
+  return date.getFullYear() === tomorrow.getFullYear() && date.getMonth() + 1 === tomorrow.getMonth() + 1 && date.getDate() === tomorrow.getDate();
+}
+
+function getDateDisplay(dateStr) {
+  if (!dateStr) return '';
+  if (isToday(dateStr)) {
+    return '今天';
+  } else if (isTomorrow(dateStr)) {
+    return '明天';
   } else {
-    return formatDate(date)
+    var date = getDate(dateStr);
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    return month + '月' + day + '日';
   }
 }
 
-/**
- * 判断是否为今天
- */
-export const isToday = (date) => {
-  if (!date) return false
-  
-  const d = new Date(date)
-  const today = new Date()
-  
-  return d.getFullYear() === today.getFullYear() &&
-         d.getMonth() === today.getMonth() &&
-         d.getDate() === today.getDate()
-}
-
-/**
- * 判断是否为明天
- */
-export const isTomorrow = (date) => {
-  if (!date) return false
-  
-  const d = new Date(date)
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  
-  return d.getFullYear() === tomorrow.getFullYear() &&
-         d.getMonth() === tomorrow.getMonth() &&
-         d.getDate() === tomorrow.getDate()
-}
-
-/**
- * 判断是否为昨天
- */
-export const isYesterday = (date) => {
-  if (!date) return false
-  
-  const d = new Date(date)
-  const yesterday = new Date()
-  yesterday.setDate(yesterday.getDate() - 1)
-  
-  return d.getFullYear() === yesterday.getFullYear() &&
-         d.getMonth() === yesterday.getMonth() &&
-         d.getDate() === yesterday.getDate()
-}
-
-/**
- * 获取日期范围
- */
-export const getDateRange = (period) => {
-  const now = new Date()
-  const start = new Date(now)
-  const end = new Date(now)
-  
-  switch (period) {
-    case 'day':
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      break
-    case 'week':
-      const day = start.getDay()
-      start.setDate(start.getDate() - day + (day === 0 ? -6 : 1)) // 周一
-      start.setHours(0, 0, 0, 0)
-      end.setDate(start.getDate() + 6)
-      end.setHours(23, 59, 59, 999)
-      break
-    case 'month':
-      start.setDate(1)
-      start.setHours(0, 0, 0, 0)
-      end.setMonth(end.getMonth() + 1)
-      end.setDate(0)
-      end.setHours(23, 59, 59, 999)
-      break
-    case 'year':
-      start.setMonth(0, 1)
-      start.setHours(0, 0, 0, 0)
-      end.setMonth(11, 31)
-      end.setHours(23, 59, 59, 999)
-      break
-    default:
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
+function getCourseStatus(course) {
+  if (!course || !course.scheduleDate || !course.startTime || !course.endTime) {
+    return {
+      'class': '',
+      'text': ''
+    };
   }
   
-  const formatDateTime = (date) => {
-    const y = date.getFullYear()
-    const m = String(date.getMonth() + 1).padStart(2, '0')
-    const d = String(date.getDate()).padStart(2, '0')
-    const h = String(date.getHours()).padStart(2, '0')
-    const min = String(date.getMinutes()).padStart(2, '0')
-    const s = String(date.getSeconds()).padStart(2, '0')
-    return `${y}-${m}-${d} ${h}:${min}:${s}`
-  }
+  var now = getDate();
+  var scheduleDate = getDate(course.scheduleDate + ' ' + course.startTime);
+  var courseEnd = getDate(course.scheduleDate + ' ' + course.endTime);
   
-  return [formatDateTime(start), formatDateTime(end)]
-}
-
-/**
- * 判断是否在签到时间内
- */
-export const isCheckinTime = (courseDate, startTime, checkinStartMinutes, checkinEndMinutes) => {
-  if (!courseDate || !startTime) return false
-  
-  const now = new Date()
-  const courseStart = new Date(`${courseDate} ${startTime}`)
-  
-  const checkinStart = new Date(courseStart.getTime() - checkinStartMinutes * 60 * 1000)
-  const checkinEnd = new Date(courseStart.getTime() + checkinEndMinutes * 60 * 1000)
-  
-  return now >= checkinStart && now <= checkinEnd
-}
-
-/**
- * 获取课程状态
- */
-export const getCourseStatus = (courseDate, startTime, endTime) => {
-  if (!courseDate || !startTime || !endTime) return 'completed'
-  
-  const now = new Date()
-  const start = new Date(`${courseDate} ${startTime}`)
-  const end = new Date(`${courseDate} ${endTime}`)
-  
-  if (now < start) {
-    return 'upcoming'
-  } else if (now > end) {
-    return 'completed'
+  if (now < scheduleDate) {
+    return {
+      'class': 'upcoming',
+      'text': '待上课'
+    };
+  } else if (now > courseEnd) {
+    return {
+      'class': 'completed',
+      'text': '已结束'
+    };
   } else {
-    return 'ongoing'
+    return {
+      'class': 'ongoing',
+      'text': '进行中'
+    };
   }
 }
+
+function getBookingStatusText(status) {
+  var statusMap = {
+    '0': '待上课',
+    '1': '已签到',
+    '2': '已完成',
+    '3': '已取消',
+    '4': '已过期'
+  };
+  return statusMap[status] || '未知';
+}
+
+function getBookingStatusClass(status) {
+  var classMap = {
+    '0': 'pending',
+    '1': 'checked',
+    '2': 'completed',
+    '3': 'cancelled',
+    '4': 'expired'
+  };
+  return classMap[status] || 'unknown';
+}
+
+function getRemainingText(remaining) {
+  if (remaining <= 0) return '已满';
+  if (remaining <= 5) return '仅剩' + remaining + '席';
+  return remaining + '席';
+}
+
+function getRemainingClass(remaining) {
+  if (remaining <= 0) return 'full';
+  if (remaining <= 5) return 'low';
+  return 'normal';
+}
+
+function getCourseTypeText(type) {
+  if (type === 0) {
+    return '私教';
+  } else {
+    return '团课';
+  }
+}
+
+function getCourseTypeClass(type) {
+  if (type === 0) {
+    return 'private';
+  } else {
+    return 'group';
+  }
+}
+
+function formatMoney(amount) {
+  if (!amount && amount !== 0) return '¥0.00';
+  return '¥' + amount.toFixed(2);
+}
+
+function getGenderText(gender) {
+  if (gender === 0) return '女';
+  if (gender === 1) return '男';
+  return '未知';
+}
+
+module.exports["formatTime"] = formatTime;
+module.exports["formatDate"] = formatDate;
+module.exports["isToday"] = isToday;
+module.exports["isTomorrow"] = isTomorrow;
+module.exports["getDateDisplay"] = getDateDisplay;
+module.exports["getCourseStatus"] = getCourseStatus;
+module.exports["getBookingStatusText"] = getBookingStatusText;
+module.exports["getBookingStatusClass"] = getBookingStatusClass;
+module.exports["getRemainingText"] = getRemainingText;
+module.exports["getRemainingClass"] = getRemainingClass;
+module.exports["getCourseTypeText"] = getCourseTypeText;
+module.exports["getCourseTypeClass"] = getCourseTypeClass;
+module.exports["formatMoney"] = formatMoney;
+module.exports["getGenderText"] = getGenderText;

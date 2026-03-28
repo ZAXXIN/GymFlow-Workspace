@@ -116,8 +116,8 @@
       wx:if="{{!loading && orders.length === 0}}"
       show="{{true}}"
       text="暂无订单"
-      buttonText="去逛逛"
-      bindbuttonTap="goToHome"
     ></empty-state>
+    <!--       buttonText="去逛逛"
+      bindbuttonTap="goToHome" -->
   </view>
 </view>

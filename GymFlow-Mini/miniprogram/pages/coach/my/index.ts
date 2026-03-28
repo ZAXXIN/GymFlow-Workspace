@@ -2,8 +2,11 @@
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
+import { bookingStore } from '../../../stores/booking.store'
+import { orderStore } from '../../../stores/order.store'
 import { getMyCoachInfo } from '../../../services/api/coach.api'
-import { showModal } from '../../../utils/wx-util'
+import { logout as logoutApi } from '../../../services/api/auth.api'
+import { showModal, showSuccess, showError } from '../../../utils/wx-util'
 
 Page({
   data: {
@@ -64,8 +67,8 @@ Page({
       console.log(info)
       // 更新 store
       userStore.updateUserInfo(info)
-     
-      this.setData({ coachInfo:info })
+
+      this.setData({ coachInfo: info })
     } catch (error) {
       console.error('加载教练信息失败:', error)
     }
@@ -85,7 +88,8 @@ Page({
    */
   onMenuTap(e: any) {
     const { url } = e.currentTarget.dataset
-
+    console.log(e.currentTarget.dataset)
+    console.log(url)
     if (url) {
       wx.navigateTo({
         url
@@ -106,18 +110,30 @@ Page({
    * 退出登录
    */
   async onLogout() {
-    const confirm = await showModal({
-      title: '提示',
-      content: '确定要退出登录吗？'
-    })
-
-    if (!confirm) return
-
     try {
-      const { logout } = await import('../../../hooks/useUser')
-      await logout()
-    } catch (error) {
-      console.error('退出登录失败:', error)
+      const confirm = await showModal({
+        title: '提示',
+        content: '确定要退出登录吗？'
+      })
+      if (!confirm) return
+
+      // 调用登出
+      await logoutApi()
+      // 清除所有store
+      userStore.logout()
+      messageStore.reset()
+      bookingStore.reset()
+      orderStore.reset()
+
+      showSuccess('已退出登录')
+      // 跳转到登录页
+      setTimeout(() => {
+        wx.reLaunch({
+          url: '/pages/common/login/index'
+        })
+      }, 1500)
+    } catch (error: any) {
+      showError(error.message || '退出登录失败')
     }
   }
 })

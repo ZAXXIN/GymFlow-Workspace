@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="message-list">
   <!-- 头部操作栏 -->
   <view class="message-list-header">
@@ -59,7 +60,7 @@
         <view class="message-list-item-content">
           <view class="message-list-item-header">
             <text class="message-list-item-title">{{msg.title}}</text>
-            <text class="message-list-item-time">{{formatTime(msg.createTime)}}</text>
+            <text class="message-list-item-time">{{dateUtil.formatTime(msg.createTime)}}</text>
           </view>
           
           <view class="message-list-item-preview">

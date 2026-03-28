@@ -33,8 +33,16 @@
       <view class="coach-my-section-title">个人信息</view>
       <view class="coach-my-info-list">
         <view class="coach-my-info-item">
+          <text class="coach-my-info-label">课时数</text>
+          <text class="coach-my-info-value">{{coachInfo.totalCourses || 0}}</text>
+        </view>
+        <view class="coach-my-info-item">
           <text class="coach-my-info-label">从业年限</text>
           <text class="coach-my-info-value">{{coachInfo.yearsOfExperience || 0}}年</text>
+        </view>
+        <view class="coach-my-info-item">
+          <text class="coach-my-info-label">个人专长</text>
+          <text class="coach-my-info-value">{{coachInfo.specialty || 0}}年</text>
         </view>
       </view>
     </view>

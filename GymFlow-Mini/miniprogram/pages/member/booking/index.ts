@@ -24,11 +24,16 @@ Page({
     selectedCourseTypeIndex: 0,
     showCourseTypeSelect: false,
 
-    // 时间选择器
+    // 团课时间选择器
     selectedDate: '',
     selectedDateDisplay: '',
     minDate: '',
     maxDate: '',
+
+    // 私教课教练选择器
+    privateCoachList: [] as any[],
+    selectedCoachId: null as number | null,
+    selectedCoachName: '',
 
     // 可预约课程列表
     displayCourses: [] as any[],
@@ -49,14 +54,27 @@ Page({
       { label: '已过期', value: 4 }
     ],
 
-    // ========== 预约弹窗 ==========
+    // ========== 团课预约弹窗 ==========
     showBookingModal: false,
     selectedCourse: null as any,
     bookingLoading: false,
 
+    // ========== 私教课预约弹窗 ==========
+    showPrivateBookingModal: false,
+    selectedCourseDuration: 60,
+    privateScheduleDate: '',
+    privateStartTime: '',
+    privateEndTime: '',
+    privateMinDate: '',
+    privateMaxDate: '',
+    privateMinStartTime: '',  // 最小可选开始时间
+    privateMaxStartTime: '',  // 最大可选开始时间
+    timeOptions: [] as string[],
+    privateBookingLoading: false,
+
     // ========== 签到码弹窗 ==========
     showCheckinModal: false,
-    checkinBooking: null as any,  // 直接存储预约数据
+    checkinBooking: null as any,
     checkinLoading: false,
     showCancelBtn: false
   },
@@ -112,18 +130,121 @@ Page({
   },
 
   async initData() {
-    await bookingStore.initMemberCourseType()
+    console.log('initData 开始')
 
+    // 先加载会员卡信息，确定课程类型
+    await bookingStore.initMemberCourseType()
+    console.log('会员卡类型:', bookingStore.currentCourseType)
+
+    // 显示/隐藏下拉框（两种卡都有时才显示）
     const showSelect = bookingStore.currentCourseType === 'BOTH'
     this.setData({ showCourseTypeSelect: showSelect })
 
+    // 设置默认选中的类型
     if (bookingStore.currentCourseType === 'PRIVATE_ONLY') {
       this.setData({ selectedCourseTypeIndex: 0 })
     } else if (bookingStore.currentCourseType === 'GROUP_ONLY') {
       this.setData({ selectedCourseTypeIndex: 1 })
     }
 
-    this.loadAvailableCourses()
+    // 初始加载数据（使用 loadAvailableCourses）
+    await this.loadAvailableCourses()
+    console.log('loadAvailableCourses 完成')
+
+    // 更新显示
+    this.updateDisplayCourses()
+  },
+
+  /**
+   * 根据当前选择更新显示课程列表
+   */
+  updateDisplayCourses() {
+    const { selectedCourseTypeIndex, courseTypeOptions, showCourseTypeSelect, selectedDate, selectedCoachId } = this.data
+
+    let targetCourseType: number | undefined = undefined
+    if (!showCourseTypeSelect) {
+      const currentType = bookingStore.currentCourseType
+      if (currentType === 'PRIVATE_ONLY') {
+        targetCourseType = 0
+      } else if (currentType === 'GROUP_ONLY') {
+        targetCourseType = 1
+      }
+    } else {
+      targetCourseType = courseTypeOptions[selectedCourseTypeIndex].value
+    }
+
+    // 直接从 store 获取已加载的数据
+    let allPrivateCourses = bookingStore.availablePrivateCourses || []
+    let allGroupCourses = bookingStore.availableGroupCourses || []
+
+    // 私教课：如果选择了具体教练才筛选
+    let filteredPrivate = allPrivateCourses
+    if (targetCourseType === 0 && selectedCoachId !== null && selectedCoachId !== undefined) {
+      filteredPrivate = allPrivateCourses.filter(c => c.coachId === selectedCoachId)
+    }
+
+    // 团课：按日期筛选（但数据已经是按日期请求的，不需要再过滤）
+    let filteredGroup = allGroupCourses
+
+    let displayCourses: any[] = []
+    if (targetCourseType === 0) {
+      displayCourses = filteredPrivate
+      // 提取教练列表（用于筛选器）
+      this.extractPrivateCoachList(allPrivateCourses)
+    } else if (targetCourseType === 1) {
+      displayCourses = filteredGroup
+    } else {
+      displayCourses = [...filteredPrivate, ...filteredGroup]
+    }
+
+    this.setData({ displayCourses })
+  },
+
+  /**
+ * 从私教课列表中提取教练列表（现在每个课程已对应一个教练）
+ */
+  extractPrivateCoachList(privateCourses: any[]) {
+    // 由于每个课程已经只对应一个教练，直接从课程中提取去重
+    const coachMap = new Map()
+    for (const course of privateCourses) {
+      if (course.coachId && !coachMap.has(course.coachId)) {
+        coachMap.set(course.coachId, {
+          id: course.coachId,
+          name: course.coachName,
+          specialty: course.coachSpecialty,
+          rating: course.coachRating,
+          yearsOfExperience: course.coachYearsOfExperience
+        })
+      }
+    }
+    const coachList = Array.from(coachMap.values())
+
+    // 在列表开头添加"全部教练"选项
+    const fullList = [
+      { id: null, name: '全部教练', specialty: '', rating: null, yearsOfExperience: null },
+      ...coachList
+    ]
+
+    // 更新教练列表，并保持当前选中的教练
+    const currentCoachId = this.data.selectedCoachId
+    let newSelectedCoachId = currentCoachId
+    let newSelectedCoachName = ''
+
+    if (currentCoachId && coachList.some(c => c.id === currentCoachId)) {
+      // 当前选中的教练还在列表中，保持选中
+      const coach = coachList.find(c => c.id === currentCoachId)
+      newSelectedCoachName = coach?.name || ''
+    } else {
+      // 当前选中的教练不在列表中，清空选中
+      newSelectedCoachId = null
+      newSelectedCoachName = '全部教练'
+    }
+
+    this.setData({
+      privateCoachList: coachList,
+      selectedCoachId: newSelectedCoachId,
+      selectedCoachName: newSelectedCoachName
+    })
   },
 
   onMainTabChange(e: any) {
@@ -141,7 +262,9 @@ Page({
 
   onCourseTypeChange(e: any) {
     const index = e.detail.value
-    this.setData({ selectedCourseTypeIndex: index }, () => {
+    this.setData({
+      selectedCourseTypeIndex: index
+    }, () => {
       this.loadAvailableCourses()
     })
   },
@@ -156,6 +279,22 @@ Page({
     }, () => {
       this.loadAvailableCourses()
     })
+  },
+
+  /**
+   * 私教课教练选择变化
+   */
+  onPrivateCoachChange(e: any) {
+    const index = e.detail.value
+    const coach = this.data.privateCoachList[index]
+    if (coach) {
+      this.setData({
+        selectedCoachId: coach.id,
+        selectedCoachName: coach.name
+      }, () => {
+        this.updateDisplayCourses()
+      })
+    }
   },
 
   getDateDisplay(dateStr: string): string {
@@ -175,12 +314,12 @@ Page({
 
   async loadAvailableCourses() {
     if (this.data.availableLoading) return
-
+  
     this.setData({ availableLoading: true })
-
+  
     try {
       const { selectedDate, selectedCourseTypeIndex, courseTypeOptions, showCourseTypeSelect } = this.data
-
+  
       let targetCourseType: number | undefined = undefined
       if (!showCourseTypeSelect) {
         const currentType = bookingStore.currentCourseType
@@ -192,25 +331,23 @@ Page({
       } else {
         targetCourseType = courseTypeOptions[selectedCourseTypeIndex].value
       }
-
-      await bookingStore.loadAvailableCourses({
-        date: selectedDate,
-        courseType: targetCourseType
-      })
-
-      let displayCourses: any[] = []
-      if (targetCourseType === 0 || bookingStore.currentCourseType === 'PRIVATE_ONLY') {
-        displayCourses = bookingStore.availablePrivateCourses
-      } else if (targetCourseType === 1 || bookingStore.currentCourseType === 'GROUP_ONLY') {
-        displayCourses = bookingStore.availableGroupCourses
+  
+      // ✅ 根据课程类型调用不同的方法
+      if (targetCourseType === 0) {
+        await bookingStore.loadPrivateCourses()
+      } else if (targetCourseType === 1) {
+        await bookingStore.loadGroupCourses({ date: selectedDate })
       } else {
-        displayCourses = [...bookingStore.availablePrivateCourses, ...bookingStore.availableGroupCourses]
+        // 两者都有，同时加载
+        await Promise.all([
+          bookingStore.loadPrivateCourses(),
+          bookingStore.loadGroupCourses({ date: selectedDate })
+        ])
       }
-
-      this.setData({
-        displayCourses,
-        availableLoading: false
-      })
+  
+      // 更新显示
+      this.updateDisplayCourses()
+      this.setData({ availableLoading: false })
     } catch (error: any) {
       console.error('加载可预约课程失败:', error)
       showToast(error.message || '加载失败', 'none')
@@ -218,17 +355,213 @@ Page({
     }
   },
 
+  /**
+ * 点击课程 - 打开预约弹窗
+ */
   onCourseTap(e: any) {
     const course = e.currentTarget.dataset.course
-    if (!course.canBook) {
-      showToast('课程已满员', 'none')
+
+    if (course.courseType === 0) {
+      // 私教课：直接使用当前课程的信息（已经包含教练）
+      this.openPrivateBookingModal(course)
+    } else {
+      // 团课：检查是否满员
+      if (!course.canBook) {
+        showToast('课程已满员', 'none')
+        return
+      }
+      this.setData({
+        selectedCourse: course,
+        showBookingModal: true
+      })
+    }
+  },
+
+  /**
+   * 打开私教课预约弹窗
+   */
+  openPrivateBookingModal(course: any) {
+    // 初始化日期选择器
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    const todayStr = `${year}-${month}-${day}`
+
+    const maxDate = new Date(today)
+    maxDate.setMonth(maxDate.getMonth() + 3)
+    const maxYear = maxDate.getFullYear()
+    const maxMonth = String(maxDate.getMonth() + 1).padStart(2, '0')
+    const maxDay = String(maxDate.getDate()).padStart(2, '0')
+    const maxDateStr = `${maxYear}-${maxMonth}-${maxDay}`
+
+    // 获取课程时长
+    const duration = course.duration || 60
+
+    // 获取营业开始时间
+    const businessStart = configStore.businessStartTime || '08:00'
+
+    // 计算当天的最小开始时间
+    const minStartTime = configStore.getMinStartTime(todayStr, duration)
+    const maxStartTime = configStore.getMaxStartTime(duration)
+
+    this.setData({
+      showPrivateBookingModal: true,
+      selectedCourse: course,
+      selectedCourseDuration: duration,
+      privateScheduleDate: todayStr,
+      privateStartTime: minStartTime,
+      privateEndTime: configStore.calculateEndTime(minStartTime, duration),
+      privateMinDate: todayStr,
+      privateMaxDate: maxDateStr,
+      privateMinStartTime: minStartTime,
+      privateMaxStartTime: maxStartTime,
+      privateBookingLoading: false
+    })
+  },
+
+  /**
+   * 私教课日期变化 - 重新计算开始时间和可选范围
+   */
+  onPrivateDateChange(e: any) {
+    const newDate = e.detail.value
+    const duration = this.data.selectedCourseDuration
+
+    // 判断选择的日期是否是当天
+    const today = new Date()
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const isToday = newDate === todayStr
+
+    // 获取营业开始时间
+    const businessStart = configStore.businessStartTime || '08:00'
+
+    let minStartTime = ''
+    let defaultStartTime = ''
+
+    if (isToday) {
+      // 当天：使用动态计算的最小开始时间
+      minStartTime = configStore.getMinStartTime(newDate, duration)
+      defaultStartTime = minStartTime
+    } else {
+      // 未来日期：最小开始时间为营业开始时间，默认开始时间也是营业开始时间
+      minStartTime = businessStart
+      defaultStartTime = businessStart
+    }
+
+    // 获取最大开始时间
+    const maxStartTime = configStore.getMaxStartTime(duration)
+
+    console.log('日期变化:', newDate, '是否当天:', isToday)
+    console.log('minStartTime:', minStartTime)
+    console.log('maxStartTime:', maxStartTime)
+    console.log('defaultStartTime:', defaultStartTime)
+
+    this.setData({
+      privateScheduleDate: newDate,
+      privateMinStartTime: minStartTime,
+      privateMaxStartTime: maxStartTime,
+      privateStartTime: defaultStartTime,
+      privateEndTime: configStore.calculateEndTime(defaultStartTime, duration)
+    })
+  },
+
+  /**
+   * 私教课开始时间变化 - 自动计算结束时间
+   */
+  onPrivateTimeChange(e: any) {
+    const startTime = e.detail.value
+    const duration = this.data.selectedCourseDuration
+
+    if (startTime && duration) {
+      const [hours, minutes] = startTime.split(':').map(Number)
+      const durationHours = Math.floor(duration / 60)
+      const durationMinutes = duration % 60
+
+      let endHour = hours + durationHours
+      let endMinute = minutes + durationMinutes
+
+      if (endMinute >= 60) {
+        endMinute -= 60
+        endHour += 1
+      }
+
+      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+
+      this.setData({
+        privateStartTime: startTime,
+        privateEndTime: endTime
+      })
+    } else {
+      this.setData({
+        privateStartTime: startTime,
+        privateEndTime: ''
+      })
+    }
+  },
+
+  /**
+   * 关闭私教课预约弹窗
+   */
+  onClosePrivateBookingModal() {
+    this.setData({
+      showPrivateBookingModal: false,
+      selectedCourse: null,
+      privateScheduleDate: '',
+      privateStartTime: '',
+      privateEndTime: '',
+      privateBookingLoading: false
+    })
+  },
+
+  /**
+ * 确认私教课预约
+ */
+  async onConfirmPrivateBooking() {
+    const { selectedCourse, privateScheduleDate, privateStartTime } = this.data
+    const memberId = userStore.memberId
+
+    if (!memberId) {
+      showToast('请先登录', 'none')
       return
     }
 
-    this.setData({
-      selectedCourse: course,
-      showBookingModal: true
-    })
+    if (!selectedCourse || !selectedCourse.coachId) {
+      showToast('请选择教练', 'none')
+      return
+    }
+
+    if (!privateScheduleDate) {
+      showToast('请选择日期', 'none')
+      return
+    }
+
+    if (!privateStartTime) {
+      showToast('请选择开始时间', 'none')
+      return
+    }
+
+    this.setData({ privateBookingLoading: true })
+
+    try {
+      await bookingStore.bookPrivateCourse(
+        memberId,
+        selectedCourse.coachId,
+        privateScheduleDate,
+        privateStartTime
+      )
+
+      showToast('预约成功', 'success')
+      this.onClosePrivateBookingModal()
+
+      // 刷新列表
+      this.loadAvailableCourses()
+      this.loadMyBookings(true)
+
+    } catch (error: any) {
+      showToast(error.message || '预约失败', 'none')
+    } finally {
+      this.setData({ privateBookingLoading: false })
+    }
   },
 
   onCloseBookingModal() {
@@ -256,7 +589,7 @@ Page({
     this.setData({ bookingLoading: true })
 
     try {
-      const result = await bookingStore.createBooking(memberId, selectedCourse)
+      await bookingStore.createBooking(memberId, selectedCourse)
 
       showToast('预约成功', 'success')
       this.onCloseBookingModal()
@@ -276,16 +609,14 @@ Page({
   async loadMyBookings(refresh: boolean) {
     if (this.data.myLoading) return
     if (!refresh && !this.data.myHasMore) return
-  
+
     this.setData({ myLoading: true })
-  
+
     try {
-      // 全部时传 null，store 中会判断不添加参数
       const status = this.data.bookingStatus === -1 ? null : this.data.bookingStatus
-      console.log('调用 getMemberBookings，status:', status)
-      
-      const result = await bookingStore.loadMyBookings(refresh, status)  // 直接传 status
-  
+
+      await bookingStore.loadMyBookings(refresh, status)
+
       this.setData({
         myBookings: bookingStore.myBookings,
         myHasMore: bookingStore.hasMore,
@@ -367,49 +698,38 @@ Page({
       return
     }
 
-    // 检查是否有签到码
     if (!booking.signCode) {
       showToast('签到码未生成', 'none')
       return
     }
 
-    // 打印二维码内容
-    const qrContent = `gymflow://checkin?bookingId=${booking.bookingId}&code=${booking.signCode}`
-    console.log('二维码内容:', qrContent)
-
-    // 直接使用预约数据打开弹窗
     this.setData({
       showCheckinModal: true,
       checkinBooking: booking,
       checkinLoading: false,
       showCancelBtn: this.checkCanCancel(booking.scheduleDate, booking.startTime)
     })
-    console.log(this.data.showCheckinModal)
   },
 
   /**
- * 检查是否可取消
- */
-  checkCanCancel(courseDate: string, startTime: string): boolean {
-    if (!courseDate || !startTime) return false
+   * 检查是否可取消
+   */
+  checkCanCancel(scheduleDate: string, startTime: string): boolean {
+    if (!scheduleDate || !startTime) return false
 
     const cancelHours = configStore.courseCancelHours || 2
 
     const now = new Date()
 
-    // 将 "2026-03-24" 和 "14:00:00" 转换为 iOS 支持的格式
-    // 使用 "2026/03/24 14:00:00" 格式，iOS 支持
-    const dateStr = courseDate.replace(/-/g, '/')
+    const dateStr = scheduleDate.replace(/-/g, '/')
     const courseStart = new Date(`${dateStr} ${startTime}`)
 
-    // 检查日期是否有效
     if (isNaN(courseStart.getTime())) {
-      console.error('无效的日期格式', courseDate, startTime)
+      console.error('无效的日期格式', scheduleDate, startTime)
       return false
     }
 
     const hoursUntilCourse = (courseStart.getTime() - now.getTime()) / (1000 * 60 * 60)
-
     return hoursUntilCourse >= cancelHours
   },
 
@@ -419,10 +739,8 @@ Page({
   formatExpireTime(expireTime: string): string {
     if (!expireTime) return ''
 
-    // expireTime 格式: "2026-03-24T14:15:00" 这是 iOS 支持的格式
     const date = new Date(expireTime)
 
-    // 检查日期是否有效
     if (isNaN(date.getTime())) {
       console.error('无效的过期时间格式', expireTime)
       return ''
@@ -430,20 +748,6 @@ Page({
 
     const hour = date.getHours().toString().padStart(2, '0')
     const minute = date.getMinutes().toString().padStart(2, '0')
-
-    return `${hour}:${minute}`
-  },
-
-  /**
-   * 格式化过期时间
-   */
-  formatExpireTime(expireTime: string): string {
-    if (!expireTime) return ''
-
-    const date = new Date(expireTime)
-    const hour = date.getHours().toString().padStart(2, '0')
-    const minute = date.getMinutes().toString().padStart(2, '0')
-
     return `${hour}:${minute}`
   },
 
@@ -485,8 +789,6 @@ Page({
       showToast('取消成功', 'success')
 
       this.onCloseCheckinModal()
-
-      // 刷新列表
       this.loadMyBookings(true)
       this.loadAvailableCourses()
 
@@ -511,6 +813,7 @@ Page({
 
   onPullDownRefresh() {
     if (this.data.activeTab === 0) {
+      // 下拉刷新时重新加载数据
       this.loadAvailableCourses()
     } else {
       this.loadMyBookings(true)

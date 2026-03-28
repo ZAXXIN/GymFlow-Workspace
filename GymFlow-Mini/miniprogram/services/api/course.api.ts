@@ -1,3 +1,4 @@
+// services/api/course.api.ts
 // 课程相关API（复用PC接口）
 
 import { wxRequest } from '../../utils/request'
@@ -8,7 +9,7 @@ import { Course, CourseSchedule, PageResult } from '../types/booking.types'
  * GET /course/list
  */
 export const getCourseList = (params: any) => {
-  return wxRequest.get<PageResult<Course>>('/course/list', params)
+  return wxRequest.get('/course/list', params)
 }
 
 /**
@@ -24,13 +25,5 @@ export const getCourseDetail = (courseId: number) => {
  * GET /course/schedules/{courseId}
  */
 export const getCourseSchedules = (courseId: number) => {
-  return wxRequest.get<CourseSchedule[]>(`/course/schedules/${courseId}`)
-}
-
-/**
- * 获取课程表
- * GET /course/timetable
- */
-export const getCourseTimetable = (startDate?: string, endDate?: string) => {
-  return wxRequest.get<CourseSchedule[]>('/course/timetable', { startDate, endDate })
+  return wxRequest.get(`/course/schedules/${courseId}`)
 }

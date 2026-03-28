@@ -1,15 +1,17 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="student-list-page">
   <!-- 课程信息头部 -->
   <view class="student-list-header" wx:if="{{courseInfo}}">
     <view class="student-list-header-bg"></view>
     <view class="student-list-header-content">
       <view class="student-list-course-info">
+      {{courseInfo}}
         <text class="student-list-course-name">{{courseInfo.courseName}}</text>
         <text class="student-list-course-type">{{courseInfo.courseType === 0 ? '私教课' : '团课'}}</text>
       </view>
       <view class="student-list-course-time">
         <image class="student-list-course-icon" src="/assets/icons/time-white.png" mode="aspectFit"></image>
-        <text>{{courseInfo.courseDate}} {{formatTime(courseInfo.startTime)}}-{{formatTime(courseInfo.endTime)}}</text>
+        <text>{{courseInfo.scheduleDate}} {{dateUtil.formatTime(courseInfo.startTime)}}-{{dateUtil.formatTime(courseInfo.endTime)}}</text>
       </view>
       <view class="student-list-course-stats">
         <text>已签到 {{checkedCount}}/{{courseInfo.currentEnrollment}}人</text>

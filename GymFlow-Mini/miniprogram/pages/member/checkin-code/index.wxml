@@ -1,3 +1,4 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="checkin-code-page">
   <!-- 头部信息 -->
   <view class="checkin-code-header">
@@ -9,7 +10,7 @@
       </view>
       <view class="checkin-code-time">
         <image class="checkin-code-time-icon" src="/assets/icons/time-white.png" mode="aspectFit"></image>
-        <text>{{courseInfo.courseDate}} {{formatTime(courseInfo.startTime)}}-{{formatTime(courseInfo.endTime)}}</text>
+        <text>{{courseInfo.scheduleDate}} {{dateUtil.formatTime(courseInfo.startTime)}}-{{dateUtil.formatTime(courseInfo.endTime)}}</text>
       </view>
     </view>
   </view>

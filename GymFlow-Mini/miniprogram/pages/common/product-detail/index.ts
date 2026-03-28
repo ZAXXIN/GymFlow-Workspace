@@ -2,16 +2,17 @@
 import { getProductDetail } from '../../../services/api/product.api'
 import { createOrder } from '../../../services/api/order.api'
 import { userStore } from '../../../stores/user.store'
+import{ orderStore} from '../../../stores/order.store'
 import { showToast, showLoading, hideLoading, showModal } from '../../../utils/wx-util'
 
 Page({
   data: {
     // 商品ID
     productId: 0,
-    
+
     // 操作类型（buy-购买 renew-续费）
     action: 'buy',
-    
+
     // 商品信息
     product: {
       id: 0,
@@ -28,14 +29,14 @@ Page({
       description: '',
       detail: null
     },
-    
+
     // 加载状态
     loading: true
   },
 
   onLoad(options: any) {
     const { id, action } = options
-    
+
     if (!id) {
       showToast('参数错误', 'none')
       setTimeout(() => {
@@ -43,12 +44,12 @@ Page({
       }, 1500)
       return
     }
-    
+
     this.setData({
       productId: parseInt(id),
       action: action || 'buy'
     })
-    
+
     this.loadProductDetail()
   },
 
@@ -57,16 +58,16 @@ Page({
    */
   async loadProductDetail() {
     this.setData({ loading: true })
-    
+
     try {
       const { productId } = this.data
       const detail = await getProductDetail(productId)
-      
+
       this.setData({
         product: detail,
         loading: false
       })
-      
+
     } catch (error: any) {
       console.error('加载商品详情失败:', error)
       this.setData({ loading: false })
@@ -79,14 +80,14 @@ Page({
    */
   async onBuyNow() {
     const { product, action } = this.data
-    
+
     // 检查登录状态
     if (!userStore.isLogin) {
       const confirm = await showModal({
         title: '提示',
         content: '请先登录后再购买'
       })
-      
+
       if (confirm) {
         wx.navigateTo({
           url: '/pages/common/login/index'
@@ -94,83 +95,90 @@ Page({
       }
       return
     }
-    
+
     // 检查库存
     if (product.productType === 3 && product.stockQuantity <= 0) {
       showToast('库存不足', 'none')
       return
     }
-    
-    if (action === 'renew') {
-      // 续费操作
-      this.renewProduct()
-    } else {
-      // 购买操作
-      this.buyProduct()
-    }
+
+    // if (action === 'renew') {
+    //   // 续费操作
+    //   this.renewProduct()
+    // } else {
+    // 购买操作
+    this.buyProduct()
+    // }
   },
 
   /**
-   * 购买商品
-   */
+ * 购买商品
+ */
   async buyProduct() {
     const { product } = this.data
     const memberId = userStore.memberId
-    
+
     if (!memberId) {
       showToast('用户信息错误', 'none')
       return
     }
-    
+
     showLoading('创建订单中...')
-    
+
     try {
       // 创建订单
       const result = await createOrder({
         memberId,
         orderType: product.productType,
-        items: [{
+        orderItems: [{
           productId: product.id,
           productName: product.productName,
           productType: product.productType,
           quantity: 1,
-          unitPrice: product.currentPrice
+          unitPrice: product.currentPrice,
+          totalSessions: product.totalSessions,
+          validityDays: product.validityDays
         }],
         remark: ''
       })
-      
+
       hideLoading()
-      
-      // 跳转到支付页面（模拟支付）
+      const orderId = result
+      console.log(orderId, '商品详情的订单id')
+      // 弹出选择框
       const confirm = await showModal({
         title: '提示',
         content: `订单创建成功，需支付 ¥${product.currentPrice}`,
-        confirmText: '模拟支付',
+        confirmText: '立即支付',
         cancelText: '稍后支付'
       })
-      
+
       if (confirm) {
-        // 模拟支付成功
+        // 立即支付 - 调用 store 中的 payOrder 方法
         showLoading('支付中...')
-        
-        setTimeout(() => {
+        console.log(orderId, "我是订单ID")
+        try {
+          await orderStore.payOrder(orderId)
           hideLoading()
           showToast('支付成功', 'success')
-          
+
           // 跳转到订单详情
           setTimeout(() => {
             wx.navigateTo({
-              url: `/pages/common/order-detail/index?id=${result.orderId}`
+              url: `/pages/common/order-detail/index?id=${orderId}`
             })
           }, 1500)
-        }, 1500)
+        } catch (payError: any) {
+          hideLoading()
+          showToast(payError.message || '支付失败', 'none')
+        }
       } else {
-        // 跳转到订单列表
+        // 稍后支付 - 跳转到订单详情
         wx.navigateTo({
-          url: '/pages/member/order-list/index'
+          url: `/pages/common/order-detail/index?id=${orderId}`
         })
       }
-      
+
     } catch (error: any) {
       hideLoading()
       showToast(error.message || '创建订单失败', 'none')
@@ -180,29 +188,11 @@ Page({
   /**
    * 续费商品
    */
-  async renewProduct() {
-    const { product } = this.data
-    
-    showToast('续费功能开发中', 'none')
-  },
+  // async renewProduct() {
+  //   const { product } = this.data
 
-  /**
-   * 计算折扣
-   */
-  calculateDiscount(original: number, current: number): string {
-    if (original <= 0) return '0'
-    const discount = Math.round((current / original) * 10 * 10) / 10
-    return discount.toFixed(1)
-  },
-
-  /**
-   * 获取教练姓名（模拟）
-   */
-  getCoachNames(coachIds: number[]): string {
-    if (!coachIds || coachIds.length === 0) return '所有教练'
-    // 实际应该从缓存或接口获取教练姓名
-    return `${coachIds.length}位教练可选`
-  },
+  //   showToast('续费功能开发中', 'none')
+  // },
 
   /**
    * 获取商品标签样式类

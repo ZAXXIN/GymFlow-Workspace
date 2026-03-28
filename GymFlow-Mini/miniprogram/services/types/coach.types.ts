@@ -7,7 +7,7 @@ export interface CoachInfo {
   phone: string
   specialty?: string
   yearsOfExperience?: number
-  rating?: number
+  // rating?: number
   introduction?: string
   certifications?: string[]
   totalCourses?: number
@@ -33,7 +33,7 @@ export interface CoachCourse {
   id: number
   courseName: string
   courseType: 0 | 1
-  courseDate: string
+  scheduleDate: string
   startTime: string
   endTime: string
   duration: number
@@ -72,7 +72,7 @@ export interface CoachMemberDetail {
 export interface MemberCourseRecord {
   courseId: number
   courseName: string
-  courseDate: string
+  scheduleDate: string
   startTime: string
   endTime: string
   bookingId: number

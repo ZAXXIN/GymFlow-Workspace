@@ -42,14 +42,13 @@ export const createOrder = (params: CreateOrderParams) => {
 }
 
 /**
- * 支付订单
- * POST /order/pay/{orderId}
+ * 更新订单状态
+ * PUT /order/updateStatus/{orderId}
  */
-export const payOrder = ({ orderId, paymentMethod }: PayOrderParams) => {
-  return wxRequest.post(`/order/pay/${orderId}`, null, {
-    params: { paymentMethod },
-    showLoading: true,
-    loadingText: '支付中...'
+export const updateOrderStatus = (orderId: number, orderStatus: string, remark?: string) => {
+  return wxRequest.put(`/order/updateStatus/${orderId}`, {
+    orderStatus,
+    remark
   })
 }
 

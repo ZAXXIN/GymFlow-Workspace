@@ -2,16 +2,19 @@
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
+import { bookingStore } from '../../../stores/booking.store'
+import { orderStore } from '../../../stores/order.store'
 import { getMyMemberInfo } from '../../../services/api/member.api'
-import { showModal } from '../../../utils/wx-util'
-import { formatDate } from '../../../utils/date'
+import { logout as logoutApi } from '../../../services/api/auth.api'
+import { showModal, showSuccess, showError } from '../../../utils/wx-util'
+
 
 Page({
   data: {
     selectedTab: 0,
     // 用户信息
     userInfo: null,
-    
+
     // 统计数据
     stats: {
       totalCheckins: 0,
@@ -19,13 +22,13 @@ Page({
       totalSpent: 0,
       memberDays: 0
     },
-    
+
     // 会员卡信息（从my-info接口获取）
     memberCard: null,
-    
+
     // 未读消息数
     unreadCount: 0,
-    
+
     // 菜单列表
     menuList: [
       {
@@ -68,7 +71,7 @@ Page({
     ]
   },
 
-  onLoad: function() {
+  onLoad: function () {
     // 获取当前页面在 TabBar 中的索引
     const pages = getCurrentPages()
     const currentPage = pages[pages.length - 1]
@@ -80,7 +83,7 @@ Page({
     this.initData()
   },
 
-  onShow: function() {
+  onShow: function () {
     // 每次显示时只刷新用户信息和未读消息数
     // 不自动加载订单列表
     this.loadUserInfo()
@@ -95,11 +98,11 @@ Page({
   /**
    * 初始化数据
    */
-  initData: function() {
+  initData: function () {
     var that = this
     this.setData({
       userInfo: userStore.userInfo
-    }, function() {
+    }, function () {
       that.updateUnreadCount()
       // 从userInfo中获取统计数据
       that.updateStatsFromUserInfo()
@@ -111,10 +114,10 @@ Page({
   /**
    * 从userInfo更新统计数据
    */
-  updateStatsFromUserInfo: function() {
+  updateStatsFromUserInfo: function () {
     var userInfo = this.data.userInfo
     if (!userInfo) return
-    
+
     // 计算会员天数
     var memberDays = 0
     if (userInfo.membershipStartDate) {
@@ -122,7 +125,7 @@ Page({
       var now = new Date()
       memberDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
     }
-    
+
     this.setData({
       stats: {
         totalCheckins: userInfo.totalCheckins || 0,
@@ -136,17 +139,17 @@ Page({
   /**
    * 从userInfo更新会员卡信息
    */
-  updateCardFromUserInfo: function() {
+  updateCardFromUserInfo: function () {
     var userInfo = this.data.userInfo
     if (!userInfo || !userInfo.cards || userInfo.cards.length === 0) {
       this.setData({ memberCard: null })
       return
     }
-    
+
     // 获取当前有效的会员卡
     var now = new Date()
     var activeCard = null
-    
+
     for (var i = 0; i < userInfo.cards.length; i++) {
       var card = userInfo.cards[i]
       if (card.status === 'ACTIVE') {
@@ -156,22 +159,22 @@ Page({
         }
       }
     }
-    
+
     this.setData({ memberCard: activeCard })
   },
 
   /**
    * 加载用户信息
    */
-  loadUserInfo: function() {
+  loadUserInfo: function () {
     var that = this
-    getMyMemberInfo().then(function(memberInfo) {
+    getMyMemberInfo().then(function (memberInfo) {
       userStore.updateUserInfo(memberInfo)
-      that.setData({ userInfo: userStore.userInfo }, function() {
+      that.setData({ userInfo: userStore.userInfo }, function () {
         that.updateStatsFromUserInfo()
         that.updateCardFromUserInfo()
       })
-    }).catch(function(error) {
+    }).catch(function (error) {
       console.error('加载用户信息失败:', error)
     })
   },
@@ -179,13 +182,13 @@ Page({
   /**
    * 更新未读消息数
    */
-  updateUnreadCount: function() {
+  updateUnreadCount: function () {
     var that = this
     var unreadCount = messageStore.unreadCount
     this.setData({ unreadCount: unreadCount })
-    
+
     // 更新菜单徽标
-    var menuList = this.data.menuList.map(function(item) {
+    var menuList = this.data.menuList.map(function (item) {
       if (item.id === 'messages') {
         return { ...item, badge: unreadCount }
       }
@@ -197,7 +200,7 @@ Page({
   /**
    * 点击菜单项
    */
-  onMenuTap: function(e) {
+  onMenuTap: function (e) {
     var item = e.currentTarget.dataset.item
     if (item && item.url) {
       console.log('跳转到:', item.url)
@@ -210,7 +213,7 @@ Page({
   /**
    * 点击会员卡
    */
-  onCardTap: function() {
+  onCardTap: function () {
     wx.navigateTo({
       url: '/pages/member/card-info/index'
     })
@@ -219,7 +222,7 @@ Page({
   /**
    * 点击健康档案
    */
-  onHealthTap: function() {
+  onHealthTap: function () {
     wx.navigateTo({
       url: '/pages/member/health-records/index'
     })
@@ -228,7 +231,7 @@ Page({
   /**
    * 查看全部订单
    */
-  onViewAllOrders: function() {
+  onViewAllOrders: function () {
     wx.navigateTo({
       url: '/pages/member/order-list/index'
     })
@@ -237,32 +240,33 @@ Page({
   /**
    * 退出登录
    */
-  onLogout: function() {
-    var that = this
-    showModal({
-      title: '提示',
-      content: '确定要退出登录吗？'
-    }).then(function(confirm) {
+  async onLogout () {
+    try {
+      const confirm = await showModal({
+        title: '提示',
+        content: '确定要退出登录吗？'
+      })
       if (!confirm) return
-      
-      // 调用登出逻辑
-      var useUser = require('../../../hooks/useUser').useUser()
-      useUser.logout(false)
-    })
-  },
 
-  /**
-   * 格式化日期
-   */
-  formatDate: function(date) {
-    return formatDate(date)
-  },
+      // 调用登出
+      await logoutApi()
 
-  /**
-   * 格式化金额
-   */
-  formatMoney: function(amount) {
-    if (amount === undefined || amount === null) return '¥0.00'
-    return '¥' + amount.toFixed(2)
+      // 清除所有store
+      userStore.logout()
+      messageStore.reset()
+      bookingStore.reset()
+      orderStore.reset()
+
+      showSuccess('已退出登录')
+
+      // 跳转到登录页
+      setTimeout(() => {
+        wx.reLaunch({
+          url: '/pages/common/login/index'
+        })
+      }, 1500)
+    } catch (error: any) {
+      showError(error.message || '退出登录失败')
+    }
   }
 })

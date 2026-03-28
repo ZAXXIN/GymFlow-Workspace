@@ -32,7 +32,7 @@ export interface Course {
   coachName?: string
   maxCapacity: number
   currentEnrollment: number
-  courseDate: string
+  scheduleDate: string
   startTime: string
   endTime: string
   duration: number
@@ -78,7 +78,7 @@ export interface CourseBooking {
   checkinTime?: string
   cancellationReason?: string
   cancellationTime?: string
-  courseDate?: string
+  scheduleDate?: string
   startTime?: string
   endTime?: string
   location?: string
