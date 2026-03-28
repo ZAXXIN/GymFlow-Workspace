@@ -85,6 +85,7 @@ const handleLogin = async () => {
 
 // 页面加载时，如果已登录则跳转
 onMounted(() => {
+  const systemConfig = localStorage.getItem('systemConfig')
   if (authStore.isLoggedIn) {
     router.replace('/dashboard')
   }

@@ -96,11 +96,11 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="notes" label="备注" min-width="150">
+            <!-- <el-table-column prop="notes" label="备注" min-width="150">
               <template #default="{ row }">
                 <span class="notes-text">{{ row.notes || '-' }}</span>
               </template>
-            </el-table-column>
+            </el-table-column> -->
             <el-table-column label="操作" width="200" fixed="right" align="center">
               <template #default="{ row }">
                 <el-button type="text" size="small" @click="handleViewScheduleDetail(row)">
@@ -133,14 +133,14 @@
     <el-dialog v-model="scheduleDialog.visible" :title="scheduleDialog.title" width="600px" :before-close="handleDialogClose">
       <el-form ref="scheduleFormRef" :model="scheduleForm" :rules="scheduleRules" label-width="100px" v-loading="scheduleDialog.loading">
         <el-form-item label="课程日期" prop="scheduleDate">
-          <el-date-picker v-model="scheduleForm.scheduleDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" />
+          <el-date-picker v-model="scheduleForm.scheduleDate" type="date" placeholder="选择课程日期" value-format="YYYY-MM-DD" style="width: 100%" :disabled-date="disabledDate" @change="handleDateChange" />
         </el-form-item>
         <el-form-item label="开始时间" prop="startTime">
-          <el-time-select v-model="scheduleForm.startTime" placeholder="选择开始时间" :start="businessStartTime" :end="maxStartTime" step="00:30" style="width: 100%" @change="handleStartTimeChange" />
+          <el-time-select v-model="scheduleForm.startTime" placeholder="选择开始时间" :start="minStartTime" :end="maxStartTime" step="00:10" style="width: 100%" @change="handleStartTimeChange" />
         </el-form-item>
 
         <el-form-item label="结束时间" prop="endTime">
-          <el-time-select v-model="scheduleForm.endTime" :min-time="scheduleForm.startTime" :max-time="businessEndTime" placeholder="选择结束时间" :start="businessStartTime" :end="businessEndTime" step="00:30" style="width: 100%" :disabled="true" />
+          <el-time-select v-model="scheduleForm.endTime" :min-time="scheduleForm.startTime" :max-time="businessEndTime" placeholder="选择结束时间" :start="businessStartTime" :end="businessEndTime" step="00:10" style="width: 100%" :disabled="true" />
         </el-form-item>
 
         <el-form-item label="教练" prop="coachId">
@@ -153,9 +153,9 @@
           <el-input-number v-model="scheduleForm.maxCapacity" :min="1" :max="100" :step="1" controls-position="right" style="width: 100%" placeholder="请输入最大人数" />
         </el-form-item>
 
-        <el-form-item label="备注" prop="notes">
+        <!-- <el-form-item label="备注" prop="notes">
           <el-input v-model="scheduleForm.notes" type="textarea" :rows="3" placeholder="请输入排课备注" maxlength="200" show-word-limit />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
 
       <template #footer>
@@ -183,9 +183,9 @@
           <el-descriptions-item label="当前报名">{{ selectedSchedule.currentEnrollment }}</el-descriptions-item>
           <el-descriptions-item label="剩余名额">{{ selectedSchedule.remainingSlots }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ selectedSchedule.statusDesc }}</el-descriptions-item>
-          <el-descriptions-item label="备注" :span="2">
+          <!-- <el-descriptions-item label="备注" :span="2">
             {{ selectedSchedule.notes || '无' }}
-          </el-descriptions-item>
+          </el-descriptions-item> -->
         </el-descriptions>
 
         <!-- 预约列表 -->
@@ -245,8 +245,11 @@ const loading = ref(false)
 const courseId = computed(() => Number(route.params.id))
 
 // 营业时间
-const businessStartTime = ref('06:00')
+const businessStartTime = ref('')
 const businessEndTime = ref('22:00')
+// 提前预约小时数
+const advanceBookingHours = ref(4)
+const currentScheduleDate = ref('')
 
 // 最大可选开始时间（营业结束时间 - 课程时长）
 const maxStartTime = computed(() => {
@@ -271,6 +274,128 @@ const maxStartTime = computed(() => {
 
   return `${String(maxHour).padStart(2, '0')}:${String(maxMinute).padStart(2, '0')}`
 })
+
+// 最小可选开始时间（根据选择的日期和提前预约小时数计算）
+const minStartTime = computed(() => {
+  const selectedDate = currentScheduleDate.value
+  const now = new Date()
+  const advanceHours = advanceBookingHours.value || 4
+  const earliestTime = new Date(now.getTime() + advanceHours * 60 * 60 * 1000)
+  
+  // 如果选择的日期不是当天，直接返回营业开始时间
+  if (selectedDate) {
+    const selectedParts = selectedDate.split('-')
+    const selectedYear = parseInt(selectedParts[0])
+    const selectedMonth = parseInt(selectedParts[1]) - 1
+    const selectedDay = parseInt(selectedParts[2])
+    const selectedDateObj = new Date(selectedYear, selectedMonth, selectedDay)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // 如果不是当天，返回营业开始时间
+    if (selectedDateObj.getTime() !== today.getTime()) {
+      return businessStartTime.value || '08:00'
+    }
+  }
+  
+  // 当天：根据提前预约小时数计算
+  let hour = earliestTime.getHours()
+  let minute = earliestTime.getMinutes()
+  
+  const [startHour, startMinute] = businessStartTime.value ? businessStartTime.value.split(':').map(Number) : [8, 0]
+  
+  if (hour * 60 + minute < startHour * 60 + startMinute) {
+    return businessStartTime.value || '08:00'
+  }
+  
+  const roundedMinutes = Math.ceil((hour * 60 + minute) / 10) * 10
+  const roundedHour = Math.floor(roundedMinutes / 60)
+  const roundedMinute = roundedMinutes % 60
+  return `${roundedHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`
+})
+
+// 动态开始时间（根据提前预约小时数和营业时间计算）
+const dynamicStartTime = computed(() => {
+  const now = new Date()
+  
+  // 确保 advanceBookingHours 有值，如果没有则使用默认值 4
+  const advanceHours = advanceBookingHours.value || 4
+  
+  // 计算最早可排课时间点
+  const earliestTime = new Date(now.getTime() + advanceHours * 60 * 60 * 1000)
+  
+  let earliestHour = earliestTime.getHours()
+  let earliestMinute = earliestTime.getMinutes()
+  
+  // 获取营业开始和结束时间
+  const [startHour, startMinute] = businessStartTime.value ? 
+    businessStartTime.value.split(':').map(Number) : [8, 0]
+  const [endHour, endMinute] = businessEndTime.value.split(':').map(Number)
+  const startTotalMinutes = startHour * 60 + startMinute
+  const endTotalMinutes = endHour * 60 + endMinute
+  
+  // 计算最早可排课时间的总分钟数
+  const earliestTotalMinutes = earliestHour * 60 + earliestMinute
+  
+  console.log('=== dynamicStartTime 计算 ===')
+  console.log('当前时间:', now.toLocaleString())
+  console.log('advanceHours:', advanceHours)
+  console.log('最早可排课时间点:', earliestTime.toLocaleString())
+  console.log('最早可排课时间:', `${earliestHour}:${earliestMinute}`)
+  console.log('最早分钟数:', earliestTotalMinutes)
+  console.log('营业开始:', startTotalMinutes, '营业结束:', endTotalMinutes)
+  
+  // 情况1：最早可排课时间在营业时间内
+  if (earliestTotalMinutes >= startTotalMinutes && earliestTotalMinutes < endTotalMinutes) {
+    const roundedTime = getRoundedTime(`${earliestHour.toString().padStart(2, '0')}:${earliestMinute.toString().padStart(2, '0')}`)
+    console.log('在营业时间内，返回:', roundedTime)
+    return roundedTime
+  }
+  
+  // 情况2：最早可排课时间早于营业开始时间，使用营业开始时间
+  if (earliestTotalMinutes < startTotalMinutes) {
+    console.log('早于营业开始时间，返回营业开始时间:', businessStartTime.value)
+    return businessStartTime.value || '08:00'
+  }
+  
+  // 情况3：最早可排课时间晚于营业结束时间，使用第二天营业开始时间
+  if (earliestTotalMinutes >= endTotalMinutes) {
+    console.log('晚于营业结束时间，返回第二天营业开始时间:', businessStartTime.value)
+    return businessStartTime.value || '08:00'
+  }
+  
+  return businessStartTime.value || '08:00'
+})
+
+// 获取按步长向上取整的时间（步长10分钟）
+const getRoundedTime = (timeStr: string): string => {
+  const step = 10 // 分钟步长
+  const [hour, minute] = timeStr.split(':').map(Number)
+
+  // 计算当前时间距离当天开始的分钟数
+  const totalMinutes = hour * 60 + minute
+
+  // 向上取整到 step 的倍数
+  const roundedMinutes = Math.ceil(totalMinutes / step) * step
+
+  // 如果取整后超过营业结束时间，返回当前时间的向上取整（不检查边界）或最早可用时间
+  const [endHour, endMinute] = businessEndTime.value.split(':').map(Number)
+  const maxMinutes = endHour * 60 + endMinute - duration.value // 减去课程时长
+
+  if (roundedMinutes > maxMinutes) {
+    // 返回当前时间的向上取整（不进行边界检查）
+    const fallbackHour = Math.floor(roundedMinutes / 60)
+    const fallbackMinute = roundedMinutes % 60
+    return `${fallbackHour.toString().padStart(2, '0')}:${fallbackMinute
+      .toString()
+      .padStart(2, '0')}`
+  }
+
+  const roundedHour = Math.floor(roundedMinutes / 60)
+  const roundedMinute = roundedMinutes % 60
+
+  return `${roundedHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`
+}
 
 // 课程信息
 const courseName = ref('')
@@ -302,8 +427,8 @@ const scheduleForm = reactive({
   scheduleDate: '',
   startTime: '',
   endTime: '',
-  maxCapacity: 20,
-  notes: '',
+  maxCapacity: '',
+  // notes: '',
 })
 
 const scheduleRules: FormRules = {
@@ -400,13 +525,26 @@ const loadSystemConfig = async () => {
     await systemConfigStore.fetchConfig()
     const business = systemConfigStore.getBusinessConfig()
     if (business) {
-      businessStartTime.value = business.businessStartTime.substring(0, 5)
-      businessEndTime.value = business.businessEndTime.substring(0, 5)
+      // 如果后端返回的值存在则使用，否则保持空字符串
+      if (business.businessStartTime) {
+        businessStartTime.value = business.businessStartTime.substring(0, 5)
+      } else {
+        businessStartTime.value = '' // 保持空字符串
+      }
+      if (business.businessEndTime) {
+        businessEndTime.value = business.businessEndTime.substring(0, 5)
+      } else {
+        businessEndTime.value = '22:00' // 默认结束时间
+      }
+      // 获取提前预约小时数
+      if (business.courseAdvanceBookingHours) {
+        advanceBookingHours.value = business.courseAdvanceBookingHours
+      }
     }
   } catch (error) {
     console.error('加载系统配置失败:', error)
-    // 使用默认值
-    businessStartTime.value = '08:00'
+    // 加载失败时，保持空值
+    businessStartTime.value = ''
     businessEndTime.value = '22:00'
   }
 }
@@ -458,9 +596,15 @@ const loadSchedules = async () => {
   }
 }
 
-// 日期过滤
+// 日期过滤 - 根据提前预约小时数禁用不可排课的日期
 const disabledDate = (time: Date) => {
-  return time.getTime() < Date.now() - 8.64e7 // 禁用今天之前的日期
+  const now = new Date()
+  // 计算最早可排课时间点
+  const earliestScheduleTime = new Date(now.getTime() + advanceBookingHours.value * 60 * 60 * 1000)
+  earliestScheduleTime.setHours(0, 0, 0, 0)
+
+  // 禁用今天之前以及最早可排课日期之前的日期
+  return time.getTime() < earliestScheduleTime.getTime()
 }
 
 const handleDateFilterChange = () => {
@@ -486,20 +630,59 @@ const handleAddSchedule = () => {
   scheduleDialog.editingScheduleId = null
   scheduleDialog.visible = true
 
+  // 计算最早可排课日期
+  const now = new Date()
+  const advanceHours = advanceBookingHours.value || 4
+  const earliestScheduleTime = new Date(now.getTime() + advanceHours * 60 * 60 * 1000)
+  const earliestDate = earliestScheduleTime.toISOString().split('T')[0]
+  
+  // 设置当前选择的日期
+  currentScheduleDate.value = earliestDate
+  
   // 重置表单
   Object.assign(scheduleForm, {
     courseId: courseId.value,
     coachId: undefined,
-    scheduleDate: '',
-    startTime: businessStartTime.value,
+    scheduleDate: earliestDate,
+    startTime: '',
     endTime: '',
     maxCapacity: 20,
-    notes: '',
   })
+  
+  // 触发日期变化，设置开始时间
+  handleDateChange(earliestDate)
+}
 
-  // 计算结束时间
-  if (businessStartTime.value) {
-    scheduleForm.endTime = calculateEndTime(businessStartTime.value)
+// 日期变化时，更新当前选择的日期并设置开始时间
+const handleDateChange = (value: string) => {
+  if (!value) return
+  
+  // 更新当前选择的日期
+  currentScheduleDate.value = value
+  
+  const selectedParts = value.split('-')
+  const selectedYear = parseInt(selectedParts[0])
+  const selectedMonth = parseInt(selectedParts[1]) - 1
+  const selectedDay = parseInt(selectedParts[2])
+  
+  const today = new Date()
+  const todayYear = today.getFullYear()
+  const todayMonth = today.getMonth()
+  const todayDay = today.getDate()
+  
+  const isToday = selectedYear === todayYear && selectedMonth === todayMonth && selectedDay === todayDay
+  
+  let defaultStartTime = ''
+  
+  if (isToday) {
+    defaultStartTime = minStartTime.value
+  } else {
+    defaultStartTime = businessStartTime.value || '08:00'
+  }
+  
+  scheduleForm.startTime = defaultStartTime
+  if (defaultStartTime) {
+    scheduleForm.endTime = calculateEndTime(defaultStartTime)
   }
 }
 
@@ -517,7 +700,7 @@ const handleEditSchedule = (schedule: CourseScheduleVO) => {
     startTime: schedule.startTime.slice(0, 5),
     endTime: schedule.endTime.slice(0, 5),
     maxCapacity: schedule.maxCapacity,
-    notes: schedule.notes || '',
+    // notes: schedule.notes || '',
   })
 }
 
@@ -574,7 +757,7 @@ const handleSaveSchedule = async () => {
       startTime: scheduleForm.startTime + ':00',
       endTime: scheduleForm.endTime + ':00',
       maxCapacity: scheduleForm.maxCapacity,
-      notes: scheduleForm.notes,
+      // notes: scheduleForm.notes,
     }
 
     if (scheduleDialog.mode === 'add') {
@@ -588,7 +771,7 @@ const handleSaveSchedule = async () => {
     await loadSchedules()
   } catch (error) {
     console.error('保存排课失败:', error)
-    ElMessage.error('保存排课失败')
+    // ElMessage.error('保存排课失败')
   } finally {
     scheduleDialog.loading = false
   }

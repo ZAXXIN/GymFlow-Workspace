@@ -84,8 +84,8 @@
         </el-table-column>
         <el-table-column prop="coachNames" label="教练" width="250">
           <template #default="{ row }">
-            <span v-if="row.coachNames && row.coachNames.length > 0">
-              {{ row.coachNames.join(', ') }}
+            <span v-if="row.coaches && row.coaches.length > 0">
+              {{ row.coaches.realName.join(', ') }}
             </span>
             <span v-else class="no-data">-</span>
           </template>

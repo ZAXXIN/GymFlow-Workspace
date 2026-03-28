@@ -130,10 +130,13 @@ export const useAuthStore = defineStore('auth', () => {
       // 调用系统配置接口验证token
       const response = await systemConfigApi.getConfig()
       if (response.code === 200) {
+        alert(response,'re')
         // 接口调用成功，说明token有效
         // 注意：这里不设置用户信息，因为系统配置接口不返回用户信息
         // 用户信息应该已经在登录时存储了
+        console.log(response)
         initialized.value = true
+        localStorage.setItem('systemConfig',response)
         return true
       } else {
         // token无效，清除登录状态

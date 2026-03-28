@@ -74,18 +74,32 @@
                   <div class="form-tip">课程排课、签到只能在营业时间内进行</div>
                 </el-form-item>
 
-                <el-form-item label="课程提前续约时间" prop="courseRenewalDays">
-                  <el-input-number v-model="businessForm.courseRenewalDays" :min="1" :max="30" controls-position="right" style="width: 150px;">
-                    <template #suffix>天</template>
+                <el-form-item label="课程提前预约时间" prop="courseAdvanceBookingHours">
+                  <el-input-number v-model="businessForm.courseAdvanceBookingHours" :min="0" :max="12" controls-position="right" style="width: 150px;">
+                    <template #suffix>小时</template>
                   </el-input-number>
-                  <div class="form-tip">会员卡到期前多少天内可以续费</div>
+                  <div class="form-tip">课程需要提前多少小时预约</div>
                 </el-form-item>
 
                 <el-form-item label="课程取消时间限制" prop="courseCancelHours">
-                  <el-input-number v-model="businessForm.courseCancelHours" :min="1" :max="48" controls-position="right" style="width: 150px;">
+                  <el-input-number v-model="businessForm.courseCancelHours" :min="0" :max="2" controls-position="right" style="width: 150px;">
                     <template #suffix>小时</template>
                   </el-input-number>
                   <div class="form-tip">课程开始前多少小时内不能取消</div>
+                </el-form-item>
+
+                <el-form-item label="签到开始时间" prop="checkinStartMinutes">
+                  <el-input-number v-model="businessForm.checkinStartMinutes" :min="0" :max="60" controls-position="right" style="width: 150px;">
+                    <template #suffix>分钟</template>
+                  </el-input-number>
+                  <div class="form-tip">课程开始前多少分钟可签到</div>
+                </el-form-item>
+
+                <el-form-item label="签到截止时间" prop="checkinEndMinutes">
+                  <el-input-number v-model="businessForm.checkinEndMinutes" :min="0" :max="60" controls-position="right" style="width: 150px;">
+                    <template #suffix>分钟</template>
+                  </el-input-number>
+                  <div class="form-tip">课程开始后多少分钟截止签到</div>
                 </el-form-item>
 
                 <el-form-item label="最低开课人数" prop="minClassSize">
@@ -100,6 +114,13 @@
                     <template #suffix>人</template>
                   </el-input-number>
                   <div class="form-tip">团课最多允许报名人数</div>
+                </el-form-item>
+
+                <el-form-item label="自动完成时间" prop="autoCompleteHours">
+                  <el-input-number v-model="businessForm.autoCompleteHours" :min="0" :max="24" controls-position="right" style="width: 150px;">
+                    <template #suffix>小时</template>
+                  </el-input-number>
+                  <div class="form-tip">课程结束后多少小时自动变更为已完成</div>
                 </el-form-item>
               </el-form>
             </div>
@@ -154,10 +175,13 @@ const basicForm = reactive({
 const businessForm = reactive({
   businessStartTime: '08:00:00',
   businessEndTime: '22:00:00',
-  courseRenewalDays: 7,
+  courseAdvanceBookingHours: 2,
   courseCancelHours: 2,
-  minClassSize: 3,
+  checkinStartMinutes: 2,
+  checkinEndMinutes: 2,
+  minClassSize: 5,
   maxClassCapacity: 20,
+  autoCompleteHours:1
 })
 
 // 表单验证规则
@@ -171,10 +195,15 @@ const basicRules: FormRules = {
 const businessRules: FormRules = {
   businessStartTime: [{ required: true, message: '请选择营业开始时间', trigger: 'change' }],
   businessEndTime: [{ required: true, message: '请选择营业结束时间', trigger: 'change' }],
-  courseRenewalDays: [{ required: true, message: '请输入课程提前续约时间', trigger: 'blur' }],
+  courseAdvanceBookingHours: [
+    { required: true, message: '请输入课程提前预约时间', trigger: 'blur' },
+  ],
   courseCancelHours: [{ required: true, message: '请输入课程取消时间限制', trigger: 'blur' }],
+  checkinStartMinutes: [{ required: true, message: '请输入课程开始前可签到时间', trigger: 'blur' }],
+  checkinEndMinutes: [{ required: true, message: '请输入课程开始后可签到时间', trigger: 'blur' }],
   minClassSize: [{ required: true, message: '请输入最低开课人数', trigger: 'blur' }],
   maxClassCapacity: [{ required: true, message: '请输入最大课程容量', trigger: 'blur' }],
+  autoCompleteHours:[{ required: true, message: '请输入自动完成时间', trigger: 'blur' }]
 }
 
 // 禁用的小时选项
@@ -213,10 +242,13 @@ const loadConfig = async () => {
       // 填充业务设置
       businessForm.businessStartTime = config.business.businessStartTime
       businessForm.businessEndTime = config.business.businessEndTime
-      businessForm.courseRenewalDays = config.business.courseRenewalDays
+      businessForm.courseAdvanceBookingHours = config.business.courseAdvanceBookingHours
       businessForm.courseCancelHours = config.business.courseCancelHours
+      businessForm.checkinStartMinutes = config.business.checkinStartMinutes
+      businessForm.checkinEndMinutes = config.business.checkinEndMinutes
       businessForm.minClassSize = config.business.minClassSize
       businessForm.maxClassCapacity = config.business.maxClassCapacity
+      businessForm.autoCompleteHours = config.business.autoCompleteHours
 
       updateTime.value = config.updateTime || ''
     }
@@ -307,10 +339,13 @@ const handleSave = async () => {
       {
         businessStartTime: businessForm.businessStartTime,
         businessEndTime: businessForm.businessEndTime,
-        courseRenewalDays: businessForm.courseRenewalDays,
+        courseAdvanceBookingHours: businessForm.courseAdvanceBookingHours,
         courseCancelHours: businessForm.courseCancelHours,
+        checkinStartMinutes: businessForm.checkinStartMinutes,
+        checkinEndMinutes: businessForm.checkinEndMinutes,
         minClassSize: businessForm.minClassSize,
         maxClassCapacity: businessForm.maxClassCapacity,
+        autoCompleteHours:businessForm.autoCompleteHours
       }
     )
     // 重新加载配置获取更新时间
@@ -490,6 +525,6 @@ onMounted(() => {
 
 :deep(.el-form-item__content) {
   line-height: 1;
-  display:block;
+  display: block;
 }
 </style>

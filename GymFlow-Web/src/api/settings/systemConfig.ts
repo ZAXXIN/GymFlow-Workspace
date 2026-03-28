@@ -11,10 +11,13 @@ export interface BasicConfigDTO {
 export interface BusinessConfigDTO {
   businessStartTime: string
   businessEndTime: string
-  courseRenewalDays: number
+  courseAdvanceBookingHours: number
   courseCancelHours: number
+  checkinStartMinutes: number
+  checkinEndMinutes: number
   minClassSize: number
   maxClassCapacity: number
+  autoCompleteHours: number
 }
 
 // 系统配置响应DTO
