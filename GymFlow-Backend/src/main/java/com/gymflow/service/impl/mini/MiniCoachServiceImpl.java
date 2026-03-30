@@ -3,8 +3,10 @@ package com.gymflow.service.impl.mini;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gymflow.dto.coach.CoachFullDTO;
+import com.gymflow.dto.member.CourseRecordDTO;
 import com.gymflow.dto.member.HealthRecordDTO;
 import com.gymflow.dto.member.MemberFullDTO;
+import com.gymflow.dto.member.CheckInRecordDTO;
 import com.gymflow.dto.mini.*;
 import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
@@ -41,6 +43,8 @@ public class MiniCoachServiceImpl implements MiniCoachService {
     private final CourseScheduleMapper courseScheduleMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final HealthRecordMapper healthRecordMapper;
+    private final CheckInRecordMapper checkInRecordMapper;
+    private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final BCryptUtil bCryptUtil;
 
@@ -69,7 +73,6 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         dto.setSpecialty(coach.getSpecialty());
         dto.setYearsOfExperience(coach.getYearsOfExperience());
         dto.setStatus(coach.getStatus());
-        dto.setTotalCourses(coach.getTotalCourses());
         dto.setRating(coach.getRating());
         dto.setIntroduction(coach.getIntroduction());
         dto.setCreateTime(coach.getCreateTime());
@@ -164,7 +167,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         // 查询排课的预约
         LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
         bookingQuery.eq(CourseBooking::getScheduleId, scheduleId)
-                .in(CourseBooking::getBookingStatus, 0, 1, 2) // 待上课、已签到、已完成
+                .in(CourseBooking::getBookingStatus, 0, 1, 2, 4) // 待上课、已签到、已完成
                 .orderByAsc(CourseBooking::getBookingTime);
 
         List<CourseBooking> bookings = courseBookingMapper.selectList(bookingQuery);
@@ -218,7 +221,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         // 查询该排课的所有预约
         LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
         bookingWrapper.eq(CourseBooking::getScheduleId, scheduleId)
-                .in(CourseBooking::getBookingStatus, Arrays.asList(0, 1, 2)) // 待上课、已签到、已完成
+                .in(CourseBooking::getBookingStatus, Arrays.asList(0, 1, 2,4)) // 待上课、已签到、已完成
                 .orderByAsc(CourseBooking::getBookingTime);
 
         List<CourseBooking> bookings = courseBookingMapper.selectList(bookingWrapper);
@@ -263,24 +266,178 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         BeanUtils.copyProperties(member, dto);
         dto.setUsername(member.getPhone());
 
-        // 获取该教练所教排课中该会员的预约记录
-        LambdaQueryWrapper<CourseSchedule> scheduleWrapper = new LambdaQueryWrapper<>();
-        scheduleWrapper.eq(CourseSchedule::getCoachId, coachId);
-        List<CourseSchedule> schedules = courseScheduleMapper.selectList(scheduleWrapper);
-
-        if (!CollectionUtils.isEmpty(schedules)) {
-            List<Long> scheduleIds = schedules.stream().map(CourseSchedule::getScheduleId).collect(Collectors.toList());
-
-            LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
-            bookingWrapper.eq(CourseBooking::getMemberId, memberId)
-                    .in(CourseBooking::getScheduleId, scheduleIds)
-                    .orderByDesc(CourseBooking::getBookingTime);
-
-            List<CourseBooking> bookings = courseBookingMapper.selectList(bookingWrapper);
-            // 这里可以添加课程记录转换逻辑
+        // 计算年龄
+        if (member.getBirthday() != null) {
+            dto.setAge(java.time.Period.between(member.getBirthday(), LocalDate.now()).getYears());
         }
 
+        // 1. 查询健康档案
+        LambdaQueryWrapper<HealthRecord> healthWrapper = new LambdaQueryWrapper<>();
+        healthWrapper.eq(HealthRecord::getMemberId, memberId)
+                .orderByDesc(HealthRecord::getRecordDate);
+        List<HealthRecord> healthRecords = healthRecordMapper.selectList(healthWrapper);
+
+        List<HealthRecordDTO> healthRecordDTOs = healthRecords.stream().map(record -> {
+            HealthRecordDTO dtoItem = new HealthRecordDTO();
+            BeanUtils.copyProperties(record, dtoItem);
+            return dtoItem;
+        }).collect(Collectors.toList());
+        dto.setHealthRecords(healthRecordDTOs);
+
+        // 2. 查询会员卡
+        List<MiniMemberCardDTO> memberCards = getMemberCards(memberId);
+        dto.setMemberCards(memberCards);
+
+        // 3. 查询课程记录
+        List<CourseRecordDTO> courseRecords = getCourseRecords(memberId);
+        dto.setCourseRecords(courseRecords);
+
+        // 4. 查询签到记录
+        List<CheckInRecordDTO> checkinRecords = getCheckinRecords(memberId);
+        dto.setCheckinRecords(checkinRecords);
+
         return dto;
+    }
+
+    /**
+     * 获取会员卡列表
+     */
+    private List<MiniMemberCardDTO> getMemberCards(Long memberId) {
+        List<MiniMemberCardDTO> cardList = new ArrayList<>();
+
+        LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
+        orderQuery.eq(Order::getMemberId, memberId)
+                .eq(Order::getPaymentStatus, 1)
+                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+
+        List<Order> orders = orderMapper.selectList(orderQuery);
+        if (CollectionUtils.isEmpty(orders)) {
+            return cardList;
+        }
+
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+        LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
+        itemQuery.in(OrderItem::getOrderId, orderIds)
+                .in(OrderItem::getProductType, 0, 1, 2)
+                .orderByDesc(OrderItem::getCreateTime);
+
+        List<OrderItem> orderItems = orderItemMapper.selectList(itemQuery);
+
+        for (OrderItem item : orderItems) {
+            MiniMemberCardDTO card = new MiniMemberCardDTO();
+            card.setProductId(item.getProductId());
+            card.setProductName(item.getProductName());
+            card.setCardType(item.getProductType());
+            card.setStartDate(item.getValidityStartDate());
+            card.setEndDate(item.getValidityEndDate());
+            card.setTotalSessions(item.getTotalSessions());
+            card.setRemainingSessions(item.getRemainingSessions());
+
+            if (item.getTotalSessions() != null && item.getRemainingSessions() != null) {
+                card.setUsedSessions(item.getTotalSessions() - item.getRemainingSessions());
+            }
+
+            if (item.getStatus() != null) {
+                card.setStatus(item.getStatus());
+            } else if (item.getValidityEndDate() != null && LocalDate.now().isAfter(item.getValidityEndDate())) {
+                card.setStatus("EXPIRED");
+            } else if (item.getRemainingSessions() != null && item.getRemainingSessions() <= 0) {
+                card.setStatus("USED_UP");
+            } else {
+                card.setStatus("ACTIVE");
+            }
+
+            cardList.add(card);
+        }
+
+        return cardList;
+    }
+
+    /**
+     * 获取课程记录
+     */
+    private List<CourseRecordDTO> getCourseRecords(Long memberId) {
+        List<CourseRecordDTO> courseRecords = new ArrayList<>();
+
+        LambdaQueryWrapper<CourseBooking> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseBooking::getMemberId, memberId)
+                .orderByDesc(CourseBooking::getBookingTime);
+
+        List<CourseBooking> bookings = courseBookingMapper.selectList(queryWrapper);
+
+        for (CourseBooking booking : bookings) {
+            CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+            if (schedule == null) continue;
+
+            Course course = courseMapper.selectById(schedule.getCourseId());
+            if (course == null) continue;
+
+            CourseRecordDTO record = new CourseRecordDTO();
+            record.setCourseId(course.getCourseId());
+            record.setCourseName(course.getCourseName());
+            record.setSessionCost(course.getSessionCost());
+
+            Coach coach = coachMapper.selectById(schedule.getCoachId());
+            if (coach != null) {
+                record.setCoachName(coach.getRealName());
+            }
+
+            record.setScheduleDate(schedule.getScheduleDate());
+            record.setStartTime(schedule.getStartTime());
+            record.setEndTime(schedule.getEndTime());
+            record.setBookingStatus(booking.getBookingStatus());
+            record.setCheckinTime(booking.getCheckinTime());
+
+            courseRecords.add(record);
+        }
+
+        return courseRecords;
+    }
+
+    /**
+     * 获取签到记录
+     */
+    private List<CheckInRecordDTO> getCheckinRecords(Long memberId) {
+        List<CheckInRecordDTO> checkinRecords = new ArrayList<>();
+
+        LambdaQueryWrapper<CheckinRecord> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CheckinRecord::getMemberId, memberId)
+                .orderByDesc(CheckinRecord::getCheckinTime);
+
+        List<CheckinRecord> records = checkInRecordMapper.selectList(queryWrapper);
+
+        for (CheckinRecord record : records) {
+            CheckInRecordDTO dto = new CheckInRecordDTO();
+            dto.setCheckinTime(record.getCheckinTime());
+            dto.setCheckinMethod(record.getCheckinMethod());
+            dto.setNotes(record.getNotes());
+
+            if (record.getCourseBookingId() != null) {
+                CourseBooking booking = courseBookingMapper.selectById(record.getCourseBookingId());
+                if (booking != null) {
+                    CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+                    if (schedule != null) {
+                        Course course = courseMapper.selectById(schedule.getCourseId());
+                        if (course != null) {
+                            dto.setCourseName(course.getCourseName());
+                            dto.setCourseId(course.getCourseId());
+                            dto.setScheduleId(schedule.getScheduleId());
+
+                            Coach coach = coachMapper.selectById(schedule.getCoachId());
+                            if (coach != null) {
+                                dto.setCoachName(coach.getRealName());
+                                dto.setCoachId(coach.getId());
+                            }
+                        }
+                    }
+                }
+            }
+
+            checkinRecords.add(dto);
+        }
+
+        return checkinRecords;
     }
 
     @Override
@@ -525,9 +682,6 @@ public class MiniCoachServiceImpl implements MiniCoachService {
         stats.setMonthCourseHours(monthCourseHours);
         stats.setMonthMemberCount((int) monthMemberCount);
         stats.setMonthIncome(monthIncome);
-
-        // 总数据
-        stats.setTotalCourseHours(coach.getTotalCourses() != null ? coach.getTotalCourses() : 0);
 
         // 生成趋势数据
         stats.setCourseTrend(generateTrendData(startDate, endDate, "course"));

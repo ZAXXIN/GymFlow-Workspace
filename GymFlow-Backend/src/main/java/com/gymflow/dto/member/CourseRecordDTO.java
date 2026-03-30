@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Schema(description = "会员课程记录DTO")
@@ -26,15 +28,15 @@ public class CourseRecordDTO {
 
     @NotNull(message = "课程日期不能为空")
     @Schema(description = "课程日期", example = "2026-01-28T00:00:00", required = true)
-    private LocalDateTime scheduleDate;
+    private LocalDate scheduleDate;
 
     @NotNull(message = "课程开始时间不能为空")
     @Schema(description = "课程开始时间", example = "2026-01-28T14:00:00", required = true)
-    private LocalDateTime startTime;
+    private LocalTime startTime;
 
     @NotNull(message = "课程结束时间不能为空")
     @Schema(description = "课程结束时间", example = "2026-01-28T15:30:00", required = true)
-    private LocalDateTime endTime;
+    private LocalTime endTime;
 
     @Schema(description = "消耗课时数", example = "1")
     private Integer sessionCost;

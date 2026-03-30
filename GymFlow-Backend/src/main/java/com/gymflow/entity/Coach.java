@@ -31,9 +31,6 @@ public class Coach {
 
     private Integer status;
 
-    @TableField("total_courses")
-    private Integer totalCourses;
-
     private BigDecimal rating;
 
     private String introduction;

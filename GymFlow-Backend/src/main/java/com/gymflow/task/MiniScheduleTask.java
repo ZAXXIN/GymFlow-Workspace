@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,12 +33,27 @@ public class MiniScheduleTask {
     private final MiniCheckinCodeMapper miniCheckinCodeMapper;
 
     /**
-     * 每小时执行一次，自动完成课程
+     * 应用启动时立即执行一次所有任务
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    @PostConstruct
+    public void init() {
+        log.info("========== 定时任务初始化，启动时立即执行 ==========");
+        // 启动时立即执行一次
+        expireMissedCourses();
+        expireCheckinCodes();
+        autoCompleteCourses();
+        log.info("========== 定时任务初始化完成 ==========");
+    }
+
+    /**
+     * 每半小时执行一次，自动完成课程
+     * cron 含义：每小时的第0分钟和第30分钟执行
+     * 例如：00:00, 00:30, 01:00, 01:30...
+     */
+    @Scheduled(cron = "0 */30 * * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void autoCompleteCourses() {
-        log.info("开始执行自动完成课程任务");
+        log.info("开始执行自动完成课程任务 - {}", LocalDateTime.now());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -60,12 +76,12 @@ public class MiniScheduleTask {
     }
 
     /**
-     * 每小时执行一次，处理过期的签到码
+     * 每半小时执行一次，处理过期的签到码
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void expireCheckinCodes() {
-        log.info("开始处理过期签到码");
+        log.info("开始处理过期签到码 - {}", LocalDateTime.now());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -83,12 +99,12 @@ public class MiniScheduleTask {
     }
 
     /**
-     * 每小时执行一次，将未签到的已结束课程标记为已过期
+     * 每半小时执行一次，将未签到的已结束课程标记为已过期
      */
-    @Scheduled(cron = "0 0 * * * ?")
+    @Scheduled(cron = "0 */30 * * * ?")
     @Transactional(rollbackFor = Exception.class)
     public void expireMissedCourses() {
-        log.info("定时任务：开始处理未签到的过期课程");
+        log.info("定时任务：开始处理未签到的过期课程 - {}", LocalDateTime.now());
 
         LocalDateTime now = LocalDateTime.now();
 

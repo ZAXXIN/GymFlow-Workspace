@@ -179,7 +179,6 @@ public class CoachServiceImpl implements CoachService {
         coach.setIntroduction(basicDTO.getIntroduction());
 
         // 初始化统计信息
-        coach.setTotalCourses(0);
         coach.setRating(new BigDecimal("5.00")); // 默认评分5.0
 
         // 设置创建时间和更新时间
@@ -453,7 +452,6 @@ public class CoachServiceImpl implements CoachService {
         vo.setYearsOfExperience(coach.getYearsOfExperience());
         vo.setStatus(coach.getStatus());
         vo.setStatusDesc(coach.getStatus() == 1 ? "在职" : "离职");
-        vo.setTotalCourses(coach.getTotalCourses());
         vo.setRating(coach.getRating());
         vo.setCreateTime(coach.getCreateTime());
 

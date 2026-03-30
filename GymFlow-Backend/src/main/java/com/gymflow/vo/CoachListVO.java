@@ -19,7 +19,6 @@ public class CoachListVO {
     private Integer yearsOfExperience;
     private Integer status;
     private String statusDesc;
-    private Integer totalCourses;
     private BigDecimal rating;
     private LocalDateTime createTime;
 

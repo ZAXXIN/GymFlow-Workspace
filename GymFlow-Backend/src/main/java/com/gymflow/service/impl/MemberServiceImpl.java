@@ -883,9 +883,9 @@ public class MemberServiceImpl implements MemberService {
                 }
 
                 // 从排课获取时间信息
-                recordDTO.setScheduleDate(schedule.getScheduleDate().atStartOfDay());
-                recordDTO.setStartTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()));
-                recordDTO.setEndTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime()));
+                recordDTO.setScheduleDate(schedule.getScheduleDate());
+                recordDTO.setStartTime(schedule.getStartTime());
+                recordDTO.setEndTime(schedule.getEndTime());
                 recordDTO.setBookingStatus(booking.getBookingStatus());
                 recordDTO.setCheckinTime(booking.getCheckinTime());
 

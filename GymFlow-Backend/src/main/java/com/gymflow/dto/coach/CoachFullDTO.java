@@ -19,7 +19,6 @@ public class CoachFullDTO {
     private List<String> certificationList;
     private Integer yearsOfExperience;
     private Integer status;
-    private Integer totalCourses;
     private BigDecimal rating;
     private String introduction;
     private LocalDateTime createTime;

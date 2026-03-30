@@ -920,7 +920,6 @@ public class CourseServiceImpl implements CourseService {
         vo.setBookingId(booking.getId());
         vo.setMemberId(booking.getMemberId());
         vo.setBookingTime(booking.getBookingTime());
-        vo.setBookingStatus(booking.getBookingStatus());
         vo.setCheckinTime(booking.getCheckinTime());
         vo.setSignCode(booking.getSignCode());
         vo.setSignCodeExpireTime(booking.getSignCodeExpireTime());
@@ -958,9 +957,48 @@ public class CourseServiceImpl implements CourseService {
                 vo.setCoachId(coach.getId());
                 vo.setCoachName(coach.getRealName());
             }
+
+            // ✅ 动态判断状态
+            Integer originalStatus = booking.getBookingStatus();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime courseStart = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+            LocalDateTime courseEnd = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
+
+            // 状态判断优先级：已取消 > 已完成 > 已签到 > 已过期 > 待上课
+            if (originalStatus == 3) {
+                vo.setBookingStatus(3);
+            } else if (originalStatus == 2) {
+                vo.setBookingStatus(2);
+            } else if (originalStatus == 1) {
+                vo.setBookingStatus(1);
+            } else if (originalStatus == 0) {
+                // 待上课状态，判断是否已过期
+                if (now.isAfter(courseEnd)) {
+                    vo.setBookingStatus(4);
+                } else {
+                    vo.setBookingStatus(0);
+                }
+            } else {
+                vo.setBookingStatus(originalStatus);
+            }
         }
 
         return vo;
+    }
+
+    /**
+     * 获取预约状态描述
+     */
+    private String getBookingStatusDesc(Integer status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case 0: return "待上课";
+            case 1: return "已签到";
+            case 2: return "已完成";
+            case 3: return "已取消";
+            case 4: return "已过期";
+            default: return "未知";
+        }
     }
 
     /**
@@ -990,6 +1028,10 @@ public class CourseServiceImpl implements CourseService {
         if (course != null) {
             vo.setCourseName(course.getCourseName());
             vo.setCourseType(course.getCourseType());
+            // 添加课程类型描述
+            if (course.getCourseType() != null) {
+                vo.setCourseTypeDesc(course.getCourseType() == 0 ? "私教课" : "团课");
+            }
             vo.setSessionCost(course.getSessionCost());  // 新增：设置课时消耗
         }
 
@@ -1006,12 +1048,14 @@ public class CourseServiceImpl implements CourseService {
 
         List<CourseBooking> bookings = courseBookingMapper.selectList(bookingWrapper);
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime courseEnd = LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime());
+
         List<CourseBookingVO> bookingVOs = bookings.stream().map(booking -> {
             CourseBookingVO bookingVO = new CourseBookingVO();
             bookingVO.setBookingId(booking.getId());
             bookingVO.setMemberId(booking.getMemberId());
             bookingVO.setBookingTime(booking.getBookingTime());
-            bookingVO.setBookingStatus(booking.getBookingStatus());
             bookingVO.setCheckinTime(booking.getCheckinTime());
             bookingVO.setSignCode(booking.getSignCode());
             bookingVO.setSignCodeExpireTime(booking.getSignCodeExpireTime());
@@ -1024,6 +1068,14 @@ public class CourseServiceImpl implements CourseService {
                 bookingVO.setMemberName(member.getRealName());
                 bookingVO.setMemberPhone(member.getPhone());
                 bookingVO.setMemberNo(member.getMemberNo());
+            }
+
+            // ✅ 动态判断状态（只设置 bookingStatus，不设置 bookingStatusDesc）
+            Integer originalStatus = booking.getBookingStatus();
+            if (originalStatus == 0 && now.isAfter(courseEnd)) {
+                bookingVO.setBookingStatus(4);
+            } else {
+                bookingVO.setBookingStatus(originalStatus);
             }
 
             return bookingVO;
