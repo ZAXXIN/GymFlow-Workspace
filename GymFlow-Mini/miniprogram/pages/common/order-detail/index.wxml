@@ -93,13 +93,13 @@
   <view class="order-detail-actions">
     <button 
       class="order-detail-btn order-detail-btn-pay" 
-      wx:if="{{order.paymentStatus === 0}}"
+      wx:if="{{order.paymentStatus == 0}}"
       bindtap="onPayOrder"
     >立即支付</button>
     
     <button 
       class="order-detail-btn order-detail-btn-cancel" 
-      wx:if="{{order.paymentStatus === 0}}"
+      wx:if="{{order.paymentStatus == 0}}"
       bindtap="onCancelOrder"
     >取消订单</button>
   </view>

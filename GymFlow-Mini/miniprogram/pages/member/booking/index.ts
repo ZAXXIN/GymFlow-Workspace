@@ -314,12 +314,12 @@ Page({
 
   async loadAvailableCourses() {
     if (this.data.availableLoading) return
-  
+
     this.setData({ availableLoading: true })
-  
+
     try {
       const { selectedDate, selectedCourseTypeIndex, courseTypeOptions, showCourseTypeSelect } = this.data
-  
+
       let targetCourseType: number | undefined = undefined
       if (!showCourseTypeSelect) {
         const currentType = bookingStore.currentCourseType
@@ -331,7 +331,7 @@ Page({
       } else {
         targetCourseType = courseTypeOptions[selectedCourseTypeIndex].value
       }
-  
+
       // ✅ 根据课程类型调用不同的方法
       if (targetCourseType === 0) {
         await bookingStore.loadPrivateCourses()
@@ -344,7 +344,7 @@ Page({
           bookingStore.loadGroupCourses({ date: selectedDate })
         ])
       }
-  
+
       // 更新显示
       this.updateDisplayCourses()
       this.setData({ availableLoading: false })
@@ -703,11 +703,50 @@ Page({
       return
     }
 
+    console.log('=== 准备打开签到码弹窗 ===')
+    console.log('booking:', booking)
+    console.log('signCode:', booking.signCode)
+    console.log('bookingId:', booking.bookingId)
+
     this.setData({
       showCheckinModal: true,
       checkinBooking: booking,
       checkinLoading: false,
       showCancelBtn: this.checkCanCancel(booking.scheduleDate, booking.startTime)
+    }, () => {
+      // setData 完成后的回调
+      console.log('setData 完成')
+      console.log('当前 showCheckinModal:', this.data.showCheckinModal)
+      console.log('当前 checkinBooking:', this.data.checkinBooking)
+      console.log('当前 checkinBooking.signCode:', this.data.checkinBooking?.signCode)
+
+      // 延迟后检查组件是否存在
+      setTimeout(() => {
+        // 通过 selectComponent 查找二维码组件实例
+        const qrCodeComponent = this.selectComponent('.qr-code-component')
+        console.log('二维码组件实例:', qrCodeComponent)
+
+        // 或者通过 class 查找
+        const query = wx.createSelectorQuery()
+        query.selectAll('.qr-code').boundingClientRect()
+        query.exec((res) => {
+          console.log('qr-code 元素位置:', res)
+        })
+      }, 300)
+
+      // 手动检查组件是否存在
+      setTimeout(() => {
+        const query = wx.createSelectorQuery()
+        query.select('.checkin-code-qrcode').boundingClientRect()
+        query.exec((res) => {
+          console.log('checkin-code-qrcode 容器位置:', res)
+        })
+
+        // 查找二维码组件实例
+        const pages = getCurrentPages()
+        const currentPage = pages[pages.length - 1]
+        console.log('页面组件:', currentPage)
+      }, 200)
     })
   },
 

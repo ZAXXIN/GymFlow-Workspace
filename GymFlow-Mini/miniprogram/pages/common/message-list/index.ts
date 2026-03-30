@@ -67,11 +67,11 @@ Page({
     
     // 根据tab筛选类型
     var type = undefined
-    if (activeTab === 1) {
+    if (activeTab == 1) {
       type = 'BOOKING'
-    } else if (activeTab === 2) {
+    } else if (activeTab == 2) {
       type = 'CHECKIN'
-    } else if (activeTab === 3) {
+    } else if (activeTab == 3) {
       type = 'SYSTEM'
     }
     
@@ -85,7 +85,7 @@ Page({
         filteredList = []
         for (var i = 0; i < allMessages.length; i++) {
           var msg = allMessages[i]
-          if (msg.type === type) {
+          if (msg.type == type) {
             filteredList.push(msg)
           }
         }
@@ -128,13 +128,13 @@ Page({
     
     for (var i = 0; i < messages.length; i++) {
       var msg = messages[i]
-      if (msg.isRead === 0) {
+      if (msg.isRead == 0) {
         total++
-        if (msg.type === 'BOOKING') {
+        if (msg.type == 'BOOKING') {
           booking++
-        } else if (msg.type === 'CHECKIN') {
+        } else if (msg.type == 'CHECKIN') {
           checkin++
-        } else if (msg.type === 'SYSTEM') {
+        } else if (msg.type == 'SYSTEM') {
           system++
         }
       }
@@ -172,20 +172,20 @@ Page({
     var message = e.currentTarget.dataset.message
     
     // 标记已读
-    if (message.isRead === 0) {
+    if (message.isRead == 0) {
       this.markAsRead(message.id)
     }
     
     // 根据消息类型跳转
-    if (message.type === 'BOOKING' && message.data && message.data.bookingId) {
+    if (message.type == 'BOOKING' && message.data && message.data.bookingId) {
       wx.navigateTo({
         url: '/pages/common/booking-detail/index?id=' + message.data.bookingId
       })
-    } else if (message.type === 'CHECKIN' && message.data && message.data.bookingId) {
+    } else if (message.type == 'CHECKIN' && message.data && message.data.bookingId) {
       wx.navigateTo({
         url: '/pages/member/checkin-code/index?bookingId=' + message.data.bookingId
       })
-    } else if (message.type === 'ORDER' && message.data && message.data.orderId) {
+    } else if (message.type == 'ORDER' && message.data && message.data.orderId) {
       wx.navigateTo({
         url: '/pages/common/order-detail/index?id=' + message.data.orderId
       })
@@ -203,7 +203,7 @@ Page({
       // 更新列表显示
       var messages = that.data.messages
       for (var i = 0; i < messages.length; i++) {
-        if (messages[i].id === messageId) {
+        if (messages[i].id == messageId) {
           messages[i].isRead = 1
           break
         }

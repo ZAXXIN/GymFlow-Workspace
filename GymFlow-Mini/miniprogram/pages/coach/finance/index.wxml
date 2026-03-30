@@ -19,7 +19,7 @@
         color="#07c160"
         trend="{{stats.sessionsTrend}}"
         trendText="较{{getTrendText()}}"
-        wx:if="{{activePeriod === 1}}"
+        wx:if="{{activePeriod == 1}}"
       ></stat-card>
       
       <stat-card 
@@ -30,7 +30,7 @@
         color="#07c160"
         trend="{{stats.sessionsTrend}}"
         trendText="较昨日"
-        wx:if="{{activePeriod === 0}}"
+        wx:if="{{activePeriod == 0}}"
       ></stat-card>
       
       <stat-card 
@@ -41,7 +41,7 @@
         color="#07c160"
         trend="{{stats.sessionsTrend}}"
         trendText="较去年"
-        wx:if="{{activePeriod === 2}}"
+        wx:if="{{activePeriod == 2}}"
       ></stat-card>
       
       <stat-card 
@@ -64,7 +64,7 @@
         color="#f56c6c"
         trend="{{stats.revenueTrend}}"
         trendText="较{{getTrendText()}}"
-        wx:if="{{activePeriod === 1}}"
+        wx:if="{{activePeriod == 1}}"
       ></stat-card>
       
       <stat-card 
@@ -75,7 +75,7 @@
         color="#f56c6c"
         trend="{{stats.revenueTrend}}"
         trendText="较昨日"
-        wx:if="{{activePeriod === 0}}"
+        wx:if="{{activePeriod == 0}}"
       ></stat-card>
       
       <stat-card 
@@ -86,7 +86,7 @@
         color="#f56c6c"
         trend="{{stats.revenueTrend}}"
         trendText="较去年"
-        wx:if="{{activePeriod === 2}}"
+        wx:if="{{activePeriod == 2}}"
       ></stat-card>
       
       <stat-card 
@@ -133,7 +133,7 @@
   
   <!-- 空状态 -->
   <empty-state 
-    wx:if="{{!loading && dataPoints.length === 0}}"
+    wx:if="{{!loading && dataPoints.length == 0}}"
     show="{{true}}"
     text="暂无统计数据"
   ></empty-state>

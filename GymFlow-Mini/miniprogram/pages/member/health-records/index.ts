@@ -72,7 +72,7 @@ Page({
    */
   calculateStats: function(records) {
     console.log(records)
-    if (!records || records.length === 0) {
+    if (!records || records.length == 0) {
       this.setData({
         stats: {
           latestWeight: 0,
@@ -106,15 +106,6 @@ Page({
    */
   onRetry: function() {
     this.loadRecords()
-  },
-
-  /**
-   * 添加记录
-   */
-  onAddRecord: function() {
-    wx.navigateTo({
-      url: '/pages/member/add-health-record/index'
-    })
   },
 
   /**

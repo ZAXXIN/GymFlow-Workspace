@@ -6,14 +6,16 @@
         <text class="add-health-record-form-label-text">记录日期</text>
         <text class="add-health-record-form-required">*</text>
       </view>
-      <view class="add-health-record-form-control" bindtap="onDatePickerTap">
-        <text class="add-health-record-form-value {{!form.recordDate ? 'placeholder' : ''}}">
-          {{form.recordDate || '请选择日期'}}
-        </text>
-        <image class="add-health-record-form-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
-      </view>
+      <picker mode="date" value="{{form.recordDate}}" disabled="{{true}}" bindchange="onDatePickerTap">
+        <view class="add-health-record-form-picker-inner">
+          <image class="add-health-record-form-picker-icon" src="/assets/icons/calendar.png" mode="aspectFit"></image>
+          <text class="add-health-record-form-value">{{form.recordDate}}</text>
+        </view>
+      </picker>
     </view>
-    
+
+
+
     <!-- 体重 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
@@ -21,205 +23,122 @@
         <text class="add-health-record-form-required">*</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入体重"
-          value="{{form.weight}}"
-          bindinput="onInput"
-          data-field="weight"
-          bindblur="calculateBMI"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入体重" value="{{form.weight}}"
+          bindinput="onInput" data-field="weight" bindblur="calculateBMI" />
         <text class="add-health-record-form-unit">kg</text>
       </view>
     </view>
-    
+
     <!-- 体脂率 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">体脂率 (%)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入体脂率"
-          value="{{form.bodyFatPercentage}}"
-          bindinput="onInput"
-          data-field="bodyFatPercentage"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入体脂率" value="{{form.bodyFatPercentage}}"
+          bindinput="onInput" data-field="bodyFatPercentage" />
         <text class="add-health-record-form-unit">%</text>
       </view>
     </view>
-    
+
     <!-- 肌肉量 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">肌肉量 (kg)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入肌肉量"
-          value="{{form.muscleMass}}"
-          bindinput="onInput"
-          data-field="muscleMass"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入肌肉量" value="{{form.muscleMass}}"
+          bindinput="onInput" data-field="muscleMass" />
         <text class="add-health-record-form-unit">kg</text>
       </view>
     </view>
-    
+
     <!-- BMI -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">BMI</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="自动计算"
-          value="{{form.bmi}}"
-          bindinput="onInput"
-          data-field="bmi"
-          disabled="true"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="自动计算" value="{{form.bmi}}"
+          bindinput="onInput" data-field="bmi" disabled="true" />
       </view>
     </view>
-    
+
     <!-- 胸围 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">胸围 (cm)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入胸围"
-          value="{{form.chestCircumference}}"
-          bindinput="onInput"
-          data-field="chestCircumference"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入胸围" value="{{form.chestCircumference}}"
+          bindinput="onInput" data-field="chestCircumference" />
         <text class="add-health-record-form-unit">cm</text>
       </view>
     </view>
-    
+
     <!-- 腰围 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">腰围 (cm)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入腰围"
-          value="{{form.waistCircumference}}"
-          bindinput="onInput"
-          data-field="waistCircumference"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入腰围" value="{{form.waistCircumference}}"
+          bindinput="onInput" data-field="waistCircumference" />
         <text class="add-health-record-form-unit">cm</text>
       </view>
     </view>
-    
+
     <!-- 臀围 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">臀围 (cm)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="digit"
-          placeholder="请输入臀围"
-          value="{{form.hipCircumference}}"
-          bindinput="onInput"
-          data-field="hipCircumference"
-        />
+        <input class="add-health-record-form-input" type="digit" placeholder="请输入臀围" value="{{form.hipCircumference}}"
+          bindinput="onInput" data-field="hipCircumference" />
         <text class="add-health-record-form-unit">cm</text>
       </view>
     </view>
-    
+
     <!-- 血压 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">血压</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="text"
-          placeholder="例如: 120/80"
-          value="{{form.bloodPressure}}"
-          bindinput="onInput"
-          data-field="bloodPressure"
-        />
+        <input class="add-health-record-form-input" type="text" placeholder="例如: 120/80" value="{{form.bloodPressure}}"
+          bindinput="onInput" data-field="bloodPressure" />
       </view>
     </view>
-    
+
     <!-- 心率 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">心率 (bpm)</text>
       </view>
       <view class="add-health-record-form-control">
-        <input 
-          class="add-health-record-form-input"
-          type="number"
-          placeholder="请输入心率"
-          value="{{form.heartRate}}"
-          bindinput="onInput"
-          data-field="heartRate"
-        />
+        <input class="add-health-record-form-input" type="number" placeholder="请输入心率" value="{{form.heartRate}}"
+          bindinput="onInput" data-field="heartRate" />
         <text class="add-health-record-form-unit">bpm</text>
       </view>
     </view>
-    
+
     <!-- 备注 -->
     <view class="add-health-record-form-item">
       <view class="add-health-record-form-label">
         <text class="add-health-record-form-label-text">备注</text>
       </view>
       <view class="add-health-record-form-control">
-        <textarea 
-          class="add-health-record-form-textarea"
-          placeholder="请输入备注信息"
-          value="{{form.notes}}"
-          bindinput="onInput"
-          data-field="notes"
-          maxlength="200"
-        ></textarea>
+        <textarea class="add-health-record-form-textarea" placeholder="请输入备注信息" value="{{form.notes}}"
+          bindinput="onInput" data-field="notes" maxlength="200"></textarea>
       </view>
     </view>
-    
+
     <!-- 提交按钮 -->
     <view class="add-health-record-form-actions">
-      <button 
-        class="add-health-record-form-submit" 
-        form-type="submit"
-        disabled="{{submitting}}"
-      >
+      <button class="add-health-record-form-submit" form-type="submit" disabled="{{submitting}}">
         {{submitting ? '保存中...' : '保存'}}
       </button>
     </view>
   </form>
-  
-  <!-- 日期选择弹窗 -->
-  <view class="date-picker-modal" wx:if="{{datePickerVisible}}">
-    <view class="date-picker-mask" bindtap="onDateCancel"></view>
-    <view class="date-picker-content">
-      <view class="date-picker-header">
-        <text class="date-picker-cancel" bindtap="onDateCancel">取消</text>
-        <text class="date-picker-title">选择日期</text>
-        <text class="date-picker-confirm" bindtap="onDateConfirm">确定</text>
-      </view>
-      <picker-view class="date-picker-view" value="{{[0]}}" bindchange="onDateChange">
-        <picker-view-column>
-          <view wx:for="{{dateOptions}}" wx:key="index" class="date-picker-column-item">{{item}}</view>
-        </picker-view-column>
-      </picker-view>
-    </view>
-  </view>
 </view>

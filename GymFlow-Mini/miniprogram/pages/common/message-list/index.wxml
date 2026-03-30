@@ -4,7 +4,7 @@
   <view class="message-list-header">
     <view class="message-list-tabs">
       <view 
-        class="message-list-tab {{activeTab === 0 ? 'message-list-tab-active' : ''}}"
+        class="message-list-tab {{activeTab == 0 ? 'message-list-tab-active' : ''}}"
         bindtap="onTabChange"
         data-index="0"
       >
@@ -12,7 +12,7 @@
         <text class="message-list-tab-badge" wx:if="{{unreadCount.total > 0}}">{{unreadCount.total}}</text>
       </view>
       <view 
-        class="message-list-tab {{activeTab === 1 ? 'message-list-tab-active' : ''}}"
+        class="message-list-tab {{activeTab == 1 ? 'message-list-tab-active' : ''}}"
         bindtap="onTabChange"
         data-index="1"
       >
@@ -20,7 +20,7 @@
         <text class="message-list-tab-badge" wx:if="{{unreadCount.BOOKING > 0}}">{{unreadCount.BOOKING}}</text>
       </view>
       <view 
-        class="message-list-tab {{activeTab === 2 ? 'message-list-tab-active' : ''}}"
+        class="message-list-tab {{activeTab == 2 ? 'message-list-tab-active' : ''}}"
         bindtap="onTabChange"
         data-index="2"
       >
@@ -28,7 +28,7 @@
         <text class="message-list-tab-badge" wx:if="{{unreadCount.CHECKIN > 0}}">{{unreadCount.CHECKIN}}</text>
       </view>
       <view 
-        class="message-list-tab {{activeTab === 3 ? 'message-list-tab-active' : ''}}"
+        class="message-list-tab {{activeTab == 3 ? 'message-list-tab-active' : ''}}"
         bindtap="onTabChange"
         data-index="3"
       >
@@ -48,13 +48,13 @@
   <view class="message-list-content">
     <block wx:for="{{messages}}" wx:key="id" wx:for-item="msg">
       <view 
-        class="message-list-item {{msg.isRead === 0 ? 'message-list-item-unread' : ''}}"
+        class="message-list-item {{msg.isRead == 0 ? 'message-list-item-unread' : ''}}"
         bindtap="onMessageTap"
         data-message="{{msg}}"
       >
         <view class="message-list-item-icon">
           <image src="/assets/icons/message-{{msg.type.toLowerCase()}}.png" mode="aspectFit"></image>
-          <view class="message-list-item-dot" wx:if="{{msg.isRead === 0}}"></view>
+          <view class="message-list-item-dot" wx:if="{{msg.isRead == 0}}"></view>
         </view>
         
         <view class="message-list-item-content">
@@ -86,7 +86,7 @@
     
     <!-- 空状态 -->
     <empty-state 
-      wx:if="{{!loading && messages.length === 0}}"
+      wx:if="{{!loading && messages.length == 0}}"
       show="{{true}}"
       text="暂无消息"
     ></empty-state>

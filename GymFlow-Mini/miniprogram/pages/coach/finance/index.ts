@@ -173,10 +173,10 @@ Page({
     const month = (now.getMonth() + 1).toString().padStart(2, '0')
     const day = now.getDate().toString().padStart(2, '0')
     
-    if (period === 0) {
+    if (period == 0) {
       // 日：返回今天日期
       return `${year}-${month}-${day}`
-    } else if (period === 1) {
+    } else if (period == 1) {
       // 月：返回年月
       return `${year}-${month}`
     } else {
@@ -196,7 +196,7 @@ Page({
     const current = dataPoints[dataPoints.length - 1][field]
     const previous = dataPoints[0][field]
     
-    if (previous === 0) {
+    if (previous == 0) {
       return current > 0 ? 100 : 0
     }
     

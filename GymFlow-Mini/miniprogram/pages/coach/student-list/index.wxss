@@ -129,21 +129,6 @@
   border-bottom: none;
 }
 
-.student-list-avatar {
-  position: relative;
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 24rpx;
-  background: #f0f0f0;
-}
-
-.student-list-avatar image {
-  width: 100%;
-  height: 100%;
-}
-
 .student-list-status-dot {
   position: absolute;
   bottom: 0;
@@ -160,14 +145,8 @@
 }
 
 .student-list-info {
-  flex: 1;
-}
-
-.student-list-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8rpx;
+  flex: 1;
 }
 
 .student-list-name {

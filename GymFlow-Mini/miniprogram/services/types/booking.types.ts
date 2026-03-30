@@ -14,7 +14,6 @@ export interface MiniAvailableCourseDTO {
   scheduleDate: string;         // 上课日期
   startTime: string;            // 开始时间
   endTime: string;              // 结束时间
-  location: string;             // 上课地点
   maxCapacity: number;          // 最大容量
   currentEnrollment: number;    // 当前报名人数
   remainingSlots: number;       // 剩余名额
@@ -37,7 +36,6 @@ export interface Course {
   endTime: string
   duration: number
   price: number
-  location?: string
   status: 0 | 1
   statusDesc: string
   createTime: string
@@ -81,7 +79,6 @@ export interface CourseBooking {
   scheduleDate?: string
   startTime?: string
   endTime?: string
-  location?: string
   checkinCode?: string // 签到码（6位数字）
 }
 

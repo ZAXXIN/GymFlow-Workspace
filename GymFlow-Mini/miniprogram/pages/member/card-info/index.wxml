@@ -32,7 +32,7 @@
       </swiper-item>
       
       <!-- 无卡时的空状态 -->
-      <swiper-item wx:if="{{activeCards.length === 0}}">
+      <swiper-item wx:if="{{activeCards.length == 0}}">
         <view class="card-info-card card-info-card-empty">
           <view class="card-info-card-bg"></view>
           <view class="card-info-card-content card-info-card-content-empty">
@@ -49,7 +49,7 @@
       <view 
         wx:for="{{activeCards}}" 
         wx:key="index"
-        class="card-info-dot {{currentCardIndex === index ? 'card-info-dot-active' : ''}}"
+        class="card-info-dot {{currentCardIndex == index ? 'card-info-dot-active' : ''}}"
         data-index="{{index}}"
         bindtap="onDotTap"
       ></view>

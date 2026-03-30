@@ -50,7 +50,7 @@
   </view>
   
   <!-- 会员信息（教练端显示） -->
-  <view class="booking-detail-card" wx:if="{{userRole === 'COACH' && booking.memberInfo}}">
+  <view class="booking-detail-card" wx:if="{{userRole == 'COACH' && booking.memberInfo}}">
     <view class="booking-detail-card-header">
       <text class="booking-detail-card-title">会员信息</text>
     </view>
@@ -104,13 +104,13 @@
   <view class="booking-detail-actions" wx:if="{{showActions}}">
     <button 
       class="booking-detail-btn booking-detail-btn-cancel" 
-      wx:if="{{booking.bookingStatus === 0}}"
+      wx:if="{{booking.bookingStatus == 0}}"
       bindtap="onCancelBooking"
     >取消预约</button>
     
     <button 
       class="booking-detail-btn booking-detail-btn-checkin" 
-      wx:if="{{booking.bookingStatus === 0 && canCheckin}}"
+      wx:if="{{booking.bookingStatus == 0 && canCheckin}}"
       bindtap="onViewCheckinCode"
     >查看签到码</button>
     

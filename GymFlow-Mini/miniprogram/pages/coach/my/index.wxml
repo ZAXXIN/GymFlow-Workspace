@@ -7,7 +7,6 @@
         <view class="coach-my-info">
           <view class="coach-my-name">{{coachInfo.realName || '教练'}}</view>
           <view class="coach-my-phone">{{coachInfo.phone || '未绑定手机'}}</view>
-          <view class="coach-my-specialty">{{coachInfo.specialty || '健身教练'}}</view>
         </view>
         <view class="coach-my-message" bindtap="goToMessage">
           <image class="coach-my-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
@@ -17,12 +16,7 @@
     </view>
 
     <!-- 统计数据 -->
-    <!-- <view class="coach-my-stats">
-      <view class="coach-my-stats-item">
-        <text class="coach-my-stats-value">{{coachInfo.totalCourses || 0}}</text>
-        <text class="coach-my-stats-label">累计课程</text>
-      </view>
-      <view class="coach-my-stats-item">
+    <!-- <view class="coach-my-stats-item">
         <text class="coach-my-stats-value">{{coachInfo.rating || 5.0}}</text>
         <text class="coach-my-stats-label">评分</text>
       </view>
@@ -33,16 +27,12 @@
       <view class="coach-my-section-title">个人信息</view>
       <view class="coach-my-info-list">
         <view class="coach-my-info-item">
-          <text class="coach-my-info-label">课时数</text>
-          <text class="coach-my-info-value">{{coachInfo.totalCourses || 0}}</text>
-        </view>
-        <view class="coach-my-info-item">
           <text class="coach-my-info-label">从业年限</text>
           <text class="coach-my-info-value">{{coachInfo.yearsOfExperience || 0}}年</text>
         </view>
         <view class="coach-my-info-item">
           <text class="coach-my-info-label">个人专长</text>
-          <text class="coach-my-info-value">{{coachInfo.specialty || 0}}年</text>
+          <text class="coach-my-info-value">{{coachInfo.specialty || 0}}</text>
         </view>
       </view>
     </view>
@@ -68,11 +58,11 @@
 
     <!-- 菜单列表 -->
     <view class="coach-my-menu">
-      <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/coach/schedule/index">
+      <!-- <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/coach/schedule/index">
         <image class="coach-my-menu-icon" src="/assets/icons/schedule.png" mode="aspectFit"></image>
         <text class="coach-my-menu-title">我的排班</text>
         <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-      </view>
+      </view> -->
 
       <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/modify-password/index">
         <image class="coach-my-menu-icon" src="/assets/icons/lock.png" mode="aspectFit"></image>

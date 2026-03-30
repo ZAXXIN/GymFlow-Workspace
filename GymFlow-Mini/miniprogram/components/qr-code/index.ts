@@ -1,5 +1,5 @@
 // components/qr-code/index.ts
-import drawQrcode from '../../utils/qrcode';
+import QRCode from 'wxqrcode'
 
 Component({
   properties: {
@@ -7,9 +7,8 @@ Component({
       type: String,
       value: '',
       observer(newVal) {
-        if (newVal) {
-          // 延迟绘制，确保 canvas 已创建
-          setTimeout(() => this.draw(), 100)
+        if (newVal && this.data.canvasReady) {
+          setTimeout(() => this.draw(), 200)
         }
       }
     },
@@ -28,49 +27,63 @@ Component({
   },
 
   data: {
-    canvasId: ''
+    canvasId: '',
+    canvasReady: false
   },
 
   lifetimes: {
     attached() {
-      // 生成唯一 canvasId
       const id = 'qrcode-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6)
       this.setData({ canvasId: id })
-      
-      if (this.properties.text) {
-        setTimeout(() => this.draw(), 100)
-      }
+
+      setTimeout(() => {
+        this.createSelectorQuery()
+          .select(`#${id}`)
+          .node()
+          .exec((res) => {
+            if (res && res[0] && res[0].node) {
+              this.canvasNode = res[0].node
+              this.setData({ canvasReady: true })
+              if (this.properties.text) {
+                setTimeout(() => this.draw(), 200)
+              }
+            }
+          })
+      }, 100)
     }
   },
 
   methods: {
     draw() {
-      const { text, size, color, backgroundColor, canvasId } = this.properties
-      const canvasIdValue = this.data.canvasId || canvasId
+      const { text, size, color, backgroundColor } = this.properties
       
-      if (!text) {
-        console.warn('二维码内容为空')
-        return
+      if (!text || !this.canvasNode) return
+      
+      try {
+        const canvas = this.canvasNode
+        const ctx = canvas.getContext('2d')
+        
+        // 设置 canvas 尺寸
+        const dpr = wx.getSystemInfoSync().pixelRatio
+        canvas.width = size * dpr
+        canvas.height = size * dpr
+        ctx.scale(dpr, dpr)
+        
+        // 使用 wxqrcode 绘制二维码
+        QRCode.draw({
+          ctx: ctx,
+          text: text,
+          width: size,
+          height: size,
+          colorDark: color,
+          colorLight: backgroundColor,
+          correctLevel: 1  // 纠错级别
+        })
+        
+        console.log('二维码绘制成功')
+      } catch (error) {
+        console.error('绘制二维码失败:', error)
       }
-      
-      // 使用 wx.createCanvasContext 旧版 API（兼容性更好）
-      const ctx = wx.createCanvasContext(canvasIdValue, this)
-      
-      drawQrcode({
-        ctx,
-        canvasId: canvasIdValue,
-        text,
-        width: size,
-        height: size,
-        colorDark: color,
-        colorLight: backgroundColor,
-        correctLevel: 1
-      })
-      
-      // 延迟绘制完成
-      setTimeout(() => {
-        ctx.draw()
-      }, 50)
     }
   }
 })

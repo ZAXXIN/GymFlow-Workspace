@@ -38,11 +38,11 @@ Page({
   redirectToHome: function() {
     const role = userStore.role
     
-    if (role === 'MEMBER') {
+    if (role == 'MEMBER') {
       wx.reLaunch({
         url: '/pages/member/home/index'
       })
-    } else if (role === 'COACH') {
+    } else if (role == 'COACH') {
       wx.reLaunch({
         url: '/pages/coach/home/index'
       })
@@ -127,13 +127,13 @@ Page({
           setTimeout(function() {
             // 根据 userType 直接跳转，避免依赖 store 的 role 未及时更新
             // userType: 0-会员, 1-教练
-            if (result.userType === 1) {
+            if (result.userType == 1) {
               // 教练
               wx.reLaunch({
                 url: '/pages/coach/home/index'
               })
             } else {
-              // 会员（包括 userType === 0）
+              // 会员（包括 userType == 0）
               wx.reLaunch({
                 url: '/pages/member/home/index'
               })

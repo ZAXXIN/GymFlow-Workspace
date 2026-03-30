@@ -80,3 +80,16 @@ export const getMyCourses = () => {
 // export const renewMemberCard = (memberId, data) => {
 //   return wxRequest.post(`/member/renew-card/${memberId}`, data)
 // }
+
+/**
+ * 会员修改密码
+ * POST /mini/member/modify-password
+ */
+export const modifyMemberPassword = (oldPassword: string, newPassword: string) => {
+  return wxRequest.post('/mini/member/modify-password', null, {
+    params: {
+      oldPassword,
+      newPassword
+    }
+  })
+}

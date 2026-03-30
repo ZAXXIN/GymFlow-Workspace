@@ -412,6 +412,10 @@
   background: #fff;
   border-radius: 16rpx;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  width: 400px;        /* 400px 对应 800rpx */
+  height: 400px;       /* 400px 对应 800rpx */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .checkin-code-number {

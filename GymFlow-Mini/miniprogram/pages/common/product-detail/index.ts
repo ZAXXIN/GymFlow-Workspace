@@ -97,12 +97,12 @@ Page({
     }
 
     // 检查库存
-    if (product.productType === 3 && product.stockQuantity <= 0) {
+    if (product.productType == 3 && product.stockQuantity <= 0) {
       showToast('库存不足', 'none')
       return
     }
 
-    // if (action === 'renew') {
+    // if (action == 'renew') {
     //   // 续费操作
     //   this.renewProduct()
     // } else {

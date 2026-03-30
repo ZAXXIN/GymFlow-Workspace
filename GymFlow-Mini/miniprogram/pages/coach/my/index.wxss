@@ -50,11 +50,6 @@
   margin-bottom: 4rpx;
 }
 
-.coach-my-specialty {
-  font-size: 24rpx;
-  color:#333;
-}
-
 .coach-my-message {
   position: relative;
   width: 80rpx;

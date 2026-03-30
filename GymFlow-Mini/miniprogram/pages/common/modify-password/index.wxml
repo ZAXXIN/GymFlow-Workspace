@@ -74,10 +74,6 @@
         <image src="/assets/icons/{{checkNumber ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
         <text>包含数字</text>
       </view>
-      <view class="modify-password-rule-item {{checkLetter ? 'valid' : ''}}">
-        <image src="/assets/icons/{{checkLetter ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
-        <text>包含字母</text>
-      </view>
       <view class="modify-password-rule-item {{checkMatch ? 'valid' : ''}}">
         <image src="/assets/icons/{{checkMatch ? 'check-circle' : 'circle'}}.png" mode="aspectFit"></image>
         <text>两次密码输入一致</text>

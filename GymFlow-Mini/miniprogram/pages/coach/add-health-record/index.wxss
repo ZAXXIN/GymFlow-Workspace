@@ -1,4 +1,4 @@
-/* pages/member/add-health-record/index.wxss */
+/* pages/coach/add-health-record/index.wxss */
 .add-health-record-page {
   min-height: 100vh;
   padding: 24rpx;
@@ -42,6 +42,31 @@
   background: #f5f5f5;
 }
 
+/* 日期选择器 */
+.add-health-record-form-picker {
+  width: auto;
+}
+
+.add-health-record-form-picker-inner {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.add-health-record-form-picker-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+}
+
+.add-health-record-form-text {
+  margin-right: 6px;
+}
+
 .add-health-record-form-input {
   flex: 1;
   height: 48rpx;
@@ -65,11 +90,11 @@
 
 .add-health-record-form-value {
   flex: 1;
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: #333;
   display: block;
   height:50rpx;
-  line-height: 20rpx;
+  line-height: 50rpx;
 }
 
 .add-health-record-form-value.placeholder {

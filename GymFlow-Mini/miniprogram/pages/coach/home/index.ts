@@ -14,7 +14,6 @@ Page({
     coachInfo: {
       realName: '',
       specialty: '',
-      totalCourses: 0,
       yearsOfExperience: 0
     },
     
@@ -144,8 +143,12 @@ Page({
       // 预处理，为每个课程添加状态字段
       const processedList = scheduleList.map((course: any) => {
         const now = new Date()
-        const scheduleDate = new Date(`${course.scheduleDate} ${course.startTime}`)
-        const courseEnd = new Date(`${course.scheduleDate} ${course.endTime}`)
+        
+        const scheduleDateTimeStr = `${course.scheduleDate} ${course.startTime}`.replace(/-/g, '/')
+        const courseEndDateTimeStr = `${course.scheduleDate} ${course.endTime}`.replace(/-/g, '/')
+        
+        const scheduleDate = new Date(scheduleDateTimeStr)
+        const courseEnd = new Date(courseEndDateTimeStr)
         
         if (now < scheduleDate) {
           return { ...course, statusClass: 'upcoming', statusText: '待上课' }
@@ -228,7 +231,7 @@ onViewStudents(e: any) {
   const { course } = e.currentTarget.dataset
   
   wx.navigateTo({
-    url: `/pages/coach/student-list/index?courseId=${course.scheduleId}&courseName=${encodeURIComponent(course.courseName)}&courseType=${course.courseType}&scheduleDate=${course.scheduleDate}&startTime=${course.startTime}&endTime=${course.endTime}&location=${encodeURIComponent(course.location || '')}`
+    url: `/pages/coach/student-list/index?scheduleId=${course.scheduleId}&courseName=${encodeURIComponent(course.courseName)}&courseType=${course.courseType}&scheduleDate=${course.scheduleDate}&startTime=${course.startTime}&endTime=${course.endTime}`
   })
 },
 

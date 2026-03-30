@@ -141,7 +141,7 @@ Page({
    */
   updateCardFromUserInfo: function () {
     var userInfo = this.data.userInfo
-    if (!userInfo || !userInfo.cards || userInfo.cards.length === 0) {
+    if (!userInfo || !userInfo.cards || userInfo.cards.length == 0) {
       this.setData({ memberCard: null })
       return
     }
@@ -152,7 +152,7 @@ Page({
 
     for (var i = 0; i < userInfo.cards.length; i++) {
       var card = userInfo.cards[i]
-      if (card.status === 'ACTIVE') {
+      if (card.status == 'ACTIVE') {
         if (!card.endDate || new Date(card.endDate) > now) {
           activeCard = card
           break
@@ -189,7 +189,7 @@ Page({
 
     // 更新菜单徽标
     var menuList = this.data.menuList.map(function (item) {
-      if (item.id === 'messages') {
+      if (item.id == 'messages') {
         return { ...item, badge: unreadCount }
       }
       return item

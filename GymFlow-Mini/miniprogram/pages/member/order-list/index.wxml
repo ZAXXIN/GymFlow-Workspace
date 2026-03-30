@@ -74,19 +74,19 @@
         <view class="order-list-item-actions" catchtap>
           <button 
             class="order-list-item-action order-list-item-action-cancel"
-            wx:if="{{item.paymentStatus === 0}}"
+            wx:if="{{item.paymentStatus == 0}}"
             bindtap="onCancelOrder"
             data-order="{{item}}"
           >取消订单</button>
           <button 
             class="order-list-item-action order-list-item-action-pay"
-            wx:if="{{item.paymentStatus === 0}}"
+            wx:if="{{item.paymentStatus == 0}}"
             bindtap="onPayOrder"
             data-order="{{item}}"
           >立即支付</button>
           <button 
             class="order-list-item-action order-list-item-action-confirm"
-            wx:if="{{item.orderStatus === 'PROCESSING' && item.orderType !== 3}}"
+            wx:if="{{item.orderStatus == 'PROCESSING' && item.orderType !== 3}}"
             bindtap="onConfirmReceive"
             data-order="{{item}}"
           >确认完成</button>
@@ -113,7 +113,7 @@
     
     <!-- 空状态 -->
     <empty-state 
-      wx:if="{{!loading && orders.length === 0}}"
+      wx:if="{{!loading && orders.length == 0}}"
       show="{{true}}"
       text="暂无订单"
     ></empty-state>

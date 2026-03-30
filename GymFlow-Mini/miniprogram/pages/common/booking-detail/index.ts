@@ -130,7 +130,7 @@ Page({
     var userRole = this.data.userRole
     
     // 只有待上课状态且是会员本人或教练才显示操作按钮
-    var showActions = booking.bookingStatus === 0
+    var showActions = booking.bookingStatus == 0
     
     this.setData({ showActions: showActions })
   },
@@ -243,7 +243,7 @@ Page({
    * 获取课程类型文本
    */
   getCourseTypeText: function(type) {
-    return type === 0 ? '私教课' : '团课'
+    return type == 0 ? '私教课' : '团课'
   },
 
   /**

@@ -179,7 +179,7 @@ Page({
       // 判断是否为有效卡片
       var isActive = card.status == 'ACTIVE' &&
         (!endDate || endDate > now) &&
-        (card.remainingSessions === undefined || card.remainingSessions > 0)
+        (card.remainingSessions == undefined || card.remainingSessions > 0)
 
       if (isActive) {
         activeCards.push(card)
@@ -334,7 +334,7 @@ Page({
    * 格式化金额
    */
   formatMoney: function (amount) {
-    if (amount === undefined || amount === null) return '¥0.00'
+    if (amount == undefined || amount == null) return '¥0.00'
     return '¥' + amount.toFixed(2)
   },
 
@@ -342,11 +342,11 @@ Page({
    * 格式化剩余课时
    */
   formatRemainingSessions: function (card) {
-    if (card.cardType === 0) {
+    if (card.cardType == 0) {
       // 会籍卡
       return '不限次数'
     }
-    if (card.remainingSessions === undefined) {
+    if (card.remainingSessions == undefined) {
       return '--'
     }
     return '剩余 ' + card.remainingSessions + ' 课时'

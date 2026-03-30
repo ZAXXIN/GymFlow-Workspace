@@ -45,6 +45,17 @@ Page({
   },
 
   /**
+   * 页面显示时重新加载数据
+   * 从添加健康档案页面返回时需要刷新
+   */
+  onShow() {
+    // 如果已经加载过会员ID，重新加载数据
+    if (this.data.memberId) {
+      this.loadMemberDetail()
+    }
+  },
+
+  /**
    * 加载会员详情
    */
   async loadMemberDetail() {
@@ -53,19 +64,20 @@ Page({
     try {
       const { memberId } = this.data
       const detail = await getCoachMemberDetail(memberId)
-      
+      console.log(detail)
       this.setData({
         memberInfo: {
-          memberName: detail.memberName,
-          memberPhone: detail.memberPhone,
+          memberName: detail.realName,
+          memberPhone: detail.phone,
           memberNo: detail.memberNo,
           membershipStartDate: detail.membershipStartDate,
-          memberCard: detail.memberCard
+          memberCard: detail.memberCards
         },
         healthRecords: detail.healthRecords || [],
         courseRecords: detail.courseRecords || [],
         loading: false
       })
+      console.log(this.data.memberInfo,this.data.healthRecords,this.data.courseRecords)
       
     } catch (error: any) {
       console.error('加载会员详情失败:', error)
@@ -105,7 +117,7 @@ Page({
    */
   onAddHealthRecord() {
     const { memberId } = this.data
-    
+    console.log(memberId)
     wx.navigateTo({
       url: `/pages/coach/add-health-record/index?memberId=${memberId}`
     })
@@ -135,19 +147,6 @@ Page({
       'UNPAID': '未支付'
     }
     return map[status] || '未知'
-  },
-
-  /**
-   * 获取预约状态样式类
-   */
-  getBookingStatusClass(status: number): string {
-    const map: Record<number, string> = {
-      0: 'coach-member-course-status-pending',
-      1: 'coach-member-course-status-checked',
-      2: 'coach-member-course-status-completed',
-      3: 'coach-member-course-status-cancelled'
-    }
-    return map[status] || ''
   },
 
   /**

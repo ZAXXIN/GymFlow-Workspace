@@ -9,7 +9,7 @@ Page({
   data: {
     selectedTab: 0,
     // 课程ID
-    courseId: 0,
+    scheduleId: 0,
     
     // 课程信息（从上一页传入）
     courseInfo: {
@@ -18,12 +18,14 @@ Page({
       scheduleDate: '',
       startTime: '',
       endTime: '',
-      location: '',
       currentEnrollment: 0
     },
     
-    // 学员列表
+    // 学员列表（原始数据）
     students: [] as any[],
+    
+    // 显示用的学员列表（根据activeTab过滤后）
+    displayStudents: [] as any[],
     
     // 当前选中Tab 0-全部 1-待签到 2-已签到
     activeTab: 0,
@@ -32,7 +34,12 @@ Page({
     loading: true,
     
     // 是否可以核销
-    canCheckin: false
+    canCheckin: false,
+    
+    // 统计数字
+    totalCount: 0,
+    pendingCount: 0,
+    checkedCount: 0
   },
 
   onLoad(options: any) {
@@ -44,9 +51,9 @@ Page({
       selectedTab: TabBarHelper.getSelectedIndex(pagePath)
     })
 
-    const { courseId, courseName, courseType, scheduleDate, startTime, endTime, location } = options
+    const { scheduleId, courseName, courseType, scheduleDate, startTime, endTime } = options
     
-    if (!courseId) {
+    if (!scheduleId) {
       showToast('参数错误', 'none')
       setTimeout(() => {
         wx.navigateBack()
@@ -56,19 +63,18 @@ Page({
     
     // 从上一页传入的课程信息
     this.setData({ 
-      courseId: parseInt(courseId),
+      scheduleId: parseInt(scheduleId),
       courseInfo: {
         courseName: decodeURIComponent(courseName || ''),
         courseType: parseInt(courseType || '0'),
         scheduleDate: scheduleDate || '',
         startTime: startTime || '',
         endTime: endTime || '',
-        location: location ? decodeURIComponent(location) : '',
         currentEnrollment: 0
       }
     })
 
-    console.log(this.data.courseInfo,'courseInfo')
+    console.log(this.data.courseInfo, 'courseInfo')
     
     this.initData()
   },
@@ -93,21 +99,58 @@ Page({
    * 加载学员列表
    */
   async loadStudents() {
-    const { courseId, courseInfo } = this.data
-    console.log(courseInfo,'courseInfo')
+    const { scheduleId, courseInfo } = this.data
+    console.log(courseInfo, 'courseInfo')
     try {
-      const result = await getCourseStudents(courseId)
+      const result = await getCourseStudents(scheduleId)
       console.log(result)
-      // 更新当前报名人数
+      
+      // 计算统计数字
+      let pending = 0
+      let checked = 0
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].bookingStatus == 0|| result[i].bookingStatus == 4) {
+          pending++
+        } else if (result[i].bookingStatus == 1) {
+          checked++
+        }
+      }
+      
+      // 更新当前报名人数和学员列表
       this.setData({
         'courseInfo.currentEnrollment': result.length,
-        students: result
+        students: result,
+        totalCount: result.length,
+        pendingCount: pending,
+        checkedCount: checked
       })
+      
+      // 根据当前activeTab更新显示列表
+      this.updateDisplayStudents()
+      
       console.log(this.data.students)
     } catch (error) {
       console.error('加载学员列表失败:', error)
       throw error
     }
+  },
+
+  /**
+   * 根据activeTab更新显示列表
+   */
+  updateDisplayStudents() {
+    const { students, activeTab } = this.data
+    
+    let displayStudents: any[] = []
+    if (activeTab == 0) {
+      displayStudents = students
+    } else if (activeTab == 1) {
+      displayStudents = students.filter((s: any) => s.bookingStatus == 0 || s.bookingStatus == 4)
+    } else {
+      displayStudents = students.filter((s: any) => s.bookingStatus == 1)
+    }
+    
+    this.setData({ displayStudents })
   },
 
   /**
@@ -133,9 +176,11 @@ Page({
    * Tab切换
    */
   onTabChange(e: any) {
-    console.log('tab')
+    console.log('tab切换', e)
     const { index } = e.currentTarget.dataset
-    this.setData({ activeTab: parseInt(index) })
+    this.setData({ activeTab: parseInt(index) }, () => {
+      this.updateDisplayStudents()
+    })
   },
 
   /**
@@ -201,70 +246,5 @@ Page({
       }
       showToast(error.message || '核销失败', 'none')
     }
-  },
-
-  /**
-   * 获取筛选后的学员列表
-   */
-  get filteredStudents(): any[] {
-    const { students, activeTab } = this.data
-    console.log(students,'filteredStudents')
-    if (activeTab === 0) {
-      return students
-    } else if (activeTab === 1) {
-      const result: any[] = []
-      for (let i = 0; i < students.length; i++) {
-        if (students[i].bookingStatus === 0) {
-          result.push(students[i])
-        }
-      }
-      return result
-    } else {
-      const result: any[] = []
-      for (let i = 0; i < students.length; i++) {
-        if (students[i].bookingStatus === 1) {
-          result.push(students[i])
-        }
-      }
-      console.log(result)
-      return result
-    }
-  },
-
-  /**
-   * 获取待签到人数
-   */
-  get pendingCount(): number {
-    const { students } = this.data
-    let count = 0
-    for (let i = 0; i < students.length; i++) {
-      if (students[i].bookingStatus === 0) {
-        count++
-      }
-    }
-    return count
-  },
-
-  /**
-   * 获取已签到人数
-   */
-  get checkedCount(): number {
-    const { students } = this.data
-    console.log(students,'student')
-    let count = 0
-    for (let i = 0; i < students.length; i++) {
-      if (students[i].bookingStatus === 1) {
-        count++
-      }
-    }
-    console.log(count,'count')
-    return count
-  },
-
-  /**
-   * 获取总人数
-   */
-  get totalCount(): number {
-    return this.data.students.length
-  },
+  }
 })

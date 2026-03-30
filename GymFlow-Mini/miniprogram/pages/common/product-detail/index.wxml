@@ -11,7 +11,7 @@
         </swiper-item>
       </block>
 
-      <swiper-item wx:if="{{!product.images || product.images.length === 0}}">
+      <swiper-item wx:if="{{!product.images || product.images.length == 0}}">
         <image class="product-detail-swiper-image" src="/assets/icons/product-default.jpg" mode="aspectFill"></image>
       </swiper-item>
     </swiper>

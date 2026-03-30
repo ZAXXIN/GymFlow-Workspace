@@ -1,5 +1,4 @@
 // 会员端添加健康档案页面
-import { userStore } from '../../../stores/user.store'
 import { addHealthRecord } from '../../../services/api/member.api'
 import { showToast, showLoading, hideLoading } from '../../../utils/wx-util'
 
@@ -21,16 +20,23 @@ Page({
       notes: '',
     },
 
-    // 日期选择器
-    datePickerVisible: false,
-
     // 提交状态
     submitting: false,
-
-    dateOptions: []
+    
+    // 会员ID（从页面参数获取）
+    memberId: null,
   },
 
-  onLoad: function () {
+  onLoad: function (options) {
+    // 从页面参数获取 memberId
+    const memberId = options.memberId
+    if (!memberId) {
+      showToast('缺少会员ID参数', 'none')
+      return
+    }
+
+    this.setData({ memberId: memberId })
+
     // 设置默认日期为今天
     const today = new Date()
     const year = today.getFullYear()
@@ -41,33 +47,7 @@ Page({
       'form.recordDate': `${year}-${month}-${day}`
     })
 
-    // 生成日期选项（最近30天）
-    const dateOptions = []
-    for (let i = 0; i < 30; i++) {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      const d = String(date.getDate()).padStart(2, '0')
-      dateOptions.push(`${y}-${m}-${d}`)
-    }
-    this.setData({ dateOptions })
-
     this.calculateBMI()
-  },
-
-  /**
-   * 日期确认
-   */
-  onDateConfirm: function () {
-    // 使用当前选中的日期，这里简化处理，实际应该从picker-view获取
-    const { dateOptions } = this.data
-    if (dateOptions && dateOptions.length > 0) {
-      this.setData({
-        'form.recordDate': dateOptions[0],
-        datePickerVisible: false
-      })
-    }
   },
 
   /**
@@ -80,31 +60,6 @@ Page({
     this.setData({
       [`form.${field}`]: value
     })
-  },
-
-  /**
-   * 选择日期
-   */
-  onDatePickerTap: function () {
-    this.setData({ datePickerVisible: true })
-  },
-
-  /**
-   * 日期变化
-   */
-  onDateChange: function (e) {
-    const { value } = e.detail
-    this.setData({
-      'form.recordDate': value[0],
-      datePickerVisible: false
-    })
-  },
-
-  /**
-   * 取消日期选择
-   */
-  onDateCancel: function () {
-    this.setData({ datePickerVisible: false })
   },
 
   /**
@@ -128,10 +83,10 @@ Page({
   onSubmit: function () {
     var that = this
     var form = this.data.form
+    var memberId = this.data.memberId
 
-    // 表单验证
-    if (!form.recordDate) {
-      showToast('请选择记录日期', 'none')
+    if (!memberId) {
+      showToast('会员ID不存在', 'none')
       return
     }
 
@@ -154,12 +109,6 @@ Page({
 
     this.setData({ submitting: true })
     showLoading('保存中...')
-
-    var memberId = userStore.memberId
-    if (!memberId) {
-      wx.navigateTo({ url: '/pages/common/login/index' })
-      return
-    }
 
     // 转换数据类型
     var params = {

@@ -17,7 +17,6 @@ Page({
       phone: '',
       specialty: '',
       yearsOfExperience: 0,
-      // totalCourses: 0,
       // rating: 5.0,
       certifications: [] as string[],
       introduction: ''

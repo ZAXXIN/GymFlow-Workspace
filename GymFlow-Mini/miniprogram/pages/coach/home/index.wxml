@@ -72,7 +72,7 @@
             <view class="coach-home-course-info">
               <view class="coach-home-course-header">
                 <text class="coach-home-course-name">{{course.courseName}}</text>
-                <text class="coach-home-course-type">{{course.courseType === 0 ? '私教' : '团课'}}</text>
+                <text class="coach-home-course-type">{{course.courseType == 0 ? '私教' : '团课'}}</text>
               </view>
 
               <view class="coach-home-course-detail">
@@ -101,7 +101,7 @@
         </view>
 
         <!-- 空状态 -->
-        <empty-state wx:if="{{!loading && scheduleList.length === 0}}" show="{{true}}" text="暂无课程安排"
+        <empty-state wx:if="{{!loading && scheduleList.length == 0}}" show="{{true}}" text="暂无课程安排"
           bindbutton="onTodayTap"></empty-state>
       </view>
     </view>

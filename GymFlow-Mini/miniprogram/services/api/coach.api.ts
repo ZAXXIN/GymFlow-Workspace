@@ -40,10 +40,10 @@ export const getMySchedule = (date?: string) => {
 
 /**
  * 获取课程学员列表
- * GET /mini/coach/course-students/{courseId}
+ * GET /mini/coach/course-students/{scheduleId}
  */
-export const getCourseStudents = (courseId: number) => {
-  return wxRequest.get<CourseStudent[]>(`/mini/coach/course-students/${courseId}`, null, {
+export const getCourseStudents = (scheduleId: number) => {
+  return wxRequest.get<CourseStudent[]>(`/mini/coach/course-students/${scheduleId}`, null, {
     showLoading: true
   })
 }
@@ -88,9 +88,22 @@ export const getCoachCourses = (coachId: number) => {
  * 教练添加会员健康档案
  * POST /mini/coach/add-health-record/{memberId}
  */
-export const coachAddHealthRecord = (memberId: number, data: HealthRecord) => {
-  return wxRequest.post(`/mini/coach/add-health-record/${memberId}`, data, {
-    showLoading: true,
-    loadingText: '保存中...'
+// export const coachAddHealthRecord = (memberId: number, data: HealthRecord) => {
+//   return wxRequest.post(`/mini/coach/add-health-record/${memberId}`, data, {
+//     showLoading: true,
+//     loadingText: '保存中...'
+//   })
+// }
+
+/**
+ * 教练修改密码
+ * POST /mini/coach/modify-password
+ */
+export const modifyCoachPassword = (oldPassword: string, newPassword: string) => {
+  return wxRequest.post('/mini/coach/modify-password', null, {
+    params: {
+      oldPassword,
+      newPassword
+    }
   })
 }

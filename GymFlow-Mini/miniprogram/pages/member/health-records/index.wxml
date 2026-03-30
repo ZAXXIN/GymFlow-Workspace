@@ -23,11 +23,6 @@
     </view>
   </view>
   
-  <!-- 添加按钮 -->
-  <!-- <view class="health-records-add" bindtap="onAddRecord">
-    <text class="health-records-add-text">添加新记录</text>
-  </view> -->
-  
   <!-- 记录列表 -->
   <view class="health-records-list">
     <block wx:for="{{records}}" wx:key="id">
@@ -65,7 +60,7 @@
     
     <!-- 空状态 -->
     <empty-state 
-      wx:if="{{!loading && records.length === 0}}"
+      wx:if="{{!loading && records.length == 0}}"
       show="{{true}}"
       text="暂无健康记录"
     ></empty-state>

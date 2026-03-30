@@ -37,7 +37,6 @@ export interface CoachCourse {
   startTime: string
   endTime: string
   duration: number
-  location: string
   maxCapacity: number
   currentEnrollment: number
   status: 0 | 1

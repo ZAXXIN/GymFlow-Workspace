@@ -81,7 +81,7 @@
     
     <!-- 空状态 -->
     <empty-state 
-      wx:if="{{!loading && products.length === 0}}"
+      wx:if="{{!loading && products.length == 0}}"
       show="{{true}}"
       text="暂无商品"
     ></empty-state>

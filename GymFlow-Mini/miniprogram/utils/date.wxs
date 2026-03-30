@@ -176,7 +176,7 @@ function getCourseStatusClass(course) {
 }
 
 /**
- * 获取课程状态文本
+ * 获取课程状态文
  */
 function getCourseStatusText(course) {
   if (!course || !course.scheduleDate || !course.startTime || !course.endTime) {
@@ -230,6 +230,22 @@ function getBookingStatusClass(status) {
     return 'expired'
   }
   return 'unknown'
+}
+
+/**
+ * 获取预约状态样式类（教练端会员详情）
+ */
+function getBookingStatusClassMember(status) {
+  if (status === 0) {
+    return 'coach-member-course-status-pending'
+  } else if (status === 1) {
+    return 'coach-member-course-status-checked'
+  } else if (status === 2) {
+    return 'coach-member-course-status-completed'
+  } else if (status === 3) {
+    return 'coach-member-course-status-cancelled'
+  }
+  return ''
 }
 
 /**
@@ -321,6 +337,7 @@ module.exports = {
   getCourseStatusText: getCourseStatusText,
   getBookingStatusText: getBookingStatusText,
   getBookingStatusClass: getBookingStatusClass,
+  getBookingStatusClassMember:getBookingStatusClassMember,
   getRemainingText: getRemainingText,
   getRemainingClass: getRemainingClass,
   getCourseTypeText: getCourseTypeText,

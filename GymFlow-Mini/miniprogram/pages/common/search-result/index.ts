@@ -67,7 +67,7 @@ Page({
     try {
       let result
       
-      if (activeTab === 0) {
+      if (activeTab == 0) {
         // 综合搜索
         result = await searchAll({
           keyword,
@@ -85,7 +85,7 @@ Page({
           loading: false
         })
         
-      } else if (activeTab === 1) {
+      } else if (activeTab == 1) {
         // 搜索商品
         result = await searchProducts({
           keyword,
@@ -95,9 +95,9 @@ Page({
         
         // 根据排序方式处理
         let productList = result.list
-        if (sortType === 'price') {
+        if (sortType == 'price') {
           productList = this.sortByPrice(productList)
-        } else if (sortType === 'sales') {
+        } else if (sortType == 'sales') {
           productList = this.sortBySales(productList)
         }
         
@@ -109,7 +109,7 @@ Page({
           loading: false
         })
         
-      } else if (activeTab === 2) {
+      } else if (activeTab == 2) {
         // 搜索课程
         result = await searchCourses({
           keyword,
@@ -211,9 +211,9 @@ Page({
     const { sortType } = this.data
     const result = [...list]
     
-    if (sortType === 'price-asc') {
+    if (sortType == 'price-asc') {
       result.sort((a, b) => a.currentPrice - b.currentPrice)
-    } else if (sortType === 'price-desc') {
+    } else if (sortType == 'price-desc') {
       result.sort((a, b) => b.currentPrice - a.currentPrice)
     }
     

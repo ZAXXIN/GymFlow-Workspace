@@ -1,9 +1,13 @@
 .qr-code {
+  width: 400px;
+  height: 400px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .qr-code canvas {
+  width: 400px !important;
+  height: 400px !important;
   display: block;
 }

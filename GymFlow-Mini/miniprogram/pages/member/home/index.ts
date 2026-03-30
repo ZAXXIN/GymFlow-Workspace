@@ -149,7 +149,7 @@ Page({
     var that = this
     getCurrentReminder().then(function(reminder) {
       // 根据后端返回的数据结构调整
-      if (reminder && reminder.type === 'MEMBER') {
+      if (reminder && reminder.type == 'MEMBER') {
         that.setData({ currentReminder: reminder })
       } else {
         that.setData({ currentReminder: null })
