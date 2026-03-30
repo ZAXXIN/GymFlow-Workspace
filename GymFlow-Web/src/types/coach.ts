@@ -12,7 +12,6 @@ export interface CoachListVO {
   yearsOfExperience?: number
   status?: number
   statusDesc?: string
-  totalCourses?: number
   // rating?: number
   createTime?: string
 }
@@ -42,7 +41,6 @@ export interface CoachDetail {
   yearsOfExperience?: number
   status?: number
   statusDesc?: string
-  totalCourses?: number
   // rating?: number
   introduction?: string
   createTime?: string

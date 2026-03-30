@@ -73,15 +73,6 @@
 
     <!-- 统计信息 -->
     <!-- <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
-        <el-card class="stat-card">
-          <div class="stat-item">
-            <div class="stat-label">课程总数</div>
-            <div class="stat-value">{{ coachDetail?.totalCourses || 0 }}</div>
-            <div class="stat-unit">节</div>
-          </div>
-        </el-card>
-      </el-col>
        <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-item">

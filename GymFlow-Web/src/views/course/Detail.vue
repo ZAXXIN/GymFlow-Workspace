@@ -76,17 +76,6 @@
       <!-- 排课信息 -->
       <el-tab-pane label="排课信息" name="schedules">
         <el-card shadow="never" class="tab-content">
-          <template #header>
-            <div class="tab-header">
-              <span class="tab-title">排课列表</span>
-              <el-button v-permission="'course:schedule:set'" type="primary" size="small" @click="handleAddSchedule" v-if="courseDetail?.courseType === 1">
-                <el-icon>
-                  <Plus />
-                </el-icon>
-                添加排课
-              </el-button>
-            </div>
-          </template>
 
           <div v-if="courseDetail?.schedules && courseDetail.schedules.length > 0">
             <el-table :data="courseDetail.schedules" style="width: 100%">
@@ -266,11 +255,6 @@ const loadCourseDetail = async () => {
   } finally {
     loading.value = false
   }
-}
-
-// 排课操作
-const handleAddSchedule = () => {
-  router.push(`/course/schedule/${courseId.value}`)
 }
 
 const handleViewScheduleDetail = (schedule: CourseScheduleVO) => {

@@ -104,13 +104,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="totalCourses" label="课程数" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag type="warning" size="small">
-              {{ row.totalCourses || 0 }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <!-- <el-table-column prop="rating" label="评分" width="180" align="center">
           <template #default="{ row }">
             <el-rate v-model="row.rating" disabled show-score text-color="#ff9900" score-template="{value}" :max="5" :allow-half="true" />
