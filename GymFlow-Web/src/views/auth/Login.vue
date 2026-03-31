@@ -5,12 +5,12 @@
       <div class="global-bg-circle global-bg-circle-1"></div>
       <div class="global-bg-circle global-bg-circle-2"></div>
     </div>
-    
+
     <div class="login-box">
       <!-- Logo和标题 -->
       <div class="logo-container">
-        <img src="@/assets/images/logo.png" alt="GymFlow" class="logo">
-        <h1 class="logo-title">GymFlow 健身房管理系统</h1>
+        <img :src="systemLogo || defaultLogo" alt="GymFlow" class="logo">
+        <h1 class="logo-title">{{ systemName || 'GymFlow 健身房管理系统' }}</h1>
         <p class="logo-subtitle">专业健身房管理解决方案</p>
       </div>
 
@@ -37,11 +37,19 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { systemConfigApi } from '@/api/settings/systemConfig'
 import type { FormInstance, FormRules } from 'element-plus'
+// 导入默认 Logo
+import defaultLogoUrl from '@/assets/images/logo.png'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const loginFormRef = ref<FormInstance>()
+
+// 系统配置
+const systemName = ref('')
+const systemLogo = ref('')
+const defaultLogo = defaultLogoUrl
 
 // 登录表单数据
 const loginForm = reactive({
@@ -57,6 +65,22 @@ const loginRules: FormRules = {
 
 // 加载状态
 const loading = ref(false)
+
+// 获取系统配置
+const loadSystemConfig = async () => {
+  try {
+    const response = await systemConfigApi.getConfig()
+    if (response.code === 200 && response.data) {
+      systemName.value = response.data.basic?.systemName || 'GymFlow 健身房管理系统'
+      systemLogo.value = response.data.basic?.systemLogo || ''
+    }
+  } catch (error) {
+    console.error('获取系统配置失败:', error)
+    // 使用默认值
+    systemName.value = 'GymFlow 健身房管理系统'
+    systemLogo.value = ''
+  }
+}
 
 // 处理登录
 const handleLogin = async () => {
@@ -85,7 +109,9 @@ const handleLogin = async () => {
 
 // 页面加载时，如果已登录则跳转
 onMounted(() => {
-  const systemConfig = localStorage.getItem('systemConfig')
+  loadSystemConfig()
+
+  // 如果已登录则跳转
   if (authStore.isLoggedIn) {
     router.replace('/dashboard')
   }
@@ -185,11 +211,11 @@ onMounted(() => {
     border-radius: 8px;
     background-color: #fff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    
+
     &:hover {
       box-shadow: 0 4px 12px rgba(7, 193, 96, 0.1);
     }
-    
+
     &.is-focus {
       box-shadow: 0 4px 12px rgba(7, 193, 96, 0.2);
       border-color: #07c160;
@@ -199,7 +225,7 @@ onMounted(() => {
   :deep(.el-input__inner) {
     height: 48px;
   }
-  
+
   :deep(.el-input__prefix) {
     font-size: 20px;
     color: #07c160;
@@ -216,13 +242,13 @@ onMounted(() => {
   border: none;
   font-weight: 500;
   letter-spacing: 2px;
-  
+
   &:hover {
     background: linear-gradient(135deg, #05a350 0%, #048c40 100%);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(7, 193, 96, 0.3);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
@@ -235,14 +261,14 @@ onMounted(() => {
     padding: 32px;
     margin: 0 20px;
   }
-  
+
   .global-bg-circle-1 {
     width: 400px;
     height: 400px;
     top: -150px;
     right: -150px;
   }
-  
+
   .global-bg-circle-2 {
     width: 300px;
     height: 300px;
