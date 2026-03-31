@@ -7,11 +7,9 @@ import com.gymflow.dto.checkin.CheckInQueryDTO;
 import com.gymflow.dto.checkin.CheckInReportDTO;
 import com.gymflow.dto.checkin.CheckInStatsDTO;
 import com.gymflow.entity.*;
-import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.entity.mini.MiniMessage;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
-import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import com.gymflow.mapper.mini.MiniMessageMapper;
 import com.gymflow.service.CheckInService;
 import com.gymflow.utils.SystemConfigValidator;
@@ -43,9 +41,10 @@ public class CheckInServiceImpl implements CheckInService {
     private final CourseMapper courseMapper;
     private final CourseScheduleMapper courseScheduleMapper;
     private final CoachMapper coachMapper;
-    private final MiniCheckinCodeMapper miniCheckinCodeMapper;
     private final MiniMessageMapper miniMessageMapper;
     private final SystemConfigValidator configValidator;
+    private final OrderMapper orderMapper;
+    private final OrderItemMapper orderItemMapper;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -213,6 +212,10 @@ public class CheckInServiceImpl implements CheckInService {
             throw new BusinessException("会员不存在");
         }
 
+        // ========== 新增：验证会籍卡是否有效 ==========
+        validateMembershipCard(memberId);
+
+
         // 验证签到方式
         if (checkinMethod != 0 && checkinMethod != 1) {
             throw new BusinessException("签到方式值只能是0（教练签到）或1（前台签到）");
@@ -253,6 +256,41 @@ public class CheckInServiceImpl implements CheckInService {
         updateMemberCheckinStats(memberId);
 
         log.info("会员签到成功，签到ID：{}，会员：{}", checkinRecord.getId(), member.getRealName());
+    }
+
+    /**
+     * 验证会员的会籍卡是否有效
+     * 会籍卡：product_type = 0，状态为 ACTIVE，且在有效期内
+     */
+    private void validateMembershipCard(Long memberId) {
+        // 查询会员已支付的订单
+        LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.eq(Order::getMemberId, memberId)
+                .eq(Order::getPaymentStatus, 1)
+                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+
+        List<Order> orders = orderMapper.selectList(orderWrapper);
+        if (orders.isEmpty()) {
+            throw new BusinessException("您没有有效的会籍卡，请先购买会籍卡");
+        }
+
+        List<Long> orderIds = orders.stream()
+                .map(Order::getId)
+                .collect(Collectors.toList());
+
+        // 查询有效的会籍卡订单项
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.in(OrderItem::getOrderId, orderIds)
+                .eq(OrderItem::getProductType, 0)  // 会籍卡
+                .eq(OrderItem::getStatus, "ACTIVE")
+                .ge(OrderItem::getValidityEndDate, LocalDate.now());
+
+        Long validMembershipCount = orderItemMapper.selectCount(itemWrapper);
+        if (validMembershipCount == 0) {
+            throw new BusinessException("会籍卡已过期或无效，请续费后签到");
+        }
+
+        log.debug("会籍卡验证通过，会员ID：{}", memberId);
     }
 
     @Override
@@ -332,38 +370,54 @@ public class CheckInServiceImpl implements CheckInService {
         }
 
         // 验证数字码
-        validateCheckinCode(bookingId, checkinCode);
+        validateCheckinCode(booking, checkinCode);
+
+        // 获取排课信息验证签到时间
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        configValidator.validateCheckInTime(scheduleDateTime);
 
         // 执行签到
         executeCourseCheckIn(booking, checkinMethod, notes);
     }
+
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void verifyByCode(String checkinCode, Integer checkinMethod, String notes) {
         log.info("通过数字码核销，数字码：{}", checkinCode);
 
-        // 查询签到码
-        LambdaQueryWrapper<MiniCheckinCode> codeQuery = new LambdaQueryWrapper<>();
-        codeQuery.eq(MiniCheckinCode::getDigitalCode, checkinCode);
-        codeQuery.eq(MiniCheckinCode::getStatus, 0); // 未使用
+        // 直接从 course_booking 表查询签到码
+        LambdaQueryWrapper<CourseBooking> bookingQuery = new LambdaQueryWrapper<>();
+        bookingQuery.eq(CourseBooking::getSignCode, checkinCode)
+                .eq(CourseBooking::getBookingStatus, 0); // 待上课
 
-        MiniCheckinCode checkinCodeEntity = miniCheckinCodeMapper.selectOne(codeQuery);
-        if (checkinCodeEntity == null) {
-            throw new BusinessException("无效的签到码或已使用");
-        }
-
-        // 验证有效期
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(checkinCodeEntity.getValidStartTime()) ||
-                now.isAfter(checkinCodeEntity.getValidEndTime())) {
-            throw new BusinessException("签到码不在有效期内");
-        }
-
-        // 获取预约记录
-        CourseBooking booking = courseBookingMapper.selectById(checkinCodeEntity.getBookingId());
+        CourseBooking booking = courseBookingMapper.selectOne(bookingQuery);
         if (booking == null) {
-            throw new BusinessException("预约记录不存在");
+            throw new BusinessException("无效的签到码");
+        }
+
+        // 获取排课信息
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+
+        // 使用系统配置验证签到时间
+        configValidator.validateCheckInTime(scheduleDateTime);
+
+        // 检查是否已签到
+        LambdaQueryWrapper<CheckinRecord> checkinQuery = new LambdaQueryWrapper<>();
+        checkinQuery.eq(CheckinRecord::getCourseBookingId, booking.getId());
+        Long checkInCount = checkInRecordMapper.selectCount(checkinQuery);
+        if (checkInCount > 0) {
+            throw new BusinessException("该预约已签到");
         }
 
         // 执行签到
@@ -422,16 +476,6 @@ public class CheckInServiceImpl implements CheckInService {
 
         courseBookingMapper.updateById(booking);
 
-        // 更新签到码状态
-        if (booking.getCheckinCodeId() != null) {
-            MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectById(booking.getCheckinCodeId());
-            if (checkinCode != null) {
-                checkinCode.setStatus(1); // 已使用
-                checkinCode.setCheckinTime(LocalDateTime.now());
-                miniCheckinCodeMapper.updateById(checkinCode);
-            }
-        }
-
         // 更新会员签到次数
         updateMemberCheckinStats(booking.getMemberId());
 
@@ -444,31 +488,37 @@ public class CheckInServiceImpl implements CheckInService {
     /**
      * 验证数字码
      */
-    private void validateCheckinCode(Long bookingId, String checkinCode) {
-        // 查询签到码
-        LambdaQueryWrapper<MiniCheckinCode> codeQuery = new LambdaQueryWrapper<>();
-        codeQuery.eq(MiniCheckinCode::getBookingId, bookingId);
-
-        MiniCheckinCode codeEntity = miniCheckinCodeMapper.selectOne(codeQuery);
-        if (codeEntity == null) {
-            throw new BusinessException("预约未生成签到码");
-        }
-
+    private void validateCheckinCode(CourseBooking booking, String checkinCode) {
         // 验证数字码是否正确
-        if (!codeEntity.getDigitalCode().equals(checkinCode)) {
+        if (!checkinCode.equals(booking.getSignCode())) {
             throw new BusinessException("数字码错误");
         }
 
-        // 验证状态
-        if (codeEntity.getStatus() != 0) {
-            throw new BusinessException("签到码已使用或已过期");
+        // 验证预约状态
+        if (booking.getBookingStatus() != 0) {
+            throw new BusinessException("预约状态不正确，无法签到");
         }
 
-        // 验证有效期
+        // 验证签到码有效期（使用系统配置）
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            throw new BusinessException("排课不存在");
+        }
+
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(codeEntity.getValidStartTime()) ||
-                now.isAfter(codeEntity.getValidEndTime())) {
-            throw new BusinessException("签到码不在有效期内");
+
+        int startMinutes = configValidator.getCheckinStartMinutes();
+        int endMinutes = configValidator.getCheckinEndMinutes();
+
+        LocalDateTime validStartTime = scheduleDateTime.minusMinutes(startMinutes);
+        LocalDateTime validEndTime = endMinutes == 0 ? scheduleDateTime : scheduleDateTime.plusMinutes(endMinutes);
+
+        if (now.isBefore(validStartTime)) {
+            throw new BusinessException("签到码尚未到使用时间");
+        }
+        if (now.isAfter(validEndTime)) {
+            throw new BusinessException("签到码已过期");
         }
     }
 

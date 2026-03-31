@@ -8,10 +8,8 @@ import com.gymflow.dto.mini.MiniMemberCardDTO;
 import com.gymflow.dto.mini.MiniReminderDTO;
 import com.gymflow.dto.mini.MyCourseDTO;
 import com.gymflow.entity.*;
-import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
-import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import com.gymflow.service.mini.MiniMemberService;
 import com.gymflow.utils.BCryptUtil;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +40,6 @@ public class MiniMemberServiceImpl implements MiniMemberService {
     private final CourseScheduleMapper courseScheduleMapper;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final MiniCheckinCodeMapper miniCheckinCodeMapper;
     private final BCryptUtil bCryptUtil;
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
@@ -252,20 +249,20 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
                 reminder.setBookingId(booking.getId());
 
-                // 获取签到码
-                MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectByBookingId(booking.getId());
-                if (checkinCode != null) {
-                    MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
-                    BeanUtils.copyProperties(checkinCode, codeDTO);
-                    if (course != null) {
-                        codeDTO.setCourseName(course.getCourseName());
-                    }
-                    codeDTO.setCourseStartTime(courseStart);
-                    if (coach != null) {
-                        codeDTO.setCoachName(coach.getRealName());
-                    }
-                    reminder.setCheckinCode(codeDTO);
+                // 直接从 booking 获取签到码信息，不再查询 mini_checkin_code 表
+                MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
+                codeDTO.setBookingId(booking.getId());
+                codeDTO.setDigitalCode(booking.getSignCode());
+                if (course != null) {
+                    codeDTO.setCourseName(course.getCourseName());
                 }
+                codeDTO.setCourseStartTime(courseStart);
+                if (coach != null) {
+                    codeDTO.setCoachName(coach.getRealName());
+                }
+                // 注意：有效期字段需要根据系统配置计算，这里省略，前端可以自行计算或使用 signCodeExpireTime
+                reminder.setCheckinCode(codeDTO);
+
                 break;
             }
         }

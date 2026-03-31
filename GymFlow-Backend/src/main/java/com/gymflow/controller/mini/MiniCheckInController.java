@@ -4,6 +4,7 @@ import com.gymflow.common.Result;
 import com.gymflow.dto.mini.MiniCheckinCodeDTO;
 import com.gymflow.dto.mini.MiniReminderDTO;
 import com.gymflow.dto.mini.MiniScanResultDTO;
+import com.gymflow.dto.mini.VerifyCodeRequest;
 import com.gymflow.service.mini.MiniCheckInService;
 import com.gymflow.utils.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Slf4j
@@ -76,12 +78,13 @@ public class MiniCheckInController {
     }
 
     @PostMapping("/verify-code")
-    @Operation(summary = "数字码核销（PC端调用）")
+    @Operation(summary = "数字码核销（教练端/PC端）")
     public Result<MiniScanResultDTO> verifyCode(
-            @RequestParam @NotNull String digitalCode,
-            @RequestParam @NotNull Integer checkinMethod,
-            @RequestParam(required = false) String notes) {
-        MiniScanResultDTO result = miniCheckInService.verifyCode(digitalCode, checkinMethod, notes);
+            @Valid @RequestBody VerifyCodeRequest request) {
+        MiniScanResultDTO result = miniCheckInService.verifyCode(
+                request.getDigitalCode(),
+                request.getCheckinMethod(),
+                request.getNotes());
         return Result.success("核销成功", result);
     }
 

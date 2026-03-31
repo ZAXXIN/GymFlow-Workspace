@@ -3,10 +3,8 @@ package com.gymflow.task;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.gymflow.entity.CourseBooking;
 import com.gymflow.entity.CourseSchedule;
-import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.mapper.CourseBookingMapper;
 import com.gymflow.mapper.CourseScheduleMapper;
-import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,10 +16,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 小程序定时任务
+ * 定时任务
  * 1. 自动完成课程（课程结束后自动将状态从已签到改为已完成）
- * 2. 过期签到码处理
- * 3. 未签到过期课程处理
+ * 2. 未签到过期课程处理
  */
 @Slf4j
 @Component
@@ -30,7 +27,6 @@ public class MiniScheduleTask {
 
     private final CourseBookingMapper courseBookingMapper;
     private final CourseScheduleMapper courseScheduleMapper;
-    private final MiniCheckinCodeMapper miniCheckinCodeMapper;
 
     /**
      * 应用启动时立即执行一次所有任务
@@ -40,7 +36,6 @@ public class MiniScheduleTask {
         log.info("========== 定时任务初始化，启动时立即执行 ==========");
         // 启动时立即执行一次
         expireMissedCourses();
-        expireCheckinCodes();
         autoCompleteCourses();
         log.info("========== 定时任务初始化完成 ==========");
     }
@@ -73,29 +68,6 @@ public class MiniScheduleTask {
         }
 
         log.info("自动完成课程任务执行完成，共处理 {} 条记录", count);
-    }
-
-    /**
-     * 每半小时执行一次，处理过期的签到码
-     */
-    @Scheduled(cron = "0 */30 * * * ?")
-    @Transactional(rollbackFor = Exception.class)
-    public void expireCheckinCodes() {
-        log.info("开始处理过期签到码 - {}", LocalDateTime.now());
-
-        LocalDateTime now = LocalDateTime.now();
-
-        // 查询过期的签到码
-        List<MiniCheckinCode> expiredCodes = miniCheckinCodeMapper.selectExpiredCodes(now);
-
-        int count = 0;
-        for (MiniCheckinCode code : expiredCodes) {
-            code.setStatus(2); // 已过期
-            miniCheckinCodeMapper.updateById(code);
-            count++;
-        }
-
-        log.info("过期签到码处理完成，共处理 {} 条记录", count);
     }
 
     /**

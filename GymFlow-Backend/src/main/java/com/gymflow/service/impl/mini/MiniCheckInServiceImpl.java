@@ -5,10 +5,8 @@ import com.gymflow.dto.mini.MiniCheckinCodeDTO;
 import com.gymflow.dto.mini.MiniReminderDTO;
 import com.gymflow.dto.mini.MiniScanResultDTO;
 import com.gymflow.entity.*;
-import com.gymflow.entity.mini.MiniCheckinCode;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
-import com.gymflow.mapper.mini.MiniCheckinCodeMapper;
 import com.gymflow.service.mini.MiniCheckInService;
 import com.gymflow.utils.SystemConfigValidator;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +25,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MiniCheckInServiceImpl implements MiniCheckInService {
-
-    private final MiniCheckinCodeMapper miniCheckinCodeMapper;
     private final CourseBookingMapper courseBookingMapper;
     private final CourseMapper courseMapper;
     private final CourseScheduleMapper courseScheduleMapper;
@@ -56,12 +52,6 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             throw new BusinessException("当前状态无法获取签到码");
         }
 
-        // 获取签到码
-        MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectByBookingId(bookingId);
-        if (checkinCode == null) {
-            throw new BusinessException("签到码不存在");
-        }
-
         // 获取排课信息
         CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
         if (schedule == null) {
@@ -77,11 +67,23 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
         // 获取教练信息
         Coach coach = coachMapper.selectById(schedule.getCoachId());
 
+        // 计算签到码有效期（使用系统配置）
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        int startMinutes = configValidator.getCheckinStartMinutes();
+        int endMinutes = configValidator.getCheckinEndMinutes();
+
+        LocalDateTime validStartTime = scheduleDateTime.minusMinutes(startMinutes);
+        LocalDateTime validEndTime = endMinutes == 0 ? scheduleDateTime : scheduleDateTime.plusMinutes(endMinutes);
+
         // 转换为DTO
         MiniCheckinCodeDTO dto = new MiniCheckinCodeDTO();
-        BeanUtils.copyProperties(checkinCode, dto);
+        dto.setBookingId(booking.getId());
+        dto.setDigitalCode(booking.getSignCode());
+        dto.setStatus(booking.getBookingStatus() == 0 ? 0 : 1); // 0-未使用，1-已使用
+        dto.setValidStartTime(validStartTime);
+        dto.setValidEndTime(validEndTime);
         dto.setCourseName(course.getCourseName());
-        dto.setCourseStartTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()));
+        dto.setCourseStartTime(scheduleDateTime);
         if (coach != null) {
             dto.setCoachName(coach.getRealName());
         }
@@ -109,13 +111,13 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             throw new BusinessException("无效的二维码");
         }
 
-        // 查询签到码
-        MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectByBookingId(bookingId);
-        if (checkinCode == null) {
+        // 直接从 course_booking 表查询预约
+        CourseBooking booking = courseBookingMapper.selectById(bookingId);
+        if (booking == null) {
             throw new BusinessException("无效的签到码");
         }
 
-        return executeCheckin(bookingId, checkinCode, 0, "教练扫码核销");
+        return executeCheckin(booking, 0, "教练扫码核销");
     }
 
     @Override
@@ -123,16 +125,17 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
     public MiniScanResultDTO verifyCode(String digitalCode, Integer checkinMethod, String notes) {
         log.info("数字码核销，数字码：{}", digitalCode);
 
-        // 查询签到码
-        LambdaQueryWrapper<MiniCheckinCode> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MiniCheckinCode::getDigitalCode, digitalCode);
-        MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectOne(queryWrapper);
+        // 直接从 course_booking 表查询签到码
+        LambdaQueryWrapper<CourseBooking> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseBooking::getSignCode, digitalCode)
+                .eq(CourseBooking::getBookingStatus, 0); // 待上课
 
-        if (checkinCode == null) {
+        CourseBooking booking = courseBookingMapper.selectOne(queryWrapper);
+        if (booking == null) {
             throw new BusinessException("无效的数字码");
         }
 
-        return executeCheckin(checkinCode.getBookingId(), checkinCode, checkinMethod, notes);
+        return executeCheckin(booking, checkinMethod, notes);
     }
 
     @Override
@@ -143,26 +146,27 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
             return false;
         }
 
-        // 查询签到码
-        MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectByBookingId(bookingId);
-        if (checkinCode == null) {
-            return false;
-        }
-
-        // 检查状态
-        if (checkinCode.getStatus() != 0) {
-            return false;
-        }
-
-        // 检查有效期
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(checkinCode.getValidStartTime()) ||
-                now.isAfter(checkinCode.getValidEndTime())) {
-            return false;
-        }
-
         // 检查预约状态
         if (booking.getBookingStatus() != 0) {
+            return false;
+        }
+
+        // 获取排课信息
+        CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
+        if (schedule == null) {
+            return false;
+        }
+
+        // 检查有效期（使用系统配置）
+        LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
+        int startMinutes = configValidator.getCheckinStartMinutes();
+        int endMinutes = configValidator.getCheckinEndMinutes();
+
+        LocalDateTime validStartTime = scheduleDateTime.minusMinutes(startMinutes);
+        LocalDateTime validEndTime = endMinutes == 0 ? scheduleDateTime : scheduleDateTime.plusMinutes(endMinutes);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(validStartTime) || now.isAfter(validEndTime)) {
             return false;
         }
 
@@ -173,30 +177,8 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
      * 执行核销
      */
     @Transactional(rollbackFor = Exception.class)
-    protected MiniScanResultDTO executeCheckin(Long bookingId, MiniCheckinCode checkinCode,
+    protected MiniScanResultDTO executeCheckin(CourseBooking booking,
                                                Integer checkinMethod, String notes) {
-        // 验证状态
-        if (checkinCode.getStatus() != 0) {
-            throw new BusinessException("签到码已使用或已过期");
-        }
-
-        // 验证有效期
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(checkinCode.getValidStartTime())) {
-            throw new BusinessException("尚未到签到时间");
-        }
-        if (now.isAfter(checkinCode.getValidEndTime())) {
-            checkinCode.setStatus(2); // 已过期
-            miniCheckinCodeMapper.updateById(checkinCode);
-            throw new BusinessException("签到码已过期");
-        }
-
-        // 获取预约记录
-        CourseBooking booking = courseBookingMapper.selectById(bookingId);
-        if (booking == null) {
-            throw new BusinessException("预约记录不存在");
-        }
-
         // 检查预约状态
         if (booking.getBookingStatus() != 0) {
             throw new BusinessException("预约状态不正确，无法签到");
@@ -211,10 +193,20 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
         LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         configValidator.validateCheckInTime(scheduleDateTime);
 
+        // 检查是否已签到
+        LambdaQueryWrapper<CheckinRecord> checkinQuery = new LambdaQueryWrapper<>();
+        checkinQuery.eq(CheckinRecord::getCourseBookingId, booking.getId());
+        Long checkInCount = checkInRecordMapper.selectCount(checkinQuery);
+        if (checkInCount > 0) {
+            throw new BusinessException("该预约已签到");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
         // 创建签到记录
         CheckinRecord checkinRecord = new CheckinRecord();
         checkinRecord.setMemberId(booking.getMemberId());
-        checkinRecord.setCourseBookingId(bookingId);
+        checkinRecord.setCourseBookingId(booking.getId());
         checkinRecord.setCheckinTime(now);
         checkinRecord.setCheckinMethod(checkinMethod);
         checkinRecord.setNotes(notes != null ? notes : "扫码核销");
@@ -236,11 +228,6 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
 
         courseBookingMapper.updateById(booking);
 
-        // 更新签到码状态
-        checkinCode.setStatus(1); // 已使用
-        checkinCode.setCheckinTime(now);
-        miniCheckinCodeMapper.updateById(checkinCode);
-
         // 获取会员信息
         Member member = memberMapper.selectById(booking.getMemberId());
         Course course = courseMapper.selectById(schedule.getCourseId());
@@ -249,7 +236,7 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
         MiniScanResultDTO resultDTO = new MiniScanResultDTO();
         resultDTO.setSuccess(true);
         resultDTO.setMessage("核销成功");
-        resultDTO.setBookingId(bookingId);
+        resultDTO.setBookingId(booking.getId());
         resultDTO.setCourseName(course != null ? course.getCourseName() : "");
         if (member != null) {
             resultDTO.setMemberName(member.getRealName());
@@ -258,7 +245,7 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
         resultDTO.setBookingTime(booking.getBookingTime().format(TIME_FORMATTER));
         resultDTO.setCheckinTime(now.format(TIME_FORMATTER));
 
-        log.info("核销成功，预约ID：{}", bookingId);
+        log.info("核销成功，预约ID：{}", booking.getId());
         return resultDTO;
     }
 
@@ -309,20 +296,26 @@ public class MiniCheckInServiceImpl implements MiniCheckInService {
                         reminder.setCoachName(coach.getRealName());
                     }
 
-                    // 获取签到码
-                    MiniCheckinCode checkinCode = miniCheckinCodeMapper.selectByBookingId(booking.getId());
-                    if (checkinCode != null) {
-                        MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
-                        BeanUtils.copyProperties(checkinCode, codeDTO);
-                        if (course != null) {
-                            codeDTO.setCourseName(course.getCourseName());
-                        }
-                        codeDTO.setCourseStartTime(courseStart);
-                        if (coach != null) {
-                            codeDTO.setCoachName(coach.getRealName());
-                        }
-                        reminder.setCheckinCode(codeDTO);
+                    // 计算签到码有效期
+                    int startMinutes = configValidator.getCheckinStartMinutes();
+                    int endMinutes = configValidator.getCheckinEndMinutes();
+                    LocalDateTime validStartTime = courseStart.minusMinutes(startMinutes);
+                    LocalDateTime validEndTime = endMinutes == 0 ? courseStart : courseStart.plusMinutes(endMinutes);
+
+                    // 构建签到码DTO
+                    MiniCheckinCodeDTO codeDTO = new MiniCheckinCodeDTO();
+                    codeDTO.setBookingId(booking.getId());
+                    codeDTO.setDigitalCode(booking.getSignCode());
+                    codeDTO.setValidStartTime(validStartTime);
+                    codeDTO.setValidEndTime(validEndTime);
+                    if (course != null) {
+                        codeDTO.setCourseName(course.getCourseName());
                     }
+                    codeDTO.setCourseStartTime(courseStart);
+                    if (coach != null) {
+                        codeDTO.setCoachName(coach.getRealName());
+                    }
+                    reminder.setCheckinCode(codeDTO);
                     break;
                 }
             }
