@@ -32,8 +32,9 @@ export interface ScanCheckinParams {
 
 // 数字码核销参数
 export interface VerifyCodeParams {
-  bookingId: number
-  checkinCode: string // 6位数字码
+  digitalCode: string;      // 6位数字签到码
+  checkinMethod: number;    // 签到方式：0-教练签到，1-前台签到
+  notes?: string;           // 备注（可选）
 }
 
 // 当前时段提醒信息

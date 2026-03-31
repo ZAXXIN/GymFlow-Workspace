@@ -9,10 +9,13 @@
           <text class="coach-home-title">{{coachInfo.specialty || '健身教练'}}</text>
         </view>
         <view class="coach-home-header-right">
-          <view class="coach-home-message" bindtap="goToMessage">
+          <!-- <view class="coach-home-message" bindtap="goToMessage">
             <message-badge dot="{{false}}" count="{{unreadCount ? unreadCount : 0}}">
               <image class="coach-home-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
             </message-badge>
+          </view> -->
+          <view class="coach-home-message" bindtap="goToCheckIn">
+            <image class="coach-home-message-icon" src="/assets/icons/checkin-icon.png" mode="aspectFit"></image>
           </view>
         </view>
       </view>
@@ -103,6 +106,38 @@
         <!-- 空状态 -->
         <empty-state wx:if="{{!loading && scheduleList.length == 0}}" show="{{true}}" text="暂无课程安排"
           bindbutton="onTodayTap"></empty-state>
+      </view>
+    </view>
+
+    <!-- 签到弹窗 -->
+    <view class="checkin-modal" wx:if="{{showCheckinModal}}">
+      <view class="checkin-modal-mask" bindtap="onCloseCheckinModal"></view>
+      <view class="checkin-modal-content">
+        <view class="checkin-modal-header">
+          <text class="checkin-modal-title">课程签到</text>
+          <image class="checkin-modal-close" src="/assets/icons/close.png" mode="aspectFit"
+            bindtap="onCloseCheckinModal">
+          </image>
+        </view>
+
+        <view class="checkin-modal-body">
+          <!-- 签到码输入 -->
+          <view class="checkin-modal-info-item">
+            <text class="checkin-modal-info-label">签到码</text>
+            <view class="checkin-modal-input">
+              <input type="number" maxlength="6" placeholder="请输入6位数字签到码" value="{{checkinCode}}"
+                bindinput="onCheckinCodeInput" class="checkin-code-input" />
+            </view>
+          </view>
+        </view>
+
+        <view class="checkin-modal-footer">
+          <button class="checkin-modal-btn checkin-modal-btn-cancel" bindtap="onCloseCheckinModal">取消</button>
+          <button class="checkin-modal-btn checkin-modal-btn-confirm" bindtap="onSubmitCheckin"
+            disabled="{{checkinLoading}}">
+            {{checkinLoading ? '签到中...' : '确认签到'}}
+          </button>
+        </view>
       </view>
     </view>
   </view>

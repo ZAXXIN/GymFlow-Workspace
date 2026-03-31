@@ -134,7 +134,7 @@
 
 /* 商品列表 */
 .member-home-products {
-  padding: 0 24rpx 24rpx;
+  padding: 0 24rpx 50rpx 24rpx;
 }
 
 .member-home-products-grid {

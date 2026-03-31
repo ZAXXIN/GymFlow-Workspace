@@ -194,7 +194,7 @@
 
 .coach-member-course-status {
   font-size: 22rpx;
-  padding: 4rpx 16rpx;
+  padding: 6rpx 16rpx;
   border-radius: 20rpx;
 }
 

@@ -52,9 +52,6 @@
               </view>
             </view>
 
-            <view class="student-list-footer" wx:if="{{student.checkinTime}}">
-              <text class="student-list-checkin-time">签到时间: {{formatDateTime(student.checkinTime)}}</text>
-            </view>
           </view>
           <view
             class="student-list-status {{student.bookingStatus == 1 ? 'student-list-status-checked' : 'student-list-status-pending'}}">

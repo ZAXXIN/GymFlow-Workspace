@@ -59,10 +59,10 @@
           </view>
           <view class="coach-member-course-info">
             <view class="coach-member-course-header">
-              <text class="coach-member-course-name">{{record.courseName}}</text>
-              <text class="coach-member-course-status {{dateUtil.getBookingStatusClassMember(record.bookingStatus)}}">
+              <view class="coach-member-course-name">{{record.courseName}}</view>
+              <view class="coach-member-course-status {{dateUtil.getBookingStatusClassMember(record.bookingStatus)}}">
                 {{dateUtil.getBookingStatusText(record.bookingStatus)}}
-              </text>
+              </view>
             </view>
             <view class="coach-member-course-detail" wx:if="{{record.checkinTime}}">
               <image class="coach-member-course-icon" src="/assets/icons/checkin.png" mode="aspectFit"></image>

@@ -15,11 +15,11 @@ import { CheckinRules } from '../types/common.types'
  * 获取签到码
  * GET /mini/checkin/code/{bookingId}
  */
-export const getCheckinCode = (bookingId: number) => {
-  return wxRequest.get<CheckinCode>(`/mini/checkin/code/${bookingId}`, null, {
-    showLoading: true
-  })
-}
+// export const getCheckinCode = (bookingId: number) => {
+//   return wxRequest.get<CheckinCode>(`/mini/checkin/code/${bookingId}`, null, {
+//     showLoading: true
+//   })
+// }
 
 /**
  * 扫码核销

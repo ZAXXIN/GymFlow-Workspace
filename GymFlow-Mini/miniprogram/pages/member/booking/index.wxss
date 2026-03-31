@@ -161,6 +161,7 @@
 /* 课程列表 */
 .booking-course-list {
   padding: 0 24rpx;
+  padding-bottom: 100rpx;
 }
 
 .booking-course-item {
@@ -237,6 +238,7 @@
 /* 预约列表 */
 .booking-list {
   padding: 0 24rpx;
+  padding-bottom: 100rpx;
 }
 
 /* 加载中 */
