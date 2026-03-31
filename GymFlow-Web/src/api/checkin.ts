@@ -56,6 +56,17 @@ export const checkInApi = {
   },
 
   /**
+ * 通过数字码核销课程（PC端专用）
+ */
+  verifyByCode(checkinCode: string, checkinMethod: number, notes?: string): Promise<ApiResponse> {
+    return request({
+      url: '/checkin/verify-code',
+      method: 'POST',
+      params: { checkinCode, checkinMethod, notes }
+    })
+  },
+
+  /**
    * 更新签到信息
    */
   updateCheckIn(checkInId: number, notes: string): Promise<ApiResponse> {

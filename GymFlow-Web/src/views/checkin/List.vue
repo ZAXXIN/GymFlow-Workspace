@@ -12,12 +12,6 @@
           </el-icon>
           快速签到
         </el-button>
-        <el-button type="success" @click="handleExport" :disabled="loading">
-          <el-icon>
-            <Download />
-          </el-icon>
-          导出数据
-        </el-button>
       </div>
     </div>
 
@@ -29,12 +23,6 @@
         </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="filterForm.memberPhone" placeholder="请输入手机号" clearable style="width: 180px;" @keyup.enter="handleSearch" />
-        </el-form-item>
-        <el-form-item label="签到方式">
-          <el-select v-model="filterForm.checkinMethod" placeholder="请选择签到方式" clearable style="width: 180px;">
-            <el-option label="教练签到" :value="0" />
-            <el-option label="前台签到" :value="1" />
-          </el-select>
         </el-form-item>
         <el-form-item label="签到类型">
           <el-select v-model="filterForm.hasCourseBooking" placeholder="请选择签到类型" clearable style="width: 180px;">
@@ -176,7 +164,7 @@
             <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button v-if="hasPermission('checkIn:edit')&&canEdit(row)" type="warning" link size="small"  @click="handleEdit(row.id)">
+            <el-button v-if="hasPermission('checkIn:edit')&&canEdit(row)" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
             <el-popconfirm title="确定要删除这条记录吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="!row.courseCheckIn && hasPermission('checkIn:delete')">
@@ -210,9 +198,18 @@
     <!-- 快速签到对话框 -->
     <el-dialog v-model="quickCheckInDialogVisible" title="快速签到" width="500px" :close-on-click-modal="false">
       <el-form :model="quickCheckInForm" :rules="quickCheckInRules" ref="quickCheckInFormRef">
-        <!-- <el-form-item label="会员信息" prop="memberId">
-          <el-select v-model="quickCheckInForm.memberId" placeholder="请选择会员" filterable remote :remote-method="searchMembers" :loading="searchLoading" style="width: 100%">
-            <el-option v-for="member in memberOptions" :key="member.id" :label="`${member.realName} (${member.phone})`" :value="member.id">
+        <!-- 签到类型选择 -->
+        <el-form-item label="签到类型" prop="checkInType">
+          <el-radio-group v-model="quickCheckInForm.checkInType">
+            <el-radio :label="0">自由训练</el-radio>
+            <el-radio :label="1">课程签到</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <!-- 自由训练：选择会员 -->
+        <el-form-item label="选择会员" prop="memberId" v-if="quickCheckInForm.checkInType === 0">
+          <el-select v-model="quickCheckInForm.memberId" placeholder="请选择会员" filterable remote :remote-method="searchMembers" :loading="searchLoading" style="width: 100%" clearable>
+            <el-option v-for="member in memberOptions" :key="member.id" :label="`${member.realName}`" :value="member.id">
               <div class="member-option">
                 <span class="member-name">{{ member.realName }}</span>
                 <span class="member-phone">{{ member.phone }}</span>
@@ -220,21 +217,17 @@
               </div>
             </el-option>
           </el-select>
-        </el-form-item> -->
-
-        <!-- <el-form-item label="签到方式" prop="checkinMethod">
-          <el-radio-group v-model="quickCheckInForm.checkinMethod">
-            <el-radio :label="0">教练签到</el-radio>
-            <el-radio :label="1">前台签到</el-radio>
-          </el-radio-group>
-        </el-form-item> -->
-
-        <el-form-item label="签到码" prop="notes">
-          <el-input v-model="quickCheckInForm.notes" placeholder="逻辑还没改！！！" :rows="3" />
         </el-form-item>
 
+        <!-- 课程签到：输入签到码 -->
+        <el-form-item label="签到码" prop="checkinCode" v-if="quickCheckInForm.checkInType === 1">
+          <el-input v-model="quickCheckInForm.checkinCode" placeholder="请输入6位数字签到码" maxlength="6" show-word-limit />
+          <div class="form-tip">请输入会员提供的6位数字签到码</div>
+        </el-form-item>
+
+        <!-- 备注 -->
         <el-form-item label="备注" prop="notes">
-          <el-input v-model="quickCheckInForm.notes" placeholder="请输入备注信息（选填）" :rows="3" />
+          <el-input v-model="quickCheckInForm.notes" placeholder="请输入备注信息（选填）" :rows="3" type="textarea" />
         </el-form-item>
       </el-form>
 
@@ -268,7 +261,7 @@ const memberStore = useMemberStore()
 const filterForm = reactive({
   memberName: '',
   memberPhone: '',
-  checkinMethod: undefined as number | undefined,
+  checkinMethod: 1,
   hasCourseBooking: undefined as boolean | undefined,
   dateRange: [] as string[],
 })
@@ -288,16 +281,46 @@ const searchLoading = ref(false)
 const memberOptions = ref<MemberListVO[]>([])
 
 const quickCheckInForm = reactive({
+  checkInType: 0, // 0-自由训练，1-课程签到
   memberId: undefined as number | undefined,
+  checkinCode: '',
   checkinMethod: 1,
   notes: '',
 })
 
 const quickCheckInRules = {
-  memberId: [{ required: true, message: '请选择会员', trigger: 'change' }],
-  checkinMethod: [{ required: true, message: '请选择签到方式', trigger: 'change' }],
+  checkInType: [{ required: true, message: '请选择签到类型', trigger: 'change' }],
+  memberId: [
+    {
+      required: true,
+      message: '请选择会员',
+      trigger: 'change',
+      validator: (rule: any, value: number, callback: Function) => {
+        if (quickCheckInForm.checkInType === 0 && !value) {
+          callback(new Error('请选择会员'))
+        } else {
+          callback()
+        }
+      },
+    },
+  ],
+  checkinCode: [
+    {
+      required: true,
+      message: '请输入签到码',
+      trigger: 'blur',
+      validator: (rule: any, value: string, callback: Function) => {
+        if (quickCheckInForm.checkInType === 1 && !value) {
+          callback(new Error('请输入签到码'))
+        } else if (quickCheckInForm.checkInType === 1 && !/^\d{6}$/.test(value)) {
+          callback(new Error('签到码必须是6位数字'))
+        } else {
+          callback()
+        }
+      },
+    },
+  ],
 }
-
 // 获取store状态
 const { checkInList, total, loading, pageInfo, formattedCheckInList, formatDateTime } = checkInStore
 
@@ -338,7 +361,6 @@ const searchMembers = async (query: string) => {
   try {
     const params = {
       realName: query,
-      phone: query,
       pageNum: 1,
       pageSize: 20,
     }
@@ -392,7 +414,7 @@ const handleSearch = () => {
 const handleReset = () => {
   filterForm.memberName = ''
   filterForm.memberPhone = ''
-  filterForm.checkinMethod = undefined
+  filterForm.checkinMethod = 1
   filterForm.hasCourseBooking = undefined
   filterForm.dateRange = []
   pageInfo.pageNum = 1
@@ -402,6 +424,12 @@ const handleReset = () => {
 // 快速签到
 const handleQuickCheckIn = () => {
   quickCheckInDialogVisible.value = true
+  // 重置表单
+  quickCheckInForm.checkInType = 0
+  quickCheckInForm.memberId = undefined
+  quickCheckInForm.checkinCode = ''
+  quickCheckInForm.notes = ''
+  quickCheckInForm.checkinMethod = 1
   memberOptions.value = []
 }
 
@@ -412,28 +440,38 @@ const submitQuickCheckIn = async () => {
   try {
     await quickCheckInFormRef.value.validate()
 
-    if (!quickCheckInForm.memberId) {
-      ElMessage.error('请选择会员')
-      return
+    if (quickCheckInForm.checkInType === 0) {
+      // 自由训练签到
+      if (!quickCheckInForm.memberId) {
+        ElMessage.error('请选择会员')
+        return
+      }
+      await checkInStore.memberCheckIn(
+        quickCheckInForm.memberId,
+        quickCheckInForm.checkinMethod,
+        quickCheckInForm.notes
+      )
+      ElMessage.success('自由训练签到成功')
+    } else {
+      // 课程签到（通过数字码）
+      if (!quickCheckInForm.checkinCode) {
+        ElMessage.error('请输入签到码')
+        return
+      }
+      await checkInStore.verifyByCode(
+        quickCheckInForm.checkinCode,
+        quickCheckInForm.checkinMethod,
+        quickCheckInForm.notes
+      )
+      ElMessage.success('课程签到成功')
     }
 
-    await checkInStore.memberCheckIn(
-      quickCheckInForm.memberId,
-      quickCheckInForm.checkinMethod,
-      quickCheckInForm.notes
-    )
-
-    ElMessage.success('签到成功')
     quickCheckInDialogVisible.value = false
     loadData()
     loadTodayStats()
-
-    // 重置表单
-    quickCheckInForm.memberId = undefined
-    quickCheckInForm.notes = ''
-    quickCheckInForm.checkinMethod = 1
-  } catch (error) {
+  } catch (error: any) {
     console.error('签到失败:', error)
+    ElMessage.error(error?.message || '签到失败')
   }
 }
 
@@ -532,18 +570,6 @@ const refreshTable = async () => {
   await loadData()
   await loadTodayStats()
   ElMessage.success('刷新成功')
-}
-
-// 导出数据
-const handleExport = async () => {
-  try {
-    ElMessage.info('导出功能开发中...')
-    // 这里应该调用导出API
-    // await checkInStore.exportCheckIns(filterForm)
-  } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败')
-  }
 }
 
 // 初始化加载
@@ -759,5 +785,11 @@ onMounted(() => {
 
 :deep(.el-col) {
   margin-bottom: 20px;
+}
+
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
 }
 </style>

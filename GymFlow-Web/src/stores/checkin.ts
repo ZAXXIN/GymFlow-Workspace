@@ -122,6 +122,29 @@ export const useCheckInStore = defineStore('checkIn', () => {
   }
 
   /**
+ * 通过数字码核销课程（PC端专用）
+ */
+const verifyByCode = async (checkinCode: string, checkinMethod: number, notes?: string) => {
+  try {
+    loading.value = true
+    const response = await checkInApi.verifyByCode(checkinCode, checkinMethod, notes)
+    if (response.code === 200) {
+      // 核销成功后重新加载列表
+      await fetchCheckInList({
+        pageNum: pageInfo.value.pageNum,
+        pageSize: pageInfo.value.pageSize
+      })
+    }
+    return response
+  } catch (error) {
+    console.error('数字码核销失败:', error)
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+  /**
    * 更新签到信息
    */
   const updateCheckIn = async (checkInId: number, notes: string) => {
@@ -382,6 +405,7 @@ export const useCheckInStore = defineStore('checkIn', () => {
     fetchCheckInDetail,
     memberCheckIn,
     courseCheckIn,
+    verifyByCode,
     updateCheckIn,
     deleteCheckIn,
     batchDeleteCheckIns,
