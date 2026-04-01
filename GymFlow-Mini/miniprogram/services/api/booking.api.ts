@@ -39,12 +39,13 @@ export const bookGroupCourse = (memberId: number, scheduleId: number) => {
  */
 export const bookPrivateCourse = (
   memberId: number,
+  courseId: number,      // 新增
   coachId: number,
   scheduleDate: string,
   startTime: string
 ) => {
   return wxRequest.post('/course/book/private', null, {
-    params: { memberId, coachId, scheduleDate, startTime }
+    params: { memberId, courseId, coachId, scheduleDate, startTime }
   })
 }
 

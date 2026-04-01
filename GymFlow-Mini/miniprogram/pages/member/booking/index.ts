@@ -524,6 +524,11 @@ Page({
       showToast('请先登录', 'none')
       return
     }
+    console.log(selectedCourse,'选择了私教课')
+    if (!selectedCourse || !selectedCourse.id) {
+      showToast('请选择课程', 'none')
+      return
+    }
 
     if (!selectedCourse || !selectedCourse.coachId) {
       showToast('请选择教练', 'none')
@@ -545,6 +550,7 @@ Page({
     try {
       await bookingStore.bookPrivateCourse(
         memberId,
+        selectedCourse.id,
         selectedCourse.coachId,
         privateScheduleDate,
         privateStartTime

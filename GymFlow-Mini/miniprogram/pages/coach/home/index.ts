@@ -4,7 +4,7 @@ import { userStore } from '../../../stores/user.store'
 import { messageStore } from '../../../stores/message.store'
 import { getMyCoachInfo, getMySchedule } from '../../../services/api/coach.api'
 import { getCurrentReminder, verifyCodeCheckin } from '../../../services/api/checkin.api'
-import { formatDate, isToday, isTomorrow } from '../../../utils/date'
+import { isToday, isTomorrow, formatDate } from '../../../utils/date'
 import { showToast } from '../../../utils/wx-util'
 
 Page({

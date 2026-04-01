@@ -260,8 +260,8 @@
 
         <view class="booking-modal-footer">
           <button class="booking-modal-btn booking-modal-btn-cancel" bindtap="onCloseCheckinModal">关闭</button>
-          <button class="booking-modal-btn booking-modal-btn-warning" wx:if="{{showCancelBtn}}"
-            bindtap="onCheckinCancelBooking">取消预约</button>
+          <!-- <button class="booking-modal-btn booking-modal-btn-warning" wx:if="{{showCancelBtn}}"
+            bindtap="onCheckinCancelBooking">取消预约</button> -->
         </view>
       </view>
     </view>

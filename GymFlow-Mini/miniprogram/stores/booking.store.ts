@@ -197,7 +197,7 @@ class BookingStore {
           for (const coach of coaches) {
             splitCourses.push({
               ...course,
-              scheduleId: `${course.id}_${coach.id}`,
+              // scheduleId: `${course.id}_${coach.id}`,
               coachId: coach.id,
               coachName: coach.realName,
               coachSpecialty: coach.specialty,
@@ -319,18 +319,24 @@ class BookingStore {
     }
   }
 
-  /**
-   * 预约私教课 - 修正参数传递方式
-   */
-  async bookPrivateCourse(memberId: number, coachId: number, scheduleDate: string, startTime: string) {
-    try {
-      const result = await bookPrivateCourse(memberId, coachId, scheduleDate, startTime)  // 传四个独立参数
-      return result
-    } catch (error) {
-      console.error('预约私教课失败:', error)
-      throw error
-    }
+/**
+ * 预约私教课
+ */
+async bookPrivateCourse(
+  memberId: number,
+  courseId: number,      // 新增课程ID参数
+  coachId: number,
+  scheduleDate: string,
+  startTime: string
+) {
+  try {
+    const result = await bookPrivateCourse(memberId, courseId, coachId, scheduleDate, startTime)
+    return result
+  } catch (error) {
+    console.error('预约私教课失败:', error)
+    throw error
   }
+}
 
   /**
    * 统一预约接口
@@ -339,7 +345,7 @@ class BookingStore {
     if (schedule.courseType === COURSE_TYPE.GROUP) {
       return this.bookGroupCourse(memberId, schedule.scheduleId)
     } else {
-      return this.bookPrivateCourse(memberId, schedule.coachId, schedule.scheduleDate, schedule.startTime)
+      return this.bookPrivateCourse(memberId,schedule.courseId, schedule.coachId, schedule.scheduleDate, schedule.startTime)
     }
   }
 
@@ -503,8 +509,9 @@ class BookingStore {
           for (const coach of coaches) {
             splitCourses.push({
               ...course,
+              courseId: course.id,
               // 使用 课程ID_教练ID 作为唯一标识
-              scheduleId: `${course.id}_${coach.id}`,
+              // scheduleId: `${course.id}_${coach.id}`,
               coachId: coach.id,
               coachName: coach.realName,
               // 教练专属字段
@@ -533,7 +540,8 @@ class BookingStore {
           // 兼容旧数据：如果只有一个教练
           splitCourses.push({
             ...course,
-            scheduleId: course.id,
+            courseId: course.id,
+            // scheduleId: course.id,
             coachId: course.coachId,
             coachName: course.coachName,
             courseType: COURSE_TYPE.PRIVATE,
