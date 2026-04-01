@@ -99,6 +99,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
 
         for (OrderItem item : orderItems) {
             MiniMemberCardDTO card = new MiniMemberCardDTO();
+            card.setOrderItemId(item.getId());  // 添加订单项ID
             card.setProductId(item.getProductId());
             card.setProductName(item.getProductName());
             card.setCardType(item.getProductType());
@@ -106,6 +107,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
             card.setEndDate(item.getValidityEndDate());
             card.setTotalSessions(item.getTotalSessions());
             card.setRemainingSessions(item.getRemainingSessions());
+            // 已用课时 = 总课时 - 剩余课时
             card.setUsedSessions(item.getTotalSessions() != null && item.getRemainingSessions() != null ?
                     item.getTotalSessions() - item.getRemainingSessions() : 0);
 
@@ -123,8 +125,6 @@ public class MiniMemberServiceImpl implements MiniMemberService {
             }
 
             cardList.add(card);
-            log.info("小程序端获取会员卡: 产品名称={}, 状态={}, 剩余课时={}",
-                    card.getProductName(), card.getStatus(), card.getRemainingSessions());
         }
 
         return cardList;

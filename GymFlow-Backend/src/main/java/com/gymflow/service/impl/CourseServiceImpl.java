@@ -570,7 +570,7 @@ public class CourseServiceImpl implements CourseService {
         LambdaQueryWrapper<CourseSchedule> conflictWrapper = new LambdaQueryWrapper<>();
         conflictWrapper.eq(CourseSchedule::getCoachId, coachId)
                 .eq(CourseSchedule::getScheduleDate, scheduleDate)
-                .eq(CourseSchedule::getStatus, 1)  // 只查正常状态的排课
+                .eq(CourseSchedule::getStatus, 1)
                 .and(w -> w.between(CourseSchedule::getStartTime, startTime, endTimeLocal)
                         .or(b -> b.between(CourseSchedule::getEndTime, startTime, endTimeLocal))
                         .or(c -> c.le(CourseSchedule::getStartTime, startTime)
@@ -630,17 +630,18 @@ public class CourseServiceImpl implements CourseService {
         schedule.setScheduleDate(scheduleDate);
         schedule.setStartTime(startTime);
         schedule.setEndTime(endTimeLocal);
-        schedule.setMaxCapacity(1); // 私教课最多1人
+        schedule.setMaxCapacity(1);
         schedule.setCurrentEnrollment(0);
         schedule.setStatus(1);
 
         courseScheduleMapper.insert(schedule);
 
-        // 12. 创建预约
+        // 12. 创建预约（记录使用的订单项ID）
         CourseBooking booking = new CourseBooking();
         booking.setMemberId(memberId);
         booking.setScheduleId(schedule.getScheduleId());
         booking.setCourseId(courseId);
+        booking.setOrderItemId(item.getId());  // 记录使用的订单项ID
         booking.setBookingStatus(0);
         booking.setBookingTime(now);
 
@@ -661,7 +662,8 @@ public class CourseServiceImpl implements CourseService {
         schedule.setCurrentEnrollment(1);
         courseScheduleMapper.updateById(schedule);
 
-        log.info("私教课预约成功，预约ID：{}，排课ID：{}", booking.getId(), schedule.getScheduleId());
+        log.info("私教课预约成功，预约ID：{}，排课ID：{}，使用订单项ID：{}",
+                booking.getId(), schedule.getScheduleId(), item.getId());
     }
 
     /**
@@ -800,11 +802,12 @@ public class CourseServiceImpl implements CourseService {
         item.setRemainingSessions(item.getRemainingSessions() - sessionCost);
         orderItemMapper.updateById(item);
 
-        // 创建预约
+        // 创建预约（记录使用的订单项ID）
         CourseBooking booking = new CourseBooking();
         booking.setMemberId(memberId);
         booking.setScheduleId(scheduleId);
         booking.setCourseId(schedule.getCourseId());
+        booking.setOrderItemId(item.getId());  // 记录使用的订单项ID
         booking.setBookingStatus(0);
         booking.setBookingTime(LocalDateTime.now());
 
@@ -824,6 +827,9 @@ public class CourseServiceImpl implements CourseService {
         // 更新排课当前人数
         schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() + 1);
         courseScheduleMapper.updateById(schedule);
+
+        log.info("团课预约成功，预约ID：{}，排课ID：{}，使用订单项ID：{}",
+                booking.getId(), scheduleId, item.getId());
     }
 
     @Override
@@ -856,38 +862,44 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void cancelCourseBooking(Long bookingId, String reason) {
+        log.info("取消课程预约，预约ID：{}，原因：{}", bookingId, reason);
+
+        // 1. 验证预约记录是否存在
         CourseBooking booking = courseBookingMapper.selectById(bookingId);
         if (booking == null) {
             throw new BusinessException("预约记录不存在");
         }
 
+        // 2. 验证预约状态（只有待上课的可以取消）
         if (booking.getBookingStatus() != 0) {
             throw new BusinessException("只有待上课的预约可以取消");
         }
 
-        // 验证取消时间
+        // 3. 获取排课信息
         CourseSchedule schedule = courseScheduleMapper.selectById(booking.getScheduleId());
         if (schedule == null) {
             throw new BusinessException("排课不存在");
         }
 
+        // 4. 验证取消时间（是否在允许取消的时间范围内）
         LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         configValidator.validateCourseCancellation(scheduleDateTime);
 
-        // 更新预约状态为已取消
+        // 5. 更新预约状态为已取消
         booking.setBookingStatus(3);
         booking.setCancellationReason(reason);
         booking.setCancellationTime(LocalDateTime.now());
         courseBookingMapper.updateById(booking);
+        log.info("预约状态已更新为已取消，预约ID：{}", bookingId);
 
-        // 获取课程信息
+        // 6. 获取课程信息
         Course course = courseMapper.selectById(booking.getCourseId());
+        Integer sessionCost = course != null ? (course.getSessionCost() != null ? course.getSessionCost() : 1) : 1;
 
-        // 私教课：直接取消排课（状态改为0-已取消），不修改已预约人数
+        // 7. 更新排课状态
         if (course != null && course.getCourseType() == 0) {
-            // 私教课：排课状态改为已取消
-            schedule.setStatus(0);  // 0-已取消
-            // 注意：不修改 currentEnrollment，保持原值
+            // 私教课：排课状态改为已取消（不修改 currentEnrollment）
+            schedule.setStatus(0);
             courseScheduleMapper.updateById(schedule);
             log.info("私教课取消预约，排课状态改为已取消，排课ID：{}", schedule.getScheduleId());
         } else if (course != null && course.getCourseType() == 1) {
@@ -897,24 +909,22 @@ public class CourseServiceImpl implements CourseService {
             log.info("团课取消预约，当前预约人数减1，排课ID：{}", schedule.getScheduleId());
         }
 
-        // 恢复课时
-        if (course != null) {
-            Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
-            Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
-
-            // 查询该会员最近使用的课时包
-            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
-            itemWrapper.eq(OrderItem::getProductType, targetProductType)
-                    .eq(OrderItem::getStatus, "ACTIVE")
-                    .orderByDesc(OrderItem::getUpdateTime)
-                    .last("LIMIT 1");
-
-            OrderItem item = orderItemMapper.selectOne(itemWrapper);
+        // 8. 恢复课时（根据预约时记录的订单项ID）
+        if (booking.getOrderItemId() != null) {
+            OrderItem item = orderItemMapper.selectById(booking.getOrderItemId());
             if (item != null) {
                 item.setRemainingSessions(item.getRemainingSessions() + sessionCost);
                 orderItemMapper.updateById(item);
+                log.info("课时恢复成功，订单项ID：{}，剩余课时：{}",
+                        item.getId(), item.getRemainingSessions());
+            } else {
+                log.warn("未找到订单项，订单项ID：{}", booking.getOrderItemId());
             }
+        } else {
+            log.warn("预约记录没有关联订单项ID，预约ID：{}", bookingId);
         }
+
+        log.info("取消预约成功，预约ID：{}", bookingId);
     }
 
     @Override

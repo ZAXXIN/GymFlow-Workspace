@@ -8,6 +8,8 @@ import java.time.LocalDate;
 @Data
 @Schema(description = "会员卡DTO")
 public class MiniMemberCardDTO {
+    @Schema(description = "订单项ID（卡片唯一标识）")
+    private Long orderItemId;
 
     @Schema(description = "商品ID")
     private Long productId;

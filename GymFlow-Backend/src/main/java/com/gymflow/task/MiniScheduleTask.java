@@ -1,10 +1,14 @@
 package com.gymflow.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.gymflow.entity.Course;
 import com.gymflow.entity.CourseBooking;
 import com.gymflow.entity.CourseSchedule;
+import com.gymflow.entity.OrderItem;
 import com.gymflow.mapper.CourseBookingMapper;
+import com.gymflow.mapper.CourseMapper;
 import com.gymflow.mapper.CourseScheduleMapper;
+import com.gymflow.mapper.OrderItemMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,7 +31,8 @@ public class MiniScheduleTask {
 
     private final CourseBookingMapper courseBookingMapper;
     private final CourseScheduleMapper courseScheduleMapper;
-
+    private final CourseMapper courseMapper;
+    private final OrderItemMapper orderItemMapper;
     /**
      * 应用启动时立即执行一次所有任务
      */
@@ -71,7 +76,7 @@ public class MiniScheduleTask {
     }
 
     /**
-     * 每半小时执行一次，将未签到的已结束课程标记为已过期
+     * 每半小时执行一次，将未签到的已结束课程标记为已过期，并归还课时
      */
     @Scheduled(cron = "0 */30 * * * ?")
     @Transactional(rollbackFor = Exception.class)
@@ -96,12 +101,34 @@ public class MiniScheduleTask {
 
             // 课程已结束，但未签到
             if (now.isAfter(courseEnd)) {
+                // 更新预约状态为已过期
                 booking.setBookingStatus(4); // 已过期
                 booking.setCancellationReason("课程已结束，未签到");
                 booking.setCancellationTime(now);
                 courseBookingMapper.updateById(booking);
-                expiredCount++;
 
+                // ========== 新增：归还课时 ==========
+                Course course = courseMapper.selectById(booking.getCourseId());
+                if (course != null) {
+                    Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
+
+                    // 查询该会员最近使用的课时包
+                    LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+                    itemWrapper.eq(OrderItem::getProductType, course.getCourseType() == 0 ? 1 : 2) // 私教课1，团课2
+                            .eq(OrderItem::getStatus, "ACTIVE")
+                            .orderByDesc(OrderItem::getUpdateTime)
+                            .last("LIMIT 1");
+
+                    OrderItem item = orderItemMapper.selectOne(itemWrapper);
+                    if (item != null) {
+                        item.setRemainingSessions(item.getRemainingSessions() + sessionCost);
+                        orderItemMapper.updateById(item);
+                        log.info("过期课程归还课时，预约ID：{}，归还课时：{}，订单项ID：{}",
+                                booking.getId(), sessionCost, item.getId());
+                    }
+                }
+
+                expiredCount++;
                 log.debug("预约已过期，预约ID：{}，课程ID：{}，课程结束时间：{}",
                         booking.getId(), schedule.getCourseId(), courseEnd);
             }

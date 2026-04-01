@@ -15,13 +15,13 @@ public class CourseBooking {
 
     private Long courseId;
 
-    @TableField("schedule_id")  // 新增：关联排课ID
+    @TableField("schedule_id")
     private Long scheduleId;
 
     @TableField("booking_time")
     private LocalDateTime bookingTime;
 
-//    0-待上课，1-已签到，2-已完成，3-已取消，4-已过期
+    // 0-待上课，1-已签到，2-已完成，3-已取消，4-已过期
     @TableField("booking_status")
     private Integer bookingStatus;
 
@@ -36,10 +36,10 @@ public class CourseBooking {
 
     // ========== 签到码相关字段 ==========
 
-    @TableField("sign_code")  // 新增：6位签到码
+    @TableField("sign_code")
     private String signCode;
 
-    @TableField("sign_code_expire_time")  // 新增：签到码过期时间
+    @TableField("sign_code_expire_time")
     private LocalDateTime signCodeExpireTime;
 
     @TableField("checkin_code_id")
@@ -47,6 +47,10 @@ public class CourseBooking {
 
     @TableField("auto_complete_time")
     private LocalDateTime autoCompleteTime;
+
+    // ========== 新增：订单项ID（记录使用的是哪个课时包） ==========
+    @TableField("order_item_id")
+    private Long orderItemId;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

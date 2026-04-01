@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gymflow.dto.member.*;
 import com.gymflow.dto.mini.MiniMemberCardDTO;
+import com.gymflow.dto.order.OrderItemDTO;
 import com.gymflow.entity.*;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -609,6 +611,15 @@ public class MemberServiceImpl implements MemberService {
             throw new BusinessException("请选择会员卡或课程包");
         }
 
+
+        // ========== 新增：购买限制检查（调用 OrderServiceImpl 的检查逻辑） ==========
+        // 创建临时 OrderItemDTO 用于检查
+        OrderItemDTO tempItem = new OrderItemDTO();
+        tempItem.setProductType(cardDTO.getCardType());
+        List<OrderItemDTO> tempItems = Collections.singletonList(tempItem);
+        // 注意：这里需要注入 OrderService 或提取公共方法，简单起见可以直接调用私有检查方法
+        // 由于无法直接调用，这里保留原有的会籍卡检查，并增加课程包检查
+
         // 3. 验证会籍卡是否可以添加（未过期不能添加）
         if (cardDTO.getCardType() == 0) {
             List<MemberCardDTO> currentCards = getMemberCards(memberId);
@@ -621,6 +632,22 @@ public class MemberServiceImpl implements MemberService {
                     activeMembershipCard.getEndDate().isAfter(LocalDate.now())) {
                 throw new BusinessException("当前有未过期的会籍卡（有效期至：" +
                         activeMembershipCard.getEndDate() + "），不能添加新的会籍卡");
+            }
+        }
+
+        // ========== 新增：课程包购买限制检查 ==========
+        if (cardDTO.getCardType() == 1 || cardDTO.getCardType() == 2) {
+            List<MemberCardDTO> currentCards = getMemberCards(memberId);
+            MemberCardDTO activeCourseCard = currentCards.stream()
+                    .filter(card -> card.getCardType() == cardDTO.getCardType() && "ACTIVE".equals(card.getStatus()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (activeCourseCard != null && activeCourseCard.getRemainingSessions() != null
+                    && activeCourseCard.getRemainingSessions() > 0) {
+                throw new BusinessException(String.format(
+                        "您当前已有的「%s」还有 %d 课时未使用，用完后再购买新卡",
+                        activeCourseCard.getProductName(), activeCourseCard.getRemainingSessions()));
             }
         }
 

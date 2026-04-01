@@ -174,6 +174,9 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("订单项不能为空");
         }
 
+        // ========== 新增：购买限制检查 ==========
+        checkPurchaseLimit(orderDTO.getMemberId(), orderDTO.getOrderItems());
+
         // 根据订单项的商品类型确定订单类型
         // 如果所有订单项都是同一类型，则使用该类型；否则设置为3（相关产品）或混合类型
         Integer orderType = determineOrderType(orderDTO.getOrderItems());
@@ -1100,6 +1103,81 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("团课课程包激活成功，订单项ID：{}，总课时：{}，有效期至：{}",
                 orderItem.getId(), totalSessions, orderItem.getValidityEndDate());
+    }
+
+    /**
+     * 购买限制检查
+     */
+    private void checkPurchaseLimit(Long memberId, List<OrderItemDTO> orderItems) {
+        // 查询会员当前有效的订单项
+        LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.eq(Order::getMemberId, memberId)
+                .eq(Order::getPaymentStatus, 1)
+                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+
+        List<Order> orders = orderMapper.selectList(orderWrapper);
+        if (orders.isEmpty()) {
+            return;
+        }
+
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.in(OrderItem::getOrderId, orderIds)
+                .eq(OrderItem::getStatus, "ACTIVE");
+
+        List<OrderItem> activeItems = orderItemMapper.selectList(itemWrapper);
+
+        for (OrderItemDTO newItem : orderItems) {
+            Integer productType = newItem.getProductType();
+
+            List<OrderItem> sameTypeItems = activeItems.stream()
+                    .filter(item -> item.getProductType().equals(productType))
+                    .collect(Collectors.toList());
+
+            if (sameTypeItems.isEmpty()) {
+                continue;
+            }
+
+            switch (productType) {
+                case 0: // 会籍卡
+                    checkMembershipLimit(sameTypeItems);
+                    break;
+                case 1: // 私教课
+                case 2: // 团课
+                    checkCoursePackageLimit(sameTypeItems);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * 会籍卡购买限制检查
+     */
+    private void checkMembershipLimit(List<OrderItem> existingItems) {
+        LocalDate today = LocalDate.now();
+
+        for (OrderItem item : existingItems) {
+            if (item.getValidityEndDate() != null && item.getValidityEndDate().isAfter(today)) {
+                throw new BusinessException(String.format(
+                        "您当前已有有效的会籍卡「%s」，有效期至 %s，到期后才能购买新卡",
+                        item.getProductName(), item.getValidityEndDate()));
+            }
+        }
+    }
+
+    /**
+     * 课程包购买限制检查（私教课/团课）
+     */
+    private void checkCoursePackageLimit(List<OrderItem> existingItems) {
+        for (OrderItem item : existingItems) {
+            Integer remainingSessions = item.getRemainingSessions();
+            if (remainingSessions != null && remainingSessions > 0) {
+                throw new BusinessException(String.format(
+                        "您当前已有的「%s」还有 %d 课时未使用，用完后再购买新卡",
+                        item.getProductName(), remainingSessions));
+            }
+        }
     }
 
     /**
