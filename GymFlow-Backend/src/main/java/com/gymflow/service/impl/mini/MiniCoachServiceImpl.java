@@ -137,6 +137,20 @@ public class MiniCoachServiceImpl implements MiniCoachService {
             Course course = courseMapper.selectById(schedule.getCourseId());
             if (course == null) continue;
 
+            // 私教课：检查是否有有效预约（状态为待上课或已签到）
+            if (course.getCourseType() == 0) {
+                // 查询该排课下是否有有效预约（待上课或已签到）
+                LambdaQueryWrapper<CourseBooking> bookingWrapper = new LambdaQueryWrapper<>();
+                bookingWrapper.eq(CourseBooking::getScheduleId, schedule.getScheduleId())
+                        .in(CourseBooking::getBookingStatus, 0, 1);  // 待上课或已签到
+                Long validBookingCount = courseBookingMapper.selectCount(bookingWrapper);
+
+                if (validBookingCount == 0) {
+                    log.debug("私教课排课无有效预约，跳过：{}", schedule.getScheduleId());
+                    continue;
+                }
+            }
+
             MiniScheduleDTO dto = new MiniScheduleDTO();
             dto.setScheduleId(schedule.getScheduleId());
             dto.setCourseId(course.getCourseId());

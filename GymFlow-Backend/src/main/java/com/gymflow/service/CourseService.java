@@ -70,7 +70,7 @@ public interface CourseService {
     /**
      * 会员预约私教课
      */
-    void bookPrivateCourse(Long memberId, Long coachId, LocalDate scheduleDate, LocalTime startTime);
+    void bookPrivateCourse(Long memberId, Long courseId, Long coachId, LocalDate scheduleDate, LocalTime startTime);
 
     /**
      * 会员预约团课

@@ -112,14 +112,16 @@ public class CourseController {
         return Result.success("查询成功", timetable);
     }
 
-    @Operation(summary = "会员预约私教课")
     @PostMapping("/book/private")
+    @Operation(summary = "会员预约私教课")
     @PreAuthorize("course:booking:add")
-    public Result<Void> bookPrivateCourse(@RequestParam Long memberId,
-                                          @RequestParam Long coachId,
-                                          @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate scheduleDate,
-                                          @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime startTime) {
-        courseService.bookPrivateCourse(memberId, coachId, scheduleDate, startTime);
+    public Result<Void> bookPrivateCourse(
+            @RequestParam Long memberId,
+            @RequestParam Long courseId,      // 新增：课程ID
+            @RequestParam Long coachId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate scheduleDate,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime startTime) {
+        courseService.bookPrivateCourse(memberId, courseId, coachId, scheduleDate, startTime);
         return Result.success("预约成功");
     }
 

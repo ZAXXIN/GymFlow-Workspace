@@ -367,6 +367,9 @@ public class OrderServiceImpl implements OrderService {
             if (order.getPaymentMethod() == null) {
                 order.setPaymentMethod("在线支付");
             }
+
+            // ✅ 新增：更新商品销量
+            updateProductSalesVolume(orderId);
         }
 
         // 如果状态变为已取消或已退款，保持支付状态不变
@@ -393,6 +396,28 @@ public class OrderServiceImpl implements OrderService {
         logOrderStatusChange(orderId, order.getOrderStatus(), statusDTO.getOrderStatus(), statusDTO.getRemark());
 
         log.info("更新订单状态成功，订单ID：{}，新状态：{}", orderId, statusDTO.getOrderStatus());
+    }
+
+    /**
+     * 更新商品销量
+     */
+    private void updateProductSalesVolume(Long orderId) {
+        // 查询订单的所有订单项
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getOrderId, orderId);
+        List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+        for (OrderItem item : orderItems) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null) {
+                // 增加销量
+                int newSalesVolume = (product.getSalesVolume() != null ? product.getSalesVolume() : 0) + item.getQuantity();
+                product.setSalesVolume(newSalesVolume);
+                productMapper.updateById(product);
+                log.info("更新商品销量，商品ID：{}，商品名称：{}，新增销量：{}，总销量：{}",
+                        product.getId(), product.getProductName(), item.getQuantity(), newSalesVolume);
+            }
+        }
     }
 
     @Override
