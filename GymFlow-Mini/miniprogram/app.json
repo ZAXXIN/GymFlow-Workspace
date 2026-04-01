@@ -8,6 +8,7 @@
     "pages/member/health-records/index",
     "pages/member/checkin-code/index",
     "pages/member/card-info/index",
+    "pages/member/card-detail/index",
     "pages/coach/home/index",
     "pages/coach/finance/index",
     "pages/coach/my/index",
@@ -21,7 +22,8 @@
     "pages/common/message-list/index",
     "pages/common/search-result/index",
     "pages/common/modify-password/index",
-    "components/tab-bar/index"
+    "components/tab-bar/index",
+    "pages/member/card-detail"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -5,7 +5,7 @@
     <swiper class="card-info-swiper" current="{{currentCardIndex}}" bindchange="onCardChange" indicator-dots="{{false}}"
       circular="{{true}}" previous-margin="32rpx" next-margin="32rpx">
       <swiper-item wx:for="{{activeCards}}" wx:key="productId" wx:for-item="card">
-        <view class="card-info-card">
+        <view class="card-info-card" data-card="{{card}}" bindtap="onCardTap">
           <view class="card-info-card-bg" style="background: {{dateUtil.getCardGradient(card.cardType)}}"></view>
           <view class="card-info-card-content">
             <view class="card-info-card-type">{{card.productName || '健身会员卡'}}</view>

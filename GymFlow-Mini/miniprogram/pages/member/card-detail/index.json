@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "会员卡详情",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "loading": "/components/loading/index",
+    "empty-state": "/components/empty-state/index",
+    "tab-nav": "/components/tab-nav/index"
+  }
+}

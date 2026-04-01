@@ -1,0 +1,95 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
+<view class="card-detail-page">
+  <!-- 会员卡信息 -->
+  <view class="card-info-card" wx:if="{{currentCard}}">
+    <view class="card-info-card-bg" style="background: {{dateUtil.getCardGradient(currentCard.cardType)}}"></view>
+    <view class="card-info-card-content">
+      <view class="card-info-card-type">{{currentCard.productName}}</view>
+      <view class="card-info-card-number">NO. {{memberInfo.memberNo || '------'}}</view>
+      <view class="card-info-card-name">{{memberInfo.realName || '会员'}}</view>
+      <view class="card-info-card-footer">
+        <view class="card-info-card-date" wx:if="{{currentCard.cardType == 0}}">
+          有效期 {{currentCard.startDate || '----'}} 至 {{currentCard.endDate || '----'}}
+        </view>
+        <view class="card-info-card-sessions" wx:if="{{currentCard.cardType != 0}}">
+          剩余 {{currentCard.remainingSessions}} 课时
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 会籍卡：显示签到记录 -->
+  <view wx:if="{{currentCard.cardType === 0}}">
+    <!-- 统计卡片 -->
+    <view class="stats-card">
+      <view class="stats-item">
+        <text class="stats-label">累计签到</text>
+        <text class="stats-value">{{statistics.totalCheckins}}</text>
+        <text class="stats-unit">次</text>
+      </view>
+    </view>
+
+    <!-- 签到记录列表 -->
+    <view class="record-list">
+      <block wx:for="{{statistics.recentCheckins}}" wx:key="index">
+        <view class="record-item">
+          <view class="record-item-left">
+            <view class="record-item-date">{{item.checkinTime}}</view>
+            <view class="record-item-method">{{item.checkinMethodDesc}}</view>
+          </view>
+          <view class="record-item-right">
+            <text class="record-item-badge">自由训练</text>
+          </view>
+        </view>
+      </block>
+
+      <view class="loading-wrapper" wx:if="{{loading}}">
+        <loading type="circular" text="加载中..."></loading>
+      </view>
+
+      <empty-state wx:if="{{!loading && statistics.recentCheckins.length == 0}}" show="{{true}}" text="暂无签到记录">
+      </empty-state>
+    </view>
+  </view>
+
+  <!-- 课程卡：显示课时明细 -->
+  <view wx:if="{{currentCard.cardType !== 0}}">
+    <!-- 统计卡片 -->
+    <view class="stats-card stats-card-two">
+      <view class="stats-item">
+        <text class="stats-label">已消耗</text>
+        <text class="stats-value">{{statistics.totalConsumed}}</text>
+        <text class="stats-unit">课时</text>
+      </view>
+      <view class="stats-divider"></view>
+      <view class="stats-item">
+        <text class="stats-label">剩余</text>
+        <text class="stats-value">{{currentCard.remainingSessions || 0}}</text>
+        <text class="stats-unit">课时</text>
+      </view>
+    </view>
+
+    <!-- 课时明细列表 -->
+    <view class="record-list">
+      <block wx:for="{{statistics.sessionDetails}}" wx:key="bookingId">
+        <view class="record-item session-{{item.type === 'CONSUME' ? 'consume' : 'return'}}">
+          <view class="record-item-left">
+            <view class="record-item-type">{{item.type === 'CONSUME' ? '消耗' : '归还'}}</view>
+            <view class="record-item-course">{{item.courseName}}</view>
+            <view class="record-item-time">{{item.time}}</view>
+          </view>
+          <view class="record-item-right">
+            <text class="record-item-sessions">{{item.type === 'CONSUME' ? '-' : '+'}}{{item.sessions}}课时</text>
+          </view>
+        </view>
+      </block>
+
+      <view class="loading-wrapper" wx:if="{{loading}}">
+        <loading type="circular" text="加载中..."></loading>
+      </view>
+
+      <empty-state wx:if="{{!loading && statistics.sessionDetails.length == 0}}" show="{{true}}" text="暂无课时明细">
+      </empty-state>
+    </view>
+  </view>
+</view>

@@ -1,26 +1,111 @@
-<view class="tab-nav-wrapper {{fixed ? 'tab-nav-fixed' : ''}}">
-  <scroll-view 
-    class="tab-nav"
-    scroll-x="{{scrollable}}"
-    scroll-left="{{scrollLeft}}"
-    scroll-with-animation
-    show-scrollbar="{{false}}"
-  >
-    <view class="tab-nav-container">
-      <view 
-        class="tab-nav-item {{index === current ? 'tab-nav-item-active' : ''}}"
-        wx:for="{{tabs}}"
-        wx:key="index"
-        data-index="{{index}}"
-        bindtap="onTabTap"
-      >
-        <text class="tab-nav-item-text">{{item}}</text>
+<view class="card-detail-page">
+  <!-- 会员卡信息 -->
+  <view class="card-info-card" wx:if="{{currentCard}}">
+    <view class="card-info-card-bg" style="background: {{getCardGradient(currentCard.cardType)}}"></view>
+    <view class="card-info-card-content">
+      <view class="card-info-card-type">{{currentCard.productName}}</view>
+      <view class="card-info-card-number">NO. {{memberInfo.memberNo || '------'}}</view>
+      <view class="card-info-card-name">{{memberInfo.realName || '会员'}}</view>
+      <view class="card-info-card-footer">
+        <view class="card-info-card-date" wx:if="{{currentCard.cardType == 0}}">
+          有效期 {{currentCard.startDate || '----'}} 至 {{currentCard.endDate || '----'}}
+        </view>
+        <view class="card-info-card-sessions" wx:if="{{currentCard.cardType != 0}}">
+          剩余 {{currentCard.remainingSessions}} 课时
+        </view>
       </view>
-      <view 
-        class="tab-nav-line"
-        style="width: {{100 / tabs.length}}%; transform: translateX({{current * 100}}%); background-color: {{lineColor}};"
-        wx:if="{{!scrollable}}"
-      ></view>
     </view>
-  </scroll-view>
+  </view>
+
+  <!-- Tab 导航 -->
+  <tab-nav 
+    tabs="{{tabTitles}}" 
+    current="{{activeTab}}" 
+    bind:change="onTabChange"
+  ></tab-nav>
+
+  <!-- 签到记录 Tab -->
+  <view class="card-detail-content" wx:if="{{activeTab === 0}}">
+    <!-- 签到统计卡片 -->
+    <view class="checkin-stats-card">
+      <view class="checkin-stats-item">
+        <text class="checkin-stats-label">累计签到</text>
+        <text class="checkin-stats-value">{{statistics.totalCheckins}}</text>
+        <text class="checkin-stats-unit">次</text>
+      </view>
+    </view>
+
+    <!-- 签到记录列表 -->
+    <view class="checkin-list">
+      <block wx:for="{{statistics.recentCheckins}}" wx:key="index">
+        <view class="checkin-item">
+          <view class="checkin-item-left">
+            <view class="checkin-item-date">{{item.checkinTime}}</view>
+            <view class="checkin-item-method">{{item.checkinMethodDesc}}</view>
+          </view>
+          <view class="checkin-item-right">
+            <text class="checkin-item-badge">自由训练</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 加载中 -->
+      <view class="loading-wrapper" wx:if="{{loading}}">
+        <loading type="circular" text="加载中..."></loading>
+      </view>
+
+      <!-- 空状态 -->
+      <empty-state 
+        wx:if="{{!loading && statistics.recentCheckins.length == 0}}"
+        show="{{true}}"
+        text="暂无签到记录"
+      ></empty-state>
+    </view>
+  </view>
+
+  <!-- 课时明细 Tab -->
+  <view class="card-detail-content" wx:if="{{activeTab === 1}}">
+    <!-- 课时统计卡片 -->
+    <view class="session-stats-card">
+      <view class="session-stats-item">
+        <text class="session-stats-label">总消耗课时</text>
+        <text class="session-stats-value">{{statistics.totalConsumed}}</text>
+        <text class="session-stats-unit">课时</text>
+      </view>
+      <view class="session-stats-divider"></view>
+      <view class="session-stats-item">
+        <text class="session-stats-label">总归还课时</text>
+        <text class="session-stats-value">{{statistics.totalReturned}}</text>
+        <text class="session-stats-unit">课时</text>
+      </view>
+    </view>
+
+    <!-- 课时明细列表 -->
+    <view class="session-list">
+      <block wx:for="{{statistics.sessionDetails}}" wx:key="bookingId">
+        <view class="session-item {{item.type === 'CONSUME' ? 'session-item-consume' : 'session-item-return'}}">
+          <view class="session-item-left">
+            <view class="session-item-type">{{item.type === 'CONSUME' ? '消耗' : '归还'}}</view>
+            <view class="session-item-course">{{item.courseName}}</view>
+            <view class="session-item-time">{{item.time}}</view>
+          </view>
+          <view class="session-item-right">
+            <text class="session-item-sessions">{{item.type === 'CONSUME' ? '-' : '+'}}{{item.sessions}}课时</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 加载中 -->
+      <view class="loading-wrapper" wx:if="{{loading}}">
+        <loading type="circular" text="加载中..."></loading>
+      </view>
+
+      <!-- 空状态 -->
+      <empty-state 
+        wx:if="{{!loading && statistics.sessionDetails.length == 0}}"
+        show="{{true}}"
+        text="暂无课时明细"
+      ></empty-state>
+    </view>
+  </view>
 </view>

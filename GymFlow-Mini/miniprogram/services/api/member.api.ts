@@ -93,3 +93,11 @@ export const modifyMemberPassword = (oldPassword: string, newPassword: string) =
     }
   })
 }
+
+/**
+ * 获取会员统计数据（签到记录 + 课时明细）
+ * GET /mini/member/statistics
+ */
+export const getMemberStatistics = (orderItemId: number) => {
+  return wxRequest.get('/mini/member/statistics', { orderItemId })
+}
