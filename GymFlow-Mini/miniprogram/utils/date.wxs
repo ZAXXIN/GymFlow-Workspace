@@ -325,6 +325,22 @@ function calculateDiscount(original, current){
   return discount.toFixed(1)
 }
 
+//会籍卡颜色
+function getCardGradient(cardType) {
+  switch (cardType) {
+    case 0: // 会籍卡 - 豆沙粉（加深）
+    return 'linear-gradient(135deg, #E0B7AD 0%, #CFA194 100%)'
+  case 1: // 私教课 - 灰蓝色（加深）
+    return 'linear-gradient(135deg, #7E99B0 0%, #6081A0 100%)'
+  case 2: // 团课 - 薄荷绿（加深）
+    return 'linear-gradient(135deg, #9FCAA1 0%, #82AD84 100%)'
+  case 3: // 相关产品 - 淡芋紫（加深）
+    return 'linear-gradient(135deg, #BDA5CF 0%, #A587BC 100%)'
+  default:
+    return 'linear-gradient(135deg, #A5B3BC 0%, #8E9EAA 100%)'
+  }
+}
+
 module.exports = {
   formatTime: formatTime,
   formatDate: formatDate,
@@ -343,5 +359,6 @@ module.exports = {
   getCourseTypeText: getCourseTypeText,
   getCourseTypeClass: getCourseTypeClass,
   formatMoney: formatMoney,
-  getGenderText: getGenderText
+  getGenderText: getGenderText,
+  getCardGradient: getCardGradient,
 }

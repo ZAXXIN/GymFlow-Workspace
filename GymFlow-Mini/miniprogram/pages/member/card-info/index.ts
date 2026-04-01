@@ -159,46 +159,53 @@ Page({
     return false // 无变化
   },
 
-  /**
-   * 渲染卡片（从 store 读取数据）
-   */
-  renderCards: function () {
-    var cards = userStore._userInfo.memberCards || []
+/**
+ * 渲染卡片（从 store 读取数据）
+ */
+renderCards: function () {
+  var cards = userStore._userInfo.memberCards || []
 
-    console.log('渲染卡片，store数据:', cards)
+  console.log('渲染卡片，store数据:', cards)
 
-    // 分离有效卡片和历史卡片
-    var activeCards = []
-    var historyCards = []
-    var now = new Date()
+  // 分离有效卡片和历史卡片
+  var activeCards = []
+  var historyCards = []
+  var now = new Date()
 
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i]
-      var endDate = card.endDate ? new Date(card.endDate) : null
+  for (var i = 0; i < cards.length; i++) {
+    var card = cards[i]
+    var endDate = card.endDate ? new Date(card.endDate) : null
+    var isActive = false
 
-      // 判断是否为有效卡片
-      var isActive = card.status == 'ACTIVE' &&
+    // 根据卡片类型判断有效性
+    if (card.cardType === 0) {
+      // 会籍卡：只判断状态和有效期，不判断剩余课时
+      isActive = card.status == 'ACTIVE' && (!endDate || endDate > now)
+    } else {
+      // 课程卡（私教课、团课）：判断状态、有效期和剩余课时
+      isActive = card.status == 'ACTIVE' &&
         (!endDate || endDate > now) &&
-        (card.remainingSessions == undefined || card.remainingSessions > 0)
-
-      if (isActive) {
-        activeCards.push(card)
-      } else {
-        historyCards.push(card)
-      }
-
-      console.log(activeCards)
+        (card.remainingSessions !== undefined && card.remainingSessions > 0)
     }
 
-    this.setData({
-      activeCards: activeCards,
-      historyCards: historyCards,
-      loading: false,
-      loadError: false,
-      // 重置当前卡片索引
-      currentCardIndex: 0
-    })
-  },
+    if (isActive) {
+      activeCards.push(card)
+    } else {
+      historyCards.push(card)
+    }
+  }
+
+  console.log('有效卡片:', activeCards)
+  console.log('历史卡片:', historyCards)
+
+  this.setData({
+    activeCards: activeCards,
+    historyCards: historyCards,
+    loading: false,
+    loadError: false,
+    currentCardIndex: 0
+  })
+},
 
   /**
    * 卡片切换事件

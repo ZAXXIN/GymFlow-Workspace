@@ -1,36 +1,27 @@
+<wxs module="dateUtil" src="/utils/date.wxs"></wxs>
 <view class="card-info-page">
   <!-- 头部卡片 - 使用 swiper 支持多卡滑动 -->
   <view class="card-info-header">
-    <swiper 
-      class="card-info-swiper" 
-      current="{{currentCardIndex}}" 
-      bindchange="onCardChange"
-      indicator-dots="{{false}}"
-      circular="{{true}}"
-      previous-margin="32rpx"
-      next-margin="32rpx"
-    >
+    <swiper class="card-info-swiper" current="{{currentCardIndex}}" bindchange="onCardChange" indicator-dots="{{false}}"
+      circular="{{true}}" previous-margin="32rpx" next-margin="32rpx">
       <swiper-item wx:for="{{activeCards}}" wx:key="productId" wx:for-item="card">
         <view class="card-info-card">
-          <view class="card-info-card-bg" style="background: {{getCardGradient(card.cardType)}}"></view>
+          <view class="card-info-card-bg" style="background: {{dateUtil.getCardGradient(card.cardType)}}"></view>
           <view class="card-info-card-content">
             <view class="card-info-card-type">{{card.productName || '健身会员卡'}}</view>
             <view class="card-info-card-number">NO. {{memberInfo.memberNo || '------'}}</view>
-            <view class="card-info-card-name">{{memberInfo.realName || '会员'}}</view>
             <view class="card-info-card-footer">
-            <!-- {{card.cardType   card.cardType == 0   card.cardType == 0}} -->
               <view class="card-info-card-date" wx:if="{{card.cardType == 0}}">
-                <text>有效期</text>
-                <text>{{card.startDate || '----'}} 至 {{card.endDate || '----'}}</text>
+                有效期 {{card.startDate || '----'}} 至 {{card.endDate || '----'}}
               </view>
-              <view class="card-info-card-date" wx:if="{{ }}">
-                <text>剩余课时{{card.remainingSessions}}节</text>
+              <view class="card-info-card-date" wx:if="{{card.cardType != 0 }}">
+                <text>剩余课时 {{card.remainingSessions}}节</text>
               </view>
             </view>
           </view>
         </view>
       </swiper-item>
-      
+
       <!-- 无卡时的空状态 -->
       <swiper-item wx:if="{{activeCards.length == 0}}">
         <view class="card-info-card card-info-card-empty">
@@ -43,19 +34,15 @@
         </view>
       </swiper-item>
     </swiper>
-    
+
     <!-- 底部指示点（多张卡时显示） -->
     <view class="card-info-dots" wx:if="{{activeCards.length > 1}}">
-      <view 
-        wx:for="{{activeCards}}" 
-        wx:key="index"
-        class="card-info-dot {{currentCardIndex == index ? 'card-info-dot-active' : ''}}"
-        data-index="{{index}}"
-        bindtap="onDotTap"
-      ></view>
+      <view wx:for="{{activeCards}}" wx:key="index"
+        class="card-info-dot {{currentCardIndex == index ? 'card-info-dot-active' : ''}}" data-index="{{index}}"
+        bindtap="onDotTap"></view>
     </view>
   </view>
-  
+
   <!-- 会员信息 -->
   <view class="card-info-section">
     <view class="card-info-section-title">会员信息</view>
@@ -78,7 +65,7 @@
       </view> -->
     </view>
   </view>
-  
+
   <!-- 统计数据 -->
   <view class="card-info-section">
     <view class="card-info-section-title">统计数据</view>
@@ -97,14 +84,14 @@
       </view>
     </view>
   </view>
-  
+
   <!-- 历史卡片 -->
   <view class="card-info-section" wx:if="{{historyCards.length > 0}}">
     <view class="card-info-section-header">
       <text class="card-info-section-title">历史卡片</text>
       <text class="card-info-section-more" bindtap="toggleHistory">{{showHistory ? '收起' : '展开'}}</text>
     </view>
-    
+
     <view class="card-info-history" wx:if="{{showHistory}}">
       <view class="card-info-history-item" wx:for="{{historyCards}}" wx:key="productId" wx:for-item="card">
         <view class="card-info-history-header">
