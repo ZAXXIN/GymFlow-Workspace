@@ -1,12 +1,12 @@
 <template>
   <div class="system-settings">
     <el-card shadow="never">
-      <template #header>
+      <!-- <template #header>
         <div class="card-header">
-          <h3 class="card-title">系统设置</h3>
+          <h3 class="card-title">系统配置</h3>
           <div class="card-subtitle">管理系统基本配置和业务参数</div>
         </div>
-      </template>
+      </template> -->
 
       <div class="settings-content">
         <!-- 加载状态 -->
@@ -15,114 +15,121 @@
         </div>
 
         <template v-else>
-          <!-- 基本设置 -->
-          <div class="settings-section">
-            <h4 class="section-title">基本设置</h4>
-            <div class="section-content">
-              <el-form ref="basicFormRef" :model="basicForm" :rules="basicRules" label-width="120px" status-icon>
-                <el-form-item label="系统名称" prop="systemName">
-                  <el-input v-model="basicForm.systemName" placeholder="请输入系统名称" maxlength="100" clearable style="width: 400px;" />
-                  <div class="form-tip">显示在浏览器标签和页面标题上</div>
-                </el-form-item>
+          <!-- 左右两列布局 -->
+          <div class="settings-two-columns">
+            <!-- 左侧：基本设置 -->
+            <div class="settings-left">
+              <div class="settings-section">
+                <h4 class="section-title">基本设置</h4>
+                <div class="section-content">
+                  <el-form ref="basicFormRef" :model="basicForm" :rules="basicRules" label-width="120px" status-icon>
+                    <el-form-item label="系统名称" prop="systemName">
+                      <el-input v-model="basicForm.systemName" placeholder="请输入系统名称" maxlength="100" clearable />
+                      <div class="form-tip">显示在浏览器标签和页面标题上</div>
+                    </el-form-item>
 
-                <el-form-item label="系统Logo" prop="systemLogo">
-                  <div class="logo-upload">
-                    <el-image v-if="basicForm.systemLogo" :src="basicForm.systemLogo" class="logo-preview" fit="contain">
-                      <template #error>
-                        <div class="image-error">
-                          <el-icon>
+                    <el-form-item label="系统Logo" prop="systemLogo">
+                      <div class="logo-upload">
+                        <el-image v-if="basicForm.systemLogo" :src="basicForm.systemLogo" class="logo-preview" fit="contain">
+                          <template #error>
+                            <div class="image-error">
+                              <el-icon>
+                                <Picture />
+                              </el-icon>
+                              <span>加载失败</span>
+                            </div>
+                          </template>
+                        </el-image>
+                        <div v-else class="logo-placeholder">
+                          <el-icon :size="48">
                             <Picture />
                           </el-icon>
-                          <span>加载失败</span>
+                          <span>暂无Logo</span>
                         </div>
-                      </template>
-                    </el-image>
-                    <div v-else class="logo-placeholder">
-                      <el-icon :size="48">
-                        <Picture />
-                      </el-icon>
-                      <span>暂无Logo</span>
-                    </div>
-                    <div class="logo-actions">
-                      <el-upload class="logo-uploader" :show-file-list="false" :before-upload="beforeLogoUpload" :http-request="handleUploadRequest" :disabled="uploading">
-                        <el-button type="primary" size="small" :loading="uploading">
-                          {{ uploading ? '上传中...' : '上传Logo' }}
-                        </el-button>
-                      </el-upload>
-                      <el-button v-if="basicForm.systemLogo" type="danger" size="small" plain @click="removeLogo">
-                        移除
-                      </el-button>
-                    </div>
-                  </div>
-                  <div class="form-tip">建议尺寸：200x200像素，支持PNG、JPG格式，大小不超过2MB</div>
-                </el-form-item>
-              </el-form>
+                        <div class="logo-actions">
+                          <el-upload class="logo-uploader" :show-file-list="false" :before-upload="beforeLogoUpload" :http-request="handleUploadRequest" :disabled="uploading">
+                            <el-button type="primary" size="small" :loading="uploading">
+                              {{ uploading ? '上传中...' : '上传Logo' }}
+                            </el-button>
+                          </el-upload>
+                          <el-button v-if="basicForm.systemLogo" type="danger" size="small" plain @click="removeLogo">
+                            移除
+                          </el-button>
+                        </div>
+                      </div>
+                      <div class="form-tip">建议尺寸：200x200像素，支持PNG、JPG格式，大小不超过2MB</div>
+                    </el-form-item>
+                  </el-form>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- 业务设置 -->
-          <div class="settings-section">
-            <h4 class="section-title">业务设置</h4>
-            <div class="section-content">
-              <el-form ref="businessFormRef" :model="businessForm" :rules="businessRules" label-width="150px" status-icon>
-                <el-form-item label="营业时间" prop="businessHours">
-                  <div class="business-hours">
-                    <el-time-picker v-model="businessForm.businessStartTime" format="HH:mm" value-format="HH:mm:ss" placeholder="开始时间" :disabled-hours="disabledStartHours" style="width: 120px;" />
-                    <span class="time-separator">至</span>
-                    <el-time-picker v-model="businessForm.businessEndTime" format="HH:mm" value-format="HH:mm:ss" placeholder="结束时间" :disabled-hours="disabledEndHours" style="width: 120px;" />
-                  </div>
-                  <div class="form-tip">课程排课、签到只能在营业时间内进行</div>
-                </el-form-item>
+            <!-- 右侧：业务设置 -->
+            <div class="settings-right">
+              <div class="settings-section">
+                <h4 class="section-title">业务设置</h4>
+                <div class="section-content">
+                  <el-form ref="businessFormRef" :model="businessForm" :rules="businessRules" label-width="150px" status-icon>
+                    <el-form-item label="营业时间" prop="businessHours">
+                      <div class="business-hours">
+                        <el-time-picker 
+                          v-model="businessForm.businessStartTime" 
+                          :editable="false"
+                          format="HH:mm" 
+                          value-format="HH:mm:ss" 
+                          placeholder="开始时间"
+                          class="time-picker" 
+                        />
+                        <span class="time-separator">至</span>
+                        <el-time-picker 
+                          v-model="businessForm.businessEndTime" 
+                          :editable="false"
+                          format="HH:mm" 
+                          value-format="HH:mm:ss" 
+                          placeholder="结束时间"
+                          class="time-picker" 
+                        />
+                      </div>
+                      <div class="form-tip">课程排课、签到只能在营业时间内进行</div>
+                    </el-form-item>
 
-                <el-form-item label="课程提前预约时间" prop="courseAdvanceBookingHours">
-                  <el-input-number v-model="businessForm.courseAdvanceBookingHours" :min="0" :max="12" controls-position="right" style="width: 150px;">
-                    <template #suffix>小时</template>
-                  </el-input-number>
-                  <div class="form-tip">课程需要提前多少小时预约</div>
-                </el-form-item>
+                    <el-form-item label="课程提前预约时间" prop="courseAdvanceBookingHours">
+                      <el-input-number v-model="businessForm.courseAdvanceBookingHours" :min="0" :max="12" controls-position="right" class="number-input" />
+                      <div class="form-tip">课程需要提前多少小时预约</div>
+                    </el-form-item>
 
-                <el-form-item label="课程取消时间限制" prop="courseCancelHours">
-                  <el-input-number v-model="businessForm.courseCancelHours" :min="0" :max="2" controls-position="right" style="width: 150px;">
-                    <template #suffix>小时</template>
-                  </el-input-number>
-                  <div class="form-tip">课程开始前多少小时内不能取消</div>
-                </el-form-item>
+                    <el-form-item label="课程取消时间限制" prop="courseCancelHours">
+                      <el-input-number v-model="businessForm.courseCancelHours" :min="0" :max="2" controls-position="right" class="number-input" />
+                      <div class="form-tip">课程开始前多少小时内不能取消</div>
+                    </el-form-item>
 
-                <el-form-item label="签到开始时间" prop="checkinStartMinutes">
-                  <el-input-number v-model="businessForm.checkinStartMinutes" :min="0" :max="60" controls-position="right" style="width: 150px;">
-                    <template #suffix>分钟</template>
-                  </el-input-number>
-                  <div class="form-tip">课程开始前多少分钟可签到</div>
-                </el-form-item>
+                    <el-form-item label="签到开始时间" prop="checkinStartMinutes">
+                      <el-input-number v-model="businessForm.checkinStartMinutes" :min="0" :max="60" controls-position="right" class="number-input" />
+                      <div class="form-tip">课程开始前多少分钟可签到</div>
+                    </el-form-item>
 
-                <el-form-item label="签到截止时间" prop="checkinEndMinutes">
-                  <el-input-number v-model="businessForm.checkinEndMinutes" :min="0" :max="60" controls-position="right" style="width: 150px;">
-                    <template #suffix>分钟</template>
-                  </el-input-number>
-                  <div class="form-tip">课程开始后多少分钟截止签到</div>
-                </el-form-item>
+                    <el-form-item label="签到截止时间" prop="checkinEndMinutes">
+                      <el-input-number v-model="businessForm.checkinEndMinutes" :min="0" :max="60" controls-position="right" class="number-input" />
+                      <div class="form-tip">课程开始后多少分钟截止签到</div>
+                    </el-form-item>
 
-                <el-form-item label="最低开课人数" prop="minClassSize">
-                  <el-input-number v-model="businessForm.minClassSize" :min="1" :max="20" controls-position="right" style="width: 150px;">
-                    <template #suffix>人</template>
-                  </el-input-number>
-                  <div class="form-tip">团课报名人数达到此值才能开课</div>
-                </el-form-item>
+                    <el-form-item label="最低开课人数" prop="minClassSize">
+                      <el-input-number v-model="businessForm.minClassSize" :min="1" :max="20" controls-position="right" class="number-input" />
+                      <div class="form-tip">团课报名人数达到此值才能开课</div>
+                    </el-form-item>
 
-                <el-form-item label="最大课程容量" prop="maxClassCapacity">
-                  <el-input-number v-model="businessForm.maxClassCapacity" :min="1" :max="100" controls-position="right" style="width: 150px;">
-                    <template #suffix>人</template>
-                  </el-input-number>
-                  <div class="form-tip">团课最多允许报名人数</div>
-                </el-form-item>
+                    <el-form-item label="最大课程容量" prop="maxClassCapacity">
+                      <el-input-number v-model="businessForm.maxClassCapacity" :min="1" :max="100" controls-position="right" class="number-input" />
+                      <div class="form-tip">团课最多允许报名人数</div>
+                    </el-form-item>
 
-                <el-form-item label="自动完成时间" prop="autoCompleteHours">
-                  <el-input-number v-model="businessForm.autoCompleteHours" :min="0" :max="24" controls-position="right" style="width: 150px;">
-                    <template #suffix>小时</template>
-                  </el-input-number>
-                  <div class="form-tip">课程结束后多少小时自动变更为已完成</div>
-                </el-form-item>
-              </el-form>
+                    <el-form-item label="自动完成时间" prop="autoCompleteHours">
+                      <el-input-number v-model="businessForm.autoCompleteHours" :min="0" :max="24" controls-position="right" class="number-input" />
+                      <div class="form-tip">课程结束后多少小时自动变更为已完成</div>
+                    </el-form-item>
+                  </el-form>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -145,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
@@ -181,7 +188,7 @@ const businessForm = reactive({
   checkinEndMinutes: 2,
   minClassSize: 5,
   maxClassCapacity: 20,
-  autoCompleteHours:1
+  autoCompleteHours: 1,
 })
 
 // 表单验证规则
@@ -203,31 +210,8 @@ const businessRules: FormRules = {
   checkinEndMinutes: [{ required: true, message: '请输入课程开始后可签到时间', trigger: 'blur' }],
   minClassSize: [{ required: true, message: '请输入最低开课人数', trigger: 'blur' }],
   maxClassCapacity: [{ required: true, message: '请输入最大课程容量', trigger: 'blur' }],
-  autoCompleteHours:[{ required: true, message: '请输入自动完成时间', trigger: 'blur' }]
+  autoCompleteHours: [{ required: true, message: '请输入自动完成时间', trigger: 'blur' }],
 }
-
-// 禁用的小时选项
-const disabledStartHours = computed(() => {
-  if (!businessForm.businessEndTime) return []
-  const endHour = parseInt(businessForm.businessEndTime.split(':')[0])
-  return Array.from({ length: 24 }, (_, i) => i).filter((h) => h > endHour)
-})
-
-const disabledEndHours = computed(() => {
-  if (!businessForm.businessStartTime) return []
-  const startHour = parseInt(businessForm.businessStartTime.split(':')[0])
-  return Array.from({ length: 24 }, (_, i) => i).filter((h) => h < startHour)
-})
-
-// 验证营业时间
-watch(
-  [() => businessForm.businessStartTime, () => businessForm.businessEndTime],
-  ([start, end]) => {
-    if (start && end && start >= end) {
-      ElMessage.warning('营业结束时间不能早于或等于开始时间')
-    }
-  }
-)
 
 // 加载配置
 const loadConfig = async () => {
@@ -281,7 +265,7 @@ const beforeLogoUpload = (file: File) => {
 const handleUploadRequest = async (options: any) => {
   const { file } = options
 
-  const url = await uploadStore.uploadImage(file, {
+  await uploadStore.uploadImage(file, {
     onSuccess: (url) => {
       basicForm.systemLogo = url
     },
@@ -316,9 +300,24 @@ const handleSave = async () => {
     return
   }
 
-  // 验证营业时间
-  if (businessForm.businessStartTime >= businessForm.businessEndTime) {
-    ElMessage.error('营业结束时间不能早于或等于开始时间')
+  // 验证营业时间范围
+  const start = businessForm.businessStartTime
+  const end = businessForm.businessEndTime
+
+  if (start >= end) {
+    ElMessage.error('营业结束时间必须晚于开始时间')
+    return
+  }
+
+  // 限制：开始时间不能早于 06:00
+  if (start < '06:00:00') {
+    ElMessage.error('营业开始时间不能早于 06:00')
+    return
+  }
+
+  // 限制：结束时间不能晚于 23:59
+  if (end > '23:59:59') {
+    ElMessage.error('营业结束时间不能晚于 23:59')
     return
   }
 
@@ -345,7 +344,7 @@ const handleSave = async () => {
         checkinEndMinutes: businessForm.checkinEndMinutes,
         minClassSize: businessForm.minClassSize,
         maxClassCapacity: businessForm.maxClassCapacity,
-        autoCompleteHours:businessForm.autoCompleteHours
+        autoCompleteHours: businessForm.autoCompleteHours,
       }
     )
     // 重新加载配置获取更新时间
@@ -380,6 +379,7 @@ onMounted(() => {
   loadConfig()
 })
 </script>
+
 <style scoped lang="scss">
 .system-settings {
   .card-header {
@@ -401,22 +401,32 @@ onMounted(() => {
       padding: 40px 20px;
     }
 
-    .settings-section {
-      margin-bottom: 30px;
-      padding-bottom: 30px;
-      border-bottom: 1px solid #e4e7ed;
+    // 左右两列布局
+    .settings-two-columns {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
 
-      &:last-child {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
+      .settings-left,
+      .settings-right {
+        flex: 1;
+        min-width: 280px;
       }
+    }
 
+    .settings-section {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+      height: 100%;
+      
       .section-title {
         margin: 0 0 20px 0;
         font-size: 16px;
         color: #606266;
         font-weight: 500;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e4e7ed;
       }
 
       .section-content {
@@ -431,6 +441,7 @@ onMounted(() => {
           display: flex;
           align-items: flex-start;
           gap: 20px;
+          flex-wrap: wrap;
 
           .logo-preview,
           .logo-placeholder {
@@ -491,10 +502,28 @@ onMounted(() => {
           display: flex;
           align-items: center;
           gap: 10px;
+          flex-wrap: wrap;
 
           .time-separator {
             color: #606266;
           }
+          
+          .time-picker {
+            width: 120px;
+          }
+        }
+        
+        // 表单控件宽度自适应
+        :deep(.el-input) {
+          width: 100%;
+        }
+        
+        :deep(.el-input-number) {
+          width: 100%;
+        }
+        
+        .number-input {
+          width: 100%;
         }
       }
     }
@@ -503,20 +532,16 @@ onMounted(() => {
       text-align: right;
       font-size: 12px;
       color: #909399;
-      margin-bottom: 20px;
-      padding-top: 10px;
+      margin: 24px 0 20px;
+      padding-top: 16px;
       border-top: 1px dashed #e4e7ed;
     }
 
     .settings-actions {
-      margin-top: 20px;
+      margin-top: 8px;
       text-align: center;
     }
   }
-}
-
-:deep(.el-input-number .el-input__wrapper) {
-  width: 100%;
 }
 
 :deep(.el-form-item) {
@@ -526,5 +551,13 @@ onMounted(() => {
 :deep(.el-form-item__content) {
   line-height: 1;
   display: block;
+}
+
+// 小屏幕适配：左右列自动变为上下布局
+@media (max-width: 768px) {
+  .settings-two-columns {
+    flex-direction: column;
+    gap: 24px;
+  }
 }
 </style>

@@ -134,12 +134,12 @@
         <el-table-column prop="paymentTimeFormatted" label="支付时间" width="180" />
         <el-table-column label="操作" width="120" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+            <el-button v-permission="'order:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button v-permission="'order:edit'" type="warning" link size="small" v-if="row.orderStatus === 'PENDING'" @click="handleEdit(row.id)">
+            <!-- <el-button v-permission="'order:edit'" type="warning" link size="small" v-if="row.orderStatus === 'PENDING'" @click="handleEdit(row.id)">
               编辑
-            </el-button>
+            </el-button> -->
             <!-- <el-button 
               type="success" 
               link 
@@ -149,27 +149,16 @@
             >
               支付
             </el-button> -->
-            <el-popconfirm title="确定要删除这个订单吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="row.orderStatus === 'CANCELLED' || row.orderStatus === 'COMPLETED'">
+            <!-- <el-popconfirm title="确定要删除这个订单吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="row.orderStatus === 'CANCELLED' || row.orderStatus === 'COMPLETED'">
               <template #reference>
                 <el-button v-permission="'order:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
-            </el-popconfirm>
+            </el-popconfirm> -->
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 批量操作 -->
-      <div class="batch-actions" v-if="selectedRows.length > 0">
-        <el-button type="danger" size="small" @click="handleBatchDelete">
-          <el-icon>
-            <Delete />
-          </el-icon>
-          批量删除
-        </el-button>
-        <span class="selected-count">已选择 {{ selectedRows.length }} 项</span>
-      </div>
 
       <!-- 分页 -->
       <div class="pagination-wrapper">
@@ -193,7 +182,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { useOrderStore } from '@/stores/order'
 // import PaymentDialog from './components/PaymentDialog.vue'
 import type { OrderQueryParams } from '@/types/order'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
 
@@ -210,9 +199,6 @@ const filterForm = reactive({
   orderStatus: '' as string,
   dateRange: [] as string[],
 })
-
-// 选择的行
-const selectedRows = ref<any[]>([])
 
 // 对话框
 const paymentDialogVisible = ref(false)
@@ -320,30 +306,6 @@ const handleDelete = async (id: number) => {
   } catch (error) {
     console.error('删除失败:', error)
     ElMessage.error('删除失败')
-  }
-}
-
-// 批量删除
-const handleBatchDelete = async () => {
-  if (selectedRows.value.length === 0) {
-    ElMessage.warning('请选择要删除的订单')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(`确定要删除选中的 ${selectedRows.value.length} 个订单吗？`, '警告', {
-      type: 'warning',
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-    })
-
-    const ids = selectedRows.value.map((row) => row.id)
-    await orderStore.batchDeleteOrder(ids)
-    ElMessage.success('批量删除成功')
-    selectedRows.value = []
-    loadData()
-  } catch (error) {
-    // 用户取消
   }
 }
 

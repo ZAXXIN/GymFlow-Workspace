@@ -40,7 +40,7 @@ export interface ProductBasicDTO {
   totalSessions?: number          // 总课时数（仅私教课/团课）
   membershipBenefits?: string[]   // 会籍权益（仅会籍卡）
   maxPurchaseQuantity?: number    // 最大购买数量
-  refundPolicy?: string           // 退款政策
+  // refundPolicy?: string           // 退款政策
   usageRules?: string             // 使用规则
 }
 
@@ -63,7 +63,7 @@ export interface ProductFullDTO {
   totalSessions?: number
   membershipBenefits?: string[]
   maxPurchaseQuantity?: number
-  refundPolicy?: string
+  // refundPolicy?: string
   usageRules?: string
   createTime: string
   updateTime?: string

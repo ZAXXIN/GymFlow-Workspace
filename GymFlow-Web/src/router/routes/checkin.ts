@@ -11,7 +11,7 @@ const checkInRoutes: RouteRecordRaw[] = [
       icon: 'Finished',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['checkIn:view'] as PermissionCode[]  // 查看签到列表需要的权限
+      permissions: ['checkIn:menu'] as PermissionCode[]  // 查看签到列表需要的权限
     }
   },
   {

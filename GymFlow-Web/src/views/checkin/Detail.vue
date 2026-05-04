@@ -5,45 +5,6 @@
       <template #content>
         <div class="header-content">
           <span class="page-title">签到详情</span>
-          <div class="header-actions">
-            <el-button-group>
-              <el-button type="warning" v-if="canEdit" @click="handleEdit">
-                <el-icon>
-                  <Edit />
-                </el-icon>
-                编辑
-              </el-button>
-              <!-- <el-button
-                type="danger"
-                v-if="canDelete"
-                @click="handleDelete"
-              >
-                <el-icon><Delete /></el-icon>
-                删除
-              </el-button>
-              <el-dropdown @command="handleMoreAction">
-                <el-button>
-                  更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="print">
-                      <el-icon><Printer /></el-icon>
-                      打印记录
-                    </el-dropdown-item>
-                    <el-dropdown-item command="member" divided>
-                      <el-icon><User /></el-icon>
-                      查看会员
-                    </el-dropdown-item>
-                    <el-dropdown-item v-if="isCourseCheckIn" command="course">
-                      <el-icon><Calendar /></el-icon>
-                      查看课程
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown> -->
-            </el-button-group>
-          </div>
         </div>
       </template>
     </el-page-header>
@@ -70,10 +31,9 @@
               <span>手机：{{ currentCheckIn?.memberPhone || '-' }}</span>
               <span>会员号：{{ currentCheckIn?.memberNo || '-' }}</span>
             </div>
-            <div class="member-detail">
+            <!-- <div class="member-detail">
               <span>性别：{{ currentCheckIn?.genderDesc || '-' }}</span>
-              <span v-if="currentCheckIn?.personalCoachName">专属教练：{{ currentCheckIn.personalCoachName }}</span>
-            </div>
+            </div> -->
           </div>
         </el-descriptions-item>
 
@@ -86,9 +46,6 @@
             </div>
             <div class="checkin-time-detail">
               签到时间：{{ formatDateTime(currentCheckIn?.checkinTime) }}
-            </div>
-            <div class="create-time">
-              创建时间：{{ formatDateTime(currentCheckIn?.createTime) }}
             </div>
           </div>
         </el-descriptions-item>
@@ -110,32 +67,27 @@
       </template>
 
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="预约编号">
-          <span class="info-value">{{ currentCheckIn?.courseBookingId || '-' }}</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="预约时间">
-          {{ formatDateTime(currentCheckIn?.bookingTime) }}
-        </el-descriptions-item>
-
         <el-descriptions-item label="课程名称">
           <div class="course-name">{{ currentCheckIn?.courseName || '-' }}</div>
           <div class="course-type">{{ currentCheckIn?.courseTypeDesc || '-' }}</div>
         </el-descriptions-item>
+
         <el-descriptions-item label="课程时间">
-          <div v-if="currentCheckIn?.courseDate && currentCheckIn?.startTime && currentCheckIn?.endTime">
-            <div>{{ formatDate(currentCheckIn.courseDate) }}</div>
+          <div>
+            <div>{{ currentCheckIn.scheduleDate }}</div>
             <div>{{ currentCheckIn.startTime.slice(0, 5) }} - {{ currentCheckIn.endTime.slice(0, 5) }}</div>
           </div>
         </el-descriptions-item>
-
-        <el-descriptions-item label="上课地点">
-          {{ currentCheckIn?.location || '-' }}
-        </el-descriptions-item>
+       
         <el-descriptions-item label="教练信息">
           <div v-if="currentCheckIn?.coachName">
             <div class="coach-name">{{ currentCheckIn.coachName }}</div>
             <div class="coach-phone">{{ currentCheckIn.coachPhone }}</div>
           </div>
+        </el-descriptions-item>
+
+        <el-descriptions-item label="预约时间">
+          {{ formatDateTime(currentCheckIn?.bookingTime) }}
         </el-descriptions-item>
 
         <el-descriptions-item label="预约状态" :span="2">
@@ -488,7 +440,7 @@ onMounted(() => {
   max-height: 200px;
   overflow-y: auto;
   padding: 8px;
-  background-color: #f8f9fa;
+  // background-color: #f8f9fa;
   border-radius: 4px;
 }
 

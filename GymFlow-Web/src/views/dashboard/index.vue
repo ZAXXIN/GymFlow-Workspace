@@ -10,7 +10,7 @@
           </el-icon>
           刷新数据
         </el-button>
-        <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" @change="handleDateChange" />
+        <el-date-picker v-model="dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" size="small" :disabled-date="disabledDate" @change="handleDateChange" />
       </div>
     </div>
 
@@ -161,10 +161,9 @@
           </div>
         </template>
         <el-table :data="todayCourses" style="width: 100%" v-loading="coursesLoading">
-          <el-table-column prop="courseNo" label="课程编号" width="120" />
-          <el-table-column prop="name" label="课程名称" />
+          <el-table-column prop="courseName" label="课程名称" />
           <el-table-column prop="coachName" label="教练" />
-          <el-table-column prop="startTime" label="开始时间" >
+          <el-table-column prop="startTime" label="开始时间">
             <template #default="{ row }">
               {{ formatTime(row.startTime) }}
             </template>
@@ -174,21 +173,21 @@
               {{ formatTime(row.endTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="currentBookings" label="预约/容量" >
+          <el-table-column prop="currentBookings" label="预约/容量">
             <template #default="{ row }">
               {{ row.currentBookings }}/{{ row.capacity }}
             </template>
           </el-table-column>
-          <el-table-column label="状态" >
+          <el-table-column label="状态">
             <template #default="{ row }">
               <el-tag :type="getStatusType(row.status)" size="small">
-                {{ getStatusText(row.status) }}
+                {{ row.statusText }}
               </el-tag>
             </template>
           </el-table-column>
           <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
-              <el-button type="text" size="small" @click="viewCourseDetail(row.id)">
+              <el-button type="text" size="small" @click="viewCourseDetail(row.courseId)">
                 详情
               </el-button>
             </template>
@@ -255,6 +254,11 @@ const formatRevenue = (value: number) => {
   return value.toFixed(2)
 }
 
+// 禁止选择未来日期
+const disabledDate = (time: Date) => {
+  return time.getTime() > Date.now() // 禁止今天之后的日期
+}
+
 // 初始化数据
 const initData = async () => {
   try {
@@ -301,6 +305,108 @@ const handlePeriodChange = (period: string) => {
     updateRevenueChart()
   })
 }
+
+// 初始化营收图表
+// const initRevenueChart = () => {
+//   if (!revenueChartRef.value || !revenueTrend.value) return
+
+//   revenueChart = echarts.init(revenueChartRef.value)
+
+//   // 检查是否所有值都是0
+//   const allZero = revenueTrend.value.values.every((v) => v === 0)
+
+//   const option = {
+//     tooltip: {
+//       trigger: 'axis',
+//       axisPointer: {
+//         type: 'shadow',
+//       },
+//       formatter: (params: any) => {
+//         const data = params[0]
+//         const value = typeof data.value === 'number' ? data.value : 0
+//         const formattedValue =
+//           value >= 10000 ? `${(value / 10000).toFixed(1)}万` : `¥${value.toFixed(2)}`
+//         return `${data.name}<br/>营收：${formattedValue}`
+//       },
+//     },
+//     grid: {
+//       left: '3%',
+//       right: '4%',
+//       bottom: '10%',
+//       containLabel: true,
+//     },
+//     xAxis: {
+//       type: 'category',
+//       data: revenueTrend.value?.categories || [],
+//       axisLabel: {
+//         rotate: revenuePeriod.value === 'year' ? 0 : 30,
+//         fontSize: 12,
+//         margin: 8,
+//       },
+//     },
+//     yAxis: {
+//       type: 'value',
+//       name: '金额 (¥)',
+//       axisLabel: {
+//         formatter: (value: number) => {
+//           if (value >= 10000) {
+//             return (value / 10000).toFixed(1) + '万'
+//           }
+//           return value === 0 ? '0' : value
+//         },
+//       },
+//       scale: true,
+//       min: 'dataMin',
+//       max: 'dataMax',
+//     },
+//     title: allZero
+//       ? {
+//           text: '暂无营收数据',
+//           left: 'center',
+//           top: '50%',
+//           textStyle: {
+//             fontSize: 14,
+//             color: '#999',
+//           },
+//         }
+//       : null,
+//     series: [
+//       {
+//         name: '营收',
+//         type: 'bar',
+//         data: revenueTrend.value?.values || [],
+//         itemStyle: {
+//           color: '#07c160',
+//           borderRadius: [4, 4, 0, 0],
+//         },
+//         barWidth: 30,
+//         label: {
+//           show: true,
+//           position: 'top',
+//           formatter: (params: any) => {
+//             const value = typeof params.value === 'number' ? params.value : 0
+//             if (value === 0) return ''
+//             return value >= 10000 ? `¥${(value / 10000).toFixed(1)}万` : `¥${value.toFixed(0)}`
+//           },
+//           fontSize: 11,
+//           color: '#666',
+//         },
+//         emphasis: {
+//           itemStyle: {
+//             color: '#07c160',
+//           },
+//         },
+//       },
+//     ],
+//   }
+
+//   revenueChart.setOption(option)
+
+//   // 监听窗口大小变化
+//   window.addEventListener('resize', () => {
+//     revenueChart?.resize()
+//   })
+// }
 
 // 初始化营收图表
 const initRevenueChart = () => {
@@ -369,13 +475,34 @@ const initRevenueChart = () => {
     series: [
       {
         name: '营收',
-        type: 'bar',
+        type: 'line', // 改为折线图
         data: revenueTrend.value?.values || [],
+        smooth: true, // 平滑曲线
+        symbol: 'circle', // 数据点形状
+        symbolSize: 8, // 数据点大小
+        lineStyle: {
+          color: '#07c160',
+          width: 3,
+        },
         itemStyle: {
           color: '#07c160',
-          borderRadius: [4, 4, 0, 0],
+          borderColor: '#fff',
+          borderWidth: 2,
         },
-        barWidth: 30,
+        areaStyle: {
+          // 添加面积填充（可选）
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(7, 193, 96, 0.3)' },
+              { offset: 1, color: 'rgba(7, 193, 96, 0.05)' },
+            ],
+          },
+        },
         label: {
           show: true,
           position: 'top',
@@ -388,9 +515,7 @@ const initRevenueChart = () => {
           color: '#666',
         },
         emphasis: {
-          itemStyle: {
-            color: '#07c160',
-          },
+          focus: 'series',
         },
       },
     ],
@@ -530,32 +655,16 @@ const updateCourseChart = () => {
 // 获取状态类型
 const getStatusType = (status: string) => {
   switch (status) {
-    case 'scheduled':
+    case 'UPCOMING':
       return 'primary'
-    case 'in-progress':
+    case 'ONGOING':
       return 'warning'
-    case 'completed':
+    case 'COMPLETED':
       return 'success'
-    case 'cancelled':
+    case 'CANCELLED':
       return 'danger'
     default:
       return 'info'
-  }
-}
-
-// 获取状态文本
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'scheduled':
-      return '待开始'
-    case 'in-progress':
-      return '进行中'
-    case 'completed':
-      return '已完成'
-    case 'cancelled':
-      return '已取消'
-    default:
-      return '未知'
   }
 }
 
@@ -564,29 +673,12 @@ const formatTime = (time: string) => {
   return dashboardStore.formatTime(time)
 }
 
-// 快速操作
-const handleAddMember = () => {
-  router.push('/member/add')
-}
-
-const handleAddCourse = () => {
-  router.push('/course/schedule')
-}
-
-const handleCheckIn = () => {
-  router.push('/checkIn/list')
-}
-
-const handleViewOrders = () => {
-  router.push('/order/list')
-}
-
 const viewAllCourses = () => {
   router.push('/course/list')
 }
 
-const viewCourseDetail = (id: number) => {
-  router.push(`/course/detail/${id}`)
+const viewCourseDetail = (courseId: number) => {
+  router.push(`/course/detail/${courseId}`)
 }
 
 // 监听数据变化

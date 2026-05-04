@@ -18,11 +18,11 @@
       <!-- 搜索表单 -->
       <el-form :model="queryParams" :inline="true" class="search-form">
         <el-form-item label="商品名称">
-          <el-input v-model="queryParams.productName" placeholder="请输入商品名称" clearable @keyup.enter="handleSearch" />
+          <el-input v-model="queryParams.productName" placeholder="请输入商品名称" clearable />
         </el-form-item>
 
         <el-form-item label="商品类型">
-          <el-select v-model="queryParams.productType" placeholder="请选择商品类型" clearable>
+          <el-select v-model="queryParams.productType" placeholder="请选择商品类型" clearable style="width: 180px;">
             <el-option label="会籍卡" :value="0" />
             <el-option label="私教课" :value="1" />
             <el-option label="团课" :value="2" />
@@ -31,7 +31,7 @@
         </el-form-item>
 
         <el-form-item label="状态">
-          <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择状态" style="width: 180px;" clearable>
             <el-option label="在售" :value="1" />
             <el-option label="下架" :value="0" />
           </el-select>
@@ -123,15 +123,15 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="refundPolicy" label="退款政策" width="240" align="center">
+        <!-- <el-table-column prop="refundPolicy" label="退款政策" width="240" align="center">
           <template #default="{ row }">
             {{ row.refundPolicy }}
           </template>
-        </el-table-column>
+        </el-table-column> -->
 
         <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" link @click="handleView(row.id)">
+            <el-button v-permission="'product:detail'" type="primary" size="small" link @click="handleView(row.id)">
               详情
             </el-button>
             <el-button v-permission="'product:edit'" type="primary" size="small" link @click="handleEdit(row.id)">
@@ -168,7 +168,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useProductStore } from '@/stores/product'
 import type { ProductQueryDTO } from '@/types/product'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
 
@@ -176,12 +176,12 @@ const router = useRouter()
 const store = useProductStore()
 
 // 查询参数
-const queryParams = ref<ProductQueryDTO>({
+const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  ProductName: '',
-  ProductType: '',
-  status: '',
+  productName: '',
+  productType: undefined as number | undefined,
+  status: undefined as number | undefined,
 })
 
 // 格式化后的列表
@@ -195,23 +195,48 @@ onMounted(() => {
 // 获取数据
 const fetchData = async () => {
   try {
-    await store.fetchProductList(queryParams.value)
+    const params: any = {
+      pageNum: queryParams.pageNum,
+      pageSize: queryParams.pageSize,
+    }
+    
+    if (queryParams.productName && queryParams.productName.trim()) {
+      params.productName = queryParams.productName
+    }
+    if (queryParams.productType !== null) {
+      params.productType = queryParams.productType
+    }
+    if (queryParams.status !== null) {
+      params.status = queryParams.status
+    }
+    
+    await store.fetchProductList(params)
   } catch (error) {
     console.error('加载数据失败:', error)
   }
 }
 
 // 搜索
-const handleSearch = () => {
-  queryParams.value.pageNum = 1
-  fetchData()
+const handleSearch = async () => {
+  const queryParamsDTO: ProductQueryDTO = {
+    pageNum: store.pageInfo.pageNum,
+    pageSize: store.pageInfo.pageSize,
+    productName: queryParams.productName,
+    productType: queryParams.productType,
+    status: queryParams.status,
+  }
+
+  await store.fetchProductList(queryParamsDTO)
 }
 
-// 重置
+// 重置 - 保持所有字段
 const handleReset = () => {
   queryParams.value = {
     pageNum: 1,
     pageSize: store.pageInfo.pageSize,
+    productName: '',
+    productType: null,
+    status: null,
   }
   fetchData()
 }

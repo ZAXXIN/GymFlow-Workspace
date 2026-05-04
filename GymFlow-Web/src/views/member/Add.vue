@@ -160,7 +160,7 @@
           <template #header>
             <div class="card-header">
               <span class="card-title">会员卡信息</span>
-              <el-button type="primary" text @click="handleAddCard">添加会员卡</el-button>
+              <el-button v-if="!isEditMode" type="primary" text @click="handleAddCard">添加会员卡</el-button>
             </div>
           </template>
 

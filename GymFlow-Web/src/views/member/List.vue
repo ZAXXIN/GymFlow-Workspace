@@ -31,7 +31,7 @@
           <el-select v-model="filterForm.cardStatus" placeholder="请选择状态" clearable style="width: 180px;">
             <el-option label="有效" value="ACTIVE" />
             <el-option label="过期" value="EXPIRED" />
-            <el-option label="用完" value="USED_UP" />
+            <!-- <el-option label="用完" value="USED_UP" /> -->
           </el-select>
         </el-form-item>
         <!-- <el-form-item label="注册时间">
@@ -79,51 +79,31 @@
       </template>
 
       <el-table :data="memberStore.members" style="width: 100%" row-key="id" v-loading="memberStore.loading" stripe border>
-        <el-table-column prop="memberNo" label="会员编号" width="120" fixed="left" />
-        <el-table-column prop="realName" label="姓名" width="100">
+        <el-table-column prop="memberNo" label="会员编号" width="150" fixed="left" align="center"/>
+        <el-table-column prop="realName" label="姓名" width="180" align="center">
           <template #default="{ row }">
             <div class="member-info">
               <span class="member-name">{{ row.realName }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="phone" label="手机号" width="120" />
-        <el-table-column prop="gender" label="性别" width="80">
+        <el-table-column prop="phone" label="手机号" width="120" align="center"/>
+        <el-table-column prop="gender" label="性别" width="80" align="center">
           <template #default="{ row }">
-            {{ row.gender === 1 ? '男' : row.gender === 0 ? '女' : '未知' }}
+            {{ row.gender == 1 ? '男' : row.gender == 0 ? '女' : '未知' }}
           </template>
         </el-table-column>
         <el-table-column prop="age" label="年龄" width="80" align="center" />
-        <el-table-column prop="cardTypeDesc" label="会员卡类型" width="120">
+        <el-table-column prop="cardTypesDesc" label="会员卡类型" width="180" >
           <template #default="{ row }">
-            <el-tag :type="getCardTypeTag(row.cardType)" size="small">
-              {{ row.cardTypeDesc || '无' }}
-            </el-tag>
+            <span>{{ row.cardTypesDesc || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="cardStatusDesc" label="会员卡状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="getCardStatusTag(row.cardStatus)" size="small">
-              {{ row.cardStatusDesc || '无' }}
+            <el-tag :type="row.cardStatus === 'ACTIVE' ? 'success' : 'danger'" size="small">
+              {{ row.cardStatusDesc }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="remainingSessions" label="剩余课时" width="100" align="center">
-          <template #default="{ row }">
-            <div v-if=" row.cardType == 0">-</div>
-            <el-tag v-else type="success" size="small">
-              {{ row.cardType == 0 ? '-' : row.remainingSessions }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="cardEndDate" label="有效期至" width="120">
-          <template #default="{ row }">
-            <div v-if="row.cardEndDate">
-              {{ formatDate(row.cardEndDate) }}
-            </div>
-            <div v-else>
-              <span class="no-date">-</span>
-            </div>
           </template>
         </el-table-column>
         <el-table-column prop="totalCheckins" label="总签到" width="100" align="center">
@@ -135,7 +115,7 @@
         </el-table-column>
         <el-table-column prop="totalCourseHours" label="累计课时" width="100" align="center">
           <template #default="{ row }">
-            {{ row.cardType == 0 ? '-' : row.totalCourseHours || 0 }}
+            {{ row.cardTypes && (row.cardTypes.includes(1) || row.cardTypes.includes(2) )? (row.totalCourseHours || 0) : '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="totalSpent" label="累计消费" width="120" align="right">
@@ -143,14 +123,14 @@
             <span class="amount">¥{{ formatAmount(row.totalSpent) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="注册时间" width="160">
+        <el-table-column prop="createTime" label="注册时间" width="160" align="center">
           <template #default="{ row }">
             {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+            <el-button v-permission="'member:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
             <el-button v-permission="'member:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
@@ -181,7 +161,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useMemberStore } from '@/stores/member'
 import type { MemberQueryDTO } from '@/types/member'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
 
@@ -224,32 +204,32 @@ const getRandomColor = () => {
 }
 
 // 卡片类型标签样式
-const getCardTypeTag = (cardType: number) => {
-  switch (cardType) {
-    case 0:
-      return 'success' //会籍卡
-    case 1:
-      return 'warning' // 私教课
-    case 2:
-      return 'danger' // 团课
-    default:
-      return 'info'
-  }
-}
+// const getCardTypeTag = (cardType: number) => {
+//   switch (cardType) {
+//     case 0:
+//       return 'success' //会籍卡
+//     case 1:
+//       return 'warning' // 私教课
+//     case 2:
+//       return 'danger' // 团课
+//     default:
+//       return 'info'
+//   }
+// }
 
 // 卡片状态标签样式
-const getCardStatusTag = (cardStatus: string) => {
-  switch (cardStatus) {
-    case 'ACTIVE':
-      return 'success'
-    case 'EXPIRED':
-      return 'danger'
-    case 'USED_UP':
-      return 'warning'
-    default:
-      return 'info'
-  }
-}
+// const getCardStatusTag = (cardStatus: string) => {
+//   switch (cardStatus) {
+//     case 'ACTIVE':
+//       return 'success'
+//     case 'EXPIRED':
+//       return 'danger'
+//     case 'USED_UP':
+//       return 'warning'
+//     default:
+//       return 'info'
+//   }
+// }
 
 // 搜索处理
 const handleSearch = async () => {

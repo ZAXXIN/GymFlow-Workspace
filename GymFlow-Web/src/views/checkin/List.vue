@@ -121,36 +121,27 @@
         </div>
       </template>
 
-      <el-table :data="formattedCheckIns" style="width: 100%" row-key="id" v-loading="loading" stripe border @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column prop="checkinTimeFormatted" label="签到时间" width="180" fixed="left" />
-        <el-table-column label="会员信息" width="200">
-          <template #default="{ row }">
-            <div class="member-info">
-              <div class="member-name">{{ row.memberName || '-' }}</div>
-              <div class="member-phone">{{ row.memberPhone || '-' }}</div>
-              <div class="member-no" v-if="row.memberNo">{{ row.memberNo }}</div>
-            </div>
-          </template>
-        </el-table-column>
+      <el-table :data="formattedCheckIns" style="width: 100%" row-key="id" v-loading="loading" stripe border>
+        <el-table-column prop="checkinTimeFormatted" label="签到时间" />
+        <el-table-column prop="memberName" label="会员姓名"/>
+        <el-table-column prop="memberPhone" label="会员手机号" />
         <el-table-column label="签到类型" width="150">
           <template #default="{ row }">
             <el-tag :type="row.courseCheckIn ? 'success' : 'primary'" size="small">
               {{ row.courseCheckIn ? '课程签到' : '自由训练' }}
             </el-tag>
-            <div class="course-info" v-if="row.courseCheckIn && row.courseName">
-              <span class="course-name">{{ row.courseName }}</span>
-              <span class="coach-name" v-if="row.coachName">({{ row.coachName }})</span>
-            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="checkinMethodDesc" label="签到方式" width="100">
+        <el-table-column prop="courseName" label="课程名称" />
+        <el-table-column prop="coachName" label="课程教练"/>
+        <el-table-column prop="checkinMethodDesc" label="签到方式">
           <template #default="{ row }">
             <el-tag :type="row.checkinMethod === 0 ? 'warning' : 'info'" size="small">
               {{ row.checkinMethodDesc }}
             </el-tag>
           </template>
         </el-table-column>
+
         <el-table-column prop="notes" label="备注" width="200">
           <template #default="{ row }">
             <div class="notes-content" :title="row.notes">
@@ -158,22 +149,22 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="createTimeFormatted" label="创建时间" width="180" />
+        <!-- <el-table-column prop="createTimeFormatted" label="创建时间" width="180" /> -->
         <el-table-column label="操作" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+            <el-button v-permission="'checkIn:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
-            <el-button v-if="hasPermission('checkIn:edit')&&canEdit(row)" type="warning" link size="small" @click="handleEdit(row.id)">
+            <!-- <el-button v-if="hasPermission('checkIn:edit')&&canEdit(row)" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
-            </el-button>
-            <el-popconfirm title="确定要删除这条记录吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="!row.courseCheckIn && hasPermission('checkIn:delete')">
+            </el-button> -->
+            <!-- <el-popconfirm title="确定要删除这条记录吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="!row.courseCheckIn && hasPermission('checkIn:delete')">
               <template #reference>
                 <el-button type="danger" link size="small">
                   删除
                 </el-button>
               </template>
-            </el-popconfirm>
+            </el-popconfirm> -->
           </template>
         </el-table-column>
       </el-table>
@@ -249,7 +240,7 @@ import { useCheckInStore } from '@/stores/checkIn'
 import { useMemberStore } from '@/stores/member'
 import type { CheckInQueryParams } from '@/types/checkIn'
 import type { MemberListVO } from '@/types/member'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
 
@@ -545,11 +536,6 @@ const handleBatchDelete = async () => {
   } catch (error) {
     // 用户取消
   }
-}
-
-// 选择变化
-const handleSelectionChange = (rows: any[]) => {
-  selectedRows.value = rows
 }
 
 // 分页大小变化

@@ -1,6 +1,6 @@
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 import { ElMessage } from 'element-plus'
 
 export const setupRouterGuards = (router: any) => {

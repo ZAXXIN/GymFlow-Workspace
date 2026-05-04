@@ -92,12 +92,12 @@
           <template #header>
             <div class="tab-header">
               <span class="tab-title">排班信息</span>
-              <el-button type="primary" size="small" @click="handleAddSchedule">
+              <!-- <el-button type="primary" size="small" @click="handleAddSchedule">
                 <el-icon>
                   <Plus />
                 </el-icon>
                 添加排班
-              </el-button>
+              </el-button> -->
             </div>
           </template>
 
@@ -128,7 +128,7 @@
               <el-table-column prop="status" label="状态" width="100">
                 <template #default="{ row }">
                   <el-tag :type="getScheduleStatusType(row.status)" size="small">
-                    {{ row.status }}
+                    {{ row.statusDesc }}
                   </el-tag>
                 </template>
               </el-table-column>
@@ -177,7 +177,7 @@
               </el-table-column>
               <el-table-column prop="courseDate" label="上课日期" width="120">
                 <template #default="{ row }">
-                  {{ formatDate(row.courseDate) }}
+                  {{ formatDate(row.scheduleDate) }}
                 </template>
               </el-table-column>
               <el-table-column prop="startTime" label="开始时间" width="100">
@@ -195,12 +195,6 @@
                   {{ row.duration }}分钟
                 </template>
               </el-table-column>
-              <el-table-column prop="price" label="价格" width="100" align="right">
-                <template #default="{ row }">
-                  <span class="amount">¥{{ formatAmount(row.price) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="location" label="地点" width="120" />
               <el-table-column prop="currentEnrollment" label="报名人数" width="100" align="center">
                 <template #default="{ row }">
                   {{ row.currentEnrollment }}/{{ row.maxCapacity }}

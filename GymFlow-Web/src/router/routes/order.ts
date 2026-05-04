@@ -11,7 +11,7 @@ const orderRoutes: RouteRecordRaw[] = [
       icon: 'Ticket',
       showInMenu: true,
       requiresAuth: true,
-      permissions: ['order:view'] as PermissionCode[]  // 查看订单列表需要的权限
+      permissions: ['order:menu'] as PermissionCode[]  // 查看订单列表需要的权限
     }
   },
   {

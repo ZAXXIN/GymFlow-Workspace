@@ -116,7 +116,7 @@ const allMenus = [
     path: '/member/list',
     title: '会员管理',
     icon: User,
-    permissions: ['member:view'],
+    permissions: ['member:menu'],
   },
 
   // 教练管理
@@ -124,7 +124,7 @@ const allMenus = [
     path: '/coach/list',
     title: '教练管理',
     icon: Avatar,
-    permissions: ['coach:view'],
+    permissions: ['coach:menu'],
   },
 
   // 课程管理
@@ -132,7 +132,7 @@ const allMenus = [
     path: '/course/list',
     title: '课程管理',
     icon: Calendar,
-    permissions: ['course:view'],
+    permissions: ['course:menu'],
   },
 
   // 商品管理
@@ -140,7 +140,7 @@ const allMenus = [
     path: '/product/list',
     title: '商品管理',
     icon: Goods,
-    permissions: ['product:view'],
+    permissions: ['product:menu'],
   },
 
   // 订单管理
@@ -148,7 +148,7 @@ const allMenus = [
     path: '/order/list',
     title: '订单管理',
     icon: Document,
-    permissions: ['order:view'],
+    permissions: ['order:menu'],
   },
 
   // 签到管理
@@ -156,7 +156,7 @@ const allMenus = [
     path: '/checkIn/list',
     title: '签到管理',
     icon: Check,
-    permissions: ['checkIn:view'],
+    permissions: ['checkIn:menu'],
   },
 
   // 系统设置
@@ -164,56 +164,56 @@ const allMenus = [
     path: '/settings',
     title: '系统设置',
     icon: Setting,
-    permissions: ['settings:user:view', 'settings:config:view'],
+    permissions: ['settings:menu'],
     children: [
       {
         path: '/settings/webUser',
         title: '用户管理',
         icon: User,  // 添加 icon
-        permissions: ['settings:user:view'],
+        permissions: ['settings:user'],
+      },
+       {
+        path: '/settings/role',
+        title: '角色权限',
+        icon: UserFilled,  // 添加 icon
+        permissions: ['settings:role'],
       },
       {
         path: '/settings/systemConfig',
         title: '系统配置',
         icon: Setting,  // 添加 icon
-        permissions: ['settings:config:view'],
-      },
-      {
-        path: '/settings/role',
-        title: '角色权限',
-        icon: UserFilled,  // 添加 icon
-        permissions: ['settings:role:view'],
+        permissions: ['settings:config'],
       },
     ],
   },
 
   // 报表统计
-  {
-    path: '/reports',
-    title: '报表统计',
-    icon: PieChart,
-    permissions: ['member:view', 'order:view', 'checkIn:view'],
-    children: [
-      {
-        path: '/reports/member',
-        title: '会员统计',
-        icon: User,  // 添加 icon
-        permissions: ['member:view'],
-      },
-      {
-        path: '/reports/finance',
-        title: '财务统计',
-        icon: Document,  // 添加 icon
-        permissions: ['order:view'],
-      },
-      {
-        path: '/reports/course',
-        title: '课程统计',
-        icon: Calendar,  // 添加 icon
-        permissions: ['course:view'],
-      },
-    ],
-  },
+  // {
+  //   path: '/reports',
+  //   title: '报表统计',
+  //   icon: PieChart,
+  //   permissions: ['member:view', 'order:view', 'checkIn:view'],
+  //   children: [
+  //     {
+  //       path: '/reports/member',
+  //       title: '会员统计',
+  //       icon: User,  // 添加 icon
+  //       permissions: ['member:view'],
+  //     },
+  //     {
+  //       path: '/reports/finance',
+  //       title: '财务统计',
+  //       icon: Document,  // 添加 icon
+  //       permissions: ['order:view'],
+  //     },
+  //     {
+  //       path: '/reports/course',
+  //       title: '课程统计',
+  //       icon: Calendar,  // 添加 icon
+  //       permissions: ['course:view'],
+  //     },
+  //   ],
+  // },
 ]
 
 // 根据用户权限过滤菜单（保留 icon 对象，不使用 JSON 序列化）
@@ -323,6 +323,8 @@ const handleMenuSelect = (index: string) => {
 
 // 处理退出登录
 const handleLogout = async () => {
+  // 跳转到登录页
+  window.location.href = '/login'
   try {
     await authStore.logout()
   } catch (error) {
@@ -331,9 +333,6 @@ const handleLogout = async () => {
     // 清除本地存储
     localStorage.removeItem('gymflow_token')
     localStorage.removeItem('gymflow_user_info')
-
-    // 跳转到登录页
-    window.location.href = '/login'
   }
 }
 

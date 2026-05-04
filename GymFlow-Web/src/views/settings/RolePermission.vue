@@ -23,58 +23,36 @@
           <template #header>
             <div class="card-header">
               <span class="card-title">角色列表</span>
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="handleAddRole" 
-                v-permission="'settings:role:add'"
-              >
-                <el-icon><Plus /></el-icon>
+              <el-button type="primary" size="small" @click="handleAddRole">
+                <el-icon>
+                  <Plus />
+                </el-icon>
                 新增角色
               </el-button>
             </div>
           </template>
 
           <div class="role-list">
-            <div
-              v-for="role in store.roles"
-              :key="role.id"
-              class="role-item"
-              :class="{ active: currentRole?.id === role.id }"
-              @click="selectRole(role)"
-            >
+            <div v-for="role in store.roles" :key="role.id" class="role-item" :class="{ active: currentRole?.id === role.id }" @click="selectRole(role)">
               <div class="role-info">
                 <span class="role-name">{{ role.roleName }}</span>
                 <span class="role-code">{{ role.roleCode }}</span>
-                <el-tag 
-                  :type="role.status === 1 ? 'success' : 'info'" 
-                  size="small"
-                  effect="plain"
-                  class="role-status"
-                >
+                <el-tag :type="role.status === 1 ? 'success' : 'info'" size="small" effect="plain" class="role-status">
                   {{ role.status === 1 ? '启用' : '禁用' }}
                 </el-tag>
               </div>
               <div class="role-actions">
-                <el-button 
-                  type="text" 
-                  size="small" 
-                  @click.stop="handleEditRole(role)" 
-                  v-permission="'settings:role:edit'"
-                >
-                  <el-icon><Edit /></el-icon>
+                <el-button type="text" size="small" @click.stop="handleEditRole(role)">
+                  <el-icon>
+                    <Edit />
+                  </el-icon>
                 </el-button>
-                <el-popconfirm
-                  v-if="role.roleCode !== 'BOSS'"
-                  title="确定要删除这个角色吗？"
-                  @confirm="handleDeleteRole(role.id)"
-                  confirm-button-text="确定"
-                  cancel-button-text="取消"
-                  v-permission="'settings:role:delete'"
-                >
+                <el-popconfirm v-if="role.roleCode !== 'BOSS'" title="确定要删除这个角色吗？" @confirm="handleDeleteRole(role.id)" confirm-button-text="确定" cancel-button-text="取消">
                   <template #reference>
                     <el-button type="text" size="small" @click.stop>
-                      <el-icon><Delete /></el-icon>
+                      <el-icon>
+                        <Delete />
+                      </el-icon>
                     </el-button>
                   </template>
                 </el-popconfirm>
@@ -91,11 +69,7 @@
             <div class="card-header">
               <div class="header-left">
                 <span class="card-title">{{ currentRole.roleName }} - 权限配置</span>
-                <el-tag 
-                  :type="currentRole.status === 1 ? 'success' : 'info'" 
-                  size="small"
-                  style="margin-left: 10px;"
-                >
+                <el-tag :type="currentRole.status === 1 ? 'success' : 'info'" size="small" style="margin-left: 10px;">
                   {{ currentRole.status === 1 ? '已启用' : '已禁用' }}
                 </el-tag>
               </div>
@@ -107,18 +81,10 @@
           </template>
 
           <div class="permission-tree-container">
-            <el-tree
-              ref="treeRef"
-              :data="store.permissionTree"
-              show-checkbox
-              node-key="id"
-              default-expand-all
-              :props="{
+            <el-tree ref="treeRef" :data="store.permissionTree" show-checkbox node-key="id" default-expand-all :props="{
                 label: 'permissionName',
                 children: 'children'
-              }"
-              @check="handleCheck"
-            />
+              }" @check="handleCheck" />
           </div>
         </el-card>
 
@@ -129,48 +95,19 @@
     </el-row>
 
     <!-- 新增/编辑角色对话框 -->
-    <el-dialog
-      v-model="roleDialog.visible"
-      :title="roleDialog.title"
-      width="400px"
-      destroy-on-close
-    >
-      <el-form 
-        :model="roleForm" 
-        :rules="roleRules" 
-        ref="roleFormRef" 
-        label-width="80px"
-        v-loading="roleDialog.loading"
-      >
+    <el-dialog v-model="roleDialog.visible" :title="roleDialog.title" width="400px" destroy-on-close>
+      <el-form :model="roleForm" :rules="roleRules" ref="roleFormRef" label-width="80px" v-loading="roleDialog.loading">
         <el-form-item label="角色名称" prop="roleName">
-          <el-input 
-            v-model="roleForm.roleName" 
-            placeholder="请输入角色名称" 
-            maxlength="50" 
-            clearable
-          />
+          <el-input v-model="roleForm.roleName" placeholder="请输入角色名称" maxlength="50" clearable />
         </el-form-item>
         <el-form-item label="角色编码" prop="roleCode">
-          <el-input 
-            v-model="roleForm.roleCode" 
-            placeholder="请输入角色编码，如：MANAGER" 
-            :disabled="roleDialog.mode === 'edit'"
-            maxlength="50"
-            clearable
-          />
+          <el-input v-model="roleForm.roleCode" placeholder="请输入角色编码，如：MANAGER" :disabled="roleDialog.mode === 'edit'" maxlength="50" clearable />
           <div class="form-tip" v-if="roleDialog.mode === 'add'">
             创建后不可修改
           </div>
         </el-form-item>
         <el-form-item label="角色描述" prop="description">
-          <el-input 
-            v-model="roleForm.description" 
-            type="textarea" 
-            :rows="3" 
-            placeholder="请输入角色描述" 
-            maxlength="200"
-            show-word-limit
-          />
+          <el-input v-model="roleForm.description" type="textarea" :rows="3" placeholder="请输入角色描述" maxlength="200" show-word-limit />
         </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="roleForm.status">
@@ -193,10 +130,8 @@
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { usePermission } from '@/composables/usePermission'
 import { useRolePermissionStore } from '@/stores/settings/rolePermission'
 
-const { hasPermission } = usePermission()
 const store = useRolePermissionStore()
 
 // 状态
@@ -214,7 +149,7 @@ const roleDialog = reactive({
   visible: false,
   title: '',
   mode: 'add',
-  loading: false
+  loading: false,
 })
 
 const roleForm = reactive({
@@ -222,22 +157,20 @@ const roleForm = reactive({
   roleName: '',
   roleCode: '',
   description: '',
-  status: 1
+  status: 1,
 })
 
 const roleRules: FormRules = {
   roleName: [
     { required: true, message: '请输入角色名称', trigger: 'blur' },
-    { max: 50, message: '角色名称不能超过50个字符', trigger: 'blur' }
+    { max: 50, message: '角色名称不能超过50个字符', trigger: 'blur' },
   ],
   roleCode: [
     { required: true, message: '请输入角色编码', trigger: 'blur' },
     { pattern: /^[A-Z_]+$/, message: '角色编码只能包含大写字母和下划线', trigger: 'blur' },
-    { max: 50, message: '角色编码不能超过50个字符', trigger: 'blur' }
+    { max: 50, message: '角色编码不能超过50个字符', trigger: 'blur' },
   ],
-  status: [
-    { required: true, message: '请选择状态', trigger: 'change' }
-  ]
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
 
 // 加载数据
@@ -247,14 +180,37 @@ const loadData = async () => {
 }
 
 // 选择角色
+// const selectRole = async (role: any) => {
+//   currentRole.value = role
+
+//   loadingPermissions.value = true
+//   try {
+//     await store.fetchRolePermissionDetails(role.id)
+//     await nextTick()
+//     treeRef.value?.setCheckedKeys(store.rolePermissions)
+//   } catch (error) {
+//     console.error('加载角色权限失败:', error)
+//     ElMessage.error('加载角色权限失败')
+//   } finally {
+//     loadingPermissions.value = false
+//   }
+// }
+
+// 选择角色 - 修改 selectRole 中的设置选中逻辑
 const selectRole = async (role: any) => {
   currentRole.value = role
-  
+
   loadingPermissions.value = true
   try {
     await store.fetchRolePermissionDetails(role.id)
     await nextTick()
-    treeRef.value?.setCheckedKeys(store.rolePermissions)
+    // 使用 setCheckedKeys 会自动处理父子联动
+    // 如果后端返回的包含父节点，这里需要展开所有父节点
+    const permissionIds = store.rolePermissions
+    treeRef.value?.setCheckedKeys(permissionIds)
+
+    // 可选：自动展开所有节点，让用户看到选中状态
+    expandAll()
   } catch (error) {
     console.error('加载角色权限失败:', error)
     ElMessage.error('加载角色权限失败')
@@ -266,21 +222,25 @@ const selectRole = async (role: any) => {
 // 展开所有
 const expandAll = () => {
   const nodes = treeRef.value?.store?.nodesMap
-  nodes?.forEach((node: any) => {
-    if (node.childNodes && node.childNodes.length > 0) {
-      node.expanded = true
-    }
-  })
+  if (nodes) {
+    Object.values(nodes).forEach((node: any) => {
+      if (node.childNodes && node.childNodes.length > 0) {
+        node.expanded = true
+      }
+    })
+  }
 }
 
 // 收起所有
 const collapseAll = () => {
   const nodes = treeRef.value?.store?.nodesMap
-  nodes?.forEach((node: any) => {
-    if (node.childNodes && node.childNodes.length > 0) {
-      node.expanded = false
-    }
-  })
+  if (nodes) {
+    Object.values(nodes).forEach((node: any) => {
+      if (node.childNodes && node.childNodes.length > 0) {
+        node.expanded = false
+      }
+    })
+  }
 }
 
 // 处理权限勾选
@@ -296,7 +256,7 @@ const handleSave = async () => {
   }
 
   const checkedKeys = treeRef.value?.getCheckedKeys(true) || []
-  
+
   saving.value = true
   try {
     await store.updateRolePermissions(currentRole.value.id, checkedKeys)
@@ -334,7 +294,7 @@ const handleEditRole = (role: any) => {
 // 保存角色
 const saveRole = async () => {
   await roleFormRef.value?.validate()
-  
+
   roleDialog.loading = true
   try {
     if (roleDialog.mode === 'add') {
@@ -342,7 +302,7 @@ const saveRole = async () => {
         roleName: roleForm.roleName,
         roleCode: roleForm.roleCode,
         description: roleForm.description,
-        status: roleForm.status
+        status: roleForm.status,
       })
     } else if (roleForm.id) {
       await store.updateRole(roleForm.id, {
@@ -350,7 +310,7 @@ const saveRole = async () => {
         roleName: roleForm.roleName,
         roleCode: roleForm.roleCode,
         description: roleForm.description,
-        status: roleForm.status
+        status: roleForm.status,
       })
     }
     roleDialog.visible = false
@@ -389,7 +349,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    padding:20px;
+    padding: 20px;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);

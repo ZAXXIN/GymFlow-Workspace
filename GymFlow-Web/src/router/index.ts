@@ -12,7 +12,6 @@ import productRoutes from './routes/product'
 import orderRoutes from './routes/order'
 import checkInRoutes from './routes/checkIn'
 import settingsRoutes from './routes/settings'
-import reportRoutes from './routes/report'
 
 // 合并所有路由
 const routes: RouteRecordRaw[] = [
@@ -20,7 +19,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Layout',
-    component: () => import('@/components/layout/Layout.vue'),
+    component: () => import('@/views/Layout.vue'),
     redirect: '/dashboard',
     children: [
       ...dashboardRoutes,
@@ -31,7 +30,6 @@ const routes: RouteRecordRaw[] = [
       ...orderRoutes,
       ...checkInRoutes,
       ...settingsRoutes,
-      ...reportRoutes
     ]
   },
   {

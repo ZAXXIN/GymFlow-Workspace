@@ -95,15 +95,16 @@
         </div>
       </div>
 
-      <div class="spec-section" v-if="productDetail?.refundPolicy">
+      <!-- <div class="spec-section" v-if="productDetail?.refundPolicy">
         <h3 class="section-title">退款政策</h3>
         <div class="spec-content">
           {{ productDetail.refundPolicy }}
         </div>
-      </div>
+      </div> -->
 
       <!-- 销售记录 -->
-      <div class="spec-section" v-if="productDetail?.refundPolicy">
+      <!-- <div class="spec-section" v-if="productDetail?.refundPolicy"> -->
+        <div class="spec-section">
         <h3 class="section-title">销售记录</h3>
         <div v-if="salesRecords.length > 0">
           <el-table :data="salesRecords" style="width: 100%">

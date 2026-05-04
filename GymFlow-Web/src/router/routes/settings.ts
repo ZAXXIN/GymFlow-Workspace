@@ -10,21 +10,9 @@ const settingsRoutes: RouteRecordRaw[] = [
       title: '用户管理',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['settings:user:view'] as PermissionCode[]  // 查看用户列表需要的权限
+      permissions: ['settings:user'] as PermissionCode[]  // 查看用户列表需要的权限
     }
   },
-  // {
-  //   path: '/settings/webUser/detail/:id',
-  //   name: 'webUserDetail',
-  //   component: () => import('@/views/settings/webUser/Detail.vue'),
-  //   meta: {
-  //     title: '用户详情',
-  //     requiresAuth: true,
-  //     showInMenu: false,
-  //     parent: 'webUserList',
-  //     permissions: ['settings:user:view'] as PermissionCode[]  // 查看详情需要的权限
-  //   }
-  // },
   {
     path: '/settings/webUser/add',
     name: 'addWebUser',
@@ -34,7 +22,7 @@ const settingsRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       showInMenu: false,
       parent: 'webUserList',
-      permissions: ['settings:user:add'] as PermissionCode[]  // 新增用户需要的权限
+      permissions: ['settings:user'] as PermissionCode[]  // 新增用户需要的权限
     }
   },
   {
@@ -46,18 +34,7 @@ const settingsRoutes: RouteRecordRaw[] = [
       requiresAuth: true,
       showInMenu: false,
       parent: 'webUserList',
-      permissions: ['settings:user:edit'] as PermissionCode[]  // 编辑用户需要的权限
-    }
-  },
-  {
-    path: '/settings/systemConfig',
-    name: 'systemConfig',
-    component: () => import('@/views/settings/SystemConfig.vue'),
-    meta: {
-      title: '系统配置',
-      requiresAuth: true,
-      showInMenu: true,
-      permissions: ['settings:config:view'] as PermissionCode[]  // 查看系统配置需要的权限
+      permissions: ['settings:user'] as PermissionCode[]  // 编辑用户需要的权限
     }
   },
   {
@@ -68,7 +45,18 @@ const settingsRoutes: RouteRecordRaw[] = [
       title: '角色权限',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['settings:role:view']
+      permissions: ['settings:role']
+    }
+  },
+  {
+    path: '/settings/systemConfig',
+    name: 'systemConfig',
+    component: () => import('@/views/settings/SystemConfig.vue'),
+    meta: {
+      title: '系统配置',
+      requiresAuth: true,
+      showInMenu: true,
+      permissions: ['settings:config'] as PermissionCode[]  // 查看系统配置需要的权限
     }
   }
 ]

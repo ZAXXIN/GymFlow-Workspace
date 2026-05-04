@@ -72,7 +72,7 @@
       </template>
 
       <el-table :data="courseList" style="width: 100%" row-key="id" v-loading="loading" stripe border>
-        <el-table-column prop="courseName" label="课程名称" width="250">
+        <el-table-column prop="courseName" label="课程名称">
           <template #default="{ row }">
             <div class="course-info">
               <span class="course-name">{{ row.courseName }}</span>
@@ -82,7 +82,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="coachNames" label="教练" width="250">
+        <el-table-column prop="coachNames" label="教练">
           <template #default="{ row }">
             <span v-if="row.coaches && row.coaches.length > 0">
               {{ row.coaches.map(c => c.realName).join('、') }}
@@ -101,7 +101,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="课程描述" align="center" />
+        <el-table-column prop="description" label="课程描述"/>
+        <el-table-column prop="notice" label="课程须知"/>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-permission="'course:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
@@ -110,7 +111,7 @@
             <el-button v-permission="'course:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button v-permission="'course:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)" v-if="row.courseType === 1">
+            <el-button v-permission="'course:schedule'" type="info" link size="small" @click="handleViewSchedule(row.id)" v-if="row.courseType === 1">
               排课
             </el-button>
             <el-popconfirm title="确定要删除这个课程吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">

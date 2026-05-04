@@ -177,10 +177,6 @@
           <el-input v-model="courseForm.notes" placeholder="请输入课程名称（如：瑜伽入门、动感单车等）" maxlength="50" show-word-limit />
         </el-form-item>
 
-        <el-form-item label="上课地点" prop="location">
-          <el-input v-model="courseForm.location" placeholder="请输入上课地点" maxlength="100" />
-        </el-form-item>
-
         <el-form-item label="备注" prop="remark">
           <el-input v-model="courseForm.remark" type="textarea" :rows="3" placeholder="请输入课程备注" maxlength="200" show-word-limit />
         </el-form-item>
@@ -268,7 +264,6 @@ const courseForm = reactive({
   endTime: '',
   scheduleType: 0,
   notes: '',
-  location: '',
   remark: '',
 })
 
@@ -518,7 +513,6 @@ const handleCourseClick = (course: any) => {
     endTime: formatTime(course.endTime),
     scheduleType: course.scheduleType,
     notes: course.notes || '',
-    location: course.location || '',
     remark: '',
   })
 }
@@ -536,7 +530,6 @@ const handleAddCourse = () => {
     endTime: '10:00',
     scheduleType: 0,
     notes: '',
-    location: '',
     remark: '',
   })
 }
@@ -553,7 +546,6 @@ const handleAddCourseForDay = (day: any) => {
     endTime: '10:00',
     scheduleType: 0,
     notes: '',
-    location: '',
     remark: '',
   })
 }
@@ -578,7 +570,6 @@ const handleAddCourseForTime = (day: any, time: string) => {
       .padStart(2, '0')}`,
     scheduleType: 0,
     notes: '',
-    location: '',
     remark: '',
   })
 }
@@ -597,7 +588,6 @@ const handleSaveCourse = async () => {
       endTime: courseForm.endTime + ':00',
       scheduleType: courseForm.scheduleType,
       notes: courseForm.notes,
-      location: courseForm.location,
       remark: courseForm.remark,
     }
 

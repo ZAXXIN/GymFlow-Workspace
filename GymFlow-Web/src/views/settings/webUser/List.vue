@@ -6,7 +6,7 @@
         <h1 class="page-title">用户管理</h1>
       </div>
       <div class="header-right">
-        <el-button v-permission="'settings:user:add'" type="primary" @click="handleCreateUser">
+        <el-button type="primary" @click="handleCreateUser">
           <el-icon>
             <Plus />
           </el-icon>
@@ -86,13 +86,13 @@
         <el-table-column prop="updateTimeFormatted" label="更新时间" width="180" />
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button v-permission="'settings:user:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
+            <el-button type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button type="success" link size="small" v-if="row.status === 0" v-permission="'settings:user:status'" @click="handleEnable(row.id)">
+            <el-button type="success" link size="small" v-if="row.status === 0" @click="handleEnable(row.id)">
               启用
             </el-button>
-            <el-button type="danger" link size="small" v-if="row.status === 1" v-permission="'settings:user:status'" @click="handleDisable(row.id)">
+            <el-button type="danger" link size="small" v-if="row.status === 1" @click="handleDisable(row.id)">
               禁用
             </el-button>
           </template>
@@ -178,9 +178,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useWebUserStore } from '@/stores/settings/webUser'
 import type { WebUserQueryParams } from '@/api/settings/webUser'
-import { usePermission } from '@/composables/usePermission'
 
-const { hasPermission } = usePermission()
 const router = useRouter()
 const userStore = useWebUserStore()
 

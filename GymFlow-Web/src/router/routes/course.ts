@@ -11,7 +11,7 @@ const courseRoutes: RouteRecordRaw[] = [
       icon: 'Calendar',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['course:view'] as PermissionCode[]  // 查看课程列表需要的权限
+      permissions: ['course:menu'] as PermissionCode[]  // 查看课程列表需要的权限
     }
   },
   {
@@ -55,11 +55,11 @@ const courseRoutes: RouteRecordRaw[] = [
     name: 'CourseSchedule',
     component: () => import('@/views/course/Schedule.vue'),
     meta: {
-      title: '课程安排',
+      title: '课程排课',
       requiresAuth: true,
       showInMenu: false,
       parent: 'CourseList',
-      permissions: ['course:schedule:view'] as PermissionCode[]  // 查看排课需要的权限
+      permissions: ['course:schedule'] as PermissionCode[]  // 查看排课需要的权限
     }
   }
 ]

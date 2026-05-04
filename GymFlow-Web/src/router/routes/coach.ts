@@ -11,7 +11,19 @@ const coachRoutes: RouteRecordRaw[] = [
       icon: 'UserFilled',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['coach:view'] as PermissionCode[]  // 查看教练列表需要的权限
+      permissions: ['coach:menu'] as PermissionCode[]  // 查看教练列表需要的权限
+    }
+  },
+  {
+    path: '/coach/detail/:id',
+    name: 'CoachDetail',
+    component: () => import('@/views/coach/Detail.vue'),
+    meta: {
+      title: '教练详情',
+      requiresAuth: true,
+      showInMenu: false,
+      parent: 'CoachList',
+      permissions: ['coach:detail'] as PermissionCode[]  // 查看详情需要的权限
     }
   },
   {
@@ -38,30 +50,19 @@ const coachRoutes: RouteRecordRaw[] = [
       permissions: ['coach:edit'] as PermissionCode[]  // 编辑教练需要的权限
     }
   },
-  {
-    path: '/coach/detail/:id',
-    name: 'CoachDetail',
-    component: () => import('@/views/coach/Detail.vue'),
-    meta: {
-      title: '教练详情',
-      requiresAuth: true,
-      showInMenu: false,
-      parent: 'CoachList',
-      permissions: ['coach:detail'] as PermissionCode[]  // 查看详情需要的权限
-    }
-  },
-  {
-    path: '/coach/schedule/:id',
-    name: 'CoachSchedule',
-    component: () => import('@/views/coach/Schedule.vue'),
-    meta: {
-      title: '教练排班',
-      requiresAuth: true,
-      showInMenu: false,
-      parent: 'CoachList',
-      permissions: ['coach:schedule:view'] as PermissionCode[]  // 查看排班需要的权限
-    }
-  }
+  //没有这个权限了
+  // {
+  //   path: '/coach/schedule/:id',
+  //   name: 'CoachSchedule',
+  //   component: () => import('@/views/coach/Schedule.vue'),
+  //   meta: {
+  //     title: '教练排班',
+  //     requiresAuth: true,
+  //     showInMenu: false,
+  //     parent: 'CoachList',
+  //     permissions: ['coach:schedule:view'] as PermissionCode[]  // 查看排班需要的权限
+  //   }
+  // }
 ]
 
 export default coachRoutes

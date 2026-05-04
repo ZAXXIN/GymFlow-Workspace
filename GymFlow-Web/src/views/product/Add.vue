@@ -153,11 +153,11 @@
             </el-form-item>
           </div>
 
-          <div class="form-row">
+          <!-- <div class="form-row">
             <el-form-item label="退款政策" class="full-width">
               <el-input v-model="formData.refundPolicy" type="textarea" :rows="4" placeholder="请输入退款政策" maxlength="500" show-word-limit />
             </el-form-item>
-          </div>
+          </div> -->
         </el-card>
       </el-form>
     </div>
@@ -203,7 +203,7 @@ const formData = reactive<ProductBasicDTO>({
   totalSessions: undefined,
   membershipBenefits: [],
   maxPurchaseQuantity: 10,
-  refundPolicy: '',
+  // refundPolicy: '',
   usageRules: '',
 })
 
@@ -293,7 +293,7 @@ const loadProductData = async (id: number) => {
         validityDays: product.validityDays,
         totalSessions: product.totalSessions,
         maxPurchaseQuantity: product.maxPurchaseQuantity,
-        refundPolicy: product.refundPolicy || '',
+        // refundPolicy: product.refundPolicy || '',
         usageRules: product.usageRules || '',
       })
 

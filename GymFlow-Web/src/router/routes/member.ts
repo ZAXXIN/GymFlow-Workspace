@@ -11,7 +11,19 @@ const memberRoutes: RouteRecordRaw[] = [
       icon: 'User',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['member:view'] as PermissionCode[]  // 查看会员列表需要的权限
+      permissions: ['member:menu'] as PermissionCode[]  // 查看会员列表需要的权限
+    }
+  },
+  {
+    path: '/member/detail/:id',
+    name: 'MemberDetail',
+    component: () => import('@/views/member/Detail.vue'),
+    meta: {
+      title: '会员详情',
+      requiresAuth: true,
+      showInMenu: false,
+      parent: 'MemberList',
+      permissions: ['member:detail'] as PermissionCode[]  // 查看详情需要的权限
     }
   },
   {
@@ -36,18 +48,6 @@ const memberRoutes: RouteRecordRaw[] = [
       showInMenu: false,
       parent: 'MemberList',
       permissions: ['member:edit'] as PermissionCode[]  // 编辑会员需要的权限
-    }
-  },
-  {
-    path: '/member/detail/:id',
-    name: 'MemberDetail',
-    component: () => import('@/views/member/Detail.vue'),
-    meta: {
-      title: '会员详情',
-      requiresAuth: true,
-      showInMenu: false,
-      parent: 'MemberList',
-      permissions: ['member:detail'] as PermissionCode[]  // 查看详情需要的权限
     }
   }
 ]

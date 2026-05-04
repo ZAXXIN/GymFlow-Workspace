@@ -11,7 +11,19 @@ const productRoutes: RouteRecordRaw[] = [
       icon: 'Shop',
       requiresAuth: true,
       showInMenu: true,
-      permissions: ['product:view'] as PermissionCode[]  // 查看商品列表需要的权限
+      permissions: ['product:menu'] as PermissionCode[]  // 查看商品列表需要的权限
+    }
+  },
+  {
+    path: '/product/detail/:id',
+    name: 'ProductDetail',
+    component: () => import('@/views/product/Detail.vue'),
+    meta: {
+      title: '商品详情',
+      requiresAuth: true,
+      showInMenu: false,
+      parent: 'ProductList',
+      permissions: ['product:detail'] as PermissionCode[]  // 查看商品详情需要的权限
     }
   },
   {
@@ -36,18 +48,6 @@ const productRoutes: RouteRecordRaw[] = [
       showInMenu: false,
       parent: 'ProductList',
       permissions: ['product:edit'] as PermissionCode[]  // 编辑商品需要的权限
-    }
-  },
-  {
-    path: '/product/detail/:id',
-    name: 'ProductDetail',
-    component: () => import('@/views/product/Detail.vue'),
-    meta: {
-      title: '商品详情',
-      requiresAuth: true,
-      showInMenu: false,
-      parent: 'ProductList',
-      permissions: ['product:detail'] as PermissionCode[]  // 查看商品详情需要的权限
     }
   }
 ]

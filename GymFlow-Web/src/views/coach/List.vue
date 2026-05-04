@@ -74,19 +74,28 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="realName" label="姓名" width="100">
+        <el-table-column prop="realName" label="性别" width="80" align="center">
           <template #default="{ row }">
             {{ row.gender == 0 ? '女' : row.gender == 1 ? '男' : '未知' }}
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="手机号" width="120" />
-        <el-table-column prop="gender" label="性别" width="80" align="center">
+        <el-table-column prop="courses" label="相关课程" >
+          <!-- width="250" -->
           <template #default="{ row }">
-            {{row.gender == 0 ? '女' : row.gender == 1 ? '男' : '未知'}}</template>
+            <span v-if="row.courses && row.courses.length > 0">
+              {{ row.courses.map(c => c.courseName).join('、') }}
+            </span>
+            <span v-else class="no-data">-</span>
+          </template>
         </el-table-column>
-        <el-table-column prop="specialty" label="专长" width="120">
+        <el-table-column prop="certifications" label="资格证书">
+          <!-- width="250" -->
           <template #default="{ row }">
-            <span>{{ row.specialty || '-' }}</span>
+            <span v-if="row.certifications && row.certifications.length > 0">
+              {{ row.certifications.map(c => c).join('、') }}
+            </span>
+            <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
         <el-table-column prop="yearsOfExperience" label="经验年限" width="100" align="center">
@@ -95,6 +104,11 @@
               {{ row.yearsOfExperience }}年
             </el-tag>
             <span v-else class="no-data">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="specialty" label="专长">
+          <template #default="{ row }">
+            <span>{{ row.specialty || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="statusDesc" label="状态" width="80" align="center">
@@ -116,7 +130,7 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="handleViewDetail(row.id)">
+            <el-button v-permission="'coach:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
             </el-button>
             <el-button v-permission="'coach:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
@@ -125,13 +139,16 @@
             <!-- <el-button v-permission="'coach:schedule:view'" type="info" link size="small" @click="handleViewSchedule(row.id)">
               排班
             </el-button> -->
-            <!-- <el-popconfirm title="确定改变教练状态吗？" @confirm="handleChangeStatus(row.id,row.status)" confirm-button-text="确定" cancel-button-text="取消">
+            <el-popconfirm title="确定改变教练状态吗？" @confirm="handleChangeStatus(row.id,row.status == 1 ? 0 : 1)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
-                <el-button v-permission="'coach:delete'" type="danger" link size="small">
-                  {{ row.status == 1 ? '离职' : '在职' }}
+                <el-button v-permission="'coach:delete'" v-if="row.status == 1" type="danger" link size="small">
+                  离职
+                </el-button>
+                <el-button v-permission="'coach:delete'" v-else type="primary" link size="small">
+                  在职
                 </el-button>
               </template>
-            </el-popconfirm> -->
+            </el-popconfirm>
             <el-popconfirm title="确定要删除这个教练吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
                 <el-button v-permission="'coach:delete'" type="danger" link size="small">
@@ -155,10 +172,9 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Search, Refresh, View, Edit, Delete, Calendar } from '@element-plus/icons-vue'
 import { useCoachStore } from '@/stores/coach'
 import type { CoachQueryParams } from '@/types/coach'
-import { usePermission } from '@/composables/usePermission'
+import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
 
@@ -258,8 +274,8 @@ const handleChangeStatus = async (id: number, newStatus: number) => {
     // 刷新列表
     await handleSearch()
   } catch (error) {
-    console.error('状态变更失败:', error)
-    ElMessage.error('状态变更失败')
+    // console.error('状态变更失败:', error)
+    // ElMessage.error('状态变更失败')
   }
 }
 
@@ -270,7 +286,7 @@ const handleDelete = async (id: number) => {
     ElMessage.success('删除成功')
   } catch (error) {
     console.error('删除失败:', error)
-    ElMessage.error('删除失败')
+    // ElMessage.error('删除失败')
   }
 }
 

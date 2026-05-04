@@ -50,7 +50,6 @@ export interface CheckInDetailVO {
   // 会员信息
   gender?: number
   genderDesc?: string
-  personalCoachName?: string
   
   // 课程预约信息（如果有关联）
   courseBookingId?: number
@@ -66,7 +65,6 @@ export interface CheckInDetailVO {
   courseDate?: string
   startTime?: string
   endTime?: string
-  location?: string
   
   // 教练信息
   coachName?: string

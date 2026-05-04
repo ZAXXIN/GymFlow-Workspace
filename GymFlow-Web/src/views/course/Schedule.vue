@@ -11,7 +11,7 @@
       </div>
       <div class="header-actions">
         <el-button @click="goBack">返回</el-button>
-        <el-button v-permission="'course:schedule:set'" type="primary" @click="handleAddSchedule" v-if="isGroupCourse">
+        <el-button v-permission="'course:schedule'" type="primary" @click="handleAddSchedule" v-if="isGroupCourse">
           <el-icon>
             <Plus />
           </el-icon>
