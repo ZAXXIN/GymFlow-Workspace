@@ -42,9 +42,6 @@ public class CourseBooking {
     @TableField("sign_code_expire_time")
     private LocalDateTime signCodeExpireTime;
 
-    @TableField("checkin_code_id")
-    private Long checkinCodeId;
-
     @TableField("auto_complete_time")
     private LocalDateTime autoCompleteTime;
 

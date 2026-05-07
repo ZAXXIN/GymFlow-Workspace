@@ -37,17 +37,11 @@ public class OrderListVO {
     @Schema(description = "实付金额")
     private BigDecimal actualAmount;
 
-    @Schema(description = "支付状态：0-待支付，1-已支付")
-    private Integer paymentStatus;
-
-    @Schema(description = "支付状态描述")
-    private String paymentStatusDesc;
-
     @Schema(description = "订单状态")
-    private String orderStatus;
+    private String status;
 
     @Schema(description = "订单状态描述")
-    private String orderStatusDesc;
+    private String statusDesc;
 
     @Schema(description = "订单项数量")
     private Integer itemCount;
@@ -55,9 +49,6 @@ public class OrderListVO {
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
-    /**
-     * 获取订单类型描述
-     */
     public String getOrderTypeDesc() {
         if (orderType == null) return "未知";
         switch (orderType) {
@@ -69,31 +60,15 @@ public class OrderListVO {
         }
     }
 
-    /**
-     * 获取支付状态描述
-     */
-    public String getPaymentStatusDesc() {
-        if (paymentStatus == null) return "未知";
-        switch (paymentStatus) {
-            case 0: return "待支付";
-            case 1: return "已支付";
-            default: return "未知";
-        }
-    }
-
-    /**
-     * 获取订单状态描述
-     */
-    public String getOrderStatusDesc() {
-        if (orderStatus == null) return "未知";
-        switch (orderStatus) {
-            case "PENDING": return "待处理";
-            case "PROCESSING": return "处理中";
+    public String getStatusDesc() {
+        if (status == null) return "未知";
+        switch (status) {
+            case "WAIT_PAY": return "待支付";
+            case "PAID": return "已支付";
             case "COMPLETED": return "已完成";
             case "CANCELLED": return "已取消";
             case "REFUNDED": return "已退款";
-            case "DELETED": return "已删除";
-            default: return orderStatus;
+            default: return status;
         }
     }
 }

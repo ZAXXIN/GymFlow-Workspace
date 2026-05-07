@@ -33,7 +33,7 @@ public class CheckInController {
 
     @PostMapping("/list")
     @Operation(summary = "分页查询签到列表")
-    @PreAuthorize("checkIn:view")  // 查看权限（老板和前台都有）
+    @PreAuthorize("checkIn:menu")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<CheckInListVO>> getCheckInList(@Valid @RequestBody CheckInQueryDTO queryDTO) {
         PageResultVO<CheckInListVO> result = checkInService.getCheckInList(queryDTO);
         return Result.success("查询成功", result);
@@ -51,7 +51,6 @@ public class CheckInController {
 
     @PostMapping("/member/{memberId}")
     @Operation(summary = "会员签到")
-    @PreAuthorize("checkIn:member:add")  // 会员签到权限（老板和前台都有）
     public Result<Void> memberCheckIn(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
@@ -63,7 +62,6 @@ public class CheckInController {
 
     @PostMapping("/course/{bookingId}")
     @Operation(summary = "课程签到（支持扫码和数字码）")
-    @PreAuthorize("checkIn:course:add")
     public Result<Void> courseCheckIn(
             @Parameter(description = "预约ID", required = true)
             @PathVariable @NotNull Long bookingId,
@@ -86,7 +84,6 @@ public class CheckInController {
     // ========== 通过数字码核销接口（PC端专用） ==========
     @PostMapping("/verify-code")
     @Operation(summary = "通过数字码核销课程")
-    @PreAuthorize("checkIn:verify")
     public Result<Void> verifyByCode(
             @Parameter(description = "数字码", required = true)
             @RequestParam @NotNull String checkinCode,

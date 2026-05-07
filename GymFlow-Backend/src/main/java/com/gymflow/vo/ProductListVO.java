@@ -61,8 +61,8 @@ public class ProductListVO {
     @Schema(description = "最大购买数量")
     private Integer maxPurchaseQuantity;
 
-    @Schema(description = "退款政策")
-    private String refundPolicy;
+//    @Schema(description = "退款政策")
+//    private String refundPolicy;
 
     @Schema(description = "使用规则")
     private String usageRules;

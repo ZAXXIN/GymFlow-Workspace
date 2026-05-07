@@ -30,7 +30,7 @@ public class ProductController {
 
     @PostMapping("/list")
     @Operation(summary = "分页查询商品列表")
-    @PreAuthorize("product:view")
+    @PreAuthorize("product:menu")
     public Result<PageResultVO<ProductListVO>> getProductList(@Valid @RequestBody ProductQueryDTO queryDTO) {
         PageResultVO<ProductListVO> result = productService.getProductList(queryDTO);
         return Result.success("查询成功", result);
@@ -38,7 +38,7 @@ public class ProductController {
 
     @GetMapping("/list-by-type")
     @Operation(summary = "根据类型查询商品列表")
-    @PreAuthorize("product:view")
+    @PreAuthorize("product:menu")
     public Result<List<ProductListVO>> getProductsByType(
             @Parameter(description = "商品类型：0-会籍卡，1-私教课，2-团课，3-相关产品", required = true)
             @RequestParam @NotNull Integer productType) {
@@ -96,14 +96,14 @@ public class ProductController {
         return Result.success("更新状态成功");
     }
 
-    @PutMapping("/updateStock/{productId}")
-    @Operation(summary = "更新商品库存")
-    @PreAuthorize("product:stock")
-    public Result<Void> updateProductStock(
-            @Parameter(description = "商品ID", required = true)
-            @PathVariable @NotNull Long productId,
-            @RequestParam @NotNull Integer quantity) {
-        productService.updateProductStock(productId, quantity);
-        return Result.success("更新库存成功");
-    }
+//    @PutMapping("/updateStock/{productId}")
+//    @Operation(summary = "更新商品库存")
+//    @PreAuthorize("product:stock")
+//    public Result<Void> updateProductStock(
+//            @Parameter(description = "商品ID", required = true)
+//            @PathVariable @NotNull Long productId,
+//            @RequestParam @NotNull Integer quantity) {
+//        productService.updateProductStock(productId, quantity);
+//        return Result.success("更新库存成功");
+//    }
 }

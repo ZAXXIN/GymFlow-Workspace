@@ -17,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -217,16 +215,48 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             throw new BusinessException("角色不存在");
         }
 
+        // 自动补全父权限
+        Set<Long> fullPermissionIds = new HashSet<>();
+        if (!CollectionUtils.isEmpty(permissionIds)) {
+            for (Long permissionId : permissionIds) {
+                addParentPermissions(permissionId, fullPermissionIds);
+            }
+        }
+
+        log.info("补全父权限后，权限数量：{}", fullPermissionIds.size());
+
         // 删除原有的权限关联
         permissionMapper.deleteRolePermissions(roleId);
 
         // 添加新的权限关联
-        if (!CollectionUtils.isEmpty(permissionIds)) {
-            int insertCount = permissionMapper.insertRolePermissions(roleId, permissionIds);
+        if (!fullPermissionIds.isEmpty()) {
+            List<Long> sortedPermissionIds = new ArrayList<>(fullPermissionIds);
+            int insertCount = permissionMapper.insertRolePermissions(roleId, sortedPermissionIds);
             log.info("为角色ID：{} 添加了 {} 个权限", roleId, insertCount);
         }
 
         log.info("更新角色权限成功，角色ID：{}", roleId);
+    }
+
+    /**
+     * 递归添加权限的所有父级权限
+     * @param permissionId 权限ID
+     * @param result 结果集合
+     */
+    private void addParentPermissions(Long permissionId, Set<Long> result) {
+        if (permissionId == null) {
+            return;
+        }
+
+        // 添加当前权限
+        result.add(permissionId);
+
+        // 查询当前权限的父级ID
+        Permission permission = permissionMapper.selectById(permissionId);
+        if (permission != null && permission.getParentId() != null && permission.getParentId() != 0L) {
+            // 递归添加父权限
+            addParentPermissions(permission.getParentId(), result);
+        }
     }
 
     // ========== 私有辅助方法 ==========

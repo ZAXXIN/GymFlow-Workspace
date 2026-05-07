@@ -31,7 +31,7 @@ public class WebUserController {
 
     @PostMapping("/list")
     @Operation(summary = "分页查询用户列表")
-    @PreAuthorize("settings:user:view")  // 查看用户列表权限（只有老板有）
+    @PreAuthorize("settings:user")  // 查看用户列表权限（只有老板有）
     public Result<PageResultVO<WebUserListVO>> getUserList(@Valid @RequestBody WebUserQueryDTO queryDTO) {
         PageResultVO<WebUserListVO> result = webUserService.getUserList(queryDTO);
         return Result.success("查询成功", result);
@@ -39,7 +39,7 @@ public class WebUserController {
 
     @GetMapping("/detail/{userId}")
     @Operation(summary = "获取用户详情")
-    @PreAuthorize("settings:user:view")  // 查看用户详情权限（只有老板有）
+    @PreAuthorize("settings:user")  // 查看用户详情权限（只有老板有）
     public Result<WebUserDetailDTO> getUserDetail(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
@@ -49,7 +49,7 @@ public class WebUserController {
 
     @PostMapping("/add")
     @Operation(summary = "新增用户")
-    @PreAuthorize("settings:user:add")  // 新增用户权限（只有老板有）
+    @PreAuthorize("settings:user")  // 新增用户权限（只有老板有）
     public Result<Long> addUser(@Valid @RequestBody WebUserBasicDTO userDTO) {
         Long userId = webUserService.addUser(userDTO);
         return Result.success("添加成功", userId);
@@ -57,7 +57,7 @@ public class WebUserController {
 
     @PutMapping("/update/{userId}")
     @Operation(summary = "编辑用户")
-    @PreAuthorize("settings:user:edit")  // 编辑用户权限（只有老板有）
+    @PreAuthorize("settings:user")  // 编辑用户权限（只有老板有）
     public Result<Void> updateUser(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
@@ -68,7 +68,7 @@ public class WebUserController {
 
     @DeleteMapping("/delete/{userId}")
     @Operation(summary = "删除用户")
-    @PreAuthorize("settings:user:delete")  // 删除用户权限（只有老板有）
+    @PreAuthorize("settings:user")  // 删除用户权限（只有老板有）
     public Result<Void> deleteUser(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
@@ -78,7 +78,7 @@ public class WebUserController {
 
     @PutMapping("/updateStatus/{userId}")
     @Operation(summary = "更新用户状态")
-    @PreAuthorize("settings:user:status")  // 修改用户状态权限（只有老板有）
+    @PreAuthorize("settings:user")  // 修改用户状态权限（只有老板有）
     public Result<Void> updateUserStatus(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
@@ -89,7 +89,7 @@ public class WebUserController {
 
     @PutMapping("/resetPassword/{userId}")
     @Operation(summary = "重置密码")
-    @PreAuthorize("settings:user:resetpwd")  // 重置密码权限（只有老板有）
+    @PreAuthorize("settings:user")  // 重置密码权限（只有老板有）
     public Result<Void> resetPassword(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId) {
@@ -99,7 +99,7 @@ public class WebUserController {
 
     @PutMapping("/customResetPassword/{userId}")
     @Operation(summary = "自定义重置密码")
-    @PreAuthorize("settings:user:resetpwd")  // 重置密码权限（只有老板有）
+    @PreAuthorize("settings:user")  // 重置密码权限（只有老板有）
     public Result<Void> customResetPassword(
             @Parameter(description = "用户ID", required = true)
             @PathVariable @NotNull Long userId,
@@ -110,7 +110,7 @@ public class WebUserController {
 
     @GetMapping("/check-username")
     @Operation(summary = "检查用户名是否存在")
-    @PreAuthorize("settings:user:add,settings:user:edit,logical=OR")  // 新增或编辑时检查
+    @PreAuthorize("settings:user")  // 新增或编辑时检查
     public Result<Boolean> checkUsernameExists(
             @RequestParam String username,
             @RequestParam(required = false) Long excludeUserId) {

@@ -5,18 +5,15 @@ import com.gymflow.dto.coach.CoachBasicDTO;
 import com.gymflow.dto.course.CourseFullDTO;
 import com.gymflow.dto.mini.*;
 import com.gymflow.entity.*;
-import com.gymflow.exception.BusinessException;
 import com.gymflow.exception.MiniBusinessException;
 import com.gymflow.mapper.*;
 import com.gymflow.service.mini.MiniBookingService;
-import com.gymflow.service.mini.MiniMessageService;
 import com.gymflow.utils.SystemConfigValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +32,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
     private final MemberMapper memberMapper;
     private final CourseCoachMapper courseCoachMapper;
     private final OrderItemMapper orderItemMapper;
-    private final MiniMessageService miniMessageService;
     private final SystemConfigValidator configValidator;
 
     @Override
@@ -264,22 +260,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
         schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() + 1);
         courseScheduleMapper.updateById(schedule);
 
-        // 发送预约成功消息
-        Member member = memberMapper.selectById(memberId);
-        Coach coach = coachMapper.selectById(schedule.getCoachId());
-        String messageContent = String.format("您已成功预约 %s - %s，消耗 %d 课时，教练：%s",
-                course.getCourseName(),
-                schedule.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")),
-                sessionCost,
-                coach != null ? coach.getRealName() : "");
-
-        miniMessageService.sendMessage(
-                memberId, 0, "BOOKING_SUCCESS",
-                "预约成功",
-                messageContent,
-                booking.getId()
-        );
-
         return booking.getId();
     }
 
@@ -463,15 +443,6 @@ public class MiniBookingServiceImpl implements MiniBookingService {
                 orderItemMapper.updateById(item);
             }
         }
-
-        // 发送取消消息
-        Member member = memberMapper.selectById(memberId);
-        miniMessageService.sendMessage(
-                memberId, 0, "BOOKING_CANCEL",
-                "预约已取消",
-                String.format("您已取消 %s 的预约，取消原因：%s", course.getCourseName(), reason),
-                booking.getId()
-        );
     }
 
     private String generateSignCode() {

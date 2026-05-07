@@ -43,7 +43,7 @@ public interface OrderService {
     void cancelOrder(Long orderId, String reason);
 
     /**
-     * 完成订单（确认收货/完成服务）
+     * 完成订单
      */
     void completeOrder(Long orderId);
 
@@ -53,22 +53,22 @@ public interface OrderService {
     void deleteOrder(Long orderId);
 
     /**
-     * 批量删除订单
-     */
-    void batchDeleteOrders(List<Long> orderIds);
-
-    /**
      * 获取会员订单列表
      */
     PageResultVO<OrderListVO> getMemberOrders(Long memberId, OrderQueryDTO queryDTO);
 
     /**
-     * 订单支付
+     * 订单支付（同步完成权益激活）
+     * @param orderId 订单ID
+     * @param paymentMethod 支付方式（默认"前台支付"）
+     * @return true-支付并激活成功，false-支付成功但激活失败（状态为PAID）
      */
-    void payOrder(Long orderId, String paymentMethod);
+    boolean payOrder(Long orderId, String paymentMethod);
 
     /**
-     * 订单退款
+     * 重试激活订单权益（仅适用于状态为PAID的订单）
+     * @param orderId 订单ID
+     * @return true-激活成功，false-激活失败
      */
-    void refundOrder(Long orderId, BigDecimal refundAmount, String reason);
+    boolean retryActivateOrder(Long orderId);
 }

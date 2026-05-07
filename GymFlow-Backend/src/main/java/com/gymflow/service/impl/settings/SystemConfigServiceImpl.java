@@ -108,9 +108,30 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     public void updateConfig(BasicConfigDTO basicConfig, BusinessConfigDTO businessConfig) {
         log.info("开始更新系统配置");
 
-        // 验证营业时间
-        if (businessConfig.getBusinessStartTime().isAfter(businessConfig.getBusinessEndTime())) {
+        // 验证营业时间范围
+        LocalTime startTime = businessConfig.getBusinessStartTime();
+        LocalTime endTime = businessConfig.getBusinessEndTime();
+
+        // 检查营业时间范围：不能早于6:00
+        LocalTime minTime = LocalTime.of(6, 0);
+        if (startTime.isBefore(minTime)) {
+            throw new BusinessException("营业开始时间不能早于06:00");
+        }
+
+        // 检查营业结束时间：不能晚于24:00（即次日00:00）
+        LocalTime maxTime = LocalTime.of(23, 59, 59);
+        if (endTime.isAfter(maxTime)) {
+            throw new BusinessException("营业结束时间不能晚于23:59:59");
+        }
+
+        // 验证营业时间顺序
+        if (startTime.isAfter(endTime)) {
             throw new BusinessException("营业开始时间不能晚于结束时间");
+        }
+
+        // 可选：建议至少营业1小时
+        if (startTime.plusHours(1).isAfter(endTime)) {
+            throw new BusinessException("营业时间至少需要1小时");
         }
 
         // 验证课程容量

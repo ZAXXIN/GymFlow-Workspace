@@ -321,8 +321,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
 
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
         if (CollectionUtils.isEmpty(orders)) {
@@ -394,6 +393,7 @@ public class MiniCoachServiceImpl implements MiniCoachService {
 
             Coach coach = coachMapper.selectById(schedule.getCoachId());
             if (coach != null) {
+                record.setCoachId(coach.getId());
                 record.setCoachName(coach.getRealName());
             }
 

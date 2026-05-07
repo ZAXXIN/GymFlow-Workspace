@@ -30,7 +30,7 @@ public class CourseController {
 
     @Operation(summary = "分页查询课程列表")
     @GetMapping("/list")
-    @PreAuthorize("course:view")
+    @PreAuthorize("course:menu")
     public Result<PageResultVO<com.gymflow.vo.CourseListVO>> getCourseList(@Valid CourseQueryDTO queryDTO) {
         PageResultVO<com.gymflow.vo.CourseListVO> result = courseService.getCourseList(queryDTO);
         return Result.success("查询成功", result);
@@ -80,7 +80,7 @@ public class CourseController {
 
     @Operation(summary = "课程排课（团课）")
     @PostMapping("/schedule")
-    @PreAuthorize("course:schedule:set")
+    @PreAuthorize("course:schedule")
     public Result<Void> scheduleCourse(@Valid @RequestBody CourseScheduleDTO scheduleDTO) {
         courseService.scheduleCourse(scheduleDTO);
         return Result.success("排课成功");
@@ -88,7 +88,7 @@ public class CourseController {
 
     @Operation(summary = "删除排课")
     @DeleteMapping("/schedule/{scheduleId}")
-    @PreAuthorize("course:schedule:set")
+    @PreAuthorize("course:schedule")
     public Result<Void> deleteCourseSchedule(@PathVariable Long scheduleId) {
         courseService.deleteCourseSchedule(scheduleId);
         return Result.success("删除排课成功");
@@ -96,7 +96,7 @@ public class CourseController {
 
     @Operation(summary = "获取课程排课列表（包含预约信息）")
     @GetMapping("/schedules/{courseId}")
-    @PreAuthorize("course:schedule:view")
+    @PreAuthorize("course:schedule")
     public Result<List<CourseScheduleVO>> getCourseSchedules(@PathVariable Long courseId) {
         List<CourseScheduleVO> schedules = courseService.getCourseSchedules(courseId);
         return Result.success("查询成功", schedules);
@@ -104,7 +104,7 @@ public class CourseController {
 
     @Operation(summary = "获取课程表（所有排课，包含预约信息）")
     @GetMapping("/timetable")
-    @PreAuthorize("course:schedule:view")
+    @PreAuthorize("course:schedule")
     public Result<List<CourseScheduleVO>> getCourseTimetable(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
@@ -114,7 +114,6 @@ public class CourseController {
 
     @PostMapping("/book/private")
     @Operation(summary = "会员预约私教课")
-    @PreAuthorize("course:booking:add")
     public Result<Void> bookPrivateCourse(
             @RequestParam Long memberId,
             @RequestParam Long courseId,      // 新增：课程ID
@@ -127,7 +126,6 @@ public class CourseController {
 
     @Operation(summary = "会员预约团课")
     @PostMapping("/book/group")
-    @PreAuthorize("course:booking:add")
     public Result<Void> bookGroupCourse(@RequestParam Long memberId,
                                         @RequestParam Long scheduleId) {
         courseService.bookGroupCourse(memberId, scheduleId);
@@ -139,7 +137,6 @@ public class CourseController {
      * GET /course/booking/member/{memberId}
      */
     @GetMapping("/booking/member/{memberId}")
-    @PreAuthorize("course:view")
     public Result<PageResultVO<CourseBookingVO>> getMemberBookings(
             @PathVariable Long memberId,
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -152,7 +149,6 @@ public class CourseController {
 
     @Operation(summary = "核销课程预约")
     @PostMapping("/verify/{bookingId}")
-    @PreAuthorize("checkIn:verify")
     public Result<Void> verifyCourseBooking(@PathVariable Long bookingId,
                                             @RequestParam Integer checkinMethod) {
         courseService.verifyCourseBooking(bookingId, checkinMethod);
@@ -161,7 +157,6 @@ public class CourseController {
 
     @Operation(summary = "取消课程预约")
     @PostMapping("/cancel/{bookingId}")
-    @PreAuthorize("course:booking:cancel")
     public Result<Void> cancelCourseBooking(@PathVariable Long bookingId,
                                             @RequestParam String reason) {
         courseService.cancelCourseBooking(bookingId, reason);

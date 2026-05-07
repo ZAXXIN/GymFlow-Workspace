@@ -37,20 +37,8 @@ public class OrderFullDTO {
     @Schema(description = "支付方式")
     private String paymentMethod;
 
-    @Schema(description = "支付状态：0-待支付，1-已支付")
-    private Integer paymentStatus;
-
-    @Schema(description = "支付状态描述")
-    private String paymentStatusDesc;
-
     @Schema(description = "支付时间")
     private LocalDateTime paymentTime;
-
-    @Schema(description = "订单状态")
-    private String orderStatus;
-
-    @Schema(description = "订单状态描述")
-    private String orderStatusDesc;
 
     @Schema(description = "备注")
     private String remark;
@@ -66,4 +54,34 @@ public class OrderFullDTO {
 
     @Schema(description = "支付记录列表")
     private List<PaymentRecord> paymentRecords;
+
+    /**
+     * 订单状态：WAIT_PAY, PAID, COMPLETED, CANCELLED, REFUNDED
+     */
+    @Schema(description = "订单状态")
+    private String status;
+
+    @Schema(description = "订单状态描述")
+    public String getStatusDesc() {
+        if (status == null) return "未知";
+        switch (status) {
+            case "WAIT_PAY": return "待支付";
+            case "PAID": return "已支付";
+            case "COMPLETED": return "已完成";
+            case "CANCELLED": return "已取消";
+            case "REFUNDED": return "已退款";
+            default: return status;
+        }
+    }
+
+    public String getOrderTypeDesc() {
+        if (orderType == null) return "未知";
+        switch (orderType) {
+            case 0: return "会籍卡";
+            case 1: return "私教课";
+            case 2: return "团课";
+            case 3: return "相关产品";
+            default: return "未知";
+        }
+    }
 }

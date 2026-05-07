@@ -26,9 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +38,7 @@ public class CoachServiceImpl implements CoachService {
     private final CourseMapper courseMapper;
     private final CourseScheduleMapper courseScheduleMapper;
     private final CourseBookingMapper courseBookingMapper;
+    private final CourseCoachMapper courseCoachMapper;
     private final ObjectMapper objectMapper;
     private final SystemConfigValidator configValidator;
     private final BCryptUtil bCryptUtil;
@@ -86,9 +85,69 @@ public class CoachServiceImpl implements CoachService {
         // 执行分页查询
         IPage<Coach> coachPage = coachMapper.selectPage(page, queryWrapper);
 
+        // 获取所有教练ID
+        List<Long> coachIds = coachPage.getRecords().stream()
+                .map(Coach::getId)
+                .collect(Collectors.toList());
+
+        // 批量查询所有教练绑定的课程
+        Map<Long, List<CoachCourseDTO>> coachCoursesMap = new HashMap<>();
+        if (!coachIds.isEmpty()) {
+            // 1. 查询所有教练的课程关联关系
+            List<CourseCoach> courseCoaches = courseCoachMapper.selectByCoachIds(coachIds);
+
+            if (!courseCoaches.isEmpty()) {
+                // 2. 获取所有课程ID
+                List<Long> courseIds = courseCoaches.stream()
+                        .map(CourseCoach::getCourseId)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                // 3. 批量查询课程信息
+                Map<Long, Course> courseMap = new HashMap<>();
+                if (!courseIds.isEmpty()) {
+                    List<Course> courses = courseMapper.selectBatchIds(courseIds);
+                    for (Course course : courses) {
+                        courseMap.put(course.getCourseId(), course);
+                    }
+                }
+
+                // 4. 按教练ID分组构建课程DTO
+                for (CourseCoach cc : courseCoaches) {
+                    Course course = courseMap.get(cc.getCourseId());
+                    if (course == null) {
+                        continue;
+                    }
+
+                    CoachCourseDTO dto = new CoachCourseDTO();
+                    dto.setId(course.getCourseId());
+                    dto.setCourseName(course.getCourseName());
+                    dto.setCourseType(course.getCourseType());
+                    dto.setDescription(course.getDescription());
+                    dto.setDuration(course.getDuration());
+                    dto.setStatus(course.getStatus());
+                    // 课程没有排期相关信息，设为null或默认值
+                    dto.setScheduleDate(null);
+                    dto.setStartTime(null);
+                    dto.setEndTime(null);
+                    dto.setMaxCapacity(null);
+                    dto.setCurrentEnrollment(null);
+                    dto.setEnrollmentRate(null);
+
+                    coachCoursesMap.computeIfAbsent(cc.getCoachId(), k -> new ArrayList<>()).add(dto);
+                }
+            }
+        }
+
         // 转换为VO列表
         List<CoachListVO> voList = coachPage.getRecords().stream()
-                .map(this::convertToCoachListVO)
+                .map(coach -> {
+                    CoachListVO vo = convertToCoachListVO(coach);
+                    // 设置教练绑定的课程列表
+                    List<CoachCourseDTO> courses = coachCoursesMap.get(coach.getId());
+                    vo.setCourses(courses != null ? courses : new ArrayList<>());
+                    return vo;
+                })
                 .collect(Collectors.toList());
 
         // 构建返回结果
@@ -272,11 +331,11 @@ public class CoachServiceImpl implements CoachService {
         // 2. 检查教练是否有未完成的课程排班
         checkUnfinishedCourses(coachId);
 
-        // 3. 软删除：更新状态为离职（不删除记录）
-        coach.setStatus(0);
-        coach.setUpdateTime(LocalDateTime.now());
+        // （可选）3. 检查教练是否还关联课程（course_coach 表）
+        checkCourseAssociation(coachId);
 
-        int result = coachMapper.updateById(coach);
+        // 4. 硬删除：物理删除记录
+        int result = coachMapper.deleteById(coachId);
         if (result <= 0) {
             throw new BusinessException("删除教练失败");
         }
@@ -484,6 +543,18 @@ public class CoachServiceImpl implements CoachService {
         Long count = courseScheduleMapper.selectCount(queryWrapper);
         if (count > 0) {
             throw new BusinessException("教练有未完成的课程排班，不能删除");
+        }
+    }
+
+    /**
+     * 检查教练是否关联了课程（course_coach 表）
+     */
+    private void checkCourseAssociation(Long coachId) {
+        LambdaQueryWrapper<CourseCoach> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CourseCoach::getCoachId, coachId);
+        Long count = courseCoachMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException("教练存在关联课程，无法删除。请先解除课程关联");
         }
     }
 }

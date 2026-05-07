@@ -50,8 +50,8 @@ public class Product {
     @TableField("max_purchase_quantity")
     private Integer maxPurchaseQuantity;
 
-    @TableField("refund_policy")
-    private String refundPolicy;
+//    @TableField("refund_policy")
+//    private String refundPolicy;
 
     @TableField("usage_rules")
     private String usageRules;

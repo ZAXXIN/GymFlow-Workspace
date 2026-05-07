@@ -79,8 +79,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         // 查询会员已支付的订单（COMPLETED状态）
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
         if (CollectionUtils.isEmpty(orders)) {
@@ -139,8 +138,7 @@ public class MiniMemberServiceImpl implements MiniMemberService {
         // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderQuery = new LambdaQueryWrapper<>();
         orderQuery.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderQuery);
         if (CollectionUtils.isEmpty(orders)) {

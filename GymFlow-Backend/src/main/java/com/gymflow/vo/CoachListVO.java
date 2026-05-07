@@ -1,5 +1,6 @@
 package com.gymflow.vo;
 
+import com.gymflow.dto.coach.CoachCourseDTO;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ public class CoachListVO {
     private Integer status;
     private String statusDesc;
     private BigDecimal rating;
+    private List<CoachCourseDTO> courses;
     private LocalDateTime createTime;
 
     // 获取性别描述

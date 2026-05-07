@@ -24,7 +24,6 @@ public class UploadController {
 
     @PostMapping("/image")
     @Operation(summary = "上传图片")
-    @PreAuthorize("common:upload")  // 上传权限（所有登录用户都有）
     public Result<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             // 验证文件类型

@@ -57,7 +57,9 @@ public class ProductServiceImpl implements ProductService {
             queryWrapper.gt(Product::getStockQuantity, 0);
         }
 
-        queryWrapper.orderByDesc(Product::getCreateTime);
+        // 修改排序：按商品类型排序（0-会籍卡，1-私教课，2-团课，3-相关产品）
+        queryWrapper.orderByAsc(Product::getProductType)
+                .orderByDesc(Product::getCreateTime);
         IPage<Product> productPage = productMapper.selectPage(page, queryWrapper);
 
         List<ProductListVO> voList = productPage.getRecords().stream()
@@ -350,13 +352,16 @@ public class ProductServiceImpl implements ProductService {
         vo.setStatus(product.getStatus());
         vo.setStatusDesc(product.getStatus() == 1 ? "在售" : "下架");
         vo.setCreateTime(product.getCreateTime());
-
-        // 新增字段
         vo.setValidityDays(product.getValidityDays());
         vo.setTotalSessions(product.getTotalSessions());
         vo.setMaxPurchaseQuantity(product.getMaxPurchaseQuantity());
-        vo.setRefundPolicy(product.getRefundPolicy());
+//        vo.setRefundPolicy(product.getRefundPolicy());
         vo.setUsageRules(product.getUsageRules());
+
+        // 课程包（私教课/团课）默认有效期365天
+        if (product.getProductType() == 1 || product.getProductType() == 2) {
+            vo.setValidityDays(365);
+        }
 
         // 计算折扣
         if (product.getOriginalPrice() != null && product.getOriginalPrice().compareTo(BigDecimal.ZERO) > 0) {
@@ -403,6 +408,11 @@ public class ProductServiceImpl implements ProductService {
 
         dto.setProductTypeDesc(getProductTypeDesc(product.getProductType()));
         dto.setStatusDesc(product.getStatus() == 1 ? "在售" : "下架");
+
+        // 课程包（私教课/团课）默认有效期365天
+        if (product.getProductType() == 1 || product.getProductType() == 2) {
+            dto.setValidityDays(365);
+        }
 
         // 解析图片列表
         if (StringUtils.hasText(product.getImages())) {

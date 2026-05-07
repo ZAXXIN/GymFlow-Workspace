@@ -22,6 +22,9 @@ public class CourseRecordDTO {
     @Schema(description = "课程名称", example = "团课-瑜伽基础", required = true)
     private String courseName;
 
+    @Schema(description = "授课教练ID", example = "2001")
+    private Long coachId;
+
     @Size(max = 50, message = "教练姓名长度不能超过50")
     @Schema(description = "授课教练姓名", example = "王教练")
     private String coachName;

@@ -7,10 +7,8 @@ import com.gymflow.dto.checkin.CheckInQueryDTO;
 import com.gymflow.dto.checkin.CheckInReportDTO;
 import com.gymflow.dto.checkin.CheckInStatsDTO;
 import com.gymflow.entity.*;
-import com.gymflow.entity.mini.MiniMessage;
 import com.gymflow.exception.BusinessException;
 import com.gymflow.mapper.*;
-import com.gymflow.mapper.mini.MiniMessageMapper;
 import com.gymflow.service.CheckInService;
 import com.gymflow.utils.SystemConfigValidator;
 import com.gymflow.vo.CheckInDetailVO;
@@ -41,7 +39,6 @@ public class CheckInServiceImpl implements CheckInService {
     private final CourseMapper courseMapper;
     private final CourseScheduleMapper courseScheduleMapper;
     private final CoachMapper coachMapper;
-    private final MiniMessageMapper miniMessageMapper;
     private final SystemConfigValidator configValidator;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
@@ -266,8 +263,7 @@ public class CheckInServiceImpl implements CheckInService {
         // 查询会员已支付的订单
         LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
         orderWrapper.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderWrapper);
         if (orders.isEmpty()) {
@@ -479,9 +475,6 @@ public class CheckInServiceImpl implements CheckInService {
         // 更新会员签到次数
         updateMemberCheckinStats(booking.getMemberId());
 
-        // 发送消息通知
-        sendCheckinNotification(booking, checkinMethod);
-
         log.info("课程签到成功，签到ID：{}，预约ID：{}", checkinRecord.getId(), booking.getId());
     }
 
@@ -519,38 +512,6 @@ public class CheckInServiceImpl implements CheckInService {
         }
         if (now.isAfter(validEndTime)) {
             throw new BusinessException("签到码已过期");
-        }
-    }
-
-    /**
-     * 发送签到成功通知
-     */
-    private void sendCheckinNotification(CourseBooking booking, Integer checkinMethod) {
-        try {
-            // 获取会员信息
-            Member member = memberMapper.selectById(booking.getMemberId());
-            if (member == null) return;
-
-            // 获取课程信息
-            Course course = courseMapper.selectById(booking.getCourseId());
-            if (course == null) return;
-
-            // 创建消息
-            MiniMessage message = new MiniMessage();
-            message.setUserId(member.getId());
-            message.setUserType(0); // 会员
-            message.setMessageType("CHECKIN_SUCCESS");
-            message.setTitle("签到成功");
-            message.setContent(String.format("您已成功签到课程：%s，签到方式：%s",
-                    course.getCourseName(),
-                    checkinMethod == 0 ? "教练签到" : "前台签到"));
-            message.setRelatedId(booking.getId());
-
-            miniMessageMapper.insert(message);
-
-            log.info("发送签到成功通知，会员ID：{}", member.getId());
-        } catch (Exception e) {
-            log.error("发送签到通知失败", e);
         }
     }
 

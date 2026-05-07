@@ -28,7 +28,7 @@ public class SystemConfigController {
 
     @GetMapping
     @Operation(summary = "获取系统配置")
-//    @PreAuthorize("settings:config:view")  // 查看配置权限（老板和前台都有）
+//    @PreAuthorize("settings:config")  // 查看配置权限（老板和前台都有）
     public Result<SystemConfigResponseDTO> getConfig() {
         SystemConfigResponseDTO config = systemConfigService.getConfig();
         return Result.success("获取成功", config);
@@ -36,7 +36,7 @@ public class SystemConfigController {
 
     @PutMapping
     @Operation(summary = "更新系统配置")
-    @PreAuthorize("settings:config:view,logical=AND")  // 修改配置权限（只有老板有）
+    @PreAuthorize("settings:config")  // 修改配置权限（只有老板有）
     public Result<Void> updateConfig(@Valid @RequestBody SystemConfigUpdateRequest request) {
         systemConfigService.updateConfig(request.getBasic(), request.getBusiness());
         return Result.success("更新成功");
@@ -44,7 +44,7 @@ public class SystemConfigController {
 
     @PostMapping("/reset")
     @Operation(summary = "重置系统配置")
-    @PreAuthorize("settings:config:view,logical=AND")  // 重置配置权限（只有老板有）
+    @PreAuthorize("settings:config")  // 重置配置权限（只有老板有）
     public Result<Void> resetConfig() {
         BasicConfigDTO defaultBasic = new BasicConfigDTO();
         defaultBasic.setSystemName("GymFlow健身管理系统");

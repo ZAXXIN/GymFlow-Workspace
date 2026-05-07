@@ -31,7 +31,7 @@ public class MemberController {
 
     @PostMapping("/list")
     @Operation(summary = "分页查询会员列表")
-    @PreAuthorize("member:view")  // 查看权限（老板和前台都有）
+    @PreAuthorize("member:menu")  // 查看权限（老板和前台都有）
     public Result<PageResultVO<MemberListVO>> getMemberList(@Valid @RequestBody MemberQueryDTO queryDTO) {
         PageResultVO<MemberListVO> result = memberService.getMemberList(queryDTO);
         return Result.success("查询成功", result);
@@ -85,17 +85,16 @@ public class MemberController {
         return Result.success("删除成功");
     }
 
-    @PostMapping("/batch-delete")
-    @Operation(summary = "批量删除会员")
-    @PreAuthorize("member:batch:delete")  // 批量删除权限（只有老板有）
-    public Result<Void> batchDeleteMember(@RequestBody List<Long> memberIds) {
-        memberService.batchDeleteMember(memberIds);
-        return Result.success("批量删除成功");
-    }
+//    @PostMapping("/batch-delete")
+//    @Operation(summary = "批量删除会员")
+//    @PreAuthorize("member:delete")  // 批量删除权限（只有老板有）
+//    public Result<Void> batchDeleteMember(@RequestBody List<Long> memberIds) {
+//        memberService.batchDeleteMember(memberIds);
+//        return Result.success("批量删除成功");
+//    }
 
     @PostMapping("/add-card/{memberId}")
     @Operation(summary = "为会员添加新卡")
-    @PreAuthorize("member:card:renew")
     public Result<Void> addMemberCard(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
@@ -106,7 +105,6 @@ public class MemberController {
 
 //    @PostMapping("/renew-card/{memberId}")
 //    @Operation(summary = "续费会员卡")
-//    @PreAuthorize("member:card:renew")  // 续费权限（老板和前台都有）
 //    public Result<Void> renewMemberCard(
 //            @Parameter(description = "会员ID", required = true)
 //            @PathVariable @NotNull Long memberId,
@@ -117,7 +115,6 @@ public class MemberController {
 
     @GetMapping("/health-records/{memberId}")
     @Operation(summary = "获取健康档案列表")
-    @PreAuthorize("member:health:view")  // 查看健康档案权限（老板和前台都有）
     public Result<List<HealthRecordDTO>> getHealthRecords(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId) {
@@ -127,7 +124,6 @@ public class MemberController {
 
     @PostMapping("/add-health-record/{memberId}")
     @Operation(summary = "添加健康档案")
-    @PreAuthorize("member:health:add")  // 添加健康档案权限（老板和前台都有）
     public Result<Void> addHealthRecord(
             @Parameter(description = "会员ID", required = true)
             @PathVariable @NotNull Long memberId,
@@ -141,7 +137,6 @@ public class MemberController {
      */
     @PutMapping("/update-health-record/{recordId}")
     @Operation(summary = "更新健康档案")
-    @PreAuthorize("member:health:edit")
     public Result<Void> updateHealthRecord(
             @Parameter(description = "健康档案ID", required = true)
             @PathVariable @NotNull Long recordId,
@@ -153,7 +148,6 @@ public class MemberController {
 
     @DeleteMapping("/delete-health-record/{recordId}")
     @Operation(summary = "删除健康档案")
-    @PreAuthorize("member:health:delete")
     public Result<Void> deleteHealthRecord(
             @Parameter(description = "健康档案ID", required = true)
             @PathVariable @NotNull Long recordId) {

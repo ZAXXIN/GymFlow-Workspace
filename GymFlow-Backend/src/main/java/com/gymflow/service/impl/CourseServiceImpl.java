@@ -442,12 +442,25 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("排课不存在");
         }
 
-        // 检查是否有预约
-        if (schedule.getCurrentEnrollment() > 0) {
-            throw new BusinessException("该排课已有会员预约，无法删除");
+        // 检查是否有未取消的有效预约（booking_status != 3）
+        LambdaQueryWrapper<CourseBooking> validBookingWrapper = new LambdaQueryWrapper<>();
+        validBookingWrapper.eq(CourseBooking::getScheduleId, scheduleId)
+                .ne(CourseBooking::getBookingStatus, 3);  // 排除已取消的
+        Long validBookingCount = courseBookingMapper.selectCount(validBookingWrapper);
+
+        if (validBookingCount > 0) {
+            throw new BusinessException("该排课有有效的会员预约，无法删除");
         }
 
+        // 如果有已取消的预约记录，先删除这些记录
+        LambdaQueryWrapper<CourseBooking> deleteBookingWrapper = new LambdaQueryWrapper<>();
+        deleteBookingWrapper.eq(CourseBooking::getScheduleId, scheduleId);
+        courseBookingMapper.delete(deleteBookingWrapper);
+
+        // 删除排课
         courseScheduleMapper.deleteById(scheduleId);
+
+        log.info("删除排课成功，排课ID：{}", scheduleId);
     }
 
     @Override
@@ -460,6 +473,54 @@ public class CourseServiceImpl implements CourseService {
         List<CourseSchedule> schedules = courseScheduleMapper.selectList(wrapper);
 
         return schedules.stream().map(this::convertToScheduleVO).collect(Collectors.toList());
+    }
+
+    /**
+     * 查找可用的订单项
+     * @param memberId 会员ID
+     * @param courseType 课程类型（0-私教课，1-团课）
+     * @return 可用的订单项（最早过期的）
+     */
+    private OrderItem findAvailableOrderItem(Long memberId, Integer courseType) {
+        // 根据课程类型确定需要查询的课时类型
+        // 私教课(0)对应 product_type=1，团课(1)对应 product_type=2
+        Integer targetProductType = courseType == 0 ? 1 : 2;
+
+        // 查询该会员的订单
+        LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.eq(Order::getMemberId, memberId)
+                .in(Order::getStatus, "COMPLETED", "PAID");
+
+        List<Order> orders = orderMapper.selectList(orderWrapper);
+        if (orders.isEmpty()) {
+            throw new BusinessException("您没有可用的课时");
+        }
+
+        List<Long> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+        // 查询订单项中的课时
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.in(OrderItem::getOrderId, orderIds)
+                .eq(OrderItem::getProductType, targetProductType)
+                .eq(OrderItem::getStatus, "ACTIVE")
+                .gt(OrderItem::getRemainingSessions, 0)
+                .ge(OrderItem::getValidityEndDate, LocalDate.now())
+                .orderByDesc(OrderItem::getValidityEndDate);
+
+        List<OrderItem> availableItems = orderItemMapper.selectList(itemWrapper);
+
+        if (availableItems.isEmpty()) {
+            throw new BusinessException("您没有可用的课时");
+        }
+
+        // 使用最早过期的课时
+        OrderItem item = availableItems.get(0);
+
+        // 获取课程信息以获取需要消耗的课时数
+        // 注意：这个方法需要在调用处传入 sessionCost，或者在这里再查询一次课程信息
+        // 建议在调用处扣减课时，这个方法只负责返回可用的订单项
+
+        return item;
     }
 
     @Override
@@ -586,8 +647,7 @@ public class CourseServiceImpl implements CourseService {
         // 查询该会员的订单
         LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
         orderWrapper.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderWrapper);
         if (orders.isEmpty()) {
@@ -729,16 +789,6 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("该课程已满员");
         }
 
-        // 检查会员是否已预约过
-        LambdaQueryWrapper<CourseBooking> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CourseBooking::getMemberId, memberId)
-                .eq(CourseBooking::getScheduleId, scheduleId)
-                .ne(CourseBooking::getBookingStatus, 3);
-
-        if (courseBookingMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException("您已预约过该课程");
-        }
-
         // 检查课程开始时间是否有效
         LocalDateTime scheduleDateTime = LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime());
         LocalDateTime now = LocalDateTime.now();
@@ -757,15 +807,65 @@ public class CourseServiceImpl implements CourseService {
             throw new BusinessException("课程不存在");
         }
 
+        // 检查会员是否已有预约记录
+        LambdaQueryWrapper<CourseBooking> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CourseBooking::getMemberId, memberId)
+                .eq(CourseBooking::getScheduleId, scheduleId);
+        CourseBooking existingBooking = courseBookingMapper.selectOne(wrapper);
+
+        if (existingBooking != null) {
+            // 如果存在非取消状态的预约，不能重复预约
+            if (existingBooking.getBookingStatus() != 3) {
+                throw new BusinessException("您已预约过该课程");
+            }
+
+            // 之前取消过，复用这条记录
+            log.info("复用已取消的预约记录，预约ID：{}", existingBooking.getId());
+
+            // 计算需要消耗的课时
+            Integer sessionCost = course.getSessionCost() != null ? course.getSessionCost() : 1;
+
+            // 查询可用的课时
+            OrderItem item = findAvailableOrderItem(memberId, course.getCourseType());
+
+            // 扣减课时
+            item.setRemainingSessions(item.getRemainingSessions() - sessionCost);
+            orderItemMapper.updateById(item);
+
+            // 更新预约记录
+            existingBooking.setBookingStatus(0);  // 改为待上课
+            existingBooking.setBookingTime(LocalDateTime.now());
+            existingBooking.setOrderItemId(item.getId());
+            existingBooking.setCancellationReason(null);
+            existingBooking.setCancellationTime(null);
+
+            // 重新生成签到码
+            String signCode = generateSignCode();
+            existingBooking.setSignCode(signCode);
+
+            existingBooking.setSignCodeExpireTime(scheduleDateTime.plusMinutes(15));
+            existingBooking.setAutoCompleteTime(LocalDateTime.of(schedule.getScheduleDate(), schedule.getEndTime())
+                    .plusHours(configValidator.getAutoCompleteHours()));
+
+            courseBookingMapper.updateById(existingBooking);
+
+            // 更新排课当前人数
+            schedule.setCurrentEnrollment(schedule.getCurrentEnrollment() + 1);
+            courseScheduleMapper.updateById(schedule);
+
+            log.info("团课重新预约成功，预约ID：{}，排课ID：{}，使用订单项ID：{}",
+                    existingBooking.getId(), scheduleId, item.getId());
+            return;
+        }
+
+        // 以下是首次预约的逻辑
         // 根据课程类型确定需要查询的课时类型
         Integer targetProductType = course.getCourseType() == 0 ? 1 : 2;
 
         // 查询可用的课时
-        // 查询该会员的订单
         LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
         orderWrapper.eq(Order::getMemberId, memberId)
-                .eq(Order::getPaymentStatus, 1)
-                .in(Order::getOrderStatus, "COMPLETED", "PROCESSING");
+                .in(Order::getStatus, "COMPLETED", "PAID");
 
         List<Order> orders = orderMapper.selectList(orderWrapper);
         if (orders.isEmpty()) {
@@ -791,6 +891,10 @@ public class CourseServiceImpl implements CourseService {
             sessionCost = 1;
         }
 
+        if (availableItems.isEmpty()) {
+            throw new BusinessException("您没有可用的课时");
+        }
+
         // 使用最早过期的课时
         OrderItem item = availableItems.get(0);
         if (item.getRemainingSessions() < sessionCost) {
@@ -802,12 +906,12 @@ public class CourseServiceImpl implements CourseService {
         item.setRemainingSessions(item.getRemainingSessions() - sessionCost);
         orderItemMapper.updateById(item);
 
-        // 创建预约（记录使用的订单项ID）
+        // 创建预约
         CourseBooking booking = new CourseBooking();
         booking.setMemberId(memberId);
         booking.setScheduleId(scheduleId);
         booking.setCourseId(schedule.getCourseId());
-        booking.setOrderItemId(item.getId());  // 记录使用的订单项ID
+        booking.setOrderItemId(item.getId());
         booking.setBookingStatus(0);
         booking.setBookingTime(LocalDateTime.now());
 

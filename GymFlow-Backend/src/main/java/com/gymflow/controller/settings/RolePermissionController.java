@@ -29,7 +29,7 @@ public class RolePermissionController {
 
     @GetMapping("/roles")
     @Operation(summary = "获取角色列表")
-    @PreAuthorize("settings:role:view")
+    @PreAuthorize("settings:role")
     public Result<List<RoleDTO>> getRoleList() {
         List<RoleDTO> roleList = rolePermissionService.getRoleList();
         return Result.success("获取成功", roleList);
@@ -37,7 +37,7 @@ public class RolePermissionController {
 
     @GetMapping("/roles/{roleId}")
     @Operation(summary = "获取角色详情")
-    @PreAuthorize("settings:role:view")
+    @PreAuthorize("settings:role")
     public Result<RoleDTO> getRoleDetail(@PathVariable Long roleId) {
         RoleDTO role = rolePermissionService.getRoleDetail(roleId);
         return Result.success("获取成功", role);
@@ -45,7 +45,7 @@ public class RolePermissionController {
 
     @PostMapping("/roles")
     @Operation(summary = "新增角色")
-    @PreAuthorize("settings:role:add")
+    @PreAuthorize("settings:role")
     public Result<Long> addRole(@Valid @RequestBody RoleDTO roleDTO) {
         Long roleId = rolePermissionService.addRole(roleDTO);
         return Result.success("添加成功", roleId);
@@ -53,7 +53,7 @@ public class RolePermissionController {
 
     @PutMapping("/roles/{roleId}")
     @Operation(summary = "更新角色")
-    @PreAuthorize("settings:role:edit")
+    @PreAuthorize("settings:role")
     public Result<Void> updateRole(@PathVariable Long roleId, @Valid @RequestBody RoleDTO roleDTO) {
         rolePermissionService.updateRole(roleId, roleDTO);
         return Result.success("更新成功");
@@ -61,7 +61,7 @@ public class RolePermissionController {
 
     @DeleteMapping("/roles/{roleId}")
     @Operation(summary = "删除角色")
-    @PreAuthorize("settings:role:delete")
+    @PreAuthorize("settings:role")
     public Result<Void> deleteRole(@PathVariable Long roleId) {
         rolePermissionService.deleteRole(roleId);
         return Result.success("删除成功");
@@ -69,7 +69,7 @@ public class RolePermissionController {
 
     @GetMapping("/permissions/tree")
     @Operation(summary = "获取权限树")
-    @PreAuthorize("settings:role:view")
+    @PreAuthorize("settings:role")
     public Result<List<PermissionTreeDTO>> getPermissionTree() {
         List<PermissionTreeDTO> permissionTree = rolePermissionService.getPermissionTree();
         return Result.success("获取成功", permissionTree);
@@ -77,7 +77,7 @@ public class RolePermissionController {
 
     @GetMapping("/roles/{roleId}/permissions")
     @Operation(summary = "获取角色的权限详情列表")
-    @PreAuthorize("settings:role:view")
+    @PreAuthorize("settings:role")
     public Result<List<RolePermissionDetailDTO>> getRolePermissions(@PathVariable Long roleId) {
         List<RolePermissionDetailDTO> permissionDetails = rolePermissionService.getRolePermissionDetails(roleId);
         return Result.success("获取成功", permissionDetails);
@@ -85,7 +85,7 @@ public class RolePermissionController {
 
     @GetMapping("/roles/{roleId}/permission-ids")
     @Operation(summary = "获取角色的权限ID列表")
-    @PreAuthorize("settings:role:view")
+    @PreAuthorize("settings:role")
     public Result<List<Long>> getRolePermissionIds(@PathVariable Long roleId) {
         List<Long> permissionIds = rolePermissionService.getRolePermissionIds(roleId);
         return Result.success("获取成功", permissionIds);
@@ -93,7 +93,7 @@ public class RolePermissionController {
 
     @PutMapping("/roles/{roleId}/permissions")
     @Operation(summary = "更新角色的权限")
-    @PreAuthorize("settings:role:edit")
+    @PreAuthorize("settings:role")
     public Result<Void> updateRolePermissions(
             @PathVariable Long roleId,
             @Valid @RequestBody RolePermissionUpdateDTO updateDTO) {

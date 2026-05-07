@@ -29,16 +29,15 @@ public class Order {
     @TableField("payment_method")
     private String paymentMethod;
 
-    @TableField("payment_status")
-    private Integer paymentStatus;
-
     @TableField("payment_time")
     private LocalDateTime paymentTime;
 
-    @TableField("order_status")
-    private String orderStatus;
-
     private String remark;
+
+    /**
+     * 订单状态：WAIT_PAY, PAID, COMPLETED, CANCELLED, REFUNDED
+     */
+    private String status;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
