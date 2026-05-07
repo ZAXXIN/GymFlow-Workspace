@@ -38,16 +38,9 @@
             <el-option label="相关产品" :value="3" />
           </el-select>
         </el-form-item>
-        <el-form-item label="支付状态">
-          <el-select v-model="filterForm.paymentStatus" placeholder="请选择支付状态" clearable style="width: 180px;">
-            <el-option label="待支付" :value="0" />
-            <el-option label="已支付" :value="1" />
-          </el-select>
-        </el-form-item>
         <el-form-item label="订单状态">
-          <el-select v-model="filterForm.orderStatus" placeholder="请选择订单状态" clearable style="width: 180px;">
-            <el-option label="待处理" value="PENDING" />
-            <el-option label="处理中" value="PROCESSING" />
+          <el-select v-model="filterForm.status" placeholder="请选择订单状态" clearable style="width: 180px;">
+            <el-option label="待支付" value="WAIT_PAY" />
             <el-option label="已完成" value="COMPLETED" />
             <el-option label="已取消" value="CANCELLED" />
             <el-option label="已退款" value="REFUNDED" />
@@ -100,21 +93,21 @@
           </template>
         </el-table-column>
         <el-table-column prop="orderTypeDesc" label="订单类型" width="100" />
-        <el-table-column prop="itemCount" label="商品数量" width="100" align="center">
+        <!-- <el-table-column prop="itemCount" label="商品数量" width="100" align="center">
           <template #default="{ row }">
             <el-tag size="small">{{ row.itemCount }}</el-tag>
           </template>
-        </el-table-column>
+        </el-table-column> -->
         <el-table-column prop="totalAmountFormatted" label="总金额" width="120" align="right" />
         <el-table-column prop="actualAmountFormatted" label="实付金额" width="120" align="right">
           <template #default="{ row }">
             <span class="actual-amount">{{ row.actualAmountFormatted }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="paymentStatusDesc" label="支付状态" width="100">
+        <el-table-column label="订单状态" width="120">
           <template #default="{ row }">
-            <el-tag :type="row.paymentStatus === 1 ? 'success' : 'warning'" size="small">
-              {{ row.paymentStatusDesc }}
+            <el-tag :type="getStatusTagType(row.status)" size="small">
+              {{ row.statusDesc }}
             </el-tag>
           </template>
         </el-table-column>
@@ -123,16 +116,9 @@
             {{ row.paymentMethod || '现金' }}
           </template>
         </el-table-column>
-        <el-table-column prop="orderStatusDesc" label="订单状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getStatusTagType(row.orderStatus)" size="small">
-              {{ row.orderStatusDesc }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column prop="createTimeFormatted" label="创建时间" width="180" />
         <el-table-column prop="paymentTimeFormatted" label="支付时间" width="180" />
-        <el-table-column label="操作" width="120" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-permission="'order:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
@@ -140,22 +126,26 @@
             <!-- <el-button v-permission="'order:edit'" type="warning" link size="small" v-if="row.orderStatus === 'PENDING'" @click="handleEdit(row.id)">
               编辑
             </el-button> -->
-            <!-- <el-button 
-              type="success" 
-              link 
-              size="small" 
-              v-if="row.paymentStatus === 0 && row.orderStatus === 'PENDING'" v-permission="'order:pay'"
-              @click="handlePay(row.id)"
+            <!-- v-permission="'order:pay'" -->
+            <el-popconfirm
+              title="确认支付该订单吗？支付后将自动激活权益并完成订单。"
+              @confirm="handlePay(row.id)"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
             >
-              支付
-            </el-button> -->
-            <!-- <el-popconfirm title="确定要删除这个订单吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="row.orderStatus === 'CANCELLED' || row.orderStatus === 'COMPLETED'">
+              <template #reference>
+                <el-button v-if="row.status === 'WAIT_PAY'" type="danger" link size="small">
+                  确认支付
+                </el-button>
+              </template>
+            </el-popconfirm>
+            <el-popconfirm title="确定要删除这个订单吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消" v-if="row.status === 'CANCELLED'">
               <template #reference>
                 <el-button v-permission="'order:delete'" type="danger" link size="small">
                   删除
                 </el-button>
               </template>
-            </el-popconfirm> -->
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -165,13 +155,6 @@
         <el-pagination v-model:current-page="pageInfo.pageNum" v-model:page-size="pageInfo.pageSize" :total="total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSizeChange" @current-change="handleCurrentChange" :disabled="loading" />
       </div>
     </el-card>
-
-    <!-- 支付对话框 -->
-    <!-- <PaymentDialog
-      v-model="paymentDialogVisible"
-      :order-id="currentOrderId"
-      @success="handlePaymentSuccess"
-    /> -->
   </div>
 </template>
 
@@ -180,161 +163,112 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useOrderStore } from '@/stores/order'
-// import PaymentDialog from './components/PaymentDialog.vue'
 import type { OrderQueryParams } from '@/types/order'
 import { usePermission } from '@/directives/usePermission'
 
 const { hasPermission } = usePermission()
-
 const router = useRouter()
 const orderStore = useOrderStore()
 
-// 筛选表单
 const filterForm = reactive({
   orderNo: '',
   memberName: '',
   memberPhone: '',
   orderType: undefined as number | undefined,
-  paymentStatus: undefined as number | undefined,
-  orderStatus: '' as string,
+  status: '' as string,
   dateRange: [] as string[],
 })
 
-// 对话框
-const paymentDialogVisible = ref(false)
-const currentOrderId = ref<number | null>(null)
-
-// 获取store状态
 const { orderList, total, loading, pageInfo, formattedOrderList } = orderStore
-
-// 格式化后的订单列表
 const formattedOrders = computed(() => formattedOrderList())
 
-// 获取状态标签类型
 const getStatusTagType = (status: string) => {
   switch (status) {
-    case 'PENDING':
-      return 'warning'
-    case 'PROCESSING':
-      return 'primary'
-    case 'COMPLETED':
-      return 'success'
-    case 'CANCELLED':
-      return 'info'
-    case 'REFUNDED':
-      return 'danger'
-    case 'DELETED':
-      return 'info'
-    default:
-      return 'info'
+    case 'WAIT_PAY': return 'warning'
+    case 'PAID': return 'primary'
+    case 'COMPLETED': return 'success'
+    case 'CANCELLED': return 'info'
+    case 'REFUNDED': return 'danger'
+    default: return 'info'
   }
 }
 
-// 加载数据
 const loadData = async () => {
   const params: OrderQueryParams = {
     pageNum: pageInfo.pageNum,
     pageSize: pageInfo.pageSize,
     orderNo: filterForm.orderNo,
     orderType: filterForm.orderType,
-    paymentStatus: filterForm.paymentStatus,
-    orderStatus: filterForm.orderStatus,
+    status: filterForm.status || undefined,
   }
-
-  // 处理日期范围
   if (filterForm.dateRange?.length === 2) {
     params.startDate = filterForm.dateRange[0]
     params.endDate = filterForm.dateRange[1]
   }
-
-  // 处理会员信息查询（这里需要根据实际情况调整）
-  // 如果API不支持按会员姓名和手机号直接查询，需要先查询会员ID
-  if (filterForm.memberName || filterForm.memberPhone) {
-    // 这里可以调用会员API查询符合条件的会员ID
-    // 暂时先不处理，实际项目中需要根据业务需求实现
-  }
-
   await orderStore.fetchOrderList(params)
 }
 
-// 搜索
 const handleSearch = () => {
   pageInfo.pageNum = 1
   loadData()
 }
 
-// 重置
 const handleReset = () => {
   filterForm.orderNo = ''
   filterForm.memberName = ''
   filterForm.memberPhone = ''
   filterForm.orderType = undefined
-  filterForm.paymentStatus = undefined
-  filterForm.orderStatus = ''
+  filterForm.status = ''
   filterForm.dateRange = []
   pageInfo.pageNum = 1
   loadData()
 }
 
-// 创建订单
-const handleCreateOrder = () => {
-  router.push('/order/create')
-}
-
-// 查看详情
 const handleViewDetail = (id: number) => {
   router.push(`/order/detail/${id}`)
 }
 
-// 编辑订单
-const handleEdit = (id: number) => {
-  router.push(`/order/edit/${id}`)
+const handlePay = async (orderId: number) => {
+  try {
+    const activated = await orderStore.payOrder(orderId, '后台支付')
+    if (activated) {
+      ElMessage.success('支付成功，订单已完成')
+      await loadData()
+    } else {
+      ElMessage.warning('支付成功，但权益激活失败，请稍后重试激活')
+      await loadData()
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '支付失败')
+  }
 }
 
-// 支付订单
-const handlePay = (id: number) => {
-  currentOrderId.value = id
-  paymentDialogVisible.value = true
-}
-
-// 删除订单
 const handleDelete = async (id: number) => {
   try {
     await orderStore.deleteOrder(id)
     ElMessage.success('删除成功')
     loadData()
   } catch (error) {
-    console.error('删除失败:', error)
     ElMessage.error('删除失败')
   }
 }
 
-// 分页大小变化
 const handleSizeChange = (size: number) => {
   pageInfo.pageSize = size
   pageInfo.pageNum = 1
   loadData()
 }
 
-// 页码变化
 const handleCurrentChange = (current: number) => {
   pageInfo.pageNum = current
   loadData()
 }
 
-// 刷新表格
 const refreshTable = async () => {
   await loadData()
   ElMessage.success('刷新成功')
 }
 
-// 支付成功回调
-const handlePaymentSuccess = () => {
-  paymentDialogVisible.value = false
-  loadData()
-}
-
-// 初始化加载
 onMounted(() => {
   loadData()
 })

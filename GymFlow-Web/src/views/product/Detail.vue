@@ -104,7 +104,7 @@
 
       <!-- 销售记录 -->
       <!-- <div class="spec-section" v-if="productDetail?.refundPolicy"> -->
-        <div class="spec-section">
+      <div class="spec-section">
         <h3 class="section-title">销售记录</h3>
         <div v-if="salesRecords.length > 0">
           <el-table :data="salesRecords" style="width: 100%">
@@ -126,10 +126,10 @@
                 {{ getPaymentMethodDesc(row.paymentMethod) }}
               </template>
             </el-table-column>
-            <el-table-column prop="paymentStatus" label="支付状态" width="100">
+            <el-table-column label="订单状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getPaymentStatusType(row.paymentStatus)" size="small">
-                  {{ getPaymentStatusDesc(row.paymentStatus) }}
+                <el-tag :type="getOrderStatusTagType(row.status)" size="small">
+                  {{ getOrderStatusDesc(row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -161,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useProductStore } from '@/stores/product'
@@ -174,14 +174,8 @@ const productStore = useProductStore()
 const loading = ref(false)
 const activeTab = ref('details')
 
-// 销售记录相关
+// 销售记录
 const salesRecords = ref<any[]>([])
-const salesFilter = ref({
-  dateRange: [] as string[],
-  startDate: '',
-  endDate: '',
-})
-
 const salesPagination = ref({
   pageNum: 1,
   pageSize: 10,
@@ -191,135 +185,102 @@ const salesPagination = ref({
 const productId = computed(() => Number(route.params.id))
 const productDetail = computed(() => productStore.currentProduct)
 
-// 格式化函数
-const formatDate = (date: string | null | undefined) => {
-  if (!date) return '-'
-  return date
-}
+const formatDate = (date: string | null | undefined) => date || '-'
+const formatDateTime = (datetime: string | null | undefined) => datetime?.replace('T', ' ') || '-'
+const formatAmount = (amount: number | null | undefined) => amount ? amount.toFixed(2) : '0.00'
 
-const formatDateTime = (datetime: string | null | undefined) => {
-  if (!datetime) return '-'
-  return datetime.replace('T', ' ')
-}
-
-const formatAmount = (amount: number | null | undefined) => {
-  if (!amount) return '0.00'
-  return amount.toFixed(2)
-}
-
-// 获取支付方式描述
+// 支付方式描述（保留）
 const getPaymentMethodDesc = (method?: number) => {
   if (method === undefined) return '-'
   const methods = ['微信支付', '支付宝', '银行卡', '现金', '会员卡']
   return methods[method] || '-'
 }
 
-// 获取支付状态描述
-const getPaymentStatusDesc = (status?: number) => {
-  if (status === undefined) return '-'
-  const statuses = ['待支付', '支付成功', '支付失败', '已退款']
-  return statuses[status] || '-'
+// 订单状态描述（新）
+const getOrderStatusDesc = (status?: string) => {
+  if (!status) return '-'
+  const map: Record<string, string> = {
+    WAIT_PAY: '待支付',
+    PAID: '已支付',
+    COMPLETED: '已完成',
+    CANCELLED: '已取消',
+    REFUNDED: '已退款'
+  }
+  return map[status] || status
 }
 
-const getPaymentStatusType = (status?: number) => {
-  if (status === 0) return 'warning' // 待支付
-  if (status === 1) return 'success' // 支付成功
-  if (status === 2) return 'danger' // 支付失败
-  if (status === 3) return 'info' // 已退款
-  return 'info'
+// 订单状态标签类型
+const getOrderStatusTagType = (status?: string) => {
+  if (!status) return 'info'
+  switch (status) {
+    case 'WAIT_PAY': return 'warning'
+    case 'PAID': return 'primary'
+    case 'COMPLETED': return 'success'
+    case 'CANCELLED': return 'info'
+    case 'REFUNDED': return 'danger'
+    default: return 'info'
+  }
 }
 
-// 加载商品详情
 const loadProductDetail = async () => {
   try {
     loading.value = true
     await productStore.fetchProductDetail(productId.value)
-
-    // 加载销售记录
     await loadSalesRecords()
   } catch (error) {
-    console.error('加载商品详情失败:', error)
     ElMessage.error('加载商品详情失败')
   } finally {
     loading.value = false
   }
 }
 
-// 加载销售记录
+// 加载销售记录（模拟数据，按新状态字段调整）
 const loadSalesRecords = async () => {
-  try {
-    // TODO: 这里需要调用API加载销售记录
-    // 暂时使用模拟数据
-    salesRecords.value = [
-      {
-        orderId: 10001,
-        orderNo: 'DD202312150001',
-        memberName: '张三',
-        quantity: 1,
-        unitPrice: 299.0,
-        totalAmount: 299.0,
-        paymentMethod: 0,
-        paymentStatus: 1,
-        createTime: '2023-12-15 14:30:00',
-      },
-      {
-        orderId: 10002,
-        orderNo: 'DD202312150002',
-        memberName: '李四',
-        quantity: 2,
-        unitPrice: 299.0,
-        totalAmount: 598.0,
-        paymentMethod: 1,
-        paymentStatus: 1,
-        createTime: '2023-12-15 16:45:00',
-      },
-    ]
-    salesPagination.value.total = 2
-  } catch (error) {
-    console.error('加载销售记录失败:', error)
-  }
+  // TODO: 调用真实 API，返回的数据应包含 status 字段
+  salesRecords.value = [
+    {
+      orderId: 10001,
+      orderNo: 'DD202312150001',
+      memberName: '张三',
+      quantity: 1,
+      unitPrice: 299.0,
+      totalAmount: 299.0,
+      paymentMethod: 0,
+      status: 'COMPLETED',      // 新状态
+      createTime: '2023-12-15 14:30:00',
+    },
+    {
+      orderId: 10002,
+      orderNo: 'DD202312150002',
+      memberName: '李四',
+      quantity: 2,
+      unitPrice: 299.0,
+      totalAmount: 598.0,
+      paymentMethod: 1,
+      status: 'COMPLETED',
+      createTime: '2023-12-15 16:45:00',
+    },
+  ]
+  salesPagination.value.total = 2
 }
 
-// 日期范围变化
-const handleDateRangeChange = (dates: [string, string]) => {
-  if (dates && dates.length === 2) {
-    salesFilter.value.startDate = dates[0]
-    salesFilter.value.endDate = dates[1]
-  } else {
-    salesFilter.value.startDate = ''
-    salesFilter.value.endDate = ''
-  }
-  salesPagination.value.pageNum = 1
-  loadSalesRecords()
-}
-
-// 分页大小变化
 const handleSalesSizeChange = (size: number) => {
   salesPagination.value.pageSize = size
   salesPagination.value.pageNum = 1
   loadSalesRecords()
 }
 
-// 页码变化
 const handleSalesPageChange = (page: number) => {
   salesPagination.value.pageNum = page
   loadSalesRecords()
 }
 
-// 查看订单详情
 const handleViewOrderDetail = (orderId: number) => {
   router.push(`/order/detail/${orderId}`)
 }
 
-// 返回
-const goBack = () => {
-  router.push('/product/list')
-}
-
-// 编辑商品
-const handleEdit = () => {
-  router.push(`/product/edit/${productId.value}`)
-}
+const goBack = () => router.push('/product/list')
+const handleEdit = () => router.push(`/product/edit/${productId.value}`)
 
 onMounted(() => {
   loadProductDetail()

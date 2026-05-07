@@ -5,13 +5,12 @@ export interface OrderQueryParams {
   orderNo?: string
   memberId?: number
   orderType?: number
-  paymentStatus?: number
-  orderStatus?: string
-  startDate?: string // YYYY-MM-DD
-  endDate?: string   // YYYY-MM-DD
+  status?: string          // 合并后的订单状态
+  startDate?: string
+  endDate?: string
 }
 
-// 订单基础信息DTO
+// 订单基础信息DTO（创建订单时使用）
 export interface OrderBasicDTO {
   memberId: number
   orderType: number
@@ -36,9 +35,9 @@ export interface OrderItemDTO {
   productImage?: string
 }
 
-// 订单状态DTO
+// 订单状态DTO（更新状态时使用）
 export interface OrderStatusDTO {
-  orderStatus: string
+  status: string       // WAIT_PAY, PAID, COMPLETED, CANCELLED, REFUNDED
   remark?: string
 }
 
@@ -53,12 +52,10 @@ export interface OrderListVO {
   orderTypeDesc?: string
   totalAmount?: number
   actualAmount?: number
-  paymentStatus: number
-  paymentStatusDesc: string
   paymentMethod?: string
   paymentTime?: string
-  orderStatus: string
-  orderStatusDesc: string
+  status: string            // 订单状态
+  statusDesc: string        // 订单状态描述
   itemCount: number
   createTime: string
 }
@@ -75,11 +72,9 @@ export interface OrderDetailVO {
   totalAmount: number
   actualAmount: number
   paymentMethod?: string
-  paymentStatus: number
-  paymentStatusDesc: string
   paymentTime?: string
-  orderStatus: string
-  orderStatusDesc: string
+  status: string
+  statusDesc: string
   remark?: string
   createTime: string
   updateTime?: string
@@ -105,7 +100,7 @@ export interface OrderItemVO {
   statusDesc?: string
 }
 
-// 订单完整DTO
+// 订单完整DTO（用于详情接口返回）
 export interface OrderFullDTO {
   id: number
   orderNo: string
@@ -120,16 +115,14 @@ export interface OrderFullDTO {
   totalAmount: number
   actualAmount: number
   paymentMethod?: string
-  paymentStatus: number
-  paymentStatusDesc: string
   paymentTime?: string
-  orderStatus: string
-  orderStatusDesc: string
+  status: string
+  statusDesc: string
   remark?: string
   createTime: string
   updateTime?: string
   orderItems: OrderItemDTO[]
-  paymentRecords?: any[]
+  paymentRecords?: any[]   // 支付记录表已删除，可保留any
 }
 
 // 分页结果

@@ -5,8 +5,6 @@
       <template #content>
         <div class="header-content">
           <span class="page-title">订单详情</span>
-          <div class="header-actions">
-          </div>
         </div>
       </template>
     </el-page-header>
@@ -38,17 +36,9 @@
         <!-- <el-descriptions-item label="会员ID">{{ currentOrder?.memberId || '-' }}</el-descriptions-item> -->
         <el-descriptions-item label="支付方式">{{ currentOrder?.paymentMethod || '现金' }}</el-descriptions-item>
 
-        <el-descriptions-item label="支付状态">
-          <el-tag :type="currentOrder?.paymentStatus === 1 ? 'success' : 'warning'" size="small">
-            {{ currentOrder?.paymentStatusDesc || '-' }}
-          </el-tag>
-          <div class="sub-info" v-if="currentOrder?.paymentTime">
-            支付时间：{{ formatDateTime(currentOrder.paymentTime) }}
-          </div>
-        </el-descriptions-item>
         <el-descriptions-item label="订单状态">
-          <el-tag :type="getStatusTagType(currentOrder?.orderStatus || '')" size="small">
-            {{ currentOrder?.orderStatusDesc || '-' }}
+          <el-tag :type="getStatusTagType(currentOrder?.status || '')" size="small">
+            {{ currentOrder?.statusDesc || '-' }}
           </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDateTime(currentOrder?.createTime) }}</el-descriptions-item>
@@ -176,13 +166,6 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="paymentStatus" label="支付状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.paymentStatus === 1 ? 'success' : 'warning'" size="small">
-              {{ row.paymentStatus === 1 ? '成功' : '失败' }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column prop="paymentTime" label="支付时间" width="160">
           <template #default="{ row }">
             {{ formatDateTime(row.paymentTime) }}
@@ -192,20 +175,6 @@
         <el-table-column prop="remark" label="备注" min-width="150" />
       </el-table>
     </el-card>
-
-    <!-- 支付对话框 -->
-    <!-- <PaymentDialog
-      v-model="paymentDialogVisible"
-      :order-id="orderId"
-      @success="handlePaymentSuccess"
-    /> -->
-
-    <!-- 退款对话框 -->
-    <!-- <RefundDialog
-      v-model="refundDialogVisible"
-      :order-id="orderId"
-      @success="handleRefundSuccess"
-    /> -->
   </div>
 </template>
 
@@ -214,116 +183,73 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useOrderStore } from '@/stores/order'
-// import PaymentDialog from './components/PaymentDialog.vue'
-// import RefundDialog from './components/RefundDialog.vue'
-// import type { OrderDetailVO } from '@/types/order'
 
 const router = useRouter()
 const route = useRoute()
 const orderStore = useOrderStore()
 
 const loading = ref(false)
-const paymentDialogVisible = ref(false)
-const refundDialogVisible = ref(false)
 
 const orderId = computed(() => Number(route.params.id))
 const currentOrder = computed(() => orderStore.currentOrder)
 
-// 支付记录（模拟数据，实际应该从API获取）
-const paymentRecords = computed(() => {
-  if (!currentOrder.value) return []
+// 支付记录（后端 payment_record 表已删，此处保留为空数组）
+const paymentRecords = computed(() => [])
 
-  // 这里应该从API获取支付记录
-  // 暂时模拟数据
-  return []
-})
-
-// 是否为课程订单
 const isCourseOrder = computed(() => {
   return currentOrder.value?.orderType === 1 || currentOrder.value?.orderType === 2
 })
-
-// 是否有有效期
 const hasValidity = computed(() => {
   return currentOrder.value?.orderType === 0 || isCourseOrder.value
 })
 
-// 格式化函数
 const formatDate = (date: string | null | undefined) => {
   if (!date) return '-'
   return date.split('T')[0]
 }
-
 const formatDateTime = (datetime: string | null | undefined) => {
   if (!datetime) return '-'
   return datetime.replace('T', ' ')
 }
-
 const formatAmount = (amount: number | null | undefined) => {
   if (!amount) return '0.00'
   return `¥${amount.toFixed(2)}`
 }
 
-// 商品类型描述
 const getProductTypeDesc = (productType: number | undefined) => {
   if (productType === undefined) return '未知'
-  switch (productType) {
-    case 0:
-      return '会籍卡'
-    case 1:
-      return '私教课'
-    case 2:
-      return '团课'
-    case 3:
-      return '相关产品'
-    default:
-      return '未知'
-  }
+  const map: Record<number, string> = { 0: '会籍卡', 1: '私教课', 2: '团课', 3: '相关产品' }
+  return map[productType] || '未知'
 }
 
-// 商品项状态
 const getItemStatusType = (status: string | undefined) => {
   if (!status) return 'info'
-  switch (status) {
-    case 'UNPAID':
-      return 'warning'
-    case 'PAID':
-      return 'primary'
-    case 'ACTIVE':
-      return 'success'
-    case 'EXPIRED':
-      return 'danger'
-    case 'USED_UP':
-      return 'info'
-    default:
-      return 'info'
+  const map: Record<string, string> = {
+    UNPAID: 'warning',
+    PAID: 'primary',
+    ACTIVE: 'success',
+    EXPIRED: 'danger',
+    USED_UP: 'info',
   }
+  return map[status] || 'info'
 }
-
 const getItemStatusDesc = (status: string | undefined) => {
   if (!status) return '未知'
-  switch (status) {
-    case 'UNPAID':
-      return '未支付'
-    case 'PAID':
-      return '已支付'
-    case 'ACTIVE':
-      return '生效中'
-    case 'EXPIRED':
-      return '已过期'
-    case 'USED_UP':
-      return '已用完'
-    default:
-      return '未知'
+  const map: Record<string, string> = {
+    UNPAID: '未支付',
+    PAID: '已支付',
+    ACTIVE: '生效中',
+    EXPIRED: '已过期',
+    USED_UP: '已用完',
   }
+  return map[status] || '未知'
 }
 
-// 状态标签类型
 const getStatusTagType = (status: string) => {
   switch (status) {
-    case 'PENDING':
+    case 'WAIT_PAY':
       return 'warning'
-    case 'PROCESSING':
+    case 'PAID':
       return 'primary'
     case 'COMPLETED':
       return 'success'
@@ -331,129 +257,28 @@ const getStatusTagType = (status: string) => {
       return 'info'
     case 'REFUNDED':
       return 'danger'
-    case 'DELETED':
-      return 'info'
     default:
       return 'info'
   }
 }
 
-// 加载订单详情
 const loadOrderDetail = async () => {
   try {
     loading.value = true
     await orderStore.fetchOrderDetail(orderId.value)
   } catch (error) {
-    console.error('加载订单详情失败:', error)
     ElMessage.error('加载订单详情失败')
   } finally {
     loading.value = false
   }
 }
 
-// 编辑订单
-const goEdit = () => {
-  router.push(`/order/edit/${orderId.value}`)
-}
-
-// 支付订单
-const handlePay = () => {
-  paymentDialogVisible.value = true
-}
-
-// 完成订单
-const handleComplete = async () => {
-  try {
-    await ElMessageBox.confirm('确定要完成此订单吗？', '提示', {
-      type: 'warning',
-    })
-
-    await orderStore.completeOrder(orderId.value)
-    ElMessage.success('订单已完成')
-    await loadOrderDetail()
-  } catch (error) {
-    // 用户取消
-  }
-}
-
-// 取消订单
-const handleCancel = async () => {
-  try {
-    const { value: reason } = await ElMessageBox.prompt('请输入取消原因', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputType: 'textarea',
-    })
-
-    await orderStore.cancelOrder(orderId.value, reason)
-    ElMessage.success('订单已取消')
-    await loadOrderDetail()
-  } catch (error) {
-    // 用户取消
-  }
-}
-
-// 更多操作
-const handleMoreAction = async (command: string) => {
-  switch (command) {
-    case 'refund':
-      refundDialogVisible.value = true
-      break
-    case 'print':
-      handlePrint()
-      break
-    case 'delete':
-      handleDelete()
-      break
-  }
-}
-
-// 打印订单
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中...')
-}
-
-// 删除订单
-const handleDelete = async () => {
-  try {
-    await ElMessageBox.confirm('确定要删除此订单吗？', '警告', {
-      type: 'warning',
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-    })
-
-    await orderStore.deleteOrder(orderId.value)
-    ElMessage.success('订单已删除')
-    goBack()
-  } catch (error) {
-    // 用户取消
-  }
-}
-
-// 支付成功回调
-const handlePaymentSuccess = async () => {
-  paymentDialogVisible.value = false
-  await loadOrderDetail()
-  ElMessage.success('支付成功')
-}
-
-// 退款成功回调
-const handleRefundSuccess = async () => {
-  refundDialogVisible.value = false
-  await loadOrderDetail()
-  ElMessage.success('退款成功')
-}
-
-// 返回
-const goBack = () => {
-  router.push('/order/list')
-}
+const goBack = () => router.push('/order/list')
 
 onMounted(() => {
   loadOrderDetail()
 })
 </script>
-
 <style scoped lang="scss">
 .order-detail-container {
   padding: 20px;

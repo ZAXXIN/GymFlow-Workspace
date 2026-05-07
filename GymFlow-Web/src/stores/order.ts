@@ -24,9 +24,6 @@ export const useOrderStore = defineStore('order', () => {
 
   // Actions
 
-  /**
-   * 分页查询订单列表
-   */
   const fetchOrderList = async (params: OrderQueryParams = {}) => {
     try {
       loading.value = true
@@ -35,7 +32,6 @@ export const useOrderStore = defineStore('order', () => {
         pageSize: params.pageSize || pageInfo.value.pageSize,
         ...params
       }
-
       const response = await orderApi.getOrderList(queryParams)
       if (response.code === 200) {
         orderList.value = response.data.list
@@ -55,9 +51,6 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 获取订单详情
-   */
   const fetchOrderDetail = async (orderId: number) => {
     try {
       loading.value = true
@@ -74,15 +67,11 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 创建订单
-   */
   const createOrder = async (data: OrderBasicDTO) => {
     try {
       loading.value = true
       const response = await orderApi.createOrder(data)
       if (response.code === 200) {
-        // 创建成功后重新加载列表
         await fetchOrderList({
           pageNum: pageInfo.value.pageNum,
           pageSize: pageInfo.value.pageSize
@@ -97,19 +86,14 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 更新订单信息
-   */
   const updateOrder = async (orderId: number, data: OrderBasicDTO) => {
     try {
       loading.value = true
       const response = await orderApi.updateOrder(orderId, data)
       if (response.code === 200) {
-        // 更新成功后刷新当前订单详情
         if (currentOrder.value?.id === orderId) {
           await fetchOrderDetail(orderId)
         }
-        // 刷新列表
         await fetchOrderList({
           pageNum: pageInfo.value.pageNum,
           pageSize: pageInfo.value.pageSize
@@ -124,24 +108,19 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 更新订单状态
-   */
   const updateOrderStatus = async (orderId: number, data: OrderStatusDTO) => {
     try {
       loading.value = true
       const response = await orderApi.updateOrderStatus(orderId, data)
       if (response.code === 200) {
-        // 更新列表中的状态
         const index = orderList.value.findIndex(item => item.id === orderId)
         if (index !== -1) {
-          orderList.value[index].orderStatus = data.orderStatus
-          orderList.value[index].orderStatusDesc = getOrderStatusDesc(data.orderStatus)
+          orderList.value[index].status = data.status
+          orderList.value[index].statusDesc = getStatusDesc(data.status)
         }
-        // 更新当前订单的状态
         if (currentOrder.value?.id === orderId) {
-          currentOrder.value.orderStatus = data.orderStatus
-          currentOrder.value.orderStatusDesc = getOrderStatusDesc(data.orderStatus)
+          currentOrder.value.status = data.status
+          currentOrder.value.statusDesc = getStatusDesc(data.status)
         }
       }
       return response
@@ -153,16 +132,12 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 取消订单
-   */
   const cancelOrder = async (orderId: number, reason?: string) => {
     try {
       loading.value = true
       const response = await orderApi.cancelOrder(orderId, reason)
       if (response.code === 200) {
-        // 更新状态
-        await updateOrderStatus(orderId, { orderStatus: 'CANCELLED', remark: reason })
+        await updateOrderStatus(orderId, { status: 'CANCELLED', remark: reason })
       }
       return response
     } catch (error) {
@@ -173,16 +148,12 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 完成订单
-   */
   const completeOrder = async (orderId: number) => {
     try {
       loading.value = true
       const response = await orderApi.completeOrder(orderId)
       if (response.code === 200) {
-        // 更新状态
-        await updateOrderStatus(orderId, { orderStatus: 'COMPLETED' })
+        await updateOrderStatus(orderId, { status: 'COMPLETED' })
       }
       return response
     } catch (error) {
@@ -193,19 +164,13 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 删除订单
-   */
   const deleteOrder = async (orderId: number) => {
     try {
       loading.value = true
       const response = await orderApi.deleteOrder(orderId)
       if (response.code === 200) {
-        // 从本地列表中移除
         orderList.value = orderList.value.filter(item => item.id !== orderId)
         total.value -= 1
-
-        // 如果删除的是当前查看的订单，清空当前订单数据
         if (currentOrder.value?.id === orderId) {
           currentOrder.value = null
         }
@@ -219,81 +184,51 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 批量删除订单
-   */
-  const batchDeleteOrder = async (ids: number[]) => {
-    try {
-      loading.value = true
-      const response = await orderApi.batchDeleteOrder(ids)
-      if (response.code === 200) {
-        // 从本地列表中移除
-        orderList.value = orderList.value.filter(item => !ids.includes(item.id))
-        total.value -= ids.length
-
-        // 如果删除的包含当前查看的订单，清空当前订单数据
-        if (currentOrder.value && ids.includes(currentOrder.value.id)) {
-          currentOrder.value = null
-        }
-      }
-      return response
-    } catch (error) {
-      console.error('批量删除订单失败:', error)
-      throw error
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * 订单支付
-   */
   const payOrder = async (orderId: number, paymentMethod?: string) => {
     try {
       loading.value = true
       const response = await orderApi.payOrder(orderId, paymentMethod)
       if (response.code === 200) {
-        // 支付成功后更新状态
-        const index = orderList.value.findIndex(item => item.id === orderId)
-        if (index !== -1) {
-          orderList.value[index].paymentStatus = 1
-          orderList.value[index].paymentStatusDesc = '已支付'
-          orderList.value[index].orderStatus = 'PROCESSING'
-          orderList.value[index].orderStatusDesc = '处理中'
+        const activated = response.data === true
+        if (activated) {
+          // 支付成功且激活成功，后端已更新为 COMPLETED，仅需刷新数据
+          await fetchOrderDetail(orderId)
+          await fetchOrderList({ pageNum: pageInfo.value.pageNum, pageSize: pageInfo.value.pageSize })
+          // 提示信息已在 List.vue 中处理，此处不再重复
+        } else {
+          // 支付成功但激活失败，后端状态为 PAID
+          await fetchOrderDetail(orderId)
+          await fetchOrderList({ pageNum: pageInfo.value.pageNum, pageSize: pageInfo.value.pageSize })
         }
       }
       return response
     } catch (error) {
-      console.error('订单支付失败:', error)
+      // console.error('订单支付失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
 
-  /**
-   * 订单退款
-   */
-  const refundOrder = async (orderId: number, refundAmount: number, reason?: string) => {
+  const retryActivateOrder = async (orderId: number) => {
     try {
       loading.value = true
-      const response = await orderApi.refundOrder(orderId, refundAmount, reason)
-      if (response.code === 200) {
-        // 退款成功后更新状态
-        await updateOrderStatus(orderId, { orderStatus: 'REFUNDED', remark: reason })
+      const response = await orderApi.retryActivateOrder(orderId)
+      if (response.code === 200 && response.data) {
+        await fetchOrderDetail(orderId)
+        ElMessage.success('激活成功')
+      } else {
+        ElMessage.error(response.message || '激活失败')
       }
       return response
     } catch (error) {
-      console.error('订单退款失败:', error)
+      console.error('重试激活失败:', error)
       throw error
     } finally {
       loading.value = false
     }
   }
 
-  /**
-   * 获取会员订单列表
-   */
   const fetchMemberOrders = async (memberId: number, params: OrderQueryParams = {}) => {
     try {
       loading.value = true
@@ -302,7 +237,6 @@ export const useOrderStore = defineStore('order', () => {
         pageSize: params.pageSize || pageInfo.value.pageSize,
         ...params
       }
-
       const response = await orderApi.getMemberOrders(memberId, queryParams)
       if (response.code === 200) {
         orderList.value = response.data.list
@@ -322,24 +256,15 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  /**
-   * 设置分页信息
-   */
   const setPageInfo = (pageNum: number, pageSize: number) => {
     pageInfo.value.pageNum = pageNum
     pageInfo.value.pageSize = pageSize
   }
 
-  /**
-   * 清空当前订单数据
-   */
   const clearCurrentOrder = () => {
     currentOrder.value = null
   }
 
-  /**
-   * 重置状态
-   */
   const resetState = () => {
     orderList.value = []
     currentOrder.value = null
@@ -361,9 +286,6 @@ export const useOrderStore = defineStore('order', () => {
     return pageInfo.value.pageNum > 1
   }
 
-  /**
-   * 格式化订单列表
-   */
   const formattedOrderList = () => {
     return orderList.value.map(order => ({
       ...order,
@@ -372,8 +294,7 @@ export const useOrderStore = defineStore('order', () => {
       createTimeFormatted: order.createTime ? new Date(order.createTime).toLocaleString() : '-',
       paymentTimeFormatted: order.paymentTime ? new Date(order.paymentTime).toLocaleString() : '-',
       orderTypeDesc: getOrderTypeDesc(order.orderType),
-      paymentStatusDesc: getPaymentStatusDesc(order.paymentStatus),
-      orderStatusDesc: getOrderStatusDesc(order.orderStatus)
+      statusDesc: getStatusDesc(order.status)
     }))
   }
 
@@ -389,35 +310,23 @@ export const useOrderStore = defineStore('order', () => {
     }
   }
 
-  const getPaymentStatusDesc = (status: number) => {
+  const getStatusDesc = (status: string) => {
     switch (status) {
-      case 0: return '待支付'
-      case 1: return '已支付'
-      default: return '未知'
-    }
-  }
-
-  const getOrderStatusDesc = (status: string) => {
-    switch (status) {
-      case 'PENDING': return '待处理'
-      case 'PROCESSING': return '处理中'
+      case 'WAIT_PAY': return '待支付'
+      case 'PAID': return '已支付'
       case 'COMPLETED': return '已完成'
       case 'CANCELLED': return '已取消'
       case 'REFUNDED': return '已退款'
-      case 'DELETED': return '已删除'
-      default: return '未知'
+      default: return status
     }
   }
 
   return {
-    // 状态
     orderList,
     currentOrder,
     total,
     loading,
     pageInfo,
-
-    // Actions
     fetchOrderList,
     fetchOrderDetail,
     createOrder,
@@ -426,17 +335,17 @@ export const useOrderStore = defineStore('order', () => {
     cancelOrder,
     completeOrder,
     deleteOrder,
-    batchDeleteOrder,
     payOrder,
-    refundOrder,
+    retryActivateOrder,
     fetchMemberOrders,
     setPageInfo,
     clearCurrentOrder,
     resetState,
-
-    // Getters
     hasNextPage,
     hasPrevPage,
     formattedOrderList
   }
 })
+
+// 需要引入 ElMessage（由于使用了 ElMessage.success/error）
+import { ElMessage } from 'element-plus'

@@ -9,7 +9,6 @@ import type {
   ApiResponse
 } from '@/types/order'
 
-// 订单管理API
 export const orderApi = {
   /**
    * 分页查询订单列表
@@ -66,7 +65,7 @@ export const orderApi = {
   },
 
   /**
-   * 取消订单
+   * 取消订单（仅限待支付状态）
    */
   cancelOrder(orderId: number, reason?: string): Promise<ApiResponse> {
     return request({
@@ -77,7 +76,7 @@ export const orderApi = {
   },
 
   /**
-   * 完成订单
+   * 完成订单（一般由前端调用完成）
    */
   completeOrder(orderId: number): Promise<ApiResponse> {
     return request({
@@ -87,7 +86,7 @@ export const orderApi = {
   },
 
   /**
-   * 删除订单
+   * 删除订单（软删除）
    */
   deleteOrder(orderId: number): Promise<ApiResponse> {
     return request({
@@ -97,20 +96,9 @@ export const orderApi = {
   },
 
   /**
-   * 批量删除订单
+   * 订单支付（同步完成权益激活）
    */
-  batchDeleteOrder(ids: number[]): Promise<ApiResponse> {
-    return request({
-      url: '/order/batch-delete',
-      method: 'POST',
-      data: ids
-    })
-  },
-
-  /**
-   * 订单支付
-   */
-  payOrder(orderId: number, paymentMethod?: string): Promise<ApiResponse> {
+  payOrder(orderId: number, paymentMethod?: string): Promise<ApiResponse<boolean>> {
     return request({
       url: `/order/pay/${orderId}`,
       method: 'POST',
@@ -119,13 +107,12 @@ export const orderApi = {
   },
 
   /**
-   * 订单退款
+   * 重试激活订单权益（仅限已支付状态）
    */
-  refundOrder(orderId: number, refundAmount: number, reason?: string): Promise<ApiResponse> {
+  retryActivateOrder(orderId: number): Promise<ApiResponse<boolean>> {
     return request({
-      url: `/order/refund/${orderId}`,
-      method: 'POST',
-      params: { refundAmount, reason }
+      url: `/order/retry-activate/${orderId}`,
+      method: 'POST'
     })
   },
 
