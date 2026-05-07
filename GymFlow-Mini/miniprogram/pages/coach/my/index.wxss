@@ -50,20 +50,6 @@
   margin-bottom: 4rpx;
 }
 
-.coach-my-message {
-  position: relative;
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.coach-my-message-icon {
-  width: 48rpx;
-  height: 48rpx;
-}
-
 /* 统计数据 */
 .coach-my-stats {
   background: rgba(255, 255, 255, 0.2);

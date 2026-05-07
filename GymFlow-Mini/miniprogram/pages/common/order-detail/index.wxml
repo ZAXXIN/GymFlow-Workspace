@@ -5,14 +5,15 @@
     <view class="order-detail-header-bg"></view>
     <view class="order-detail-header-content">
       <view class="order-detail-status-icon">
-      <image wx:if="{{order.orderStatus == 'PROCESSING'}}" src="/assets/icons/processing.png" mode="aspectFit"></image>
-      <image wx:if="{{order.orderStatus == 'COMPLETED'}}" src="/assets/icons/completed.png" mode="aspectFit"></image>
-      <image wx:if="{{order.orderStatus == 'CANCELLED'}}" src="/assets/icons/cancelled.png" mode="aspectFit"></image>
-      <image wx:if="{{order.orderStatus == 'REFUNDED'}}" src="/assets/icons/refunded.png" mode="aspectFit"></image>
+        <image wx:if="{{order.status == 'WAIT_PAY'}}" src="/assets/icons/wait_pay.png" mode="aspectFit"></image>
+        <image wx:if="{{order.status == 'PAID'}}" src="/assets/icons/paid.png" mode="aspectFit"></image>
+        <image wx:if="{{order.status == 'COMPLETED'}}" src="/assets/icons/completed.png" mode="aspectFit"></image>
+        <image wx:if="{{order.status == 'CANCELLED'}}" src="/assets/icons/cancelled.png" mode="aspectFit"></image>
+        <image wx:if="{{order.status == 'REFUNDED'}}" src="/assets/icons/refunded.png" mode="aspectFit"></image>
       </view>
       <view class="order-detail-status-info">
-        <text class="order-detail-status-text">{{order.orderStatusDesc}}</text>
-        <text class="order-detail-status-sub">{{order.paymentStatusDesc}}</text>
+        <text class="order-detail-status-text">{{order.statusDesc}}</text>
+        <!-- 不再显示支付状态子文本，因为已合并 -->
       </view>
     </view>
   </view>
@@ -43,30 +44,30 @@
       </view>
     </view>
   </view>
-  
+
   <!-- 订单信息卡片 -->
   <view class="order-detail-card">
     <view class="order-detail-card-header">
       <text class="order-detail-card-title">订单信息</text>
       <text class="order-detail-order-no" selectable="{{true}}">{{order.orderNo}}</text>
     </view>
-    
+
     <view class="order-detail-info-list">
       <view class="order-detail-info-item">
         <text class="order-detail-info-label">订单类型</text>
         <text class="order-detail-info-value">{{order.orderTypeDesc}}</text>
       </view>
-      
+
       <view class="order-detail-info-item">
         <text class="order-detail-info-label">订单金额</text>
         <text class="order-detail-info-value">¥{{order.totalAmount}}</text>
       </view>
-      
+
       <view class="order-detail-info-item">
         <text class="order-detail-info-label">实付金额</text>
         <text class="order-detail-info-value order-detail-price">¥{{order.actualAmount}}</text>
       </view>
-      
+
       <view class="order-detail-info-item" wx:if="{{order.paymentMethod}}">
         <text class="order-detail-info-label">支付方式</text>
         <text class="order-detail-info-value">{{order.paymentMethod}}</text>
@@ -76,34 +77,25 @@
         <text class="order-detail-info-label">创建时间</text>
         <text class="order-detail-info-value">{{dateUtil.formatDateTime(order.createTime)}}</text>
       </view>
-      
+
       <view class="order-detail-info-item" wx:if="{{order.paymentTime}}">
         <text class="order-detail-info-label">支付时间</text>
         <text class="order-detail-info-value">{{dateUtil.formatDateTime(order.paymentTime)}}</text>
       </view>
-      
+
       <view class="order-detail-info-item" wx:if="{{order.remark}}">
         <text class="order-detail-info-label">备注</text>
         <text class="order-detail-info-value">{{order.remark}}</text>
       </view>
     </view>
+
+    <view class="order-detail-actions">
+      <button class="order-detail-btn order-detail-btn-cancel" wx:if="{{order.status == 'WAIT_PAY'}}"
+        bindtap="onCancelOrder">取消订单</button>
+      <!-- <button class="order-detail-btn order-detail-btn-pay" wx:if="{{order.status == 'WAIT_PAY'}}" bindtap="onPayOrder">立即支付</button> -->
+    </view>
   </view>
-  
-  <!-- 操作按钮 -->
-  <view class="order-detail-actions">
-    <button 
-      class="order-detail-btn order-detail-btn-pay" 
-      wx:if="{{order.paymentStatus == 0}}"
-      bindtap="onPayOrder"
-    >立即支付</button>
-    
-    <button 
-      class="order-detail-btn order-detail-btn-cancel" 
-      wx:if="{{order.paymentStatus == 0}}"
-      bindtap="onCancelOrder"
-    >取消订单</button>
-  </view>
-  
+
   <!-- 加载中 -->
   <view class="order-detail-loading" wx:if="{{loading}}">
     <loading type="circular" text="加载中..."></loading>

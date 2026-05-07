@@ -36,7 +36,7 @@ Component({
     onImageError() {
       // 图片加载失败时使用默认图片
       this.setData({
-        'product.images[0]': '/assets/icons/logo.jpg'
+        'product.images[0]': '/assets/icons/logo.png'
       })
     }
   }

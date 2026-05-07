@@ -1,7 +1,6 @@
 // pages/coach/home/index.ts
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
-import { messageStore } from '../../../stores/message.store'
 import { getMyCoachInfo, getMySchedule } from '../../../services/api/coach.api'
 import { getCurrentReminder, verifyCodeCheckin } from '../../../services/api/checkin.api'
 import { isToday, isTomorrow, formatDate } from '../../../utils/date'
@@ -58,8 +57,16 @@ Page({
   },
 
   onShow() {
-    // 刷新未读消息数
-    this.updateUnreadCount()
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
 
     // 刷新当前提醒
     this.loadCurrentReminder()
@@ -111,8 +118,6 @@ Page({
         this.loadSchedule(),
         this.loadCurrentReminder()
       ])
-
-      this.updateUnreadCount()
     } catch (error) {
       console.error('加载数据失败:', error)
     } finally {
@@ -133,8 +138,6 @@ Page({
         this.loadSchedule(),
         this.loadCurrentReminder()
       ])
-
-      this.updateUnreadCount()
     } catch (error) {
       console.error('刷新数据失败:', error)
     } finally {
@@ -212,15 +215,6 @@ Page({
     } catch (error) {
       console.error('加载提醒失败:', error)
     }
-  },
-
-  /**
-   * 更新未读消息数
-   */
-  updateUnreadCount() {
-    this.setData({
-      unreadCount: messageStore.unreadCount
-    })
   },
 
   /**
@@ -370,15 +364,6 @@ Page({
     } finally {
       this.setData({ checkinLoading: false })
     }
-  },
-
-  /**
-   * 跳转到消息列表
-   */
-  goToMessage() {
-    wx.navigateTo({
-      url: '/pages/common/message-list/index'
-    })
   },
 
   /**

@@ -4,17 +4,8 @@
   <view class="member-home-header">
     <view class="member-home-header-top">
       <view class="member-home-header-left">
-        <!-- 修复：不能用 ?.，改用 && 或三元表达式 -->
         <text class="member-home-greeting">Hi, {{userInfo ? userInfo.realName : '会员'}}</text>
         <text class="member-home-date">{{getDate()}}</text>
-      </view>
-      <view class="member-home-header-right">
-        <view class="member-home-message" bindtap="goToMessage">
-          <!-- 修复：不能用 ?.，改用 && 或三元表达式 -->
-          <message-badge dot="{{true}}" count="{{messageStore && messageStore.unreadCount ? messageStore.unreadCount : 0}}">
-            <image class="member-home-message-icon" src="/assets/icons/message.png" mode="aspectFit"></image>
-          </message-badge>
-        </view>
       </view>
     </view>
     

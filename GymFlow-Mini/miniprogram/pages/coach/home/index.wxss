@@ -39,7 +39,7 @@
   align-items: center;
 }
 
-.coach-home-message {
+.coach-home-checkin {
   position: relative;
   width: 60rpx;
   height: 60rpx;
@@ -48,7 +48,7 @@
   justify-content: center;
 }
 
-.coach-home-message-icon {
+.coach-home-checkin-icon {
   width: 48rpx;
   height: 48rpx;
 }

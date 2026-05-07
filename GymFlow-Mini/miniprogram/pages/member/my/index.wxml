@@ -67,7 +67,7 @@
         >
           <view class="member-my-menu-icon-wrapper">
             <image class="member-my-menu-icon" src="{{item.icon}}" mode="aspectFit"></image>
-            <message-badge wx:if="{{item.badge > 0}}" count="{{item.badge}}" dot="{{false}}"></message-badge>
+            <!-- <message-badge wx:if="{{item.badge > 0}}" count="{{item.badge}}" dot="{{false}}"></message-badge> -->
           </view>
           <text class="member-my-menu-title">{{item.title}}</text>
         </view>
@@ -117,9 +117,9 @@
     </view>
     
     <!-- 底部版权 -->
-    <view class="member-my-footer">
+    <!-- <view class="member-my-footer">
       <text class="member-my-footer-text">© 2026 GymFlow 健身管理系统</text>
-    </view>
+    </view> -->
   </view>
 
   <!-- 自定义 TabBar -->

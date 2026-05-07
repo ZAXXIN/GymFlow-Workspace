@@ -97,43 +97,6 @@ export const getBookingStatusType = (status: number): 'pending' | 'success' | 'i
 }
 
 /**
- * 获取订单状态文本
- */
-export const getOrderStatusText = (status: string): string => {
-  const statusMap: Record<string, string> = {
-    'PENDING': '待支付',
-    'PROCESSING': '处理中',
-    'COMPLETED': '已完成',
-    'CANCELLED': '已取消',
-    'REFUNDED': '已退款',
-    'DELETED': '已删除'
-  }
-  return statusMap[status] || status
-}
-
-/**
- * 获取订单状态类型
- */
-export const getOrderStatusType = (status: string): 'pending' | 'success' | 'info' | 'warning' | 'completed' => {
-  const typeMap: Record<string, 'pending' | 'success' | 'info' | 'warning' | 'completed'> = {
-    'PENDING': 'pending',
-    'PROCESSING': 'info',
-    'COMPLETED': 'success',
-    'CANCELLED': 'warning',
-    'REFUNDED': 'warning',
-    'DELETED': 'completed'
-  }
-  return typeMap[status] || 'pending'
-}
-
-/**
- * 获取支付状态文本
- */
-export const getPaymentStatusText = (status: number): string => {
-  return status === 1 ? '已支付' : '待支付'
-}
-
-/**
  * 获取商品类型文本
  */
 export const getProductTypeText = (type: number): string => {

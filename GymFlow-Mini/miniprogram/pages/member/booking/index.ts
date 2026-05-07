@@ -86,6 +86,16 @@ Page({
   },
 
   onShow() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     if (this.data.activeTab === 0) {
       this.loadAvailableCourses()
     } else {
@@ -727,32 +737,32 @@ Page({
       console.log('当前 checkinBooking.signCode:', this.data.checkinBooking?.signCode)
 
       // 延迟后检查组件是否存在
-      setTimeout(() => {
-        // 通过 selectComponent 查找二维码组件实例
-        const qrCodeComponent = this.selectComponent('.qr-code-component')
-        console.log('二维码组件实例:', qrCodeComponent)
+      // setTimeout(() => {
+      //   // 通过 selectComponent 查找二维码组件实例
+      //   const qrCodeComponent = this.selectComponent('.qr-code-component')
+      //   console.log('二维码组件实例:', qrCodeComponent)
 
-        // 或者通过 class 查找
-        const query = wx.createSelectorQuery()
-        query.selectAll('.qr-code').boundingClientRect()
-        query.exec((res) => {
-          console.log('qr-code 元素位置:', res)
-        })
-      }, 300)
+      //   // 或者通过 class 查找
+      //   const query = wx.createSelectorQuery()
+      //   query.selectAll('.qr-code').boundingClientRect()
+      //   query.exec((res) => {
+      //     console.log('qr-code 元素位置:', res)
+      //   })
+      // }, 300)
 
-      // 手动检查组件是否存在
-      setTimeout(() => {
-        const query = wx.createSelectorQuery()
-        query.select('.checkin-code-qrcode').boundingClientRect()
-        query.exec((res) => {
-          console.log('checkin-code-qrcode 容器位置:', res)
-        })
+      // // 手动检查组件是否存在
+      // setTimeout(() => {
+      //   const query = wx.createSelectorQuery()
+      //   query.select('.checkin-code-qrcode').boundingClientRect()
+      //   query.exec((res) => {
+      //     console.log('checkin-code-qrcode 容器位置:', res)
+      //   })
 
-        // 查找二维码组件实例
-        const pages = getCurrentPages()
-        const currentPage = pages[pages.length - 1]
-        console.log('页面组件:', currentPage)
-      }, 200)
+      //   // 查找二维码组件实例
+      //   const pages = getCurrentPages()
+      //   const currentPage = pages[pages.length - 1]
+      //   console.log('页面组件:', currentPage)
+      // }, 200)
     })
   },
 

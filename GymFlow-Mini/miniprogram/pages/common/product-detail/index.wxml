@@ -72,11 +72,15 @@
   <view class="product-detail-section">
     <view class="product-detail-section-title">详细信息</view>
 
-    <!-- 私教课/团课信息 -->
+    <!-- 私教课/团课信息 总课时数 有效期-->
     <view class="product-detail-course" wx:if="{{product.productType == 1 || product.productType == 2}}">
       <view class="product-detail-course-item">
         <text class="product-detail-course-label">总课时数</text>
         <text class="product-detail-course-value">{{product.totalSessions}}节</text>
+      </view>
+      <view class="product-detail-course-item">
+        <text class="product-detail-course-label">有效期</text>
+        <text class="product-detail-course-value">{{product.validityDays}}天</text>
       </view>
     </view>
 
@@ -106,12 +110,12 @@
       </view>
     </view>
 
-    <view class="product-detail-section-inner" wx:if="{{product.refundPolicy}}">
+    <!-- <view class="product-detail-section-inner" wx:if="{{product.refundPolicy}}">
       <view class="product-detail-section-title">退款政策</view>
       <view class="product-detail-desc">
         <text>{{product.refundPolicy}}</text>
       </view>
-    </view>
+    </view> -->
   </view>
 
   <!-- 底部操作栏 -->

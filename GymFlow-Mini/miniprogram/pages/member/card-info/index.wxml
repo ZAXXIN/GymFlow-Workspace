@@ -27,7 +27,7 @@
         <view class="card-info-card card-info-card-empty">
           <view class="card-info-card-bg"></view>
           <view class="card-info-card-content card-info-card-content-empty">
-            <image class="card-info-card-empty-icon" src="/assets/icons/logo.jpg" mode="aspectFit"></image>
+            <image class="card-info-card-empty-icon" src="/assets/icons/logo.png" mode="aspectFit"></image>
             <text class="card-info-card-empty-text">暂无有效会员卡</text>
             <button class="card-info-card-empty-btn" bindtap="onBuyCard">去购买</button>
           </view>

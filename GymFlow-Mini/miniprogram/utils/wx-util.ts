@@ -80,22 +80,6 @@ export const showActionSheet = (items: string[]): Promise<number> => {
 }
 
 /**
- * 扫描二维码
- */
-export const scanCode = (): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    wx.scanCode({
-      onlyFromCamera: false,
-      scanType: ['qrCode'],
-      success: (res) => {
-        resolve(res.result)
-      },
-      fail: reject
-    })
-  })
-}
-
-/**
  * 拨打电话
  */
 export const makePhoneCall = (phoneNumber: string) => {

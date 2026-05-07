@@ -5,9 +5,7 @@
   "enablePullDownRefresh": true,
   "usingComponents": {
     "tab-bar": "/components/tab-bar/index",
-    "date-picker": "/components/date-picker/index",
     "empty-state": "/components/empty-state/index",
-    "loading": "/components/loading/index",
-    "message-badge": "/components/message-badge/index"
+    "loading": "/components/loading/index"
   }
 }

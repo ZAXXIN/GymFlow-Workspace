@@ -8,10 +8,6 @@
           <view class="coach-my-name">{{coachInfo.realName || '教练'}}</view>
           <view class="coach-my-phone">{{coachInfo.phone || '未绑定手机'}}</view>
         </view>
-        <view class="coach-my-message" bindtap="goToMessage">
-          <image class="coach-my-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
-          <message-badge count="{{unreadCount}}" dot="{{false}}"></message-badge>
-        </view>
       </view>
     </view>
 
@@ -70,11 +66,11 @@
         <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
       </view>
 
-      <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/about/index">
+      <!-- <view class="coach-my-menu-item" bindtap="onMenuTap" data-url="/pages/common/about/index">
         <image class="coach-my-menu-icon" src="/assets/icons/about.png" mode="aspectFit"></image>
         <text class="coach-my-menu-title">关于我们</text>
         <image class="coach-my-menu-arrow" src="/assets/icons/arrow-right.png" mode="aspectFit"></image>
-      </view>
+      </view> -->
     </view>
 
     <!-- 退出登录按钮 -->
@@ -83,9 +79,9 @@
     </view>
 
     <!-- 底部版权 -->
-    <view class="coach-my-footer">
+    <!-- <view class="coach-my-footer">
       <text class="coach-my-footer-text">© 2026 GymFlow 健身管理系统</text>
-    </view>
+    </view> -->
 
     <!-- 自定义 TabBar -->
     <tab-bar selected="{{selectedTab}}" bind:change="onTabChange" />

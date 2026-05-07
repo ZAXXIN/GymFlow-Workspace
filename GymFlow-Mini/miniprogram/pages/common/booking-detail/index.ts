@@ -202,9 +202,9 @@ Page({
   onViewCheckinCode: function() {
     var booking = this.data.booking
     
-    wx.navigateTo({
-      url: '/pages/member/checkin-code/index?bookingId=' + booking.id
-    })
+    // wx.navigateTo({
+    //   url: '/pages/member/checkin-code/index?bookingId=' + booking.id
+    // })
   },
 
   /**

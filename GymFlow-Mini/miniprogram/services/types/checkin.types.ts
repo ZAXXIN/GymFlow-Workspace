@@ -25,11 +25,6 @@ export interface CheckinCode {
   expireTime: string
 }
 
-// 扫码核销参数
-export interface ScanCheckinParams {
-  code: string // 扫描到的二维码内容
-}
-
 // 数字码核销参数
 export interface VerifyCodeParams {
   digitalCode: string;      // 6位数字签到码

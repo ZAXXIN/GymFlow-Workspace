@@ -2,7 +2,7 @@
 import { getProductDetail } from '../../../services/api/product.api'
 import { createOrder } from '../../../services/api/order.api'
 import { userStore } from '../../../stores/user.store'
-import{ orderStore} from '../../../stores/order.store'
+import { orderStore } from '../../../stores/order.store'
 import { showToast, showLoading, hideLoading, showModal } from '../../../utils/wx-util'
 
 Page({
@@ -149,35 +149,12 @@ Page({
       const confirm = await showModal({
         title: '提示',
         content: `订单创建成功，需支付 ¥${product.currentPrice}`,
-        confirmText: '立即支付',
-        cancelText: '稍后支付'
       })
 
-      if (confirm) {
-        // 立即支付 - 调用 store 中的 payOrder 方法
-        showLoading('支付中...')
-        console.log(orderId, "我是订单ID")
-        try {
-          await orderStore.payOrder(orderId)
-          hideLoading()
-          showToast('支付成功', 'success')
-
-          // 跳转到订单详情
-          setTimeout(() => {
-            wx.navigateTo({
-              url: `/pages/common/order-detail/index?id=${orderId}`
-            })
-          }, 1500)
-        } catch (payError: any) {
-          hideLoading()
-          showToast(payError.message || '支付失败', 'none')
-        }
-      } else {
-        // 稍后支付 - 跳转到订单详情
-        wx.navigateTo({
-          url: `/pages/common/order-detail/index?id=${orderId}`
-        })
-      }
+      // 跳转到订单详情
+      wx.navigateTo({
+        url: `/pages/common/order-detail/index?id=${orderId}`
+      })
 
     } catch (error: any) {
       hideLoading()

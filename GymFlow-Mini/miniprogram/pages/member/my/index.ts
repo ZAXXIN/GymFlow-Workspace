@@ -1,7 +1,6 @@
 // 会员端我的页面逻辑
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
-import { messageStore } from '../../../stores/message.store'
 import { bookingStore } from '../../../stores/booking.store'
 import { orderStore } from '../../../stores/order.store'
 import { getMyMemberInfo } from '../../../services/api/member.api'
@@ -50,24 +49,17 @@ Page({
         url: '/pages/member/card-info/index'
       },
       {
-        id: 'messages',
-        icon: '/assets/icons/message.png',
-        title: '消息中心',
-        url: '/pages/common/message-list/index',
-        badge: 0
-      },
-      {
         id: 'password',
         icon: '/assets/icons/lock.png',
         title: '修改密码',
         url: '/pages/common/modify-password/index'
       },
-      {
-        id: 'about',
-        icon: '/assets/icons/about.png',
-        title: '关于我们',
-        url: '/pages/common/about/index'
-      }
+      // {
+      //   id: 'about',
+      //   icon: '/assets/icons/about.png',
+      //   title: '关于我们',
+      //   url: '/pages/common/about/index'
+      // }
     ]
   },
 
@@ -84,10 +76,18 @@ Page({
   },
 
   onShow: function () {
-    // 每次显示时只刷新用户信息和未读消息数
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     // 不自动加载订单列表
     this.loadUserInfo()
-    this.updateUnreadCount()
   },
 
   onTabChange(e: any) {
@@ -103,7 +103,6 @@ Page({
     this.setData({
       userInfo: userStore.userInfo
     }, function () {
-      that.updateUnreadCount()
       // 从userInfo中获取统计数据
       that.updateStatsFromUserInfo()
       // 从userInfo中获取会员卡信息
@@ -180,24 +179,6 @@ Page({
   },
 
   /**
-   * 更新未读消息数
-   */
-  updateUnreadCount: function () {
-    var that = this
-    var unreadCount = messageStore.unreadCount
-    this.setData({ unreadCount: unreadCount })
-
-    // 更新菜单徽标
-    var menuList = this.data.menuList.map(function (item) {
-      if (item.id == 'messages') {
-        return { ...item, badge: unreadCount }
-      }
-      return item
-    })
-    this.setData({ menuList: menuList })
-  },
-
-  /**
    * 点击菜单项
    */
   onMenuTap: function (e) {
@@ -253,7 +234,6 @@ Page({
 
       // 清除所有store
       userStore.logout()
-      messageStore.reset()
       bookingStore.reset()
       orderStore.reset()
 

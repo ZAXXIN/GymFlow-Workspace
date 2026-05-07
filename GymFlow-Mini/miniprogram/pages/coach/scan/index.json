@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "扫码核销",
-  "navigationBarBackgroundColor": "#07c160",
-  "navigationBarTextStyle": "white",
-  "usingComponents": {
-    "loading": "/components/loading/index"
-  }
-}

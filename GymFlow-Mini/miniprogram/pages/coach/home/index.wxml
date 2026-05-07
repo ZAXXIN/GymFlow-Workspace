@@ -9,13 +9,8 @@
           <text class="coach-home-title">{{coachInfo.specialty || '健身教练'}}</text>
         </view>
         <view class="coach-home-header-right">
-          <!-- <view class="coach-home-message" bindtap="goToMessage">
-            <message-badge dot="{{false}}" count="{{unreadCount ? unreadCount : 0}}">
-              <image class="coach-home-message-icon" src="/assets/icons/message-white.png" mode="aspectFit"></image>
-            </message-badge>
-          </view> -->
-          <view class="coach-home-message" bindtap="goToCheckIn">
-            <image class="coach-home-message-icon" src="/assets/icons/checkin-icon.png" mode="aspectFit"></image>
+          <view class="coach-home-checkin" bindtap="goToCheckIn">
+            <image class="coach-home-checkin-icon" src="/assets/icons/checkin-icon.png" mode="aspectFit"></image>
           </view>
         </view>
       </view>

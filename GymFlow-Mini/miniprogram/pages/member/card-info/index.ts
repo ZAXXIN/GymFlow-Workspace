@@ -32,7 +32,17 @@ Page({
     this.loadCardsFromRemote()
   },
 
-  onShow: function () {
+  onShow() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     // 每次显示页面都重新加载（防止其他页面更新了会员卡状态）
     this.loadCardsFromRemote()
   },

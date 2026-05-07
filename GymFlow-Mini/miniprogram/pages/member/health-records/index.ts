@@ -27,6 +27,16 @@ Page({
   },
 
   onShow: function() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     this.loadRecords()
   },
 

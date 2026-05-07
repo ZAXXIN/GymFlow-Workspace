@@ -1,7 +1,6 @@
 // 教练端课程学员列表页面
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { getCourseStudents } from '../../../services/api/coach.api'
-// import { scanCheckin } from '../../../services/api/checkin.api'
 import { showToast, showModal, showLoading, hideLoading } from '../../../utils/wx-util'
 import { configStore } from '../../../stores/config.store'
 
@@ -194,57 +193,4 @@ Page({
     })
   },
 
-  //   /**
-  //    * 扫码核销
-  //    */
-  //   async onScanTap() {
-  //     try {
-  //       const { canCheckin } = this.data
-
-  //       if (!canCheckin) {
-  //         showToast('当前不在可核销时间内', 'none')
-  //         return
-  //       }
-
-  //       // 调用微信扫码
-  //       const { result } = await wx.scanCode({
-  //         onlyFromCamera: false,
-  //         scanType: ['qrCode']
-  //       })
-
-  //       // 解析二维码内容
-  //       if (!result || !result.startsWith('gymflow://checkin')) {
-  //         showToast('无效的签到码', 'none')
-  //         return
-  //       }
-
-  //       // 简单解析参数
-  //       const bookingIdMatch = result.match(/bookingId=(\d+)/)
-  //       const codeMatch = result.match(/code=(\d+)/)
-
-  //       if (!bookingIdMatch || !codeMatch) {
-  //         showToast('无效的签到码格式', 'none')
-  //         return
-  //       }
-
-  //       showLoading('核销中...')
-
-  //       await scanCheckin({
-  //         code: result
-  //       })
-
-  //       hideLoading()
-  //       showToast('核销成功', 'success')
-
-  //       // 刷新列表
-  //       this.loadStudents()
-
-  //     } catch (error: any) {
-  //       hideLoading()
-  //       if (error.errMsg && error.errMsg.indexOf('cancel') > -1) {
-  //         return
-  //       }
-  //       showToast(error.message || '核销失败', 'none')
-  //     }
-  //   }
 })

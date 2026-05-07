@@ -40,20 +40,6 @@
   align-items: center;
 }
 
-.member-home-message {
-  position: relative;
-  width: 60rpx;
-  height: 60rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.member-home-message-icon {
-  width: 48rpx;
-  height: 48rpx;
-}
-
 /* 提醒卡片 */
 .member-home-reminder {
   margin: 16rpx 24rpx 24rpx;

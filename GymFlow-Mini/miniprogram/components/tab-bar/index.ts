@@ -1,5 +1,4 @@
 import { userStore } from '../../stores/user.store'
-import { messageStore } from '../../stores/message.store'
 
 Component({
   properties: {
@@ -65,14 +64,6 @@ Component({
   lifetimes: {
     attached() {
       this.updateTabBarByRole()
-      this.loadUnreadCount()
-    }
-  },
-
-  pageLifetimes: {
-    show() {
-      // 每次页面显示时更新未读消息数
-      this.loadUnreadCount()
     }
   },
 
@@ -91,22 +82,6 @@ Component({
       }
       
       this.setData({ list })
-    },
-
-    /**
-     * 加载未读消息数
-     */
-    async loadUnreadCount() {
-      // 只在"我的" Tab 显示未读消息数
-      const unreadCount = messageStore.unreadCount
-      const list = this.data.list
-      
-      if (list.length > 0) {
-        // 找到"我的"对应的 Tab（通常是最后一个）
-        const lastIndex = list.length - 1
-        list[lastIndex].badge = unreadCount > 0 ? unreadCount : 0
-        this.setData({ list })
-      }
     },
 
     /**

@@ -4,7 +4,6 @@ import { wxRequest } from '../../utils/request'
 import { 
   CheckinRecord,
   CheckinCode,
-  ScanCheckinParams,
   VerifyCodeParams,
   CurrentReminder,
   PageResult
@@ -20,17 +19,6 @@ import { CheckinRules } from '../types/common.types'
 //     showLoading: true
 //   })
 // }
-
-/**
- * 扫码核销
- * POST /mini/checkin/scan
- */
-export const scanCheckin = (params: ScanCheckinParams) => {
-  return wxRequest.post('/mini/checkin/scan', params, {
-    showLoading: true,
-    loadingText: '核销中...'
-  })
-}
 
 /**
  * 数字码核销

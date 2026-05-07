@@ -1,8 +1,7 @@
 // 订单相关类型定义
 
-// 订单状态
-export type OrderStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED' | 'DELETED'
-export type PaymentStatus = 0 | 1 // 0-待支付 1-已支付
+// 订单状态（新）
+export type OrderStatus = 'WAIT_PAY' | 'PAID' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED'
 export type OrderType = 0 | 1 | 2 | 3 // 0-会籍卡 1-私教课 2-团课 3-相关产品
 
 // 订单
@@ -17,11 +16,9 @@ export interface Order {
   totalAmount: number
   actualAmount: number
   paymentMethod?: string
-  paymentStatus: PaymentStatus
-  paymentStatusDesc: string
   paymentTime?: string
-  orderStatus: OrderStatus
-  orderStatusDesc: string
+  status: OrderStatus          // 订单状态
+  statusDesc: string           // 订单状态描述
   remark?: string
   createTime: string
   updateTime: string
@@ -33,7 +30,7 @@ export interface OrderItem {
   id: number
   productId: number
   productName: string
-  productType: ProductType
+  productType: number
   quantity: number
   unitPrice: number
   totalPrice: number
@@ -51,8 +48,7 @@ export interface OrderQueryParams {
   pageSize?: number
   orderNo?: string
   orderType?: OrderType
-  paymentStatus?: PaymentStatus
-  orderStatus?: OrderStatus
+  status?: OrderStatus          // 使用合并后的状态
   startDate?: string
   endDate?: string
 }
@@ -69,15 +65,15 @@ export interface CreateOrderParams {
 export interface CreateOrderItemParams {
   productId: number
   productName: string
-  productType: ProductType
+  productType: number
   quantity: number
   unitPrice: number
 }
 
-// 支付订单参数
+// 支付订单参数（仅需订单ID，支付方式可选）
 export interface PayOrderParams {
   orderId: number
-  paymentMethod: string
+  paymentMethod?: string
 }
 
 // 取消订单参数

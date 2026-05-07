@@ -1,14 +1,12 @@
 // app.ts
 import { userStore } from './stores/user.store'
 import { configStore } from './stores/config.store'
-import { messageStore } from './stores/message.store'
 
 App<IAppOption>({
   globalData: {
     systemInfo: null,
     userStore: userStore,
     configStore: configStore,
-    messageStore: messageStore
   },
 
   onLaunch() {
@@ -20,9 +18,6 @@ App<IAppOption>({
 
   onShow() {
     console.log('小程序显示')
-    if (wx.getStorageSync('token')) {
-      this.updateUnreadMessageCount()
-    }
   },
 
   onHide() {
@@ -42,7 +37,7 @@ App<IAppOption>({
       console.error('获取系统信息失败:', error)
     }
   },
-  
+
   async loadSystemConfig() {
     try {
       await configStore.loadSystemConfig()
@@ -73,15 +68,6 @@ App<IAppOption>({
       wx.removeStorageSync('userInfo')
     }
   },
-
-  async updateUnreadMessageCount() {
-    if (!wx.getStorageSync('token')) return
-    try {
-      await messageStore.refreshUnreadCount()
-    } catch (error) {
-      console.error('获取未读消息数失败', error)
-    }
-  }
 })
 
 interface IAppOption {
@@ -89,7 +75,6 @@ interface IAppOption {
     systemInfo: wx.SystemInfo | null
     userStore: any
     configStore: any
-    messageStore: any
     systemConfigLoaded?: boolean
   }
 }

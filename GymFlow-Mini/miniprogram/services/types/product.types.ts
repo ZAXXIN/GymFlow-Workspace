@@ -39,7 +39,7 @@ export interface ProductDetail {
   validityDays?: number
   defaultTotalSessions?: number
   maxPurchaseQuantity?: number
-  refundPolicy?: string
+  // refundPolicy?: string
   usageRules?: string
   coachIds?: number[]
 }

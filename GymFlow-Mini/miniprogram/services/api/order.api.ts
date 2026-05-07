@@ -1,9 +1,9 @@
 // 订单相关API
 
 import { wxRequest } from '../../utils/request'
-import { 
-  Order, 
-  OrderQueryParams, 
+import {
+  Order,
+  OrderQueryParams,
   PageResult,
   CreateOrderParams,
   PayOrderParams,
@@ -42,12 +42,12 @@ export const createOrder = (params: CreateOrderParams) => {
 }
 
 /**
- * 更新订单状态
+ * 更新订单状态（直接设置状态）
  * PUT /order/updateStatus/{orderId}
  */
-export const updateOrderStatus = (orderId: number, orderStatus: string, remark?: string) => {
+export const updateOrderStatus = (orderId: number, status: string, remark?: string) => {
   return wxRequest.put(`/order/updateStatus/${orderId}`, {
-    orderStatus,
+    status,
     remark
   })
 }
@@ -64,12 +64,35 @@ export const cancelOrder = ({ orderId, reason }: CancelOrderParams) => {
 }
 
 /**
+ * 支付订单（同步完成权益激活）
+ * POST /order/pay/{orderId}
+ */
+export const payOrder = ({ orderId, paymentMethod }: PayOrderParams) => {
+  return wxRequest.post<boolean>(`/order/pay/${orderId}`, null, {
+    params: { paymentMethod: paymentMethod || '微信支付' },
+    showLoading: true,
+    loadingText: '支付中...'
+  })
+}
+
+/**
+ * 重试激活订单权益（仅限 PAID 状态）
+ * POST /order/retry-activate/{orderId}
+ */
+export const retryActivateOrder = (orderId: number) => {
+  return wxRequest.post<boolean>(`/order/retry-activate/${orderId}`, null, {
+    showLoading: true,
+    loadingText: '激活中...'
+  })
+}
+
+/**
  * 获取会员订单列表
  * POST /order/member/{memberId}
  */
-export const getMemberOrders = (memberId, params) => {
+export const getMemberOrders = (memberId: number, params: OrderQueryParams) => {
   if (!memberId) {
     return Promise.reject(new Error('用户未登录'))
   }
-  return wxRequest.post(`/order/member/${memberId}`, params)
+  return wxRequest.post<PageResult<Order>>(`/order/member/${memberId}`, params)
 }

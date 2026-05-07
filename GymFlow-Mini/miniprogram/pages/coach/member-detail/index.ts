@@ -2,6 +2,7 @@
 import { getCoachMemberDetail } from '../../../services/api/coach.api'
 import { formatTime, formatDateTime } from '../../../utils/date'
 import { showToast } from '../../../utils/wx-util'
+import { userStore } from '../../../stores/user.store' 
 
 Page({
   data: {
@@ -49,6 +50,16 @@ Page({
    * 从添加健康档案页面返回时需要刷新
    */
   onShow() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     // 如果已经加载过会员ID，重新加载数据
     if (this.data.memberId) {
       this.loadMemberDetail()
@@ -65,6 +76,14 @@ Page({
       const { memberId } = this.data
       const detail = await getCoachMemberDetail(memberId)
       console.log(detail)
+
+      // 获取当前教练ID
+      const currentCoachId = userStore.coachId
+      // 筛选课程记录：只保留当前教练的课程
+      const filteredCourses = (detail.courseRecords || []).filter(
+        (record: any) => record.coachId === currentCoachId
+      )
+
       this.setData({
         memberInfo: {
           memberName: detail.realName,
@@ -74,10 +93,10 @@ Page({
           memberCard: detail.memberCards
         },
         healthRecords: detail.healthRecords || [],
-        courseRecords: detail.courseRecords || [],
+        courseRecords: filteredCourses,   // 使用筛选后的数据
         loading: false
       })
-      console.log(this.data.memberInfo,this.data.healthRecords,this.data.courseRecords)
+      console.log(this.data.memberInfo, this.data.healthRecords, this.data.courseRecords)
       
     } catch (error: any) {
       console.error('加载会员详情失败:', error)

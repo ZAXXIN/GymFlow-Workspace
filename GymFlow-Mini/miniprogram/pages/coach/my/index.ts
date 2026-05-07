@@ -1,7 +1,6 @@
 // 教练端我的页面逻辑
 import { TabBarHelper } from '../../../utils/tabbar-helper'
 import { userStore } from '../../../stores/user.store'
-import { messageStore } from '../../../stores/message.store'
 import { bookingStore } from '../../../stores/booking.store'
 import { orderStore } from '../../../stores/order.store'
 import { getMyCoachInfo } from '../../../services/api/coach.api'
@@ -39,9 +38,18 @@ Page({
   },
 
   onShow() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     // 每次显示时刷新数据
     // this.loadCoachInfo()
-    // this.updateUnreadCount()
   },
 
   onTabChange(e: any) {
@@ -54,7 +62,6 @@ Page({
    */
   async initData() {
     await this.loadCoachInfo()
-    this.updateUnreadCount()
   },
 
   /**
@@ -74,15 +81,6 @@ Page({
   },
 
   /**
-   * 更新未读消息数
-   */
-  updateUnreadCount() {
-    this.setData({
-      unreadCount: messageStore.unreadCount
-    })
-  },
-
-  /**
    * 点击菜单项
    */
   onMenuTap(e: any) {
@@ -94,15 +92,6 @@ Page({
         url
       })
     }
-  },
-
-  /**
-   * 跳转到消息列表
-   */
-  goToMessage() {
-    wx.navigateTo({
-      url: '/pages/common/message-list/index'
-    })
   },
 
   /**
@@ -120,7 +109,6 @@ Page({
       await logoutApi()
       // 清除所有store
       userStore.logout()
-      messageStore.reset()
       bookingStore.reset()
       orderStore.reset()
 

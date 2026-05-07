@@ -12,9 +12,6 @@ Page({
     // 用户信息
     userInfo: null,
     
-    // 消息存储（用于显示红点）
-    messageStore: null,
-    
     // 当前提醒
     currentReminder: null,
     
@@ -55,13 +52,22 @@ Page({
     
     this.setData({ 
       userInfo: userStore.userInfo,
-      messageStore: app.globalData.messageStore 
     })
     
     this.initData()
   },
 
   onShow: function() {
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton({
+        success: (res) => {
+          console.log('Home键隐藏成功', res);
+        },
+        fail: (err) => {
+          console.error('Home键隐藏失败', err);
+        }
+      });
+    }
     // 每次显示页面时刷新提醒
     this.loadCurrentReminder()
   },
@@ -215,12 +221,12 @@ Page({
    * 点击提醒
    */
   onReminderTap: function() {
-    var currentReminder = this.data.currentReminder
-    if (currentReminder && currentReminder.bookingId) {
-      wx.navigateTo({
-        url: '/pages/member/checkin-code/index?bookingId=' + currentReminder.bookingId
-      })
-    }
+  //   var currentReminder = this.data.currentReminder
+  //   if (currentReminder && currentReminder.bookingId) {
+  //     wx.navigateTo({
+  //       url: '/pages/member/checkin-code/index?bookingId=' + currentReminder.bookingId
+  //     })
+  //   }
   },
 
   /**
@@ -269,14 +275,6 @@ Page({
    */
   onReachBottom: function() {
     this.loadProducts(false)
-  },
-
-  /**
-   * 跳转到消息列表
-   */
-  goToMessage: function() {
-    wx.navigateTo({
-      url: '/pages/common/message-list/index'
-    })
   }
+
 })

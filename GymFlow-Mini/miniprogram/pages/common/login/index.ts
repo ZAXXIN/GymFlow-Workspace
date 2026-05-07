@@ -1,20 +1,19 @@
 // pages/common/login/index.ts
 import { miniLogin } from '../../../services/api/auth.api'
 import { userStore } from '../../../stores/user.store'
-import { messageStore } from '../../../stores/message.store'
 import { configStore } from '../../../stores/config.store'
 import { showToast, showLoading, hideLoading } from '../../../utils/wx-util'
 import { isValidPhone } from '../../../utils/validator'
 
 Page({
   data: {
-    phone: '18800000003',
+    phone: '18800000005',
     password: '123456',
     loading: false,
     showPassword: false,
     agreement: true,
     systemName: 'GymFlow健身',
-    systemLogo: '/assets/icons/logo.jpg'
+    systemLogo: '/assets/icons/logo.png'
   },
 
   onLoad: function() {
@@ -117,10 +116,7 @@ Page({
         // 加载配置和消息
         return Promise.all([
           configStore.loadConfig(true),
-          messageStore.init()
         ]).then(function() {
-          return messageStore.refreshUnreadCount()
-        }).then(function() {
           hideLoading()
           showToast('登录成功', 'success')
           
