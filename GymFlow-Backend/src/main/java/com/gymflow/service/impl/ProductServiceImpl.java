@@ -34,6 +34,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
     private final OrderItemMapper orderItemMapper;
+    private final OrderMapper OrderMapper;
+    private final MemberMapper memberMapper;
     private final ObjectMapper objectMapper;
     private final SystemConfigValidator configValidator;
 
@@ -95,7 +97,13 @@ public class ProductServiceImpl implements ProductService {
             throw new BusinessException("商品不存在");
         }
 
-        return convertToProductFullDTO(product);
+        ProductFullDTO dto = convertToProductFullDTO(product);
+
+        // 查询销售记录
+        List<ProductSalesRecordDTO> salesRecords = getProductSalesRecords(productId);
+        dto.setSalesRecords(salesRecords);
+
+        return dto;
     }
 
     @Override
@@ -476,6 +484,91 @@ public class ProductServiceImpl implements ProductService {
         );
         if (orderCount > 0) {
             throw new BusinessException("商品已被购买，不能删除");
+        }
+    }
+
+    /**
+     * 查询商品销售记录（私有方法）
+     */
+    private List<ProductSalesRecordDTO> getProductSalesRecords(Long productId) {
+        // 查询该商品的所有订单项
+        LambdaQueryWrapper<OrderItem> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OrderItem::getProductId, productId)
+                .orderByDesc(OrderItem::getCreateTime);
+
+        List<OrderItem> orderItems = orderItemMapper.selectList(queryWrapper);
+
+        if (CollectionUtils.isEmpty(orderItems)) {
+            return new ArrayList<>();
+        }
+
+        // 获取所有订单ID
+        List<Long> orderIds = orderItems.stream()
+                .map(OrderItem::getOrderId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 批量查询订单信息
+        List<Order> orders = OrderMapper.selectBatchIds(orderIds);
+        Map<Long, Order> orderMap = orders.stream()
+                .collect(Collectors.toMap(Order::getId, o -> o));
+
+        // 获取所有会员ID
+        List<Long> memberIds = orders.stream()
+                .map(Order::getMemberId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 批量查询会员信息
+        List<Member> members = memberMapper.selectBatchIds(memberIds);
+        Map<Long, Member> memberMap = members.stream()
+                .collect(Collectors.toMap(Member::getId, m -> m));
+
+        // 组装返回数据
+        List<ProductSalesRecordDTO> result = new ArrayList<>();
+        for (OrderItem item : orderItems) {
+            Order order = orderMap.get(item.getOrderId());
+            if (order == null) {
+                continue;
+            }
+
+            Member member = memberMap.get(order.getMemberId());
+
+            ProductSalesRecordDTO dto = new ProductSalesRecordDTO();
+            dto.setOrderId(order.getId());
+            dto.setOrderNo(order.getOrderNo());
+            dto.setMemberId(order.getMemberId());
+            if (member != null) {
+                dto.setMemberName(member.getRealName());
+                dto.setMemberPhone(member.getPhone());
+            }
+            dto.setQuantity(item.getQuantity());
+            dto.setUnitPrice(item.getUnitPrice());
+            dto.setTotalPrice(item.getTotalPrice());
+            dto.setOrderStatus(order.getStatus());
+            dto.setOrderStatusDesc(getOrderStatusDesc(order.getStatus()));
+            dto.setPaymentMethod(order.getPaymentMethod());
+            dto.setPaymentTime(order.getPaymentTime());
+            dto.setCreateTime(order.getCreateTime());
+
+            result.add(dto);
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取订单状态描述
+     */
+    private String getOrderStatusDesc(String status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case "WAIT_PAY": return "待支付";
+            case "PAID": return "已支付";
+            case "COMPLETED": return "已完成";
+            case "CANCELLED": return "已取消";
+            case "REFUNDED": return "已退款";
+            default: return status;
         }
     }
 }

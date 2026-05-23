@@ -43,6 +43,7 @@ public interface ProductService {
      */
     void updateProductStatus(Long productId, Integer status);
 
+
     /**
      * 更新库存
      */

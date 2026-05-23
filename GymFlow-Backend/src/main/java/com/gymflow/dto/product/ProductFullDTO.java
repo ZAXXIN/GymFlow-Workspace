@@ -68,6 +68,9 @@ public class ProductFullDTO {
     @Schema(description = "使用规则")
     private String usageRules;
 
+    @Schema(description = "销售记录列表")
+    private List<ProductSalesRecordDTO> salesRecords;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 

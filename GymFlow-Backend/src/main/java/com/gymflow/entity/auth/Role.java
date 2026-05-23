@@ -15,7 +15,7 @@ public class Role {
     private String roleName;
 
     @TableField("role_code")
-    private String roleCode;  // 角色编码：BOSS, RECEPTIONIST
+    private String roleCode;
 
     private String description;
 
