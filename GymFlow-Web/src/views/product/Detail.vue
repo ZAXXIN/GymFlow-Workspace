@@ -38,8 +38,6 @@
             <el-descriptions-item label="库存数量">{{ productDetail?.stockQuantity || 0 }}</el-descriptions-item>
             <el-descriptions-item label="最大购买数量">{{ productDetail?.maxPurchaseQuantity || 0 }}</el-descriptions-item>
             <el-descriptions-item v-if="productDetail?.productType == 1 || productDetail?.productType == 2" label="总节数">{{ productDetail?.totalSessions }}节</el-descriptions-item>
-            <!-- <el-descriptions-item label="创建时间">{{ formatDateTime(productDetail?.createTime) }}</el-descriptions-item>
-            <el-descriptions-item label="更新时间">{{ formatDateTime(productDetail?.updateTime) }}</el-descriptions-item> -->
           </el-descriptions>
         </div>
       </div>
@@ -79,13 +77,12 @@
         </div>
       </div>
 
-      <!-- 会籍卡详情 -->
       <!-- 会籍权益 -->
-      <!--  -->
       <div class="spec-section" v-if="productDetail?.membershipBenefits && productDetail?.membershipBenefits.length > 0">
         <h3 class="section-title">会籍权益</h3>
         <div class="spec-content" v-for="(benefit, index) in productDetail.membershipBenefits" :key="index">
-          {{ benefit }}</div>
+          {{ benefit }}
+        </div>
       </div>
 
       <div class="spec-section" v-if="productDetail?.usageRules">
@@ -95,30 +92,23 @@
         </div>
       </div>
 
-      <!-- <div class="spec-section" v-if="productDetail?.refundPolicy">
-        <h3 class="section-title">退款政策</h3>
-        <div class="spec-content">
-          {{ productDetail.refundPolicy }}
-        </div>
-      </div> -->
-
       <!-- 销售记录 -->
-      <!-- <div class="spec-section" v-if="productDetail?.refundPolicy"> -->
       <div class="spec-section">
         <h3 class="section-title">销售记录</h3>
-        <div v-if="salesRecords.length > 0">
-          <el-table :data="salesRecords" style="width: 100%">
+        <div v-if="paginatedSalesRecords.length > 0" v-loading="loading">
+          <el-table :data="paginatedSalesRecords" style="width: 100%">
             <el-table-column prop="orderNo" label="订单号" width="180" />
             <el-table-column prop="memberName" label="购买会员" width="120" />
+            <el-table-column prop="memberPhone" label="会员手机号" width="120" />
             <el-table-column prop="quantity" label="购买数量" width="100" align="center" />
             <el-table-column prop="unitPrice" label="单价" width="100" align="right">
               <template #default="{ row }">
                 ¥{{ row.unitPrice?.toFixed(2) }}
               </template>
             </el-table-column>
-            <el-table-column prop="totalAmount" label="总金额" width="100" align="right">
+            <el-table-column prop="totalPrice" label="总金额" width="100" align="right">
               <template #default="{ row }">
-                ¥{{ row.totalAmount?.toFixed(2) }}
+                ¥{{ row.totalPrice?.toFixed(2) }}
               </template>
             </el-table-column>
             <el-table-column prop="paymentMethod" label="支付方式" width="120">
@@ -128,8 +118,8 @@
             </el-table-column>
             <el-table-column label="订单状态" width="100">
               <template #default="{ row }">
-                <el-tag :type="getOrderStatusTagType(row.status)" size="small">
-                  {{ getOrderStatusDesc(row.status) }}
+                <el-tag :type="getOrderStatusTagType(row.orderStatus)" size="small">
+                  {{ getOrderStatusDesc(row.orderStatus) }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -149,7 +139,15 @@
 
           <!-- 分页 -->
           <div class="pagination-container">
-            <el-pagination v-model:current-page="salesPagination.pageNum" v-model:page-size="salesPagination.pageSize" :total="salesPagination.total" :page-sizes="[10, 20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" @size-change="handleSalesSizeChange" @current-change="handleSalesPageChange" />
+            <el-pagination 
+              v-model:current-page="salesPageNum" 
+              v-model:page-size="salesPageSize" 
+              :total="salesTotal" 
+              :page-sizes="[5, 10, 20, 50]" 
+              layout="total, sizes, prev, pager, next, jumper" 
+              @size-change="handleSalesSizeChange" 
+              @current-change="handleSalesPageChange" 
+            />
           </div>
         </div>
         <div v-else class="empty-data">
@@ -164,39 +162,53 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Picture } from '@element-plus/icons-vue'
 import { useProductStore } from '@/stores/product'
-import type { ProductFullDTO } from '@/types/product'
 
 const router = useRouter()
 const route = useRoute()
 const productStore = useProductStore()
 
 const loading = ref(false)
-const activeTab = ref('details')
 
-// 销售记录
-const salesRecords = ref<any[]>([])
-const salesPagination = ref({
-  pageNum: 1,
-  pageSize: 10,
-  total: 0,
-})
+// 销售记录分页
+const salesPageNum = ref(1)
+const salesPageSize = ref(10)
 
 const productId = computed(() => Number(route.params.id))
 const productDetail = computed(() => productStore.currentProduct)
+
+// 获取销售记录数据
+const allSalesRecords = computed(() => productDetail.value?.salesRecords || [])
+
+// 销售记录总数
+const salesTotal = computed(() => allSalesRecords.value.length)
+
+// 分页后的销售记录
+const paginatedSalesRecords = computed(() => {
+  const start = (salesPageNum.value - 1) * salesPageSize.value
+  const end = start + salesPageSize.value
+  return allSalesRecords.value.slice(start, end)
+})
 
 const formatDate = (date: string | null | undefined) => date || '-'
 const formatDateTime = (datetime: string | null | undefined) => datetime?.replace('T', ' ') || '-'
 const formatAmount = (amount: number | null | undefined) => amount ? amount.toFixed(2) : '0.00'
 
-// 支付方式描述（保留）
-const getPaymentMethodDesc = (method?: number) => {
-  if (method === undefined) return '-'
-  const methods = ['微信支付', '支付宝', '银行卡', '现金', '会员卡']
-  return methods[method] || '-'
+// 支付方式描述
+const getPaymentMethodDesc = (method?: string | null) => {
+  if (!method) return '-'
+  const map: Record<string, string> = {
+    '微信支付': '微信支付',
+    '支付宝': '支付宝',
+    '银行卡': '银行卡',
+    '现金': '现金',
+    '前台支付': '前台支付'
+  }
+  return map[method] || method
 }
 
-// 订单状态描述（新）
+// 订单状态描述
 const getOrderStatusDesc = (status?: string) => {
   if (!status) return '-'
   const map: Record<string, string> = {
@@ -226,7 +238,6 @@ const loadProductDetail = async () => {
   try {
     loading.value = true
     await productStore.fetchProductDetail(productId.value)
-    await loadSalesRecords()
   } catch (error) {
     ElMessage.error('加载商品详情失败')
   } finally {
@@ -234,49 +245,18 @@ const loadProductDetail = async () => {
   }
 }
 
-// 加载销售记录（模拟数据，按新状态字段调整）
-const loadSalesRecords = async () => {
-  // TODO: 调用真实 API，返回的数据应包含 status 字段
-  salesRecords.value = [
-    {
-      orderId: 10001,
-      orderNo: 'DD202312150001',
-      memberName: '张三',
-      quantity: 1,
-      unitPrice: 299.0,
-      totalAmount: 299.0,
-      paymentMethod: 0,
-      status: 'COMPLETED',      // 新状态
-      createTime: '2023-12-15 14:30:00',
-    },
-    {
-      orderId: 10002,
-      orderNo: 'DD202312150002',
-      memberName: '李四',
-      quantity: 2,
-      unitPrice: 299.0,
-      totalAmount: 598.0,
-      paymentMethod: 1,
-      status: 'COMPLETED',
-      createTime: '2023-12-15 16:45:00',
-    },
-  ]
-  salesPagination.value.total = 2
+const handleViewOrderDetail = (orderId: number) => {
+  router.push(`/order/detail/${orderId}`)
 }
 
+// 分页事件
 const handleSalesSizeChange = (size: number) => {
-  salesPagination.value.pageSize = size
-  salesPagination.value.pageNum = 1
-  loadSalesRecords()
+  salesPageSize.value = size
+  salesPageNum.value = 1
 }
 
 const handleSalesPageChange = (page: number) => {
-  salesPagination.value.pageNum = page
-  loadSalesRecords()
-}
-
-const handleViewOrderDetail = (orderId: number) => {
-  router.push(`/order/detail/${orderId}`)
+  salesPageNum.value = page
 }
 
 const goBack = () => router.push('/product/list')

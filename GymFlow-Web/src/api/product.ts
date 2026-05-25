@@ -1,9 +1,10 @@
 import request from '@/utils/request'
-import type { 
-  ProductQueryDTO, 
-  ProductBasicDTO, 
+import type {
+  ProductQueryDTO,
+  ProductBasicDTO,
   ProductFullDTO,
   ProductListVO,
+  ProductSalesRecordDTO, 
   PageResultVO,
   ApiResponse
 } from '@/types/product'
@@ -19,7 +20,7 @@ export const productApi = {
       data: params
     })
   },
-  
+
   /**
    * 根据商品类型获取商品列表（用于会员卡选择）
    */
@@ -87,11 +88,11 @@ export const productApi = {
   /**
    * 更新商品库存
    */
-  updateProductStock(productId: number, quantity: number): Promise<ApiResponse> {
-    return request({
-      url: `/product/updateStock/${productId}`,
-      method: 'PUT',
-      params: { quantity }
-    })
-  }
+  // updateProductStock(productId: number, quantity: number): Promise<ApiResponse> {
+  //   return request({
+  //     url: `/product/updateStock/${productId}`,
+  //     method: 'PUT',
+  //     params: { quantity }
+  //   })
+  // }
 }

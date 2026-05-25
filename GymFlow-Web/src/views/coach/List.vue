@@ -80,24 +80,6 @@
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="手机号" width="120" />
-        <el-table-column prop="courses" label="相关课程" >
-          <!-- width="250" -->
-          <template #default="{ row }">
-            <span v-if="row.courses && row.courses.length > 0">
-              {{ row.courses.map(c => c.courseName).join('、') }}
-            </span>
-            <span v-else class="no-data">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="certifications" label="资格证书">
-          <!-- width="250" -->
-          <template #default="{ row }">
-            <span v-if="row.certifications && row.certifications.length > 0">
-              {{ row.certifications.map(c => c).join('、') }}
-            </span>
-            <span v-else class="no-data">-</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="yearsOfExperience" label="经验年限" width="100" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.yearsOfExperience" type="info" size="small">
@@ -106,6 +88,23 @@
             <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
+        <el-table-column prop="courses" label="相关课程" width="400">
+          <!-- width="250" -->
+          <template #default="{ row }">
+            <span v-if="row.courses && row.courses.length > 0">
+              {{ row.courses.map(c => c.courseName).join('、') }}
+            </span>
+            <span v-else class="no-data">-</span>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column prop="certifications" label="资格证书">
+          <template #default="{ row }">
+            <span v-if="row.certifications && row.certifications.length > 0">
+              {{ row.certifications.map(c => c).join('、') }}
+            </span>
+            <span v-else class="no-data">-</span>
+          </template>
+        </el-table-column> -->
         <el-table-column prop="specialty" label="专长">
           <template #default="{ row }">
             <span>{{ row.specialty || '-' }}</span>
@@ -123,7 +122,7 @@
             <el-rate v-model="row.rating" disabled show-score text-color="#ff9900" score-template="{value}" :max="5" :allow-half="true" />
           </template>
         </el-table-column> -->
-        <el-table-column prop="createTime" label="入职时间" width="160">
+        <el-table-column prop="createTime" label="入职时间" width="100" align="center">
           <template #default="{ row }">
             {{ formatDateTime(row.createTime) }}
           </template>
@@ -191,20 +190,9 @@ const filterForm = reactive({
 
 const loading = computed(() => coachStore.loading)
 
-// 方法
 const formatDateTime = (datetime: string) => {
   if (!datetime) return '-'
-  return datetime.replace('T', ' ')
-}
-
-const formatAmount = (amount: number) => {
-  if (!amount) return '0.00'
-  return amount.toFixed(2)
-}
-
-const getRandomColor = () => {
-  const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
-  return colors[Math.floor(Math.random() * colors.length)]
+  return datetime.split('T')[0]  // 只取 T 前面的日期部分
 }
 
 // 搜索处理
@@ -260,10 +248,6 @@ const handleViewDetail = (id: number) => {
 
 const handleEdit = (id: number) => {
   router.push(`/coach/edit/${id}`)
-}
-
-const handleViewSchedule = (id: number) => {
-  router.push(`/coach/schedule/${id}`)
 }
 
 // 更新教练状态（在职/离职）

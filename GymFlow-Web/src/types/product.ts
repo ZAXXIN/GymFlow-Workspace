@@ -36,12 +36,12 @@ export interface ProductBasicDTO {
   stockQuantity: number
   specifications?: string
   status: number
-  validityDays?: number          // 有效期天数（仅会籍卡）
-  totalSessions?: number          // 总课时数（仅私教课/团课）
-  membershipBenefits?: string[]   // 会籍权益（仅会籍卡）
-  maxPurchaseQuantity?: number    // 最大购买数量
-  // refundPolicy?: string           // 退款政策
-  usageRules?: string             // 使用规则
+  validityDays?: number // 有效期天数（仅会籍卡）
+  totalSessions?: number// 总课时数（仅私教课/团课）
+  membershipBenefits?: string[]// 会籍权益（仅会籍卡）
+  maxPurchaseQuantity?: number// 最大购买数量
+  // refundPolicy?: string // 退款政策
+  usageRules?: string// 使用规则
 }
 
 // 商品完整信息DTO

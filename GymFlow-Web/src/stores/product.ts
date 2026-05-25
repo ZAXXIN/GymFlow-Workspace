@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { productApi } from '@/api/product'
-import type { 
-  ProductQueryDTO, 
-  ProductBasicDTO, 
+import type {
+  ProductQueryDTO,
+  ProductBasicDTO,
   ProductFullDTO,
   ProductListVO,
   PageResultVO
@@ -31,7 +31,7 @@ export const useProductStore = defineStore('product', () => {
         pageSize: params.pageSize || pageInfo.value.pageSize,
         ...params
       }
-      
+
       const response = await productApi.getProductList(queryParams)
       if (response.code === 200) {
         productList.value = response.data.list
@@ -127,7 +127,7 @@ export const useProductStore = defineStore('product', () => {
       if (response.code === 200) {
         productList.value = productList.value.filter(item => item.id !== productId)
         total.value -= 1
-        
+
         if (currentProduct.value?.id === productId) {
           currentProduct.value = null
         }
@@ -255,7 +255,7 @@ export const useProductStore = defineStore('product', () => {
     total,
     loading,
     pageInfo,
-    
+
     fetchProductList,
     fetchProductDetail,
     addProduct,
@@ -266,7 +266,7 @@ export const useProductStore = defineStore('product', () => {
     setPageInfo,
     clearCurrentProduct,
     resetState,
-    
+
     hasNextPage,
     hasPrevPage,
     formattedProductList

@@ -308,7 +308,7 @@ const formData = reactive<MemberAddRequest>({
   basicDTO: {
     phone: '',
     realName: '',
-    gender: 1,
+    gender: 0,
     birthday: '',
     memberNo: '',
     membershipStartDate: '',

@@ -3,8 +3,8 @@
     <!-- 顶部导航栏 -->
     <el-header class="header">
       <div class="header-left">
-        <img src="@/assets/images/logo.png" alt="Logo" class="logo">
-        <h1 class="title">GymFlow 健身房管理系统</h1>
+        <img :src="systemLogo || defaultLogo" alt="Logo" class="logo">
+        <h1 class="title">{{ systemName || 'GymFlow 健身房管理系统' }}</h1>
       </div>
       <div class="header-right">
         <el-dropdown>
@@ -86,10 +86,18 @@ import {
   Goods,
   Document,
 } from '@element-plus/icons-vue'
+import { systemConfigApi } from '@/api/settings/systemConfig'
+import defaultLogoUrl from '@/assets/images/logo.png'
+
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+// 系统配置
+const systemName = ref('')
+const systemLogo = ref('')
+const defaultLogo = defaultLogoUrl
 
 // 用户信息
 const userInfo = ref<UserInfo>({
@@ -321,9 +329,24 @@ const handleMenuSelect = (index: string) => {
   console.log('选择菜单:', index)
 }
 
+// 获取系统配置
+const loadSystemConfig = async () => {
+  try {
+    const response = await systemConfigApi.getConfig()
+    if (response.code === 200 && response.data) {
+      systemName.value = response.data.basic?.systemName || 'GymFlow 健身房管理系统'
+      systemLogo.value = response.data.basic?.systemLogo || ''
+    }
+  } catch (error) {
+    console.error('获取系统配置失败:', error)
+    // 使用默认值
+    systemName.value = 'GymFlow 健身房管理系统'
+    systemLogo.value = ''
+  }
+}
+
 // 处理退出登录
 const handleLogout = async () => {
-  // 跳转到登录页
   window.location.href = '/login'
   try {
     await authStore.logout()
@@ -338,6 +361,7 @@ const handleLogout = async () => {
 
 // 初始化用户信息
 onMounted(() => {
+  loadSystemConfig()
   const userStr = localStorage.getItem('gymflow_user_info')
   if (userStr) {
     try {

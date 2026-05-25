@@ -72,23 +72,9 @@
                   <el-form ref="businessFormRef" :model="businessForm" :rules="businessRules" label-width="150px" status-icon>
                     <el-form-item label="营业时间" prop="businessHours">
                       <div class="business-hours">
-                        <el-time-picker 
-                          v-model="businessForm.businessStartTime" 
-                          :editable="false"
-                          format="HH:mm" 
-                          value-format="HH:mm:ss" 
-                          placeholder="开始时间"
-                          class="time-picker" 
-                        />
+                        <el-time-picker v-model="businessForm.businessStartTime" :editable="false" format="HH:mm" value-format="HH:mm:ss" placeholder="开始时间" class="time-picker" style="width: 110px;" />
                         <span class="time-separator">至</span>
-                        <el-time-picker 
-                          v-model="businessForm.businessEndTime" 
-                          :editable="false"
-                          format="HH:mm" 
-                          value-format="HH:mm:ss" 
-                          placeholder="结束时间"
-                          class="time-picker" 
-                        />
+                        <el-time-picker v-model="businessForm.businessEndTime" :editable="false" format="HH:mm" value-format="HH:mm:ss" placeholder="结束时间" class="time-picker" style="width: 110px;" />
                       </div>
                       <div class="form-tip">课程排课、签到只能在营业时间内进行</div>
                     </el-form-item>
@@ -113,15 +99,15 @@
                       <div class="form-tip">课程开始后多少分钟截止签到</div>
                     </el-form-item>
 
-                    <el-form-item label="最低开课人数" prop="minClassSize">
+                    <!-- <el-form-item label="最低开课人数" prop="minClassSize">
                       <el-input-number v-model="businessForm.minClassSize" :min="1" :max="20" controls-position="right" class="number-input" />
                       <div class="form-tip">团课报名人数达到此值才能开课</div>
-                    </el-form-item>
+                    </el-form-item> -->
 
-                    <el-form-item label="最大课程容量" prop="maxClassCapacity">
+                    <!-- <el-form-item label="最大课程容量" prop="maxClassCapacity">
                       <el-input-number v-model="businessForm.maxClassCapacity" :min="1" :max="100" controls-position="right" class="number-input" />
                       <div class="form-tip">团课最多允许报名人数</div>
-                    </el-form-item>
+                    </el-form-item> -->
 
                     <el-form-item label="自动完成时间" prop="autoCompleteHours">
                       <el-input-number v-model="businessForm.autoCompleteHours" :min="0" :max="24" controls-position="right" class="number-input" />
@@ -419,7 +405,7 @@ onMounted(() => {
       padding-bottom: 0;
       border-bottom: none;
       height: 100%;
-      
+
       .section-title {
         margin: 0 0 20px 0;
         font-size: 16px;
@@ -507,21 +493,30 @@ onMounted(() => {
           .time-separator {
             color: #606266;
           }
-          
+
           .time-picker {
-            width: 120px;
+            width: 50px;
+
+            // 深度选择器，穿透组件内部
+            :deep(.el-input) {
+              width: 100px;
+            }
+
+            :deep(.el-input__wrapper) {
+              width: 100px;
+            }
           }
         }
-        
+
         // 表单控件宽度自适应
         :deep(.el-input) {
           width: 100%;
         }
-        
+
         :deep(.el-input-number) {
           width: 100%;
         }
-        
+
         .number-input {
           width: 100%;
         }

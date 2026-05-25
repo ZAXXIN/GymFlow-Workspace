@@ -22,7 +22,7 @@
           <el-input v-model="filterForm.courseName" placeholder="请输入课程名称" clearable style="width: 180px;" />
         </el-form-item>
         <el-form-item label="课程类型">
-          <el-select v-model="filterForm.courseType" placeholder="请选择课程类型" clearable style="width: 120px;">
+          <el-select v-model="filterForm.courseType" placeholder="请选择课程类型" clearable style="width: 180px;">
             <el-option label="私教课" :value="0" />
             <el-option label="团课" :value="1" />
           </el-select>
@@ -33,7 +33,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 100px;">
+          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable style="width: 180px;">
             <el-option label="正常" :value="1" />
             <el-option label="禁用" :value="0" />
           </el-select>
@@ -101,9 +101,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="课程描述"/>
-        <el-table-column prop="notice" label="课程须知"/>
-        <el-table-column label="操作" width="200" fixed="right" align="center">
+        <el-table-column prop="description" label="课程描述" />
+        <el-table-column prop="notice" label="课程须知" />
+        <el-table-column label="操作" width="230" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-permission="'course:detail'" type="primary" link size="small" @click="handleViewDetail(row.id)">
               详情
@@ -111,9 +111,16 @@
             <el-button v-permission="'course:edit'" type="warning" link size="small" @click="handleEdit(row.id)">
               编辑
             </el-button>
-            <el-button v-permission="'course:schedule'" type="info" link size="small" @click="handleViewSchedule(row.id)" v-if="row.courseType === 1">
+            <el-button v-permission="'course:schedule'" type="info" link size="small" @click="handleViewSchedule(row.id)" v-if="row.courseType === 1&&row.status === 1">
               排课
             </el-button>
+            <el-popconfirm :title="row.status === 1 ? '确定要禁用该课程吗？' : '确定要启用该课程吗？'" @confirm="handleToggleStatus(row.id, row.status)" confirm-button-text="确定" cancel-button-text="取消">
+              <template #reference>
+                <el-button v-permission="'course:edit'" :type="row.status === 1 ? 'danger' : 'success'" link size="small">
+                  {{ row.status === 1 ? '禁用' : '启用' }}
+                </el-button>
+              </template>
+            </el-popconfirm>
             <el-popconfirm title="确定要删除这个课程吗？" @confirm="handleDelete(row.id)" confirm-button-text="确定" cancel-button-text="取消">
               <template #reference>
                 <el-button v-permission="'course:delete'" type="danger" link size="small">
@@ -213,6 +220,22 @@ const handleEdit = (id: number) => {
 
 const handleViewSchedule = (id: number) => {
   router.push(`/course/schedule/${id}`)
+}
+
+/**
+ * 切换课程状态（启用/禁用）
+ */
+ const handleToggleStatus = async (id: number, currentStatus: number) => {
+  const newStatus = currentStatus === 1 ? 0 : 1
+  const actionText = newStatus === 1 ? '启用' : '禁用'
+  try {
+    await courseStore.updateCourseStatus(id, newStatus)
+    ElMessage.success(`${actionText}成功`)
+    await handleSearch()
+  } catch (error) {
+    console.error(`${actionText}失败:`, error)
+    ElMessage.error(`${actionText}失败`)
+  }
 }
 
 // 删除课程

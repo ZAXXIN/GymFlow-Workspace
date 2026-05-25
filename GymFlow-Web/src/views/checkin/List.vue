@@ -95,13 +95,13 @@
             <div class="stat-trend">占签到方式 {{ getPercentage(todayStats.frontDeskCheckIns, todayStats.totalCheckIns) }}</div>
           </div>
         </el-col>
-        <el-col :span="4">
+        <!-- <el-col :span="4">
           <div class="stat-item">
             <div class="stat-label">签到率</div>
             <div class="stat-value text-danger">{{ todayStats.checkInRate.toFixed(1) }}%</div>
             <div class="stat-trend">今日活跃会员：{{ todayStats.uniqueMembers }}人</div>
           </div>
-        </el-col>
+        </el-col> -->
       </el-row>
     </el-card>
 
